@@ -14,9 +14,7 @@ in {
   networking.firewall.allowedTCPPorts = [
     # Home Assistant
     cfg.config.http.server_port
-    # Tewi Homekit
-    cfg.config.homekit.port
-  ];
+  ] ++ map ({ port, ... }: port) cfg.config.homekit;
   networking.firewall.allowedUDPPorts = [
     # MDNS
     5353
@@ -129,7 +127,7 @@ in {
         ];
         entity_config = {};
       };
-      homekit = {
+      homekit = [ {
         name = "Tewi";
         port = 21063;
         ip_address = "10.1.1.38";
@@ -140,7 +138,7 @@ in {
           include_entities = "!include homekit_include_entities.yaml";
         };
         entity_config = "!include homekit_entity_config.yaml";
-      };
+      } ];
       tts = [
         {
           platform = "google_translate";
