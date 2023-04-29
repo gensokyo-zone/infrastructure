@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  meta,
   ...
 }:
 with lib; {
@@ -16,11 +15,42 @@ with lib; {
     networking.domain = "inskip.me";
 
     networking.firewall = {
-      trustedInterfaces = ["tailscale0"];
-      allowedTCPPorts = [5200];
+      trustedInterfaces = [config.services.tailscale.interfaceName];
       allowedUDPPorts = [config.services.tailscale.port];
     };
 
     services.tailscale.enable = true;
+
+    sops.secrets.tailscale-key = { };
+    systemd.services.tailscale-autoconnect = mkIf config.services.tailscale.enable rec {
+      description = "Automatic connection to Tailscale";
+
+      # make sure tailscale is running before trying to connect to tailscale
+      after = wants ++ wantedBy;
+      wants = [ "network-pre.target" ];
+      wantedBy = [ "tailscaled.service" ];
+
+      # set this service as a oneshot job
+      serviceConfig = {
+        Type = "oneshot";
+      };
+
+      # have the job run this shell script
+      script = with pkgs; ''
+        # wait for tailscaled to settle
+        sleep 2
+
+        # check if we are already authenticated to tailscale
+        status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
+        if [[ $status = Running ]]; then
+          # if so, then do nothing
+          exit 0
+        fi
+
+        # otherwise authenticate with tailscale
+        # to-do: --advertise-exit-node
+        ${getExe tailscale} up -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+      '';
+    };
   };
 }
