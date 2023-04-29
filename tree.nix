@@ -50,19 +50,11 @@
             ]);
         };
       };
-      "modules/home" = {
-        functor = {
-          external = [
-            (import (inputs.arcexprs + "/modules")).home-manager
-          ];
-        };
-      };
       "modules/nixos".functor.enable = true;
       "modules/meta".functor.enable = true;
       "modules/system".functor.enable = true;
       "modules/home".functor.enable = true;
       "modules/type".functor.enable = true;
-      "nixos/systems".functor.enable = false;
       "nixos/*".functor = {
         enable = true;
       };

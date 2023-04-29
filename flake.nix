@@ -10,10 +10,6 @@
       url = "github:arcnmx/ci/v0.6";
       flake = false;
     };
-    home-manager = {
-      url = "github:nix-community/home-manager/master";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;

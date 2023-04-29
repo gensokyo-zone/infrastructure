@@ -86,9 +86,7 @@ with lib; {
   config.network = {
     nixos = {
       extraModules = [
-        inputs.home-manager.nixosModules.home-manager
         meta.modules.nixos
-        meta.system
       ];
       specialArgs = {
         inherit (config.network) nodes;
