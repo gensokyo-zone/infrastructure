@@ -7,7 +7,7 @@ in {
   services.cloudflared = {
     enable = true;
     tunnels = {
-      "a3ae32ce-fe82-4f2c-ad54-3adf4a45fcbc" = {
+      "131222b0-9db0-4168-96f5-7d45ec51c3be" = {
         credentialsFile = config.sops.secrets.cloudflared-tunnel-apartment.path;
         default = "http_status:404";
         ingress = mapAttrs' (prefix: nameValuePair "${prefix}${domain}") {
