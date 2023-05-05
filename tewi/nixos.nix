@@ -71,6 +71,7 @@ in {
       };
     };
   };
+  services.resolved.enable = true;
 
   environment.systemPackages = [
     pkgs.cryptsetup
