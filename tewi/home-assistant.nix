@@ -219,6 +219,7 @@ in {
       "androidtv"
       "cast"
       "plex"
+      "environment_canada"
       "met"
       "google"
       "google_assistant"
