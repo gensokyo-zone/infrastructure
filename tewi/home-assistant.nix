@@ -203,6 +203,7 @@ in {
         python-otbr-api
         protobuf3
         adb-shell
+        (callPackage ./androidtvremote2.nix { })
         (aiogithubapi.overrideAttrs (_: {doInstallCheck = false;}))
       ];
     extraComponents = [
