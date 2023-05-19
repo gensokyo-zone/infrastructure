@@ -11,7 +11,7 @@
     z2m-pass.owner = "mosquitto";
     systemd-pass.owner = "mosquitto";
     hass-pass.owner = "mosquitto";
-    espresence-pass.owner = "mosquitto";
+    espresense-pass.owner = "mosquitto";
   };
 
   services.mosquitto = {
@@ -29,8 +29,8 @@
               "readwrite #"
             ];
           };
-          espresence = {
-            passwordFile = config.sops.secrets.espresence-pass.path;
+          espresense = {
+            passwordFile = config.sops.secrets.espresense-pass.path;
             acl = [
               "readwrite #"
             ];
