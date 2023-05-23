@@ -194,6 +194,12 @@ in {
       zone = {};
       sensor = {};
     };
+    package = pkgs.home-assistant.override {
+      packageOverrides = self: super: {
+        pyasn1 = if lib.versionAtLeast super.pyasn1.version "0.5" then throw "unsupported pyasn1 version ${super.pyasn1.version}"
+          else super.pyasn1;
+      };
+    };
     extraPackages = python3Packages:
       with python3Packages; [
         psycopg2
