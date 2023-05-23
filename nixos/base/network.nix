@@ -2,4 +2,5 @@
 
 {
   networking.nftables.enable = true;
+  networking.tempAddresses = "disabled";
 }
