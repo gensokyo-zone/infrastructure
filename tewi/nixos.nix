@@ -64,12 +64,8 @@ in {
   sops.defaultSopsFile = ./secrets.yaml;
 
   networking = {
+    useNetworkd = true;
     useDHCP = false;
-    interfaces = {
-      eno1 = {
-        useDHCP = true;
-      };
-    };
   };
   services.resolved.enable = true;
 
@@ -205,6 +201,25 @@ in {
         serviceConfig.EnvironmentFile = [
           config.sops.secrets.systemd2mqtt-env.path
         ];
+      };
+    };
+    network = {
+      networks.eno1 = {
+        inherit (config.systemd.network.links.eno1) matchConfig;
+        networkConfig = {
+          DHCP = "yes";
+          DNSDefaultRoute = true;
+          MulticastDNS = true;
+        };
+      };
+      links.eno1 = {
+        matchConfig = {
+          Type = "ether";
+          Driver = "e1000e";
+        };
+        linkConfig = {
+          WakeOnLan = "magic";
+        };
       };
     };
   };

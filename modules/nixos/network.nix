@@ -18,6 +18,14 @@ with lib; {
       trustedInterfaces = [config.services.tailscale.interfaceName];
       allowedUDPPorts = [config.services.tailscale.port];
     };
+    systemd.network = {
+      wait-online.ignoredInterfaces = [config.services.tailscale.interfaceName];
+      networks."50-tailscale" = {
+        networkConfig = {
+          DNSDefaultRoute = false;
+        };
+      };
+    };
 
     services.tailscale.enable = true;
 
@@ -38,7 +46,9 @@ with lib; {
       # have the job run this shell script
       script = with pkgs; ''
         # wait for tailscaled to settle
-        sleep 2
+        sleep 5
+
+        resolvectl revert ${config.services.tailscale.interfaceName} || false
 
         # check if we are already authenticated to tailscale
         status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
