@@ -30,6 +30,7 @@ in {
       ];
     };
     serviceConfig = {
+      RestartSec = 15;
       StateDirectory = cfg.package.pname;
       BindReadOnlyPaths = mkMerge [
         (map (path: "${shadowDir}/media/${path}") [
