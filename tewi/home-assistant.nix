@@ -194,12 +194,18 @@ in {
       zone = {};
       sensor = {};
     };
-    package = pkgs.home-assistant.override {
-      packageOverrides = self: super: {
-        pyasn1 = if lib.versionAtLeast super.pyasn1.version "0.5" then throw "unsupported pyasn1 version ${super.pyasn1.version}"
-          else super.pyasn1;
-      };
-    };
+    package = let
+      inherit (lib) warn versionOlder elem;
+      inherit (cfg.package) python;
+      hasBrother = elem "brother" cfg.extraComponents;
+      # https://github.com/pysnmp/pysnmp/issues/51
+      needsPyasn1pin = if versionOlder python.pkgs.pysnmplib.version "6.0"
+        then true
+        else warn "pyasn1 pin likely no longer needed" false;
+      pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
+    in pkgs.home-assistant.overrideAttrs (old: {
+      makeWrapperArgs = old.makeWrapperArgs ++ lib.optional (hasBrother && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
+    });
     extraPackages = python3Packages:
       with python3Packages; [
         psycopg2
