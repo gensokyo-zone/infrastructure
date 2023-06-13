@@ -186,7 +186,6 @@ in {
       system_health = {};
       tag = {};
       template = {};
-      tile = {};
       timer = {};
       webhook = {};
       wake_on_lan = {};
