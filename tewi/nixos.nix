@@ -7,13 +7,17 @@
   modulesPath,
   ...
 }: let
+  inherit (lib) mkIf;
   hddopts = ["luks" "discard" "noauto" "nofail"];
   md = {
     shadow = rec {
       name = "shadowlegend";
       device = "/dev/md/${name}";
-      unit = utils.escapeSystemdPath device;
+      unit = utils.escapeSystemdPath device + ".device";
+      where = "/mnt/shadow";
+      mount = utils.escapeSystemdPath where + ".mount";
       service = "md-shadow.service";
+      disk = "/dev/disk/by-uuid/84aafe0e-132a-4ee5-8c5c-c4a396b999bf";
       cryptDisks =
         lib.flip lib.mapAttrs {
           seagate0 = {
@@ -91,6 +95,7 @@ in {
 
   services.openiscsi = {
     enable = true;
+    enableAutoLoginOut = true;
     name = "";
   };
 
@@ -102,14 +107,14 @@ in {
       username = "systemd";
     };
     units = {
-      "mnt-shadow.mount" = {};
-      "mediatomb.service" = lib.mkIf config.services.mediatomb.enable {};
+      ${md.shadow.mount} = {};
+      "mediatomb.service" = mkIf config.services.mediatomb.enable {};
     };
   };
 
   environment.etc = {
     "iscsi/initiatorname.iscsi" = lib.mkForce {
-      source = config.sops.secrets.openscsi-config.path;
+      source = config.sops.secrets.openiscsi-config.path;
     };
     crypttab.text = let
       inherit (lib) concatStringsSep mapAttrsToList;
@@ -127,8 +132,8 @@ in {
   };
 
   sops.secrets = {
-    openscsi-config = {};
-    openscsi-env = lib.mkIf config.services.openiscsi.enableAutoLoginOut { };
+    openiscsi-config = {};
+    openiscsi-env = mkIf config.services.openiscsi.enableAutoLoginOut { };
     systemd2mqtt-env = {};
   };
 
@@ -141,8 +146,8 @@ in {
       device = "/dev/disk/by-uuid/85DC-72FA";
       fsType = "vfat";
     };
-    "/mnt/shadow" = {
-      device = "/dev/disk/by-uuid/84aafe0e-132a-4ee5-8c5c-c4a396b999bf";
+    ${md.shadow.where} = {
+      device = md.shadow.disk;
       fsType = "xfs";
       options = [
         "x-systemd.automount"
@@ -154,9 +159,12 @@ in {
     };
   };
   systemd = let
-    inherit (lib) getExe mapAttrsToList mapAttrs' nameValuePair;
+    inherit (lib) getExe;
     serviceName = lib.removeSuffix ".service";
-    cryptServices = mapAttrsToList (_: {service, ...}: service) md.shadow.cryptDisks;
+    toSystemdIni = pkgs.lib.generators.toINI {
+      listsAsDuplicateKeys = true;
+    };
+    cryptServices = lib.mapAttrsToList (_: {service, ...}: service) md.shadow.cryptDisks;
   in {
     services = {
       nfs-mountd = {
@@ -165,7 +173,8 @@ in {
       mdmonitor.enable = false;
       ${serviceName md.shadow.service} = rec {
         restartIfChanged = false;
-        wants = cryptServices;
+        wants = cryptServices ++ [ "iscsi.service" ];
+        bindsTo = cryptServices;
         after = wants;
         serviceConfig = {
           Type = "oneshot";
@@ -187,20 +196,32 @@ in {
       };
       iscsi = let
         cfg = config.services.openiscsi;
-      in lib.mkIf cfg.enableAutoLoginOut {
+      in mkIf cfg.enableAutoLoginOut rec {
+        wantedBy = cryptServices;
+        before = wantedBy;
         serviceConfig = {
-          EnvironmentFile = [ config.sops.secrets.openscsi-env.path ];
+          EnvironmentFile = [ config.sops.secrets.openiscsi-env.path ];
           ExecStartPre = [
             "${cfg.package}/bin/iscsiadm --mode discoverydb --type sendtargets --portal $DISCOVER_PORTAL --discover"
           ];
         };
       };
-      systemd2mqtt = lib.mkIf config.services.systemd2mqtt.enable rec {
-        requires = lib.mkIf config.services.mosquitto.enable ["mosquitto.service"];
+      systemd2mqtt = mkIf config.services.systemd2mqtt.enable rec {
+        requires = mkIf config.services.mosquitto.enable ["mosquitto.service"];
         after = requires;
         serviceConfig.EnvironmentFile = [
           config.sops.secrets.systemd2mqtt-env.path
         ];
+      };
+    };
+    units = {
+      ${md.shadow.mount} = {
+        overrideStrategy = "asDropin";
+        text = toSystemdIni {
+          Unit.BindsTo = [
+            md.shadow.service
+          ];
+        };
       };
     };
     network = {

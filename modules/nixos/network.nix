@@ -58,8 +58,7 @@ with lib; {
         fi
 
         # otherwise authenticate with tailscale
-        # to-do: --advertise-exit-node
-        ${getExe tailscale} up -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+        ${getExe tailscale} up --advertise-exit-node -authkey $(cat ${config.sops.secrets.tailscale-key.path})
       '';
     };
   };

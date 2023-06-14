@@ -1,8 +1,7 @@
-{ config, lib, ... }: with lib; let
+{ config, utils, lib, ... }: with lib; let
   cfg = config.services.mediatomb;
   shadowDir = "/mnt/shadow";
   inherit (config.services) deluge;
-  delugeDir = "${shadowDir}/deluge";
 in {
   services.mediatomb = {
     enable = true;
@@ -16,7 +15,7 @@ in {
         hidden-files = false;
       }
       (mkIf deluge.enable {
-        path = delugeDir;
+        path = builtins.dirOf deluge.config.download_location;
         recursive = true;
         hidden-files = false;
       })
@@ -24,6 +23,9 @@ in {
   };
   systemd.services.mediatomb = {
     confinement.enable = true;
+    bindsTo = [
+      "${utils.escapeSystemdPath shadowDir}.mount"
+    ];
     unitConfig = {
       RequiresMountsFor = [
         shadowDir
@@ -37,7 +39,7 @@ in {
           "anime" "movies" "tv" "unsorted"
           "music" "music-to-import" "music-raw"
         ])
-        (mkIf deluge.enable [ "${delugeDir}/complete" ])
+        (mkIf deluge.enable [ deluge.config.move_completed_path ])
       ];
     };
   };

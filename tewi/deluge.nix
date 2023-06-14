@@ -1,7 +1,8 @@
-{ config, lib, ... }: let
+{ config, utils, lib, ... }: let
   inherit (lib) mkAfter;
   cfg = config.services.deluge;
-  mediaDir = "/mnt/shadow/deluge";
+  shadowDir = "/mnt/shadow";
+  mediaDir = "${shadowDir}/deluge";
 in {
   sops.secrets.deluge-auth = {
     inherit (cfg) group;
@@ -35,9 +36,12 @@ in {
   };
   systemd.services = {
     deluged = {
+      bindsTo = [
+        "${utils.escapeSystemdPath shadowDir}.mount"
+      ];
       unitConfig = {
         RequiresMountsFor = [
-          "/mnt/shadow"
+          shadowDir
         ];
       };
     };
