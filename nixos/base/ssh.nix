@@ -3,8 +3,9 @@
   lib,
   pkgs,
   ...
-}:
-with lib; {
+}: let
+  publicPort = 62954;
+in with lib; {
   /*
   security.pam.services.sshd.text = mkDefault (mkAfter ''
     session required pam_exec.so ${katnotify}/bin/notify
@@ -13,7 +14,8 @@ with lib; {
 
   services.openssh = {
     enable = true;
-    ports = lib.mkDefault [62954];
+    ports = lib.mkDefault [publicPort 22];
+    openFirewall = false;
     settings = {
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
@@ -24,6 +26,7 @@ with lib; {
       LogLevel = "VERBOSE";
     };
   };
+  networking.firewall.allowedTCPPorts = [publicPort];
 
   programs.mosh.enable = true;
 }
