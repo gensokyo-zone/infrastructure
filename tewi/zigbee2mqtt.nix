@@ -35,6 +35,11 @@
       serial = {
         port = "/dev/ttyUSB0";
       };
+      availability = {
+        # minutes
+        active.timeout = 10;
+        passive.timeout = 60 * 50;
+      };
     };
   };
 }
