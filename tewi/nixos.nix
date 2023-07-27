@@ -151,7 +151,7 @@ in {
       fsType = "xfs";
       options = [
         "x-systemd.automount"
-        "noauto"
+        "noauto" "nofail"
         "x-systemd.requires=${md.shadow.service}"
         "x-systemd.after=${md.shadow.service}"
         "x-systemd.after=${md.shadow.unit}"
