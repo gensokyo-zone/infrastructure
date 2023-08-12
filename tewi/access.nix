@@ -39,7 +39,7 @@ with lib; {
             recommendedProxySettings = false;
             proxyPass = "http://127.0.0.1:30746/validate";
             extraConfig = ''
-              proxy_set_header Host $http_host;
+              proxy_set_header Host $host;
               proxy_pass_request_body off;
               proxy_set_header Content-Length "";
               auth_request_set $auth_resp_x_vouch_user $upstream_http_x_vouch_user;

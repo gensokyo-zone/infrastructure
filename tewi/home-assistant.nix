@@ -205,14 +205,6 @@ in {
       pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
       home-assistant = pkgs.home-assistant.override {
         packageOverrides = self: super: {
-          hap-python = super.hap-python.overrideAttrs (old: {
-            src = if old.version == "4.7.0" then pkgs.fetchFromGitHub {
-              owner = "ikalchev";
-              repo = "HAP-python";
-              rev = "refs/tags/${old.version}";
-              hash = "sha256-/UBJh1m+WscN9I85/kvlNQnowNybEDyGVuQk4HBDWLE=";
-            } else lib.warn "HAP-python updated, remove hack!" old.rsc;
-          });
         };
       };
     in home-assistant.overrideAttrs (old: {

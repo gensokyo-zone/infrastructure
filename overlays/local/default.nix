@@ -17,11 +17,6 @@ final: prev: {
   wezterm = final.callPackage ./wezterm {
     inherit (final.darwin.apple_sdk.frameworks) Cocoa CoreGraphics Foundation UserNotifications;
   };
-  writers = prev.writers.override {
-    gixy = final.writeShellScriptBin "gixy" ''
-      true
-    '';
-  };
   terraform-providers =
     prev.terraform-providers
     // {

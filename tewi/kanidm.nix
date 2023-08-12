@@ -37,7 +37,7 @@ in {
       domain = "gensokyo.zone";
       origin = "https://id.gensokyo.zone";
       role = "WriteReplica";
-      log_level = "default";
+      log_level = "info";
       db_fs_type = "zfs";
       bindaddress = "0.0.0.0:8081";
       ldapbindaddress = "0.0.0.0:636";
