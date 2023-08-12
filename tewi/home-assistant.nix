@@ -179,6 +179,7 @@ in {
       mobile_app = {};
       my = {};
       person = {};
+      prometheus = {};
       ssdp = {};
       switch = {};
       stream = {};
