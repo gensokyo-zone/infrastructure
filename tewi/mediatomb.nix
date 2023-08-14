@@ -6,6 +6,7 @@ in {
   services.mediatomb = {
     enable = true;
     openFirewall = true;
+    port = 4152;
     serverName = config.networking.hostName;
     uuid = "082fd344-bf69-5b72-a68f-a5a4d88e76b2";
     mediaDirectories = [
