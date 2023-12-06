@@ -44,8 +44,6 @@
               display
               filebin
               mosh
-              base16
-              base16-shared
               doc-warnings
             ]);
         };
