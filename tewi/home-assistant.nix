@@ -238,6 +238,7 @@ in {
       "plex"
       "environment_canada"
       "met"
+      "generic_thermostat"
       "google"
       "google_assistant"
       "google_cloud"
