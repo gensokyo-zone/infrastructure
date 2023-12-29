@@ -27,6 +27,7 @@
       permittedInsecurePackages = [
         "ffmpeg-3.4.8"
         "ffmpeg-2.8.17"
+        "openssl-1.1.1w"
       ];
     };
   };

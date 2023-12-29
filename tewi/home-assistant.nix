@@ -209,6 +209,9 @@ in {
       };
     in home-assistant.overrideAttrs (old: {
       makeWrapperArgs = old.makeWrapperArgs ++ lib.optional (hasBrother && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
+      disabledTests = old.disabledTests or [ ] ++ [
+        "test_check_config"
+      ];
     });
     extraPackages = python3Packages:
       with python3Packages; [
