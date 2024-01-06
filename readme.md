@@ -3,10 +3,18 @@
 ## Build and Deploy
 
 ```shell
+:; export NF_HOST=tewi
 :; nf-deploy build
 # switch without committing to it...
 :; nf-deploy test
+# then deploy..!
 :; nf-deploy switch
+```
+
+The above is just a convenience wrapper around `nixos-rebuild`:
+
+```shell
+:; nixos-rebuild switch --flake .#tewi --target-host tewi --use-remote-sudo
 ```
 
 ## Editing Secrets

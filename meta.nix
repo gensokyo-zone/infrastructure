@@ -24,9 +24,6 @@
             ./tewi/nixos.nix
             nixfiles.nixos.base
           ];
-          networking = {
-            hostName = "tewi";
-          };
         };
         network.nodes.mew = {
           imports = [
