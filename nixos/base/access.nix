@@ -18,7 +18,6 @@
   imports = with meta; [
     nixos.kat
     nixos.arc
-    nixos.sops
   ];
 
   users.motd = ''

@@ -3,13 +3,24 @@ keys:
 - &mew 65BD3044771CB6FB
 - &tewi_gen age17haatqc7gpk9t690affyqcvwmhmz0us95en2r7qpqzw29tpq3ffspld0cf
 - &tewi_osh age172nhlv3py990k2rgw64hy27hffmnpv6ssxyu9fepww7zxfgg347qna4gzt
+- &mew_osh age16vcudjuaf3j28vlc44n78ly9eztrwekjss2kstzx9yhhutl9vpdsq58wtv
 creation_rules:
-- path_regex: '[^/]+/secrets\.yaml$'
+- path_regex: 'tewi/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
-  - pgp:
+  - pgp: &pgp_common
     - *kat
     - *mew
     age:
     - *tewi_gen
     - *tewi_osh
+- path_regex: 'mew/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *mew_osh
+- path_regex: '[^/]+/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common

@@ -5,19 +5,27 @@ NF_CONFIG_ROOT=${NF_CONFIG_ROOT-.}
 
 NF_HOST=${NF_HOST-tewi}
 NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.toplevel
+NF_ADDR=${NF_ADDR-${NF_HOST}}
+export NIX_SSHOPTS="${NIX_SSHOPTS--p62954}"
+
+if [[ $1 = tarball ]]; then
+	shift
+	set -- build "$@"
+	NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.tarball
+fi
 
 if [[ $1 = build ]]; then
 	shift
 	exec nix build --no-link --print-out-paths \
 		$NF_CONFIG_ROOT\#$NIXOS_TOPLEVEL \
 		"$@"
-elif [[ $1 = switch ]] || [[ $1 = test ]] || [[ $1 = dry-* ]]; then
+elif [[ $1 = switch ]] || [[ $1 = boot ]] || [[ $1 = test ]] || [[ $1 = dry-* ]]; then
 	METHOD=$1
 	shift
 	exec nixos-rebuild $METHOD \
 		--flake $NF_CONFIG_ROOT\#$NF_HOST \
 		--no-build-nix \
-		--target-host $NF_HOST --use-remote-sudo \
+		--target-host $NF_ADDR --use-remote-sudo \
 		"$@"
 elif [[ $1 = check ]]; then
 	EXIT_CODE=0
@@ -31,6 +39,12 @@ elif [[ $1 = check ]]; then
 		echo untrusted ok: $FLAKE
 	fi
 	exit $EXIT_CODE
+elif [[ $1 = ssh ]]; then
+	shift
+	exec ssh $NIX_SSHOPTS $NF_ADDR "$@"
+elif [[ $1 = sops-keyscan ]]; then
+	shift
+	ssh-keyscan $NIX_SSHOPTS $NF_ADDR | nix run nixpkgs#ssh-to-age
 else
 	echo unknown cmd $1 >&2
 	exit 1

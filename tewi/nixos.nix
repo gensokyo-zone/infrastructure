@@ -42,6 +42,7 @@ in {
     [
       (modulesPath + "/installer/scan/not-detected.nix")
       nixos.sops
+      nixos.tailscale
       inputs.systemd2mqtt.nixosModules.default
       ./access.nix
       ./syncplay.nix
@@ -75,7 +76,6 @@ in {
 
   environment.systemPackages = [
     pkgs.cryptsetup
-    pkgs.buildPackages.rxvt-unicode-unwrapped.terminfo
   ];
 
   boot = {

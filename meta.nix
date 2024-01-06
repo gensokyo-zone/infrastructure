@@ -28,6 +28,18 @@
             hostName = "tewi";
           };
         };
+        network.nodes.mew = {
+          imports = [
+            ./mew/nixos.nix
+            nixfiles.nixos.base
+          ];
+        };
+        network.nodes.reisen-ct = {
+          imports = [
+            ./ct/nixos.nix
+            nixfiles.nixos.base
+          ];
+        };
       }
     ];
   in
