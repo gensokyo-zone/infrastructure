@@ -6,7 +6,6 @@ NF_CONFIG_ROOT=${NF_CONFIG_ROOT-.}
 NF_HOST=${NF_HOST-tewi}
 NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.toplevel
 NF_ADDR=${NF_ADDR-${NF_HOST}}
-export NIX_SSHOPTS="${NIX_SSHOPTS--p62954}"
 
 if [[ $1 = tarball ]]; then
 	shift

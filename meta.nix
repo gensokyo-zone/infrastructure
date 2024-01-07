@@ -21,19 +21,19 @@
       {
         network.nodes.tewi = {
           imports = [
-            ./tewi/nixos.nix
+            ./systems/tewi/nixos.nix
             nixfiles.nixos.base
           ];
         };
-        network.nodes.mew = {
+        network.nodes.tei = {
           imports = [
-            ./mew/nixos.nix
+            ./systems/tei/nixos.nix
             nixfiles.nixos.base
           ];
         };
         network.nodes.reisen-ct = {
           imports = [
-            ./ct/nixos.nix
+            ./systems/ct/nixos.nix
             nixfiles.nixos.base
           ];
         };

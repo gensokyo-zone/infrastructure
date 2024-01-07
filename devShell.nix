@@ -39,6 +39,7 @@ pkgs.mkShell {
     export CI_PLATFORM="impure"
     export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ./.}}
     export NIX_PATH="$NIX_PATH:home=$NF_CONFIG_ROOT"
+    export NIX_SSHOPTS="''${NIX_SSHOPTS--p62954}"
   '';
 }
 
