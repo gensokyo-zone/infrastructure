@@ -5,7 +5,7 @@
   ...
 }:
 with lib; let
-  gitBranch = "arc";
+  gitBranch = "main";
 in {
   name = "flake-update";
 
