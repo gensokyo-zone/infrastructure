@@ -2,28 +2,27 @@
   config,
   lib,
   ...
-}: {
-  networking.firewall.allowedTCPPorts = [
-    # Zigbee2MQTT Frontend
-    8072
-  ];
-
+}: let
+  cfg = config.services.zigbee2mqtt;
+  inherit (lib) mkDefault;
+in {
   sops.secrets.z2m-secret = {
     owner = "zigbee2mqtt";
-    path = "${config.services.zigbee2mqtt.dataDir}/secret.yaml";
+    path = "${cfg.dataDir}/secret.yaml";
   };
 
-  users.groups.input.members = ["zigbee2mqtt"];
+  users.groups.input.members = [ "zigbee2mqtt" ];
 
   services.zigbee2mqtt = {
-    enable = true;
+    enable = mkDefault true;
+    openFirewall = mkDefault true;
+    domain = mkDefault "z2m.${config.networking.domain}";
     settings = {
       advanced = {
         log_level = "info";
         network_key = "!secret network_key";
       };
       mqtt = {
-        server = "mqtt://127.0.0.1:1883";
         user = "z2m";
         password = "!secret z2m_pass";
       };

@@ -2,11 +2,9 @@
   config,
   lib,
   ...
-}: {
-  networking.firewall.allowedTCPPorts = [
-    1883
-  ];
-
+}: let
+  inherit (lib) mkDefault;
+in {
   sops.secrets = {
     z2m-pass.owner = "mosquitto";
     systemd-pass.owner = "mosquitto";
@@ -15,10 +13,11 @@
   };
 
   services.mosquitto = {
-    enable = true;
-    persistence = true;
+    enable = mkDefault true;
+    persistence = mkDefault true;
     listeners = [
       {
+        openFirewall = mkDefault true;
         acl = [
           "pattern readwrite #"
         ];
@@ -49,7 +48,7 @@
           };
         };
         settings = {
-          allow_anonymous = false;
+          allow_anonymous = mkDefault false;
         };
       }
     ];

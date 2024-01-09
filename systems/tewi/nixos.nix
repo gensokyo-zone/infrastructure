@@ -43,16 +43,19 @@ in {
       (modulesPath + "/installer/scan/not-detected.nix")
       nixos.sops
       nixos.tailscale
+      nixos.cloudflared
+      nixos.nginx
+      nixos.access.gensokyo
+      nixos.access.zigbee2mqtt
+      nixos.postgres
+      nixos.vouch
+      nixos.kanidm
+      nixos.mosquitto
+      nixos.zigbee2mqtt
+      nixos.deluge
+      nixos.syncplay
+      nixos.home-assistant
       inputs.systemd2mqtt.nixosModules.default
-      ./access.nix
-      ./syncplay.nix
-      ./kanidm.nix
-      ./vouch.nix
-      ./home-assistant.nix
-      ./zigbee2mqtt.nix
-      ./mosquitto.nix
-      ./postgres.nix
-      ./nginx.nix
       ./mediatomb.nix
       ./deluge.nix
       ./cloudflared.nix
@@ -65,6 +68,7 @@ in {
   '';
 
   services.cockroachdb.locality = "provider=local,network=gensokyo,host=${config.networking.hostName}";
+  services.kanidm.serverSettings.db_fs_type = "zfs";
 
   sops.defaultSopsFile = ./secrets.yaml;
 

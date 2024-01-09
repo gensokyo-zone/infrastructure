@@ -29,7 +29,5 @@ with lib; {
       #proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
     '';
     clientMaxBodySize = "512m";
-    virtualHosts = {
-    };
   };
 }
