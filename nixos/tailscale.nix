@@ -4,7 +4,12 @@
   pkgs,
   ...
 }:
-with lib; {
+with lib; let
+  cfg = config.services.tailscale;
+in {
+  options.services.tailscale = with types; {
+    advertiseExitNode = mkEnableOption "exit node";
+  };
   config = {
     networking.firewall = {
       trustedInterfaces = [config.services.tailscale.interfaceName];
@@ -37,11 +42,16 @@ with lib; {
       };
 
       # have the job run this shell script
-      script = with pkgs; ''
+      script = let
+        fixResolved = optionalString config.services.resolved.enable ''
+          resolvectl revert ${config.services.tailscale.interfaceName} || false
+        '';
+        advertiseExitNode = optionalString cfg.advertiseExitNode " --advertise-exit-node";
+      in with pkgs; ''
         # wait for tailscaled to settle
         sleep 5
 
-        resolvectl revert ${config.services.tailscale.interfaceName} || false
+        ${fixResolved}
 
         # check if we are already authenticated to tailscale
         status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
@@ -51,7 +61,7 @@ with lib; {
         fi
 
         # otherwise authenticate with tailscale
-        ${getExe tailscale} up --advertise-exit-node -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+        ${getExe tailscale} up${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
       '';
     };
   };

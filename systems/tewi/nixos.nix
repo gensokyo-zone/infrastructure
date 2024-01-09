@@ -69,6 +69,7 @@ in {
 
   services.cockroachdb.locality = "provider=local,network=gensokyo,host=${config.networking.hostName}";
   services.kanidm.serverSettings.db_fs_type = "zfs";
+  services.tailscale.advertiseExitNode = true;
 
   sops.defaultSopsFile = ./secrets.yaml;
 

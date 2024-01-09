@@ -3,7 +3,7 @@ keys:
 - &mew 65BD3044771CB6FB
 - &tewi_gen age17haatqc7gpk9t690affyqcvwmhmz0us95en2r7qpqzw29tpq3ffspld0cf
 - &tewi_osh age172nhlv3py990k2rgw64hy27hffmnpv6ssxyu9fepww7zxfgg347qna4gzt
-- &tei_osh age16vcudjuaf3j28vlc44n78ly9eztrwekjss2kstzx9yhhutl9vpdsq58wtv
+- &tei_osh age1a2quf2ekkj94ygu7wgvhrvh44fwn32c0l2cwvgvjh23wst90s54szdsvgr
 creation_rules:
 - path_regex: 'systems/tewi/secrets\.yaml$'
   shamir_threshold: 1
