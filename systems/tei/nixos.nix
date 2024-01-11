@@ -3,12 +3,11 @@
   lib,
   ...
 }: {
-  imports = with meta;
-    [
-      nixos.reisen-ct
-      nixos.sops
-      nixos.tailscale
-    ];
+  imports = with meta; [
+    nixos.reisen-ct
+    nixos.sops
+    nixos.tailscale
+  ];
 
   sops.defaultSopsFile = ./secrets.yaml;
 

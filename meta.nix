@@ -31,6 +31,12 @@
             nixfiles.nixos.base
           ];
         };
+        network.nodes.mediabox = {
+          imports = [
+            ./systems/mediabox/nixos.nix
+            nixfiles.nixos.base
+          ];
+        };
         network.nodes.reisen-ct = {
           imports = [
             ./systems/ct/nixos.nix

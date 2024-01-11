@@ -1,4 +1,8 @@
-{ config, lib, ... }: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib) mkDefault;
   cfg = config.services.deluge;
 in {
@@ -24,7 +28,7 @@ in {
       max_active_seeding = 1;
       allow_remote = true;
       daemon_port = 58846;
-      listen_ports = [ 6881 6889 ];
+      listen_ports = [6881 6889];
       random_port = false;
     };
     authFile = config.sops.secrets.deluge-auth.path;
