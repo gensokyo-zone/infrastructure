@@ -5,8 +5,7 @@
       port = 8181;
     };
 
-    nginx.virtualHosts."tautuli.gensokyo.zone" = {
-      enableACME = true;
+    nginx.virtualHosts."tautulli.gensokyo.zone" = {
       locations."/".proxyPass = "http://localhost:${toString config.services.tautulli.port}";
     };
   };

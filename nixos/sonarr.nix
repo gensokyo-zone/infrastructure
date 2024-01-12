@@ -5,7 +5,6 @@ _: {
     };
 
     nginx.virtualHosts."sonarr.gensokyo.zone" = {
-      enableACME = true;
       locations."/".proxyPass = "http://localhost:8989";
     };
   };

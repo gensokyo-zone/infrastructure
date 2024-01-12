@@ -6,7 +6,6 @@
     };
 
     nginx.virtualHosts."bazarr.gensokyo.zone" = {
-      enableACME = true;
       locations."/".proxyPass = "http://localhost:${toString config.services.bazarr.listenPort}";
     };
   };

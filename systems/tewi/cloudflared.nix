@@ -1,4 +1,8 @@
-{ config, lib, ... }: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (config) services;
   apartment = "131222b0-9db0-4168-96f5-7d45ec51c3be";
 in {

@@ -27,14 +27,14 @@ in {
 
     services.tailscale.enable = mkDefault true;
 
-    sops.secrets.tailscale-key = mkIf config.services.tailscale.enable { };
+    sops.secrets.tailscale-key = mkIf config.services.tailscale.enable {};
     systemd.services.tailscale-autoconnect = mkIf config.services.tailscale.enable rec {
       description = "Automatic connection to Tailscale";
 
       # make sure tailscale is running before trying to connect to tailscale
       after = wants ++ wantedBy;
-      wants = [ "network-pre.target" ];
-      wantedBy = [ "tailscaled.service" ];
+      wants = ["network-pre.target"];
+      wantedBy = ["tailscaled.service"];
 
       # set this service as a oneshot job
       serviceConfig = {
@@ -44,25 +44,26 @@ in {
       # have the job run this shell script
       script = let
         fixResolved = optionalString config.services.resolved.enable ''
-          resolvectl revert ${config.services.tailscale.interfaceName} || false
+          resolvectl revert ${config.services.tailscale.interfaceName} || true
         '';
         advertiseExitNode = optionalString cfg.advertiseExitNode " --advertise-exit-node";
-      in with pkgs; ''
-        # wait for tailscaled to settle
-        sleep 5
+      in
+        with pkgs; ''
+          # wait for tailscaled to settle
+          sleep 5
 
-        ${fixResolved}
+          ${fixResolved}
 
-        # check if we are already authenticated to tailscale
-        status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
-        if [[ $status = Running ]]; then
-          # if so, then do nothing
-          exit 0
-        fi
+          # check if we are already authenticated to tailscale
+          status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
+          if [[ $status = Running ]]; then
+            # if so, then do nothing
+            exit 0
+          fi
 
-        # otherwise authenticate with tailscale
-        ${getExe tailscale} up${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
-      '';
+          # otherwise authenticate with tailscale
+          ${getExe tailscale} up${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+        '';
     };
   };
 }

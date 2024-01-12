@@ -4,7 +4,6 @@ _: {
       enable = true;
     };
     nginx.virtualHosts."jackett.gensokyo.zone" = {
-      enableACME = true;
       locations."/".proxyPass = "http://localhost:9117/";
     };
   };
