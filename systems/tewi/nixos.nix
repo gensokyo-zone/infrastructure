@@ -43,9 +43,7 @@ in {
       (modulesPath + "/installer/scan/not-detected.nix")
       nixos.sops
       nixos.tailscale
-      nixos.cloudflared
       nixos.nginx
-      nixos.access.gensokyo
       nixos.access.zigbee2mqtt
       nixos.postgres
       nixos.vouch
@@ -58,7 +56,6 @@ in {
       inputs.systemd2mqtt.nixosModules.default
       ./mediatomb.nix
       ./deluge.nix
-      ./cloudflared.nix
     ];
 
   boot.supportedFilesystems = ["nfs"];

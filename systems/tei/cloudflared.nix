@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkMerge;
+  inherit (lib.modules) mkIf mkMerge;
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (config.networking) hostName;
   cfg = config.services.cloudflared;
@@ -44,14 +44,14 @@ in {
         default = "http_status:404";
         ingress = listToAttrs [
           (ingressForNginx { host = config.networking.domain; inherit hostName; })
-          (ingressForNginx { host = config.services.zigbee2mqtt.domain; inherit hostName; })
-          (ingressForHass { inherit hostName; })
-          (ingressForVouch { inherit hostName; })
-          (ingressForKanidm { inherit hostName; })
+          (ingressForNginx rec { host = (systemFor hostName).services.zigbee2mqtt.domain; hostName = "tewi"; })
+          (ingressForHass { hostName = "tewi"; })
+          (ingressForVouch { hostName = "tewi"; })
+          (ingressForKanidm { hostName = "tewi"; })
         ];
         extraTunnel.ingress = mkMerge [
           (listToAttrs [
-            (ingressForDeluge { host = "deluge"; inherit hostName; })
+            (ingressForDeluge { host = "deluge"; hostName = "tewi"; access = "tail"; })
           ])
           {
             deluge.hostname._secret = config.sops.secrets.cloudflared-tunnel-apartment-deluge.path;
@@ -59,5 +59,12 @@ in {
         ];
       };
     };
+  };
+
+  systemd.services."cloudflared-tunnel-${apartment}" = rec {
+    wants = mkIf config.services.tailscale.enable [
+      "tailscaled.service"
+    ];
+    after = wants;
   };
 }
