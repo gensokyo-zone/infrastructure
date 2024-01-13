@@ -4,6 +4,7 @@
   inherit (lib.modules) mkIf mkMerge mkForce;
   inherit (lib.options) mkOption mkEnableOption;
   cfg = config.services.cloudflared;
+  settingsFormat = pkgs.formats.json { };
 in {
   options.services.cloudflared = with lib.types; {
     tunnels = let
@@ -14,7 +15,7 @@ in {
               default = config.extraTunnel.ingress != { };
             };
             ingress = mkOption {
-              type = attrs;
+              inherit (settingsFormat) type;
               default = { };
             };
           };
