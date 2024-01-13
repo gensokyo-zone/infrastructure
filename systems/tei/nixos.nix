@@ -7,9 +7,10 @@
     nixos.reisen-ct
     nixos.sops
     nixos.tailscale
+    nixos.postgres
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
 
-  system.stateVersion = "21.05";
+  system.stateVersion = "23.11";
 }

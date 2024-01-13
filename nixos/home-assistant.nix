@@ -1,12 +1,10 @@
 {
-  pkgs,
   config,
   lib,
   ...
 }: let
   cfg = config.services.home-assistant;
-  inherit (lib.modules) mkDefault;
-  inherit (lib.lists) optional;
+  inherit (lib.modules) mkIf mkDefault;
 in {
   sops.secrets = {
     ha-integration = {
@@ -49,6 +47,7 @@ in {
         use_webhook = true;
       };
       recorder = {
+        db_url = mkIf (!config.services.postgresql.enable) "!secret db_url";
         auto_purge = true;
         purge_keep_days = 14;
         commit_interval = 1;
