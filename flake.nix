@@ -39,6 +39,7 @@
       (system: rec {
         devShells.default = import ./devShell.nix {inherit system inputs;};
         legacyPackages = import ./meta.nix {inherit system inputs;};
+        inherit (legacyPackages.outputs) packages;
       });
   in
     providedSystems

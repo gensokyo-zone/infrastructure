@@ -1,11 +1,7 @@
 { inputs, system }:
 let
   meta = import ./meta.nix { inherit inputs system; };
-  config = meta;
   inherit (meta) pkgs;
-  inherit (pkgs) lib;
-  inherit (lib.options) optional;
-  inherit (lib.attrsets) attrValues;
   nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
     NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
     for f in "''${NF_CONFIG_FILES[@]}"; do
@@ -14,13 +10,13 @@ let
     done
   '';
   nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
-    nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.tewi.test
+    exec nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.tewi.test
   '';
   nf-update = pkgs.writeShellScriptBin "nf-update" ''
-    nix flake update
+    exec nix flake update "$@"
   '';
   nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
-    exec /usr/bin/env bash ${./nixos/deploy.sh} "$@"
+    exec nix run ''${FLAKE_OPTS-} ''$NF_CONFIG_ROOT#nf-deploy -- "$@"
   '';
 in
 pkgs.mkShell {
@@ -33,7 +29,7 @@ pkgs.mkShell {
     nf-deploy
   ];
   shellHook = ''
-    export NIX_BIN_DIR=${pkgs.nix}/bin
+    export NIX_BIN_DIR=$(dirname $(readlink -f $(type -P nix)))
     export HOME_UID=$(id -u)
     export HOME_USER=$(id -un)
     export CI_PLATFORM="impure"
