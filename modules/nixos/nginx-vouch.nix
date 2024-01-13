@@ -28,7 +28,8 @@ in {
             vouch = mkIf vouch-proxy.enable {
               proxyOrigin = let
                 inherit (vouch-proxy.settings.vouch) listen port;
-              in mkOptionDefault "http://${listen}:${toString port}";
+                host = if listen == "0.0.0.0" || listen == "[::]" then "localhost" else listen;
+              in mkOptionDefault "http://${host}:${toString port}";
               authUrl = mkOptionDefault vouch-proxy.authUrl;
               url = mkOptionDefault vouch-proxy.url;
             };

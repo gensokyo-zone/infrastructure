@@ -10,6 +10,7 @@ in {
     enable = mkDefault true;
     domain = mkDefault "login.${config.networking.domain}";
     settings = {
+      vouch.listen = mkDefault "0.0.0.0";
       vouch.cookie.secure = mkDefault false;
     };
     enableSettingsSecrets = mkDefault true;

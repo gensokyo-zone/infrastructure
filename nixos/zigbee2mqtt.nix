@@ -15,7 +15,6 @@ in {
 
   services.zigbee2mqtt = {
     enable = mkDefault true;
-    openFirewall = mkDefault true;
     domain = mkDefault "z2m.${config.networking.domain}";
     settings = {
       advanced = {
