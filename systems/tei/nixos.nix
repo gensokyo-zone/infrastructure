@@ -8,6 +8,8 @@
     nixos.sops
     nixos.tailscale
     nixos.postgres
+    nixos.nginx
+    nixos.access.gensokyo
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
