@@ -42,7 +42,7 @@ in {
         ingress = listToAttrs [
           (ingressForNginx { host = config.networking.domain; inherit hostName; })
           (ingressForNginx { host = (systemFor "tewi").services.zigbee2mqtt.domain; inherit hostName; })
-          (ingressForHass { hostName = "tewi"; })
+          (ingressForHass { inherit hostName; })
           (ingressForVouch { inherit hostName; })
           (ingressForKanidm { inherit hostName; })
         ];

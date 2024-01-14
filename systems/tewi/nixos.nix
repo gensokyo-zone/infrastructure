@@ -47,7 +47,6 @@ in {
       nixos.zigbee2mqtt
       nixos.systemd2mqtt
       nixos.deluge
-      nixos.home-assistant
       ./mediatomb.nix
       ./deluge.nix
     ];

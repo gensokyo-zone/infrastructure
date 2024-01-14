@@ -17,6 +17,7 @@
     nixos.vouch
     nixos.kanidm
     nixos.mosquitto
+    nixos.home-assistant
     nixos.syncplay
     ./cloudflared.nix
   ];
