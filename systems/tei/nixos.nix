@@ -3,7 +3,9 @@
   lib,
   ...
 }: {
-  imports = with meta; [
+  imports = let
+    inherit (meta) nixos;
+  in [
     nixos.reisen-ct
     nixos.sops
     nixos.tailscale
@@ -14,6 +16,7 @@
     nixos.access.zigbee2mqtt
     nixos.vouch
     nixos.kanidm
+    nixos.syncplay
     ./cloudflared.nix
   ];
 

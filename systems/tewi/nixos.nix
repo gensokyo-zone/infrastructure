@@ -47,7 +47,6 @@ in {
       nixos.mosquitto
       nixos.zigbee2mqtt
       nixos.deluge
-      nixos.syncplay
       nixos.home-assistant
       inputs.systemd2mqtt.nixosModules.default
       ./mediatomb.nix
