@@ -35,13 +35,13 @@
       credentialsFile = config.sops.secrets.cloudflare_mediabox_tunnel.path;
       ingress = {
         "plex.gensokyo.zone".service = "http://localhost:32400";
-        "tautuli.gensokyo.zone".service = "http://localhost:8181";
-        "ombi.gensokyo.zone".service = "http://localhost:3579";
+        "tautuli.gensokyo.zone".service = "http://localhost:${toString config.services.tautulli.port}";
+        "ombi.gensokyo.zone".service = "http://localhost:${toString config.services.ombi.port}";
         "sonarr.gensokyo.zone".service = "http://localhost:8989";
         "radarr.gensokyo.zone".service = "http://localhost:7878";
         "bazarr.gensokyo.zone".service = "http://localhost:6767";
         "jackett.gensokyo.zone".service = "http://localhost:9117";
-        "deluge.gensokyo.zone".service = "http://localhost:9117";
+        "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
       };
     };
   };
