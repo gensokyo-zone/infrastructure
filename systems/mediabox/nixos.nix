@@ -28,7 +28,7 @@
   };
 
   services.cloudflared = let
-    tunnelId = "9295ed6e-4743-45c1-83b1-6c252ae5580a";
+    tunnelId = "6a3c1863-d879-462f-b5d5-7c6ddf476d0e";
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
