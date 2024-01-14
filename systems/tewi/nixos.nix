@@ -44,9 +44,6 @@ in {
       nixos.sops
       nixos.tailscale
       nixos.nginx
-      nixos.access.zigbee2mqtt
-      nixos.vouch
-      nixos.kanidm
       nixos.mosquitto
       nixos.zigbee2mqtt
       nixos.deluge

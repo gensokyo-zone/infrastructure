@@ -12,11 +12,8 @@
   systemFor = hostName: if hostName == config.networking.hostName
     then config
     else meta.network.nodes.${hostName};
-  accessHostFor = { hostName, access ? "local", ... }: let
-    host = {
-      local = "${hostName}.local";
-      tail = "${hostName}.tail.cutie.moe";
-    }.${access} or (throw "unsupported access ${access}");
+  accessHostFor = { hostName, system ? systemFor hostName, access ? "local", ... }: let
+    host = system.networking.access.hostnameForNetwork.${access} or (throw "unsupported access ${access}");
   in if hostName == config.networking.hostName then "localhost" else host;
   ingressForNginx = { host ? system.networking.fqdn, port ? 80, hostName, system ? systemFor hostName }@args: nameValuePair host {
     service = "http://${accessHostFor args}:${toString port}";
@@ -44,10 +41,10 @@ in {
         default = "http_status:404";
         ingress = listToAttrs [
           (ingressForNginx { host = config.networking.domain; inherit hostName; })
-          (ingressForNginx rec { host = (systemFor hostName).services.zigbee2mqtt.domain; hostName = "tewi"; })
+          (ingressForNginx { host = (systemFor "tewi").services.zigbee2mqtt.domain; inherit hostName; })
           (ingressForHass { hostName = "tewi"; })
-          (ingressForVouch { hostName = "tewi"; })
-          (ingressForKanidm { hostName = "tewi"; })
+          (ingressForVouch { inherit hostName; })
+          (ingressForKanidm { inherit hostName; })
         ];
         extraTunnel.ingress = mkMerge [
           (listToAttrs [
