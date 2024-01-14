@@ -218,6 +218,7 @@ in {
           DNSDefaultRoute = true;
           MulticastDNS = true;
         };
+        linkConfig.Multicast = true;
       };
       links.eno1 = {
         matchConfig = {

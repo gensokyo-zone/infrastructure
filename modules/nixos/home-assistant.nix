@@ -8,6 +8,7 @@
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) optional elem;
+  inherit (lib.strings) toLower;
 in {
   options.services.home-assistant = with lib.types; {
     mutableUiConfig = mkEnableOption "UI-editable config files";
@@ -51,7 +52,9 @@ in {
     # MDNS
     services.avahi = mkIf (cfg.enable && cfg.homekit.enable) {
       enable = mkDefault true;
-      publish.enable = false;
+      publish.enable = let
+        homekitNames = map (homekit: toLower homekit.name) cfg.config.homekit or [ ];
+      in mkIf (elem config.networking.hostName homekitNames) false;
     };
 
     systemd.services.home-assistant = mkIf (cfg.enable && cfg.mutableUiConfig) {
