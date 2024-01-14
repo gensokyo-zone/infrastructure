@@ -45,9 +45,7 @@ in {
       nixos.tailscale
       nixos.nginx
       nixos.systemd2mqtt
-      nixos.deluge
       ./mediatomb.nix
-      ./deluge.nix
     ];
 
   boot.supportedFilesystems = ["nfs"];
