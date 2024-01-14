@@ -8,7 +8,7 @@
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (config.networking) hostName;
   cfg = config.services.cloudflared;
-  apartment = "131222b0-9db0-4168-96f5-7d45ec51c3be";
+  apartment = "5e85d878-c6b2-4b15-b803-9aeb63d63543";
   systemFor = hostName: if hostName == config.networking.hostName
     then config
     else meta.network.nodes.${hostName};
