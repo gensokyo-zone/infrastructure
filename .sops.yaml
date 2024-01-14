@@ -31,3 +31,7 @@ creation_rules:
   shamir_threshold: 1
   key_groups:
   - pgp: *pgp_common
+- path_regex: tf/terraform.tfvars.sops$
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common

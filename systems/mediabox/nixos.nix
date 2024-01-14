@@ -14,6 +14,7 @@
     nixos.plex
     nixos.tautulli
     nixos.ombi
+    nixos.deluge
 
     # yarr harr fiddle dee dee >w<
     nixos.radarr
@@ -40,6 +41,7 @@
         "radarr.gensokyo.zone".service = "http://localhost:7878";
         "bazarr.gensokyo.zone".service = "http://localhost:6767";
         "jackett.gensokyo.zone".service = "http://localhost:9117";
+        "deluge.gensokyo.zone".service = "http://localhost:9117";
       };
     };
   };
