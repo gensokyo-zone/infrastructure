@@ -18,20 +18,12 @@
     nixos.kanidm
     nixos.mosquitto
     nixos.home-assistant
+    nixos.zigbee2mqtt
     nixos.syncplay
     ./cloudflared.nix
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
-
-  services.nginx.access.zigbee2mqtt = let
-    inherit (meta.network.nodes) tewi;
-    z2m = tewi.services.zigbee2mqtt;
-  in {
-    inherit (z2m) domain;
-    inherit (z2m.settings.frontend) port;
-    host = tewi.networking.access.hostnameForNetwork.tail;
-  };
 
   system.stateVersion = "23.11";
 }

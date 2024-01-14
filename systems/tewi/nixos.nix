@@ -44,7 +44,6 @@ in {
       nixos.sops
       nixos.tailscale
       nixos.nginx
-      nixos.zigbee2mqtt
       nixos.systemd2mqtt
       nixos.deluge
       ./mediatomb.nix
