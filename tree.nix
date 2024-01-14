@@ -45,6 +45,7 @@
               filebin
               mosh
               doc-warnings
+              inputs.systemd2mqtt.nixosModules.default
             ]);
         };
       };

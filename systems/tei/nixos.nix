@@ -16,6 +16,7 @@
     nixos.access.zigbee2mqtt
     nixos.vouch
     nixos.kanidm
+    nixos.mosquitto
     nixos.syncplay
     ./cloudflared.nix
   ];

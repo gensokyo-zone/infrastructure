@@ -44,11 +44,10 @@ in {
       nixos.sops
       nixos.tailscale
       nixos.nginx
-      nixos.mosquitto
       nixos.zigbee2mqtt
+      nixos.systemd2mqtt
       nixos.deluge
       nixos.home-assistant
-      inputs.systemd2mqtt.nixosModules.default
       ./mediatomb.nix
       ./deluge.nix
     ];
@@ -63,6 +62,12 @@ in {
   services.kanidm.serverSettings.db_fs_type = "zfs";
   services.tailscale.advertiseExitNode = true;
   services.postgresql.package = pkgs.postgresql_14;
+  services.zigbee2mqtt.settings.mqtt.server = let
+    inherit (meta.network.nodes) tei;
+  in "mqtt://${tei.networking.access.hostnameForNetwork.local}:1883";
+  services.systemd2mqtt.mqtt.url = let
+    inherit (meta.network.nodes) tei;
+  in "tcp://${tei.networking.access.hostnameForNetwork.local}:1883";
 
   sops.defaultSopsFile = ./secrets.yaml;
 
@@ -97,17 +102,9 @@ in {
     name = "";
   };
 
-  services.systemd2mqtt = {
-    enable = true;
-    user = "root";
-    mqtt = {
-      url = "tcp://localhost:1883";
-      username = "systemd";
-    };
-    units = {
-      ${md.shadow.mount} = {};
-      "mediatomb.service" = mkIf config.services.mediatomb.enable {};
-    };
+  services.systemd2mqtt.units = {
+    ${md.shadow.mount} = {};
+    "mediatomb.service" = mkIf config.services.mediatomb.enable {};
   };
 
   environment.etc = {
@@ -132,7 +129,6 @@ in {
   sops.secrets = {
     openiscsi-config = {};
     openiscsi-env = mkIf config.services.openiscsi.enableAutoLoginOut { };
-    systemd2mqtt-env = {};
   };
 
   fileSystems = {
@@ -203,13 +199,6 @@ in {
             "${cfg.package}/bin/iscsiadm --mode discoverydb --type sendtargets --portal $DISCOVER_PORTAL --discover"
           ];
         };
-      };
-      systemd2mqtt = mkIf config.services.systemd2mqtt.enable rec {
-        requires = mkIf config.services.mosquitto.enable ["mosquitto.service"];
-        after = requires;
-        serviceConfig.EnvironmentFile = [
-          config.sops.secrets.systemd2mqtt-env.path
-        ];
       };
     };
     units = {
