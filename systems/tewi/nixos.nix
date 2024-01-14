@@ -45,7 +45,6 @@ in {
       nixos.tailscale
       nixos.nginx
       nixos.access.zigbee2mqtt
-      nixos.postgres
       nixos.vouch
       nixos.kanidm
       nixos.mosquitto
