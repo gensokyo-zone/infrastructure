@@ -4,7 +4,7 @@
   ...
 }: let
   cfg = config.services.zigbee2mqtt;
-  inherit (lib) mkDefault;
+  inherit (lib) mkIf mkDefault;
 in {
   sops.secrets.z2m-secret = {
     owner = "zigbee2mqtt";
@@ -31,7 +31,7 @@ in {
         port = 8072;
       };
       serial = {
-        port = "/dev/ttyUSB0";
+        port = "/dev/ttyZigbee";
       };
       availability = {
         # minutes
@@ -40,4 +40,8 @@ in {
       };
     };
   };
+
+  services.udev.extraRules = mkIf cfg.enable ''
+    SUBSYSTEM=="tty", ATTRS{interface}=="Sonoff Zigbee 3.0 USB Dongle Plus", OWNER="zigbee2mqtt", SYMLINK+="ttyZigbee"
+  '';
 }
