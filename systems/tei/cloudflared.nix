@@ -28,9 +28,6 @@
     service = "https://${accessHostFor args}:${toString port}";
     originRequest.noTLSVerify = true;
   };
-  ingressForDeluge = { host, port ? system.services.deluge.web.port, hostName, system ? systemFor hostName, ... }@args: nameValuePair host {
-    service = "http://${accessHostFor args}:${toString port}";
-  };
 in {
   sops.secrets.cloudflared-tunnel-apartment.owner = cfg.user;
   sops.secrets.cloudflared-tunnel-apartment-deluge.owner = cfg.user;
@@ -45,14 +42,6 @@ in {
           (ingressForHass { inherit hostName; })
           (ingressForVouch { inherit hostName; })
           (ingressForKanidm { inherit hostName; })
-        ];
-        extraTunnel.ingress = mkMerge [
-          (listToAttrs [
-            (ingressForDeluge { host = "deluge"; hostName = "tewi"; access = "tail"; })
-          ])
-          {
-            deluge.hostname._secret = config.sops.secrets.cloudflared-tunnel-apartment-deluge.path;
-          }
         ];
       };
     };
