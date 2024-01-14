@@ -7,6 +7,11 @@ NF_HOST=${NF_HOST-tewi}
 NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.toplevel
 NF_ADDR=${NF_ADDR-${NF_HOST}.local}
 
+if [[ $NF_ADDR = tewi.local ]]; then
+	# work around homekit namespace clash
+	NF_ADDR=tewi.local.cutie.moe
+fi
+
 if [[ $# -eq 0 ]]; then
 	set -- ""
 fi

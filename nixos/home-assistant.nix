@@ -86,7 +86,7 @@ in {
       homekit = [ {
         name = "Tewi";
         port = 21063;
-        ip_address = "10.1.1.38";
+        ip_address = config.networking.access.static.ipv4;
         filter = let
           inherit (cfg.config) google_assistant;
         in {

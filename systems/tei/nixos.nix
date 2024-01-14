@@ -24,6 +24,7 @@
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
+  networking.access.static.ipv4 = "10.1.1.39";
 
   system.stateVersion = "23.11";
 }
