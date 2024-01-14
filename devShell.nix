@@ -10,7 +10,10 @@ let
     done
   '';
   nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
-    exec nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.tewi.test
+    set -eu
+    for host in tewi tei mediabox reisen-ct; do
+      nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.$host.test
+    done
   '';
   nf-update = pkgs.writeShellScriptBin "nf-update" ''
     exec nix flake update "$@"
