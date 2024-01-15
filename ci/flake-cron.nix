@@ -95,8 +95,9 @@ in {
         displayName = "flake update build";
         environment = ["CACHIX_SIGNING_KEY" "GITHUB_REF"];
         command = let
-          filteredHosts = ["tewi"];
-          nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . network.nodes.${node}.system.build.toplevel -o result-${node} && nix-collect-garbage -d") filteredHosts;
+          filteredHosts = [ "tewi" "tei" "mediabox" ];
+          gcBetweenHosts = false;
+          nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . network.nodes.${node}.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
         in ''
           # ${toString builtins.currentTime}
           nix flake update
