@@ -19,29 +19,37 @@
   eval = let
     nixosNodes = [
       {
-        network.nodes.tewi = {
-          imports = [
-            ./systems/tewi/nixos.nix
-            nixfiles.nixos.base
-          ];
-        };
-        network.nodes.tei = {
-          imports = [
-            ./systems/tei/nixos.nix
-            nixfiles.nixos.base
-          ];
-        };
-        network.nodes.mediabox = {
-          imports = [
-            ./systems/mediabox/nixos.nix
-            nixfiles.nixos.base
-          ];
-        };
-        network.nodes.reisen-ct = {
-          imports = [
-            ./systems/ct/nixos.nix
-            nixfiles.nixos.base
-          ];
+        network.nodes = {
+          tewi = {
+            imports = [
+              ./systems/tewi/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
+          tei = {
+            imports = [
+              ./systems/tei/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
+          mediabox = {
+            imports = [
+              ./systems/mediabox/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
+          reisen-ct = {
+            imports = [
+              ./systems/ct/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
+          kuwubernetes = {
+            imports = [
+              ./systems/kuwubernetes/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
         };
       }
     ];
