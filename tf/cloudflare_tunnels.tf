@@ -22,7 +22,7 @@ output "cloudflare_tunnel_id_tewi" {
 }
 
 output "cloudflare_tunnel_token_tewi" {
-  value = module.tewi.token
+  value     = module.tewi.token
   sensitive = true
 }
 
@@ -58,7 +58,7 @@ output "cloudflare_tunnel_id_mediabox" {
 }
 
 output "cloudflare_tunnel_token_mediabox" {
-  value = module.mediabox.token
+  value     = module.mediabox.token
   sensitive = true
 }
 

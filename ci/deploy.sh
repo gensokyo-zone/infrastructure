@@ -9,7 +9,7 @@ NF_ADDR=${NF_ADDR-${NF_HOST}.local}
 
 if [[ $NF_ADDR = tewi.local ]]; then
 	# work around homekit namespace clash
-	NF_ADDR=tewi.local.cutie.moe
+	NF_ADDR=tewi.local.gensokyo.zone
 fi
 
 if [[ $# -eq 0 ]]; then

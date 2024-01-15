@@ -19,9 +19,9 @@ in {
 
   config.networking.access = {
     hostnameForNetwork = {
-      local = mkIf config.services.avahi.enable "${hostName}.local.cutie.moe";
-      tail = mkIf config.services.tailscale.enable "${hostName}.tail.cutie.moe";
-      global = mkIf config.networking.enableIPv6 "${hostName}.cutie.moe";
+      local = mkIf config.services.avahi.enable "${hostName}.local.gensokyo.zone";
+      tail = mkIf config.services.tailscale.enable "${hostName}.tail.gensokyo.zone";
+      global = mkIf config.networking.enableIPv6 "${hostName}.gensokyo.zone";
     };
   };
 }
