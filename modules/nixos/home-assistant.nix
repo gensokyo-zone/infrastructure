@@ -25,6 +25,9 @@ in {
     androidTv.enable = mkEnableOption "Android TV" // {
       default = elem "androidtv" cfg.extraComponents;
     };
+    brother.enable = mkEnableOption "brother" // {
+      default = elem "brother" cfg.extraComponents;
+    };
     cast = {
       enable = mkEnableOption "Chromecast" // {
         default = elem "cast" cfg.extraComponents;
@@ -139,7 +142,6 @@ in {
     ];
     package = let
       inherit (cfg.package) python;
-      hasBrother = elem "brother" cfg.extraComponents;
       # https://github.com/pysnmp/pysnmp/issues/51
       needsPyasn1pin = if lib.versionOlder python.pkgs.pysnmplib.version "6.0"
         then true
@@ -147,10 +149,15 @@ in {
       pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
       home-assistant = pkgs.home-assistant.override {
         packageOverrides = self: super: {
+          brother = super.brother.overridePythonAttrs (old: {
+            dontCheckRuntimeDeps = if old.dontCheckRuntimeDeps or false
+              then lib.warn "brother override no longer needed" true
+              else true;
+          });
         };
       };
     in home-assistant.overrideAttrs (old: {
-      makeWrapperArgs = old.makeWrapperArgs ++ optional (hasBrother && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
+      makeWrapperArgs = old.makeWrapperArgs ++ optional (cfg.brother.enable && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
       disabledTests = old.disabledTests or [ ] ++ [
         "test_check_config"
       ];

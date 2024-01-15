@@ -5,7 +5,7 @@
   meta,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf;
 in {
   imports = let
     inherit (meta) nixos;
