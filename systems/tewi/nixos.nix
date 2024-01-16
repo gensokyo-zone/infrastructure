@@ -13,11 +13,6 @@
       nixos.tailscale
     ];
 
-  services.udev.extraRules = ''
-    SUBSYSTEM=="tty", GROUP="input", MODE="0660"
-  '';
-
-  services.cockroachdb.locality = "provider=local,network=gensokyo,host=${config.networking.hostName}";
   services.kanidm.serverSettings.db_fs_type = "zfs";
   services.tailscale.advertiseExitNode = true;
   services.postgresql.package = pkgs.postgresql_14;

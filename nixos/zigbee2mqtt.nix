@@ -11,8 +11,6 @@ in {
     path = "${cfg.dataDir}/secret.yaml";
   };
 
-  users.groups.input.members = [ "zigbee2mqtt" ];
-
   services.zigbee2mqtt = {
     enable = mkDefault true;
     domain = mkDefault "z2m.${config.networking.domain}";
@@ -24,6 +22,9 @@ in {
       mqtt = {
         user = "z2m";
         password = "!secret z2m_pass";
+        server = mkIf (!config.services.mosquitto.enable) (
+          mkDefault "mqtt://mqtt.local.${config.networking.domain}:1883"
+        );
       };
       homeassistant = true;
       permit_join = false;
