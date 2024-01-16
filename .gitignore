@@ -2,5 +2,7 @@
 /result*
 /.direnv/
 /wiki
-.DS_Store
+/tf/terraform.tfvars
 .terraform
+.DS_Store
+.envrc.conf

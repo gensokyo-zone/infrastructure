@@ -19,7 +19,15 @@ let
     exec nix flake update "$@"
   '';
   nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
-    exec nix run ''${FLAKE_OPTS-} ''$NF_CONFIG_ROOT#nf-deploy -- "$@"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-deploy" -- "$@"
+  '';
+  nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
+    cd "$NF_CONFIG_ROOT/tf"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#terraform" -- "$@"
+  '';
+  nf-lint-tf = pkgs.writeShellScriptBin "nf-lint-tf" ''
+    cd "$NF_CONFIG_ROOT/tf"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-lint-tf" -- "$@"
   '';
 in
 pkgs.mkShell {
@@ -30,6 +38,8 @@ pkgs.mkShell {
     nf-actions-test
     nf-update
     nf-deploy
+    nf-tf
+    nf-lint-tf
   ];
   shellHook = ''
     export NIX_BIN_DIR=$(dirname $(readlink -f $(type -P nix)))
