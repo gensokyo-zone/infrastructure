@@ -21,6 +21,14 @@ module "tewi_system_records" {
   ]
 }
 
+module "mediabox_system_records" {
+  source    = "./system/records"
+  name      = "mediabox"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fe34:f4a8"
+}
+
 module "tewi_legacy_system_records" {
   source       = "./system/records"
   name         = "tewi"
