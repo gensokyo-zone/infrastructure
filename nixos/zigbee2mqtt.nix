@@ -7,6 +7,7 @@
   inherit (lib) mkIf mkDefault;
 in {
   sops.secrets.z2m-secret = {
+    sopsFile = mkDefault ./secrets/zigbee2mqtt.yaml;
     owner = "zigbee2mqtt";
     path = "${cfg.dataDir}/secret.yaml";
   };

@@ -6,12 +6,19 @@ keys:
 - &tei_osh age1a2quf2ekkj94ygu7wgvhrvh44fwn32c0l2cwvgvjh23wst90s54szdsvgr
 - &mediabox_osh age16klpkaut5759dut8mdm3jn0rnp8w6kxyvs9n6ntqrdsayjtd7upqlvw489
 creation_rules:
-- path_regex: 'systems/tewi/secrets\.yaml$'
+- path_regex: 'nixos/secrets/.+\.yaml$'
   shamir_threshold: 1
   key_groups:
   - pgp: &pgp_common
     - *kat
     - *mew
+    age: &reisen_common
+    - *tei_osh
+    - *mediabox_osh
+- path_regex: 'systems/tewi/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
     age:
     - *tewi_gen
     - *tewi_osh

@@ -5,13 +5,16 @@
 }: let
   cfg = config.services.home-assistant;
   inherit (lib.modules) mkIf mkDefault;
+  sopsFile = mkDefault ./secrets/home-assistant.yaml;
 in {
   sops.secrets = {
     ha-integration = {
+      inherit sopsFile;
       owner = "hass";
       path = "${cfg.configDir}/integration.yaml";
     };
     ha-secrets = {
+      inherit sopsFile;
       owner = "hass";
       path = "${cfg.configDir}/secrets.yaml";
     };

@@ -25,6 +25,7 @@ in {
   };
 
   sops.secrets.postgresql-init = {
+    sopsFile = mkDefault ./secrets/postgres.yaml;
     owner = "postgres";
     group = "postgres";
   };

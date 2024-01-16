@@ -15,7 +15,10 @@ with lib; let
     ]
     ++ optionals (cfg.certDir != null) ["--tls" cfg.certDir];
 in {
-  sops.secrets.syncplay-env.owner = cfg.user;
+  sops.secrets.syncplay-env = {
+    sopsFile = mkDefault ./secrets/syncplay.yaml;
+    owner = cfg.user;
+  };
 
   users.users.${cfg.user} = {
     inherit (cfg) group;

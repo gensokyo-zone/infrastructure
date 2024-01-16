@@ -5,6 +5,7 @@
 }: let
   inherit (lib) mkDefault;
   cfg = config.services.vouch-proxy;
+  sopsFile = mkDefault ./secrets/vouch.yaml;
 in {
   services.vouch-proxy = {
     enable = mkDefault true;
@@ -21,7 +22,13 @@ in {
   };
 
   sops.secrets = {
-    vouch-jwt.owner = cfg.user;
-    vouch-client-secret.owner = cfg.user;
+    vouch-jwt = {
+      inherit sopsFile;
+      owner = cfg.user;
+    };
+    vouch-client-secret = {
+      inherit sopsFile;
+      owner = cfg.user;
+    };
   };
 }

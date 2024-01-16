@@ -17,7 +17,8 @@ module "tewi_system_records" {
   local_v6     = "fd0a::be24:11ff:fecc:6657"
   local_subdomains = [
     "mqtt",
-    "home"
+    "home",
+    "postgresql",
   ]
 }
 

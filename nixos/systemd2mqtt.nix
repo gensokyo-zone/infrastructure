@@ -27,6 +27,9 @@ in {
   };
 
   sops.secrets = {
-    systemd2mqtt-env.owner = cfg.user;
+    systemd2mqtt-env = {
+      sopsFile = mkDefault ./secrets/systemd2mqtt.yaml;
+      owner = cfg.user;
+    };
   };
 }

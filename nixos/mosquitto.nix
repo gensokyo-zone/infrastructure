@@ -4,12 +4,25 @@
   ...
 }: let
   inherit (lib) mkDefault;
+  sopsFile = mkDefault ./secrets/mosquitto.yaml;
 in {
   sops.secrets = {
-    z2m-pass.owner = "mosquitto";
-    systemd-pass.owner = "mosquitto";
-    hass-pass.owner = "mosquitto";
-    espresense-pass.owner = "mosquitto";
+    z2m-pass = {
+      inherit sopsFile;
+      owner = "mosquitto";
+    };
+    systemd-pass = {
+      inherit sopsFile;
+      owner = "mosquitto";
+    };
+    hass-pass = {
+      inherit sopsFile;
+      owner = "mosquitto";
+    };
+    espresense-pass = {
+      inherit sopsFile;
+      owner = "mosquitto";
+    };
   };
 
   services.mosquitto = {

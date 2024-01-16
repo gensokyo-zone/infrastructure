@@ -8,6 +8,7 @@
   cfg = config.services.deluge;
 in {
   sops.secrets.deluge-auth = {
+    sopsFile = mkDefault ./secrets/deluge.yaml;
     inherit (cfg) group;
     owner = cfg.user;
   };

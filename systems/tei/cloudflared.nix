@@ -30,7 +30,6 @@
   };
 in {
   sops.secrets.cloudflared-tunnel-apartment.owner = cfg.user;
-  sops.secrets.cloudflared-tunnel-apartment-deluge.owner = cfg.user;
   services.cloudflared = {
     tunnels = {
       ${apartment} = {
