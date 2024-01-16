@@ -48,7 +48,7 @@ module "mediabox" {
     "radarr",
     "jackett",
     "bazarr",
-    "tatulli",
+    "tautulli",
     "ombi",
   ]
 }
