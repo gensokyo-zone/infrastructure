@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: flannel
+  namespace: argocd
+spec:
+  project: system
+  source:
+    repoURL: 'https://flannel-io.github.io/flannel/'
+    targetRevision: v0.24.x
+    helm:
+      valuesObject:
+        podCidr: 10.42.0.0/16
+    chart: flannel
+  destination:
+    namespace: kube-flannel
+    server: https://10.1.1.173:6443
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

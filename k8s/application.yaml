@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: system
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: https://10.1.1.173:6443
+  project: default
+  source:
+    repoURL: 'https://github.com/gensokyo-zone/infrastructure'
+    path: k8s/system
+    targetRevision: main
+  syncPolicy:
+    automated:
+      selfHeal: true
