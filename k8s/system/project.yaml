@@ -7,7 +7,7 @@ spec:
   description: "Underlying services and controllers required for the operation of the cluster"
   destinations:
     - namespace: "*"
-      server: https://10.1.1.173:6443
+      name: in-cluster
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

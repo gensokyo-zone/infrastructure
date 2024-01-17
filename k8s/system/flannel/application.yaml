@@ -14,7 +14,7 @@ spec:
     chart: flannel
   destination:
     namespace: kube-flannel
-    server: https://10.1.1.173:6443
+    name: in-cluster
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
