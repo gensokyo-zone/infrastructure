@@ -1,18 +1,15 @@
 {
-  meta,
+  access,
   config,
   lib,
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.attrsets) listToAttrs nameValuePair;
+  inherit (access) systemFor;
   inherit (config.networking) hostName;
   cfg = config.services.cloudflared;
   apartment = "5e85d878-c6b2-4b15-b803-9aeb63d63543";
-  systemFor = hostName:
-    if hostName == config.networking.hostName
-    then config
-    else meta.network.nodes.${hostName};
   accessHostFor = {
     hostName,
     system ? systemFor hostName,

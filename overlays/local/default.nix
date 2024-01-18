@@ -1,4 +1,5 @@
 final: prev: {
+  lib = prev.lib.extend (import ./lib.nix);
   requests-oauth = final.python3Packages.callPackage ./requests-oauth.nix {};
   withings-api = final.python3Packages.callPackage ./withings-api.nix {};
   irlsite = final.callPackage ./irlsite.nix {};

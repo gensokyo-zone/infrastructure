@@ -1,6 +1,5 @@
 {
   meta,
-  lib,
   ...
 }: {
   imports = let
@@ -25,7 +24,17 @@
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
-  networking.access.static.ipv4 = "10.1.1.39";
+
+  systemd.network.networks.eth0 = {
+    name = "eth0";
+    matchConfig = {
+      MACAddress = "BC:24:11:CC:66:57";
+      Type = "ether";
+    };
+    address = [ "10.1.1.39/24" ];
+    gateway = [ "10.1.1.1" ];
+    DHCP = "no";
+  };
 
   system.stateVersion = "23.11";
 }

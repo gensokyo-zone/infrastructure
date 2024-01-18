@@ -72,6 +72,15 @@
     extraPackages = with pkgs; [ mesa.drivers vaapiVdpau libvdpau-va-gl ];
   };
 
+  systemd.network.networks.eth0 = {
+    name = "eth0";
+    matchConfig = {
+      MACAddress = "BC:24:11:34:F4:A8";
+      Type = "ether";
+    };
+    DHCP = "ipv4";
+  };
+
   sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "21.05";

@@ -54,6 +54,15 @@
     };
   };
 
+  systemd.network.networks.eth0 = {
+    name = "eth0";
+    matchConfig = {
+      MACAddress = "BC:24:11:49:FE:DC";
+      Type = "ether";
+    };
+    DHCP = "ipv4";
+  };
+
   sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "23.11";

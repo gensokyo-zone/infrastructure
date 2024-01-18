@@ -8,9 +8,6 @@
   inherit (config.networking) hostName;
 in {
   options.networking.access = with lib.types; {
-    static.ipv4 = mkOption {
-      type = str;
-    };
     hostnameForNetwork = mkOption {
       type = attrsOf str;
       default = { };
