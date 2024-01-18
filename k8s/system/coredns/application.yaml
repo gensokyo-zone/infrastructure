@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coredns
+  namespace: argocd
+spec:
+  project: system
+  source:
+    repoURL: 'https://coredns.github.io/helm'
+    targetRevision: 1.29.x
+    helm:
+      valuesObject:
+    chart: coredns
+  destination:
+    namespace: kube-system
+    name: in-cluster
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
