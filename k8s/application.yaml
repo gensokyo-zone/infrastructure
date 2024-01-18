@@ -7,9 +7,9 @@ spec:
   destination:
     namespace: default
     name: in-cluster
-  project: default
+  project: system
   source:
-    repoURL: 'https://github.com/gensokyo-zone/infrastructure'
+    repoURL: "https://github.com/gensokyo-zone/infrastructure"
     path: k8s/system
     targetRevision: main
   syncPolicy:

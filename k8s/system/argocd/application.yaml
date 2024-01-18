@@ -1,19 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: flannel
+  name: argocd
   namespace: argocd
 spec:
   project: system
   source:
-    repoURL: "https://flannel-io.github.io/flannel/"
-    targetRevision: v0.24.x
-    chart: flannel
+    repoURL: "https://argoproj.github.io/argo-helm/"
+    targetRevision: v2.9.3
+    chart: argo-cd
     helm:
       valuesObject:
-        podCidr: 10.42.0.0/16
   destination:
-    namespace: kube-flannel
+    namespace: argocd
     name: in-cluster
   syncPolicy:
     syncOptions:
