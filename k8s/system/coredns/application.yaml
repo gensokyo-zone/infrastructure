@@ -8,9 +8,9 @@ spec:
   source:
     repoURL: 'https://coredns.github.io/helm'
     targetRevision: 1.29.x
+    chart: coredns
     helm:
       valuesObject:
-    chart: coredns
   destination:
     namespace: kube-system
     name: in-cluster
