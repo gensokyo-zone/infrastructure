@@ -17,9 +17,13 @@
   nixfiles = tree.impure;
 
   eval = let
+    inherit (config.network.nixos) builder;
+    mapNixosNodes = lib.mapAttrs (name: args: builder ({
+      inherit name;
+    } // args));
     nixosNodes = [
       {
-        network.nodes = {
+        network.nodes = mapNixosNodes {
           tewi = {
             imports = [
               ./systems/tewi/nixos.nix
