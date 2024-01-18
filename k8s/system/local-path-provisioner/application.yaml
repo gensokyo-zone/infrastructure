@@ -1,14 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: coredns
-  namespace: argocd
+  name: local-path-provisioner
+  namespace: kube-system
 spec:
   project: system
   source:
-    repoURL: "https://coredns.github.io/helm"
-    targetRevision: 1.29.x
-    chart: coredns
+    repoURL: "https://github.com/rancher/local-path-provisioner"
+    path: deploy/chart
+    targetRevision: v26.0.x
+    chart: local-path-provisioner
     helm:
       valuesObject:
   destination:
