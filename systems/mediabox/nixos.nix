@@ -36,7 +36,7 @@
       credentialsFile = config.sops.secrets.cloudflare_mediabox_tunnel.path;
       ingress = {
         "plex.gensokyo.zone".service = "http://localhost:32400";
-        "tauutuli.gensokyo.zone".service = "http://localhost:${toString config.services.tautulli.port}";
+        "tautulli.gensokyo.zone".service = "http://localhost:${toString config.services.tautulli.port}";
         "ombi.gensokyo.zone".service = "http://localhost:${toString config.services.ombi.port}";
         "sonarr.gensokyo.zone".service = "http://localhost:8989";
         "radarr.gensokyo.zone".service = "http://localhost:7878";
