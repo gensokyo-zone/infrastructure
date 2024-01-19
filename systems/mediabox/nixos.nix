@@ -2,6 +2,7 @@
   config,
   meta,
   lib,
+  pkgs,
   ...
 }: {
   imports = with meta; [
@@ -44,6 +45,11 @@
         "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
       };
     };
+  };
+
+  hardware.opengl = {
+    enable = true;
+    extraPackages = with pkgs; [ mesa.drivers vaapiVdpau libvdpau-va-gl ];
   };
 
   sops.defaultSopsFile = ./secrets.yaml;
