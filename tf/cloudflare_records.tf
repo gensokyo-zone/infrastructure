@@ -30,7 +30,6 @@ module "mediabox_system_records" {
   local_v6  = "fd0a::be24:11ff:fe34:f4a8"
   local_subdomains = [
     "plex",
-    "tautulli",
   ]
 }
 
