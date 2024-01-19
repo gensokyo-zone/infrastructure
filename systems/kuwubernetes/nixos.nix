@@ -7,7 +7,9 @@
 }: {
   imports = with meta; [
     (modulesPath + "/profiles/qemu-guest.nix")
-    nixos.k3s
+    nixos.sops
+    nixos.cloudflared
+    nixos.k8s
   ];
 
   boot = {
@@ -32,6 +34,27 @@
   ];
 
   networking.interfaces.ens18.useDHCP = true;
+
+  sops.secrets.cloudflare_kubernetes_tunnel = {
+    owner = config.services.cloudflared.user;
+  };
+
+  services.cloudflared = let
+    tunnelId = "3dde2376-1dd1-4282-b5a4-aba272594976";
+  in {
+    tunnels.${tunnelId} = {
+      default = "http_status:404";
+      credentialsFile = config.sops.secrets.cloudflare_kubernetes_tunnel.path;
+      ingress = {
+        "k8s.gensokyo.zone" = {
+          service = "https://localhost:6443";
+          originRequest.noTLSVerify = true;
+        };
+      };
+    };
+  };
+
+  sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "23.11";
 }

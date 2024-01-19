@@ -11,6 +11,8 @@ spec:
     chart: coredns
     helm:
       valuesObject:
+        services:
+          clusterIP: 10.43.0.2
   destination:
     namespace: kube-system
     name: in-cluster
