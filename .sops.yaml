@@ -1,6 +1,7 @@
 keys:
 - &kat CD8CE78CB0B3BDD4 # https://inskip.me/pubkey.asc
 - &mew 65BD3044771CB6FB
+- &hakurei_osh age12ze362pu5mza6ef9akrptr7hfe4auaqul4rkta7kyy2tnrstqensgmujeq
 - &tewi_gen age17haatqc7gpk9t690affyqcvwmhmz0us95en2r7qpqzw29tpq3ffspld0cf
 - &tewi_osh age172nhlv3py990k2rgw64hy27hffmnpv6ssxyu9fepww7zxfgg347qna4gzt
 - &tei_osh age1a2quf2ekkj94ygu7wgvhrvh44fwn32c0l2cwvgvjh23wst90s54szdsvgr
@@ -13,8 +14,15 @@ creation_rules:
     - *kat
     - *mew
     age: &reisen_common
+    - *hakurei_osh
     - *tei_osh
     - *mediabox_osh
+- path_regex: 'systems/hakurei/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *hakurei_osh
 - path_regex: 'systems/tewi/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:

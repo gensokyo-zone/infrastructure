@@ -6,6 +6,20 @@ module "reisen_system_records" {
   local_v4  = "10.1.1.40"
 }
 
+module "hakurei_system_records" {
+  source       = "./system/records"
+  name         = "hakurei"
+  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
+  tailscale_v4 = "100.71.65.59"
+  tailscale_v6 = "fd7a:115c:a1e0::9187:413b"
+  local_v4     = "10.1.1.41"
+  local_v6     = "fd0a::be24:11ff:fec4:66a7"
+  local_subdomains = [
+    "prox",
+  ]
+}
+
 module "tewi_system_records" {
   source       = "./system/records"
   name         = "tei"

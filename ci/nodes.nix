@@ -59,7 +59,7 @@ with lib; {
   };
 
   jobs = let
-    enabledHosts = ["tewi" "tei" "mediabox" "reisen-ct"];
+    enabledHosts = ["hakurei" "tei" "mediabox" "reisen-ct"];
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
       tasks.${host}.inputs = channels.nixfiles.network.nodes.${host}.system.build.toplevel;

@@ -54,6 +54,12 @@
               nixfiles.nixos.base
             ];
           };
+          hakurei = {
+            imports = [
+              ./systems/hakurei/nixos.nix
+              nixfiles.nixos.base
+            ];
+          };
         };
       }
     ];

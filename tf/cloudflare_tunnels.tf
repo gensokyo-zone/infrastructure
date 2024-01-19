@@ -1,3 +1,32 @@
+variable "cloudflare_tunnel_secret_hakurei" {
+  type      = string
+  sensitive = true
+}
+
+module "hakurei" {
+  source     = "./tunnel"
+  name       = "hakurei"
+  secret     = var.cloudflare_tunnel_secret_hakurei
+  account_id = var.cloudflare_account_id
+  zone_id    = cloudflare_zone.gensokyo-zone_zone.id
+  subdomains = [
+    "prox",
+  ]
+}
+
+output "cloudflare_tunnel_id_hakurei" {
+  value = module.hakurei.id
+}
+
+output "cloudflare_tunnel_token_hakurei" {
+  value     = module.hakurei.token
+  sensitive = true
+}
+
+output "cloudflare_tunnel_cname_hakurei" {
+  value = module.hakurei.cname
+}
+
 variable "cloudflare_tunnel_secret_tewi" {
   type      = string
   sensitive = true
