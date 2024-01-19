@@ -1,9 +1,9 @@
-_: {
+{config, ...}: {
   services = {
     plex = {
       enable = true;
     };
-    nginx.virtualHosts."plex.gensokyo.zone" = {
+    nginx.virtualHosts = let
       extraConfig = ''
         # Some players don't reopen a socket and playback stops totally instead of resuming after an extended pause
         send_timeout 100m;
@@ -24,7 +24,15 @@ _: {
         proxy_redirect off;
         proxy_buffering off;
       '';
-      locations."/".proxyPass = "http://localhost:32400";
+    in {
+      "plex.${config.networking.domain}" = {
+        locations."/".proxyPass = "http://localhost:32400";
+        inherit extraConfig;
+      };
+      "plex.local.${config.networking.domain}" = {
+        locations."/".proxyPass = "http://localhost:32400";
+        inherit extraConfig;
+      };
     };
   };
 
