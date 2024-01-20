@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: "https://isindir.github.io/sops-secrets-operator/"
     targetRevision: 0.18.0
-    chart: sops-secret-operator
+    chart: sops-secrets-operator
     helm:
       valuesObject:
         secretsAsFiles:
