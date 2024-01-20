@@ -7,7 +7,7 @@ spec:
   project: system
   source:
     repoURL: "https://isindir.github.io/sops-secrets-operator/"
-    targetRevision: 0.11.4
+    targetRevision: 0.18.0
     chart: sops-secret-operator
     helm:
       valuesObject:
