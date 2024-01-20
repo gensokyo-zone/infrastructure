@@ -60,6 +60,7 @@ creation_rules:
   - pgp: *pgp_common
 - path_regex: 'k8s/.*secret.yaml'
   shamir_threshold: 1
+  encrypted_suffix: 'Templates'
   key_groups:
   - pgp: *pgp_common
     age:
