@@ -17,6 +17,7 @@ final: prev: {
   wezterm = final.callPackage ./wezterm {
     inherit (final.darwin.apple_sdk.frameworks) Cocoa CoreGraphics Foundation UserNotifications;
   };
+  mkSnakeOil = final.callPackage ./snakeoil.nix { };
   terraform-providers =
     prev.terraform-providers
     // {

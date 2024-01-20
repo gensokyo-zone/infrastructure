@@ -5,7 +5,7 @@
 }:
 let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   cfg = config.services.zigbee2mqtt;
   access = config.services.nginx.access.zigbee2mqtt;
   proxyPass = mkDefault "http://${access.host}:${toString access.port}";
@@ -46,6 +46,12 @@ in {
         };
       };
       ${access.localDomain} = {
+        local.enable = true;
+        locations."/" = {
+          inherit proxyPass extraConfig;
+        };
+      };
+      "z2m.tail.${config.networking.domain}" = mkIf config.services.tailscale.enable {
         local.enable = true;
         locations."/" = {
           inherit proxyPass extraConfig;

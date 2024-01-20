@@ -1,15 +1,29 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   inherit (lib.modules) mkIf mkDefault;
   inherit (lib.strings) escapeRegex;
+  inherit (lib.lists) singleton optional;
+  inherit (config.services) tailscale;
   proxyPass = "https://reisen.local.gensokyo.zone:8006/";
+  unencrypted = pkgs.mkSnakeOil {
+    name = "prox-local-cert";
+    domain = singleton "prox.local.${config.networking.domain}"
+      ++ optional tailscale.enable "prox.tail.${config.networking.domain}";
+  };
+  sslCertificate = unencrypted.fullchain;
+  sslCertificateKey = unencrypted.key;
 in {
   services.nginx.virtualHosts."prox.${config.networking.domain}" = {
     locations."/" = {
       extraConfig = ''
+        if ($http_x_forwarded_proto = http) {
+          return 302 https://$host$request_uri;
+        }
+
         set $prox_prefix ''';
         include ${config.sops.secrets.access-proxmox.path};
         if ($request_uri ~ "^/([^/]+).*") {
@@ -24,7 +38,7 @@ in {
         if ($prox_prefix != $prox_expected) {
           return 501;
         }
-        if ($request_uri ~ "^/([^/]+)") {
+        if ($request_uri ~ "^/([^/]+)$") {
           rewrite /(.*) /prox/$1 last;
         }
         rewrite /[^/]+/(.*) /prox/$1;
@@ -49,12 +63,15 @@ in {
   };
   services.nginx.virtualHosts."prox.local.${config.networking.domain}" = {
     local.enable = mkDefault true;
+    forceSSL = mkDefault true;
+    inherit sslCertificate sslCertificateKey;
     locations."/" = {
       inherit proxyPass;
     };
   };
-  services.nginx.virtualHosts."prox.tail.${config.networking.domain}" = mkIf config.services.tailscale.enable {
+  services.nginx.virtualHosts."prox.tail.${config.networking.domain}" = mkIf tailscale.enable {
     local.enable = mkDefault true;
+    inherit sslCertificate sslCertificateKey;
     locations."/" = {
       inherit proxyPass;
     };

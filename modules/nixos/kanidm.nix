@@ -56,18 +56,10 @@ in {
 
     services.kanidm = {
       server.unencrypted.package = let
-        cert = pkgs.runCommand "kanidm-cert" {
+        cert = pkgs.mkSnakeOil {
+          name = "kanidm-cert";
           inherit (cfg.server.unencrypted) domain;
-          nativeBuildInputs = [ pkgs.buildPackages.minica ];
-        } ''
-          install -d $out
-          cd $out
-          minica \
-            --ca-key ca.key.pem \
-            --ca-cert ca.cert.pem \
-            --domains $domain
-          cat $domain/cert.pem ca.cert.pem > $domain.pem
-        '';
+        };
       in mkOptionDefault cert;
       clientSettings = mkIf cfg.enableServer {
         uri = mkDefault cfg.serverSettings.origin;
@@ -82,8 +74,8 @@ in {
           );
         }
         (mkIf cfg.server.unencrypted.enable {
-          tls_chain = "${cfg.server.unencrypted.package}/${cfg.server.unencrypted.domain}.pem";
-          tls_key = "${cfg.server.unencrypted.package}/${cfg.server.unencrypted.domain}/key.pem";
+          tls_chain = "${cfg.server.unencrypted.package}/fullchain.pem";
+          tls_key = "${cfg.server.unencrypted.package.key}/key.pem";
         })
       ];
     };
