@@ -14,6 +14,7 @@
     nixos.nginx
     nixos.access.gensokyo
     nixos.access.zigbee2mqtt
+    nixos.access.home-assistant
     nixos.vouch
     nixos.kanidm
     nixos.mosquitto

@@ -24,13 +24,19 @@
         proxy_redirect off;
         proxy_buffering off;
       '';
+      proxyPass = "http://localhost:32400";
     in {
       "plex.${config.networking.domain}" = {
-        locations."/".proxyPass = "http://localhost:32400";
+        locations."/" = {
+          inherit proxyPass;
+        };
         inherit extraConfig;
       };
       "plex.local.${config.networking.domain}" = {
-        locations."/".proxyPass = "http://localhost:32400";
+        local.enable = true;
+        locations."/" = {
+          inherit proxyPass;
+        };
         inherit extraConfig;
       };
     };

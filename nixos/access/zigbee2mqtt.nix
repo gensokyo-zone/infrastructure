@@ -5,9 +5,15 @@
 }:
 let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   cfg = config.services.zigbee2mqtt;
   access = config.services.nginx.access.zigbee2mqtt;
+  proxyPass = mkDefault "http://${access.host}:${toString access.port}";
+  extraConfig = ''
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_http_version 1.1;
+  '';
 in {
   options.services.nginx.access.zigbee2mqtt = with lib.types; {
     host = mkOption {
@@ -15,6 +21,10 @@ in {
     };
     domain = mkOption {
       type = str;
+    };
+    localDomain = mkOption {
+      type = str;
+      default = "z2m.local.${config.networking.domain}";
     };
     port = mkOption {
       type = port;
@@ -28,16 +38,17 @@ in {
         mkOptionDefault cfg.settings.frontend.port
       );
     };
-    virtualHosts.${access.domain} = {
-      vouch.enable = true;
-      locations = {
-        "/" = {
-          proxyPass = mkDefault "http://${access.host}:${toString access.port}";
-          extraConfig = ''
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_http_version 1.1;
-          '';
+    virtualHosts = {
+      ${access.domain} = {
+        vouch.enable = true;
+        locations."/" = {
+          inherit proxyPass extraConfig;
+        };
+      };
+      ${access.localDomain} = {
+        local.enable = true;
+        locations."/" = {
+          inherit proxyPass extraConfig;
         };
       };
     };
