@@ -9,6 +9,7 @@
     nixos.reisen-ct
     nixos.sops
     nixos.nginx
+    nixos.access.plex
     nixos.cloudflared
 
     # media

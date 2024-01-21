@@ -1,46 +1,5 @@
-{config, ...}: {
-  services = {
-    plex = {
-      enable = true;
-    };
-    nginx.virtualHosts = let
-      extraConfig = ''
-        # Some players don't reopen a socket and playback stops totally instead of resuming after an extended pause
-        send_timeout 100m;
-        # Plex headers
-        proxy_set_header X-Plex-Client-Identifier $http_x_plex_client_identifier;
-        proxy_set_header X-Plex-Device $http_x_plex_device;
-        proxy_set_header X-Plex-Device-Name $http_x_plex_device_name;
-        proxy_set_header X-Plex-Platform $http_x_plex_platform;
-        proxy_set_header X-Plex-Platform-Version $http_x_plex_platform_version;
-        proxy_set_header X-Plex-Product $http_x_plex_product;
-        proxy_set_header X-Plex-Token $http_x_plex_token;
-        proxy_set_header X-Plex-Version $http_x_plex_version;
-        proxy_set_header X-Plex-Nocache $http_x_plex_nocache;
-        proxy_set_header X-Plex-Provides $http_x_plex_provides;
-        proxy_set_header X-Plex-Device-Vendor $http_x_plex_device_vendor;
-        proxy_set_header X-Plex-Model $http_x_plex_model;
-        # Buffering off send to the client as soon as the data is received from Plex.
-        proxy_redirect off;
-        proxy_buffering off;
-      '';
-      proxyPass = "http://localhost:32400";
-    in {
-      "plex.${config.networking.domain}" = {
-        locations."/" = {
-          inherit proxyPass;
-        };
-        inherit extraConfig;
-      };
-      "plex.local.${config.networking.domain}" = {
-        local.enable = true;
-        locations."/" = {
-          inherit proxyPass;
-        };
-        inherit extraConfig;
-      };
-    };
-  };
+{...}: {
+  services.plex.enable = true;
 
   # Plex Media Server:
   #
