@@ -5,21 +5,27 @@ metadata:
   namespace: argocd
 spec:
   project: system
-  source:
-    repoURL: "https://charts.dexidp.io"
-    targetRevision: 0.15.*
-    chart: dex
-    helm:
-      valuesObject:
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: etc-ssl-certs
-          readOnly: true
-        volumes:
-        - name: ca-certs
-          hostPath:
-            path: /etc/dex-ssl
-            type: DirectoryOrCreate
+  sources:
+    - repoURL: "https://charts.dexidp.io"
+      targetRevision: 0.15.*
+      chart: dex
+      helm:
+        valuesObject:
+          configSecret:
+            name: dex-config
+            create: false
+          volumeMounts:
+          - mountPath: /etc/ssl/certs
+            name: etc-ssl-certs
+            readOnly: true
+          volumes:
+          - name: ca-certs
+            hostPath:
+              path: /etc/dex-ssl
+              type: DirectoryOrCreate
+    - repoURL: "https://github.com/gensokyo-zone/infrastructure"
+      path: k8s/system/dex/manifests
+      targetRevision: main
   destination:
     namespace: dex
     name: in-cluster
