@@ -5,7 +5,6 @@ resources:
 - flannel
 - argocd
 - coredns
-- local-path-provisioner
 - sops-secrets-operator
 - cloudflare-operator
 - metallb
