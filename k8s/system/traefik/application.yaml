@@ -17,14 +17,13 @@ spec:
         service:
           spec:
               loadBalancerIP: "10.1.1.6"
+        ingressRoute:
+          dashboard:
+            annotations:
+              make-the-diff: go-away
   destination:
     namespace: kube-system
     name: in-cluster
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
-  ignoreDifferences:
-  - group: "*"
-    kind: IngressRoute
-    jsonPointers:
-    - /metadata/annotations
