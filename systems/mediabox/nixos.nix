@@ -16,6 +16,7 @@
     nixos.tautulli
     nixos.ombi
     nixos.deluge
+    nixos.mediatomb
 
     # yarr harr fiddle dee dee >w<
     nixos.radarr
@@ -45,6 +46,24 @@
         "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
       };
     };
+  };
+
+  services.mediatomb = {
+    serverName = "tewi";
+    mediaDirectories = [
+      rec {
+        path = "/mnt/Anime";
+        mountPoint = path;
+      }
+      rec {
+        path = "/mnt/Shows";
+        mountPoint = path;
+      }
+      rec {
+        path = "/mnt/Movies";
+        mountPoint = path;
+      }
+    ];
   };
 
   hardware.opengl = {

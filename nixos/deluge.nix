@@ -37,23 +37,24 @@ in {
   };
 
   services.mediatomb.mediaDirectories = let
-    parent = builtins.dirOf cfg.config.download_location;
-    hasCompletedSubdir = cfg.config.move_completed && hasPrefix parent cfg.config.move_completed_path;
+    downloadLocation = cfg.config.download_location or (cfg.dataDir + "/Downloads");
+    parent = builtins.dirOf downloadLocation;
+    hasCompletedSubdir = cfg.config.move_completed or false && hasPrefix parent cfg.config.move_completed_path;
     completedSubdir = removePrefix parent cfg.config.move_completed_path;
     downloadDir = if hasCompletedSubdir then {
       path = parent;
       subdirectories = [
-        (builtins.baseNameOf cfg.config.download_location)
+        (builtins.baseNameOf downloadLocation)
         completedSubdir
       ];
     } else {
-      path = cfg.config.download_location;
+      path = downloadLocation;
     };
     completedDir = {
       path = cfg.config.move_completed_path;
     };
   in mkIf cfg.enable (mkAfter [
     downloadDir
-    (mkIf (cfg.config.move_completed && !hasCompletedSubdir) completedDir)
+    (mkIf (cfg.config.move_completed or false && !hasCompletedSubdir) completedDir)
   ]);
 }

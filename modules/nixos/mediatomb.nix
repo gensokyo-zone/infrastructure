@@ -48,7 +48,7 @@ in {
   config.systemd.services.mediatomb = mkIf cfg.enable {
     confinement.enable = mkIf cfg.confine (mkDefault true);
     bindsTo = map (dir: mkIf (dir.mountPoint != null)
-      "${utils.escapeSystemdPath dir.mountPoint}"
+      "${utils.escapeSystemdPath dir.mountPoint}.mount"
     ) cfg.mediaDirectories;
     unitConfig.RequiresMountsFor = mkMerge (
       map (dir: dir.paths) cfg.mediaDirectories
@@ -56,7 +56,7 @@ in {
     serviceConfig = {
       RestartSec = mkDefault 15;
       StateDirectory = mkDefault cfg.package.pname;
-      BindReadOnlyPaths = mkIf cfg.config (mkMerge (
+      BindReadOnlyPaths = mkIf cfg.confine (mkMerge (
         map (dir: dir.paths) cfg.mediaDirectories
       ));
     };
