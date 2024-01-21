@@ -27,4 +27,4 @@ spec:
   - group: traefik.io/v1alpha1
     kind: IngressRoute
     jsonPointers:
-      metadata/annotations
+    - /metadata/annotations
