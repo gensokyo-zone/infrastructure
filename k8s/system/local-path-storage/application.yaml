@@ -6,11 +6,11 @@ metadata:
 spec:
   project: system
   source:
-    repoURL: "https://github.com/rancher/local-path-provisioner"
-    path: deploy/chart/local-path-provisioner
-    targetRevision: v26.0.x
-    helm:
-      valuesObject:
+    repoURL: "https://github.com/gensokyo-zone/infrastructure"
+    path: k8s/system/local-path-provisioner/manifests
+  targetRevision: main
+  helm:
+    valuesObject:
   destination:
     namespace: local-path-storage
     name: in-cluster
