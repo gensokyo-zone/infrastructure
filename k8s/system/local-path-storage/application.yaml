@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: "https://github.com/gensokyo-zone/infrastructure"
     path: k8s/system/local-path-storage/manifests
-  targetRevision: main
+    targetRevision: main
   helm:
     valuesObject:
   destination:
