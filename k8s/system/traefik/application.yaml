@@ -12,7 +12,8 @@ spec:
     helm:
       valuesObject:
         service:
-            loadBalancerIP: "10.69.0.1"
+          spec:
+              loadBalancerIP: "10.69.0.1"
   destination:
     namespace: kube-system
     name: in-cluster
