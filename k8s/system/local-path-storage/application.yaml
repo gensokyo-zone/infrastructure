@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: local-path-pstorage
-  namespace: argocd
+  name: local-path-storage
+  namespace: kube-system
 spec:
   project: system
   source:
