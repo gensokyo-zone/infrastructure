@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-path-pstorage
+  namespace: argocd
+spec:
+  project: system
+  source:
+    repoURL: "https://github.com/rancher/local-path-provisioner"
+    path: deploy/chart
+    targetRevision: v26.0.x
+    chart: local-path-provisioner
+    helm:
+      valuesObject:
+  destination:
+    namespace: local-path-storage
+    name: in-cluster
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
