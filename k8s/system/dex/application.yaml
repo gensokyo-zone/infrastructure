@@ -19,7 +19,7 @@ spec:
             name: etc-ssl-certs
             readOnly: true
           volumes:
-          - name: ca-certs
+          - name: etc-ssl-certs
             hostPath:
               path: /etc/dex-ssl
               type: DirectoryOrCreate
