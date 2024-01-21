@@ -9,3 +9,4 @@ resources:
 - sops-secrets-operator
 - cloudflare-operator
 - metallb
+- traefik
