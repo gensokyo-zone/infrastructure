@@ -6,3 +6,4 @@ metadata:
 spec:
   addresses:
   - 10.69.0.1-10.69.254.254
+  autoAssign: true
