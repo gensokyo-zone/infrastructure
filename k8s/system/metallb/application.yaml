@@ -7,7 +7,7 @@ spec:
   project: system
   sources:
     - repoURL: "https://metallb.github.io/metallb"
-      targetRevision: v26.0.x
+      targetRevision: 0.13.*
       chart: metallb
       helm:
         valuesObject:
