@@ -7,4 +7,5 @@ resources:
 - coredns
 - local-path-provisioner
 - sops-secrets-operator
-- cloudflare-operator-app
+- cloudflare-operator
+- metallb
