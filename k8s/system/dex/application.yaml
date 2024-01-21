@@ -11,6 +11,8 @@ spec:
       chart: dex
       helm:
         valuesObject:
+          service:
+            type: LoadBalancer
           configSecret:
             name: dex-config
             create: false
