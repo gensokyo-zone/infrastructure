@@ -38,7 +38,14 @@ in {
         if ($prox_prefix != $prox_expected) {
           return 501;
         }
+        set $prox_plain ''';
         if ($request_uri ~ "^/([^/]+)$") {
+          set $prox_plain $1;
+        }
+        if ($prox_plain = $prox_expected) {
+          return 302 https://$host/$prox_plain/;
+        }
+        if ($prox_plain != ''') {
           rewrite /(.*) /prox/$1 last;
         }
         rewrite /[^/]+/(.*) /prox/$1;
