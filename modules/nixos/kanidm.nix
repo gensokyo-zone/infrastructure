@@ -75,7 +75,7 @@ in {
         }
         (mkIf cfg.server.unencrypted.enable {
           tls_chain = "${cfg.server.unencrypted.package}/fullchain.pem";
-          tls_key = "${cfg.server.unencrypted.package.key}/key.pem";
+          tls_key = "${cfg.server.unencrypted.package}/key.pem";
         })
       ];
     };
