@@ -7,9 +7,8 @@ spec:
   project: system
   source:
     repoURL: "https://github.com/rancher/local-path-provisioner"
-    path: deploy/chart
+    path: deploy/chart/local-path-provisioner
     targetRevision: v26.0.x
-    chart: local-path-provisioner
     helm:
       valuesObject:
   destination:
