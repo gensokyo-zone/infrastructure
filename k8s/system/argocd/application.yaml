@@ -11,10 +11,11 @@ spec:
     chart: argo-cd
     helm:
       valuesObject:
-        service:
-          type: LoadBalancer
-        ingress:
-          enabled: true
+        server:
+          service:
+            type: LoadBalancer
+          inigress:
+            enabled: true
   destination:
     namespace: argocd
     name: in-cluster
