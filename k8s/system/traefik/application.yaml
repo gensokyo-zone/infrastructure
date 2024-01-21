@@ -16,7 +16,7 @@ spec:
             expose: true
         service:
           spec:
-              loadBalancerIP: "10.1.1.5"
+              loadBalancerIP: "10.1.1.6"
   destination:
     namespace: kube-system
     name: in-cluster
