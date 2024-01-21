@@ -4,7 +4,18 @@
   lib,
   modulesPath,
   ...
-}: {
+}: let
+  inherit (lib.attrsets) genAttrs nameValuePair;
+  inherit (builtins) listToAttrs;
+  dexFiles = [
+    "ca-key.pem"
+    "ca.pem"
+    "ca.srl"
+    "csr.pem"
+    "key.pem"
+    "req.cnf"
+  ];
+in {
   imports = with meta; [
     (modulesPath + "/profiles/qemu-guest.nix")
     nixos.sops
@@ -35,9 +46,19 @@
 
   networking.interfaces.ens18.useDHCP = true;
 
-  sops.secrets.cloudflare_kubernetes_tunnel = {
-    owner = config.services.cloudflared.user;
-  };
+  sops.secrets = let
+    dexCommon = {
+      owner = "kubernetes";
+    };
+  in
+    {
+      cloudflare_kubernetes_tunnel = {
+        owner = config.services.cloudflared.user;
+      };
+    }
+    // (genAttrs (map (name: "dex-${name}") dexFiles) (_: dexCommon));
+
+  environment.etc = listToAttrs (map (name: nameValuePair "dex-ssl/${name}" {source = config.sops.secrets."dex-${name}".path;}) dexFiles);
 
   services.cloudflared = let
     tunnelId = "3dde2376-1dd1-4282-b5a4-aba272594976";

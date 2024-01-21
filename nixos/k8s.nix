@@ -41,6 +41,11 @@ in {
       advertiseAddress = kubeMasterIP;
       extraOpts = escapeShellArgs [
         "--service-node-port-range=1-65535"
+        "--oidc-issuer-url=https://dex.gensokyo.zone:32000"
+        "--oidc-client-id=kuwubernetes"
+        "--oidc-ca-file=/etc/dex-ssl/ca.pem"
+        "--oidc-username-claim=email"
+        "--oidc-groups-claim=groups"
       ];
       allowPrivileged = true;
     };
