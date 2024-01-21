@@ -23,8 +23,8 @@ spec:
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
-  ignoreChanges:
-  - group: "*"
+  ignoreDifferences:
+  - group: traefik.io
     kind: IngressRoute
     jsonPointers:
     - /metadata/annotations
