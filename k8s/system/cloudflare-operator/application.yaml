@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflare-operator-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: cloudflare-operator-system
+    name: in-cluster
+  project: system
+  sources:
+    - repoURL: "https://github.com/gensokyo-zone/infrastructure"
+      path: k8s/system/cloudflare-operator/manifests
+      targetRevision: main
+    - repoURL: "https://github.com/adyanth/cloudflare-operator"
+      path: config/default
+      targetRevision: v0.10.2

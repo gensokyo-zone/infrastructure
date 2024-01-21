@@ -1,0 +1,23 @@
+https://metallb.github.io/metallb
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+spec:
+  project: system
+  sources:
+    - repoURL: "https://metallb.github.io/metallb"
+      targetRevision: v26.0.x
+      chart: metallb
+      helm:
+        valuesObject:
+    - repoURL: "https://github.com/gensokyo-zone/infrastructure"
+      path: k8s/system/metallb/manifests
+      targetRevision: main
+  destination:
+    namespace: metallb-system
+    name: in-cluster
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
