@@ -8,12 +8,17 @@
 in {
   services.postgresql = {
     enable = mkDefault true;
-    ensureDatabases = ["hass"];
+    ensureDatabases = ["hass" "dex"];
     ensureUsers = [
       {
         name = "hass";
         ensureDBOwnership = true;
-        tailscale.allow = !config.services.home-assistant.enable;
+        authentication.tailscale.allow = !config.services.home-assistant.enable;
+      }
+      {
+        name = "dex";
+        ensureDBOwnership = true;
+        authentication.local.allow = true;
       }
     ];
   };

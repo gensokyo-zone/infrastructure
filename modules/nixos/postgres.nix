@@ -9,15 +9,51 @@
   cfg = config.services.postgresql;
   ensureUserModule = { config, ... }: {
     options = with lib.types; {
-      tailscale = {
-        allow = mkEnableOption "tailscale TCP connections";
+      authentication = {
+        enable = mkEnableOption "TCP connections" // {
+          default = config.authentication.hosts != [ ];
+        };
+        hosts = mkOption {
+          type = listOf str;
+          default = [ ];
+        };
+        method = mkOption {
+          type = str;
+          default = "md5";
+        };
         database = mkOption {
           type = str;
+        };
+        tailscale = {
+          allow = mkEnableOption "tailscale TCP connections";
+        };
+        local = {
+          allow = mkEnableOption "local TCP connections";
+        };
+        authentication = mkOption {
+          type = lines;
+          default = "";
         };
       };
     };
     config = {
-      tailscale.database = mkIf (config.ensureDBOwnership) (
+      authentication = {
+        hosts = mkMerge [
+          (mkIf config.authentication.tailscale.allow [
+            "fd7a:115c:a1e0::/96"
+            "fd7a:115c:a1e0:ab12::/64"
+            "100.64.0.0/10"
+          ])
+          (mkIf config.authentication.local.allow [
+            "10.1.1.0/24"
+            "fd0a::/64"
+          ])
+        ];
+        authentication = mkMerge (map (host: ''
+          host ${config.authentication.database} ${config.name} ${host} ${config.authentication.method}
+        '') config.authentication.hosts);
+      };
+      authentication.database = mkIf (config.ensureDBOwnership) (
         mkOptionDefault config.name
       );
     };
@@ -29,19 +65,11 @@ in {
     };
   };
   config.services.postgresql = {
-    enableTCPIP = mkIf (any (user: user.tailscale.allow) cfg.ensureUsers) (
+    enableTCPIP = mkIf (any (user: user.authentication.enable) cfg.ensureUsers) (
       mkDefault true
     );
-    authentication = let
-      allowTail = { database, user }: ''
-        host ${database} ${user} fd7a:115c:a1e0::/96 md5
-        host ${database} ${user} fd7a:115c:a1e0:ab12::/64 md5
-        host ${database} ${user} 100.64.0.0/10 md5
-      '';
-    in mkMerge (map
-      (user: mkIf user.tailscale.allow (
-        allowTail { inherit (user.tailscale) database; user = user.name; }
-      )) cfg.ensureUsers
-    );
+    authentication = mkMerge (map (user:
+      mkIf user.authentication.enable user.authentication.authentication
+    ) cfg.ensureUsers);
   };
 }
