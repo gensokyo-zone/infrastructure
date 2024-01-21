@@ -13,7 +13,7 @@ spec:
     helm:
       valuesObject:
   destination:
-    namespace: kube-system
+    namespace: local-path-provisioner
     name: in-cluster
   syncPolicy:
     syncOptions:
