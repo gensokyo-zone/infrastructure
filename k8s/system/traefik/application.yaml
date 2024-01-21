@@ -11,6 +11,9 @@ spec:
     chart: traefik
     helm:
       valuesObject:
+        ports:
+          traefik:
+            expose: true
         service:
           spec:
               loadBalancerIP: "10.69.0.1"
