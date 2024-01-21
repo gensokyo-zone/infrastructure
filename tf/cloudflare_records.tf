@@ -42,6 +42,7 @@ module "mediabox_system_records" {
   name      = "mediabox"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v4  = "10.1.1.44"
   local_v6  = "fd0a::be24:11ff:fe34:f4a8"
   local_subdomains = [
     "plex",

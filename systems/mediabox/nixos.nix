@@ -78,7 +78,9 @@
       MACAddress = "BC:24:11:34:F4:A8";
       Type = "ether";
     };
-    DHCP = "ipv4";
+    address = [ "10.1.1.44/24" ];
+    gateway = [ "10.1.1.1" ];
+    DHCP = "no";
   };
 
   sops.defaultSopsFile = ./secrets.yaml;
