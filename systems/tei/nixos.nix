@@ -2,6 +2,7 @@
   config,
   lib,
   meta,
+  pkgs,
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
@@ -28,6 +29,13 @@ in {
   ];
 
   sops.defaultSopsFile = ./secrets.yaml;
+
+  services.kanidm = {
+    package = lib.warnIf
+      (pkgs.kanidm.version != "1.1.0-rc.15")
+      "upstream kanidm may have localhost oauth2 support now!"
+      pkgs.kanidm-develop;
+  };
 
   networking.firewall = {
     interfaces.local.allowedTCPPorts = mkMerge [

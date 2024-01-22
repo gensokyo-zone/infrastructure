@@ -22,6 +22,7 @@ in {
   gh-actions.env.CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}";
 
   nix.config = {
+    accept-flake-config = true;
     extra-platforms = ["aarch64-linux" "armv6l-linux" "armv7l-linux"];
     #extra-sandbox-paths = with channels.cipkgs; map (package: builtins.unsafeDiscardStringContext "${package}?") [bash qemu "/run/binfmt"];
   };
