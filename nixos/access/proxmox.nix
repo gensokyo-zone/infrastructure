@@ -59,12 +59,10 @@ in {
       '';
     };
     locations."/prox/api2/" = {
+      proxy.websocket.enable = true;
       proxyPass = "${proxyPass}api2/";
       extraConfig = ''
         internal;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
       '';
     };
   };
@@ -73,6 +71,7 @@ in {
     forceSSL = mkDefault true;
     inherit sslCertificate sslCertificateKey;
     locations."/" = {
+      proxy.websocket.enable = true;
       inherit proxyPass;
     };
   };
@@ -80,6 +79,7 @@ in {
     local.enable = mkDefault true;
     inherit sslCertificate sslCertificateKey;
     locations."/" = {
+      proxy.websocket.enable = true;
       inherit proxyPass;
     };
   };

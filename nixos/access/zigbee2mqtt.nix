@@ -8,12 +8,10 @@ let
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   cfg = config.services.zigbee2mqtt;
   access = config.services.nginx.access.zigbee2mqtt;
-  proxyPass = mkDefault "http://${access.host}:${toString access.port}";
-  extraConfig = ''
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_http_version 1.1;
-  '';
+  location = {
+    proxy.websocket.enable = true;
+    proxyPass = mkDefault "http://${access.host}:${toString access.port}";
+  };
 in {
   options.services.nginx.access.zigbee2mqtt = with lib.types; {
     host = mkOption {
@@ -41,21 +39,15 @@ in {
     virtualHosts = {
       ${access.domain} = {
         vouch.enable = true;
-        locations."/" = {
-          inherit proxyPass extraConfig;
-        };
+        locations."/" = location;
       };
       ${access.localDomain} = {
         local.enable = true;
-        locations."/" = {
-          inherit proxyPass extraConfig;
-        };
+        locations."/" = location;
       };
       "z2m.tail.${config.networking.domain}" = mkIf config.services.tailscale.enable {
         local.enable = true;
-        locations."/" = {
-          inherit proxyPass extraConfig;
-        };
+        locations."/" = location;
       };
     };
   };

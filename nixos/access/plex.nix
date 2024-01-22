@@ -4,7 +4,7 @@
   ...
 }: let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkOptionDefault;
   cfg = config.services.plex;
   access = config.services.nginx.access.plex;
 in {
@@ -23,7 +23,7 @@ in {
   };
   config.services.nginx = {
     access.plex = mkIf cfg.enable {
-      url = "http://localhost:32400";
+      url = mkOptionDefault "http://localhost:32400";
     };
     virtualHosts = let
       extraConfig = ''
@@ -46,18 +46,18 @@ in {
         proxy_redirect off;
         proxy_buffering off;
       '';
+      location = {
+        proxy.websocket.enable = true;
+        proxyPass = access.url;
+      };
     in {
       ${access.domain} = {
-        locations."/" = {
-          proxyPass = access.url;
-        };
+        locations."/" = location;
         inherit extraConfig;
       };
       ${access.localDomain} = {
         local.enable = true;
-        locations."/" = {
-          proxyPass = access.url;
-        };
+        locations."/" = location;
         inherit extraConfig;
       };
     };
