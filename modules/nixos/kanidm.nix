@@ -4,7 +4,7 @@
   config,
   ...
 }: let
-  inherit (lib) mkIf mkMerge mkDefault mkOptionDefault mkEnableOption mkOption;
+  inherit (lib) mkIf mkMerge mkBefore mkDefault mkOptionDefault mkEnableOption mkOption;
   cfg = config.services.kanidm;
 in {
   options.services.kanidm = with lib.types; {
@@ -13,8 +13,7 @@ in {
       unencrypted = {
         enable = mkEnableOption "snake oil certificate";
         domain = mkOption {
-          type = str;
-          default = cfg.server.frontend.domain;
+          type = listOf str;
         };
         package = mkOption {
           type = package;
@@ -42,7 +41,7 @@ in {
         };
         port = mkOption {
           type = port;
-          default = 636;
+          default = 3636;
         };
       };
     };
@@ -55,12 +54,15 @@ in {
     ];
 
     services.kanidm = {
-      server.unencrypted.package = let
-        cert = pkgs.mkSnakeOil {
-          name = "kanidm-cert";
-          inherit (cfg.server.unencrypted) domain;
-        };
-      in mkOptionDefault cert;
+      server.unencrypted = {
+        domain = mkBefore [ cfg.server.frontend.domain ];
+        package = let
+          cert = pkgs.mkSnakeOil {
+            name = "kanidm-cert";
+            inherit (cfg.server.unencrypted) domain;
+          };
+        in mkOptionDefault cert;
+      };
       clientSettings = mkIf cfg.enableServer {
         uri = mkDefault cfg.serverSettings.origin;
       };

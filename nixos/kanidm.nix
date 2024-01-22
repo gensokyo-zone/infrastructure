@@ -11,7 +11,6 @@ in {
     enableClient = true;
     server = {
       unencrypted.enable = mkDefault true;
-      openFirewall = mkDefault true;
       frontend = {
         domain = mkDefault "id.${cfg.serverSettings.domain}";
         address = mkDefault "0.0.0.0";

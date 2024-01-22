@@ -30,6 +30,7 @@ module "tewi_system_records" {
   local_v4     = "10.1.1.39"
   local_v6     = "fd0a::be24:11ff:fecc:6657"
   local_subdomains = [
+    "id",
     "mqtt",
     "z2m",
     "home",
