@@ -1,6 +1,7 @@
 {
   config,
   meta,
+  access,
   ...
 }: {
   imports = let
@@ -13,6 +14,7 @@
     nixos.cloudflared
     nixos.nginx
     nixos.access.proxmox
+    nixos.access.plex
   ];
 
   sops.secrets.cloudflared-tunnel-hakurei = {
@@ -29,6 +31,12 @@
         "prox.${config.networking.domain}".service = "http://localhost";
       };
     };
+  };
+
+  services.nginx.access = {
+    plex.url = let
+      system = access.systemFor "mediabox";
+    in "http://${system.networking.access.hostnameForNetwork.local}:32400";
   };
 
   systemd.network.networks.eth0 = {

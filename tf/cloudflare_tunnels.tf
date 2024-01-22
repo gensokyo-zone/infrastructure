@@ -72,7 +72,6 @@ module "mediabox" {
   zone_id    = cloudflare_zone.gensokyo-zone_zone.id
   subdomains = [
     "deluge",
-    "plex",
     "sonarr",
     "radarr",
     "jackett",
