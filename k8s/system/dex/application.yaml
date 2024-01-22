@@ -11,6 +11,17 @@ spec:
       chart: dex
       helm:
         valuesObject:
+          ingress:
+            enabled: true
+            hosts:
+              - host: dex.gensokyo.zone
+                paths:
+                  - path: /
+                    pathType: ImplementationSpecific
+            tls:
+              - hosts:
+                  - dex.gensokyo.zone
+                secretName: dex-tls
           service:
             type: LoadBalancer
           configSecret:
