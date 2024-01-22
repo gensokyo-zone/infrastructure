@@ -20,6 +20,9 @@ spec:
           - mountPath: /etc/ssl/certs
             name: etc-ssl-certs
             readOnly: true
+          - mountPath: /etc/dex/tls
+            name: etc-ssl-certs
+            readOnly: true
           volumes:
           - name: etc-ssl-certs
             hostPath:
