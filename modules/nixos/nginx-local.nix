@@ -5,8 +5,10 @@
 }: let
   inherit (lib.modules) mkIf mkBefore;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.strings) optionalString;
+  inherit (lib.strings) concatMapStringsSep;
+  inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
+  inherit (config.networking.access) cidrForNetwork;
   localModule = { config, ... }: {
     options = with lib.types; {
       local = {
@@ -15,26 +17,31 @@
     };
     config = mkIf config.local.enable {
       extraConfig = let
-        tailscaleAllow = ''
-          allow fd7a:115c:a1e0::/96;
-          allow fd7a:115c:a1e0:ab12::/64;
-          allow 100.64.0.0/10;
-        '';
+        mkAllow = cidr: "allow ${cidr};";
+        allowAddresses =
+          cidrForNetwork.loopback.all
+          ++ cidrForNetwork.local.all
+          ++ optionals tailscale.enable cidrForNetwork.tail.all;
+        allows = concatMapStringsSep "\n" mkAllow allowAddresses;
       in mkBefore ''
-        allow 127.0.0.0/8;
-        allow ::1;
-        allow 10.1.1.0/24;
-        allow fd0a::/64;
-        allow fe80::/64;
-        ${optionalString tailscale.enable tailscaleAllow}
-          deny all;
+        ${allows}
+        deny all;
       '';
+    };
+  };
+  hostModule = { config, ... }: {
+    imports = [ localModule ];
+
+    options = with lib.types; {
+      locations = mkOption {
+        type = attrsOf (submodule localModule);
+      };
     };
   };
 in {
   options = with lib.types; {
     services.nginx.virtualHosts = mkOption {
-      type = attrsOf (submodule localModule);
+      type = attrsOf (submodule hostModule);
     };
   };
 }

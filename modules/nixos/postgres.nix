@@ -6,6 +6,7 @@
   inherit (lib.modules) mkIf mkMerge mkOptionDefault mkDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) any;
+  inherit (config) networking;
   cfg = config.services.postgresql;
   ensureUserModule = { config, ... }: {
     options = with lib.types; {
@@ -38,16 +39,11 @@
     };
     config = {
       authentication = {
-        hosts = mkMerge [
-          (mkIf config.authentication.tailscale.allow [
-            "fd7a:115c:a1e0::/96"
-            "fd7a:115c:a1e0:ab12::/64"
-            "100.64.0.0/10"
-          ])
-          (mkIf config.authentication.local.allow [
-            "10.1.1.0/24"
-            "fd0a::/64"
-          ])
+        hosts = let
+          inherit (networking.access) cidrForNetwork;
+        in mkMerge [
+          (mkIf config.authentication.tailscale.allow cidrForNetwork.tail.all)
+          (mkIf config.authentication.local.allow (cidrForNetwork.loopback.all ++ cidrForNetwork.local.all))
         ];
         authentication = mkMerge (map (host: ''
           host ${config.authentication.database} ${config.name} ${host} ${config.authentication.method}

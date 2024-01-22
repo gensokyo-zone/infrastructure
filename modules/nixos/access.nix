@@ -3,22 +3,84 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.options) mkOption;
-  inherit (config.networking) hostName;
+  inherit (lib.lists) optionals;
+  inherit (config.services) tailscale avahi;
+  inherit (config) networking;
+  inherit (networking) hostName;
+  cidrModule = { config, ... }: {
+    options = with lib.types; {
+      all = mkOption {
+        type = listOf str;
+        readOnly = true;
+      };
+      v4 = mkOption {
+        type = listOf str;
+        default = [ ];
+      };
+      v6 = mkOption {
+        type = listOf str;
+        default = [ ];
+      };
+    };
+    config.all = mkOptionDefault (
+      config.v4
+      ++ optionals networking.enableIPv6 config.v6
+    );
+  };
 in {
   options.networking.access = with lib.types; {
     hostnameForNetwork = mkOption {
       type = attrsOf str;
       default = { };
     };
+    cidrForNetwork = mkOption {
+      type = attrsOf (submodule cidrModule);
+      default = { };
+    };
   };
 
   config.networking.access = {
     hostnameForNetwork = {
-      local = mkIf config.services.avahi.enable "${hostName}.local.gensokyo.zone";
-      tail = mkIf config.services.tailscale.enable "${hostName}.tail.gensokyo.zone";
-      global = mkIf config.networking.enableIPv6 "${hostName}.gensokyo.zone";
+      local = let
+        eth0 = config.systemd.network.networks.eth0 or { };
+        hasStaticAddress = eth0.address or [ ] != [ ] || eth0.addresses or [ ] != [ ];
+        hasSLAAC = eth0.slaac.enable or false;
+      in mkMerge [
+        (mkIf (hasStaticAddress || hasSLAAC) (mkDefault "${hostName}.local.${config.networking.domain}"))
+        (mkIf (avahi.enable && avahi.publish.enable) (mkOptionDefault "${hostName}.local"))
+      ];
+      tail = mkIf tailscale.enable "${hostName}.tail.${config.networking.domain}";
+      global = mkIf (networking.enableIPv6 && networking.tempAddresses == "disabled") "${hostName}.${config.networking.domain}";
+    };
+    cidrForNetwork = {
+      loopback = {
+        v4 = [
+          "127.0.0.0/8"
+        ];
+        v6 = [
+          "::1"
+        ];
+      };
+      local = {
+        v4 = [
+          "10.1.1.0/24"
+        ];
+        v6 = [
+          "fd0a::/64"
+          "fe80::/64"
+        ];
+      };
+      tail = mkIf tailscale.enable {
+        v4 = [
+          "100.64.0.0/10"
+        ];
+        v6 = [
+          "fd7a:115c:a1e0::/96"
+          "fd7a:115c:a1e0:ab12::/64"
+        ];
+      };
     };
   };
 }

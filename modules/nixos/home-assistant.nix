@@ -7,7 +7,7 @@
   cfg = config.services.home-assistant;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.lists) optional elem;
+  inherit (lib.lists) optional optionals elem;
   inherit (lib.strings) toLower;
 in {
   options.services.home-assistant = with lib.types; {
@@ -83,15 +83,13 @@ in {
             "https://www.home-assistant.io"
           ];
           use_x_forwarded_for = "true";
-          trusted_proxies = [
-            "127.0.0.0/24"
+          trusted_proxies = let
+            inherit (config.networking.access) cidrForNetwork;
+          in cidrForNetwork.loopback.all
+          ++ cidrForNetwork.local.all
+          ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all
+          ++ [
             "200::/7"
-            "100.64.0.0/10"
-            "fd7a:115c:a1e0:ab12::/64"
-            "fd7a:115c:a1e0::/96"
-            "10.1.1.0/24"
-            "fd0a::/64"
-            "::1"
           ];
         };
         recorder = {

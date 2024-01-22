@@ -6,7 +6,10 @@
 let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (lib.strings) optionalString;
+  inherit (lib.strings) concatMapStringsSep;
+  inherit (lib.lists) optionals;
+  inherit (config.services) tailscale;
+  inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.kanidm;
   access = config.services.nginx.access.kanidm;
   proxyPass = mkDefault "http://${access.host}:${toString access.port}";
@@ -18,13 +21,15 @@ let
       alias = "${cfg.server.unencrypted.package.ca}";
     };
   };
-  allows = optionalString config.services.tailscale.enable ''
-    allow fd7a:115c:a1e0::/96;
-    allow fd7a:115c:a1e0:ab12::/64;
-    allow 100.64.0.0/10;
-  '' + ''
-    allow 10.1.1.0/24;
-    allow fd0a::/64;
+  allows = let
+    mkAllow = cidr: "allow ${cidr};";
+    allowAddresses =
+      cidrForNetwork.loopback.all
+      ++ cidrForNetwork.local.all
+      ++ optionals tailscale.enable cidrForNetwork.tail.all;
+    allows = concatMapStringsSep "\n" mkAllow allowAddresses;
+  in ''
+    ${allows}
     deny all;
   '';
 in {
