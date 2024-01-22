@@ -5,8 +5,12 @@
   imports = let
     inherit (meta) nixos;
   in [
+    nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.nfs
+    nixos.samba
+    ./nfs.nix
   ];
 
   systemd.network.networks.eth0 = {

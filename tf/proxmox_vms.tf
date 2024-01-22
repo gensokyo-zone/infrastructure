@@ -54,7 +54,7 @@ resource "proxmox_virtual_environment_container" "reimu" {
   started = false
 
   lifecycle {
-    ignore_changes = [started]
+    ignore_changes = [started, description]
   }
 }
 
@@ -77,7 +77,7 @@ resource "terraform_data" "proxmox_reimu_config" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo /opt/infra/bin/lxc-config ${proxmox_virtual_environment_container.reimu.vm_id} unprivileged 0 features 'nesting=1,mount=nfs,mknod=1' lxc.mount.entry '/dev/net/tun dev/net/tun none bind,optional,create=file'",
+      "sudo /opt/infra/bin/lxc-config ${proxmox_virtual_environment_container.reimu.vm_id} unprivileged 0 features 'nesting=1,mount=nfs,mknod=1' lxc.mount.entry '/dev/net/tun dev/net/tun none bind,optional,create=file' lxc.mount.entry '/mnt/kyuuto-media mnt/kyuuto-media none bind,optional,create=dir'",
     ]
   }
 }

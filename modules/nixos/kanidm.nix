@@ -5,6 +5,7 @@
   ...
 }: let
   inherit (lib) mkIf mkMerge mkBefore mkDefault mkOptionDefault mkEnableOption mkOption;
+  inherit (lib.strings) splitString concatMapStringsSep;
   cfg = config.services.kanidm;
 in {
   options.services.kanidm = with lib.types; {
@@ -42,6 +43,10 @@ in {
         port = mkOption {
           type = port;
           default = 3636;
+        };
+        baseDn = mkOption {
+          type = str;
+          default = concatMapStringsSep "," (part: "dc=${part}") (splitString "." cfg.serverSettings.domain);
         };
       };
     };
