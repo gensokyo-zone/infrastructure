@@ -25,7 +25,11 @@
   '';
   nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
-    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#terraform" -- "$@"
+    if [[ $# -eq 0 ]]; then
+      exec nix shell ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#terraform" -c bash -c "terraform init && terraform plan"
+    else
+      exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#terraform" -- "$@"
+    fi
   '';
   nf-lint-tf = pkgs.writeShellScriptBin "nf-lint-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
