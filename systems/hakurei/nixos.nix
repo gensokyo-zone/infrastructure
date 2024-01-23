@@ -23,6 +23,7 @@ in {
     nixos.acme
     nixos.nginx
     nixos.access.global
+    nixos.access.gensokyo
     nixos.access.kanidm
     nixos.access.proxmox
     nixos.access.plex
