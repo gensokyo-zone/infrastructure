@@ -55,6 +55,14 @@ module "mediabox_system_records" {
   ]
 }
 
+module "kubernetes_system_records" {
+  source    = "./system/records"
+  name      = "kubernetes"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fe49:fedc"
+}
+
 module "tewi_legacy_system_records" {
   source       = "./system/records"
   name         = "tewi"
