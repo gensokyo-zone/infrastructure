@@ -30,7 +30,7 @@ in {
       dnsProvider = mkDefault "cloudflare";
       credentialFiles = {
         CLOUDFLARE_EMAIL_FILE = config.sops.secrets.acme_cloudflare_email.path;
-        CLOUDFLARE_API_KEY_FILE = config.sops.secrets.acme_cloudflare_api_key.path;
+        CLOUDFLARE_DNS_API_TOKEN_FILE = config.sops.secrets.acme_cloudflare_token.path;
       };
     };
   };
@@ -46,6 +46,6 @@ in {
       path = accountDir + "/keys/${cfg.defaults.email}.key";
     } ];
     acme_cloudflare_email = acmeSecret;
-    acme_cloudflare_api_key = acmeSecret;
+    acme_cloudflare_token = acmeSecret;
   };
 }

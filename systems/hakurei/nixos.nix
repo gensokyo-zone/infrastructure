@@ -8,6 +8,8 @@
   inherit (lib.modules) mkIf mkMerge;
   mediabox = access.systemFor "mediabox";
   tei = access.systemFor "tei";
+  inherit (mediabox.services) plex;
+  inherit (tei.services) kanidm;
 in {
   imports = let
     inherit (meta) nixos;
@@ -17,6 +19,7 @@ in {
     nixos.reisen-ct
     nixos.tailscale
     nixos.cloudflared
+    nixos.ddclient
     nixos.acme
     nixos.nginx
     nixos.access.global
@@ -42,21 +45,32 @@ in {
   };
 
   security.acme.certs = let
-    inherit (config.services) nginx;
+    inherit (config.services) nginx tailscale;
     inherit (nginx) access;
   in {
     ${access.kanidm.domain} = {
       inherit (nginx) group;
       extraDomainNames = mkMerge [
         [ access.kanidm.localDomain ]
-        (mkIf config.services.tailscale.enable [ access.kanidm.tailDomain ])
+        (mkIf kanidm.server.ldap.enable [
+          access.kanidm.ldapDomain
+          access.kanidm.ldapLocalDomain
+        ])
+        (mkIf tailscale.enable [
+          access.kanidm.tailDomain
+        ])
+        (mkIf (kanidm.server.ldap.enable && tailscale.enable) [
+          access.kanidm.ldapTailDomain
+        ])
       ];
     };
     ${access.proxmox.domain} = {
       inherit (nginx) group;
       extraDomainNames = mkMerge [
         [ access.proxmox.localDomain ]
-        (mkIf config.services.tailscale.enable [ access.proxmox.tailDomain ])
+        (mkIf config.services.tailscale.enable [
+          access.proxmox.tailDomain
+        ])
       ];
     };
     ${access.plex.domain} = {
@@ -67,8 +81,6 @@ in {
 
   services.nginx = let
     inherit (config.services.nginx) access;
-    inherit (mediabox.services) plex;
-    inherit (tei.services) kanidm;
   in {
     access.plex = assert plex.enable; {
       url = "http://${mediabox.networking.access.hostnameForNetwork.local}:32400";
@@ -78,6 +90,7 @@ in {
       host = tei.networking.access.hostnameForNetwork.local;
       port = kanidm.server.frontend.port;
       ldapPort = kanidm.server.ldap.port;
+      ldapEnable = kanidm.server.ldap.enable;
     };
     virtualHosts = {
       ${access.kanidm.domain} = {

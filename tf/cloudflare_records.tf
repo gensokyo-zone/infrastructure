@@ -18,6 +18,11 @@ module "hakurei_system_records" {
   local_subdomains = [
     "prox",
     "id",
+    "ldap",
+  ]
+  global_subdomains = [
+    "plex",
+    "ldap",
   ]
 }
 

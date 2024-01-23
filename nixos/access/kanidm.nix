@@ -13,7 +13,7 @@ let
   inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.kanidm;
   access = config.services.nginx.access.kanidm;
-  proxyPass = mkDefault "http://${access.host}:${toString access.port}";
+  proxyPass = mkDefault "https://${access.host}:${toString access.port}";
   locations = {
     "/" = {
       inherit proxyPass;
@@ -50,11 +50,27 @@ in {
       type = str;
       default = "id.tail.${config.networking.domain}";
     };
+    ldapDomain = mkOption {
+      type = str;
+      default = "ldap.${config.networking.domain}";
+    };
+    ldapLocalDomain = mkOption {
+      type = str;
+      default = "ldap.local.${config.networking.domain}";
+    };
+    ldapTailDomain = mkOption {
+      type = str;
+      default = "ldap.tail.${config.networking.domain}";
+    };
     port = mkOption {
       type = port;
     };
     ldapPort = mkOption {
       type = port;
+    };
+    ldapEnable = mkOption {
+      type = bool;
+      default = true;
     };
     useACMEHost = mkOption {
       type = nullOr str;
@@ -68,6 +84,7 @@ in {
         host = mkOptionDefault "localhost";
         port = mkOptionDefault cfg.server.frontend.port;
         ldapPort = mkOptionDefault cfg.server.ldap.port;
+        ldapEnable = mkDefault cfg.server.ldap.enable;
       };
       streamConfig = let
         inherit (config.security.acme) certs;
@@ -79,7 +96,7 @@ in {
           ssl_certificate ${cfg.serverSettings.tls_chain};
           ssl_certificate_key ${cfg.serverSettings.tls_key};
         '';
-      in ''
+      in mkIf access.ldapEnable ''
         server {
           listen 0.0.0.0:389;
           listen [::]:389;

@@ -29,6 +29,10 @@ resource "cloudflare_record" "dyndns_a" {
   type    = "A"
   value   = "127.0.0.1"
   zone_id = cloudflare_zone.gensokyo-zone_zone.id
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "cloudflare_record" "dyndns_aaaa" {
@@ -38,6 +42,10 @@ resource "cloudflare_record" "dyndns_aaaa" {
   type    = "AAAA"
   value   = "::1"
   zone_id = cloudflare_zone.gensokyo-zone_zone.id
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 output "cloudflare_dyndns_record_a" {
