@@ -20,3 +20,8 @@ output "acme_account_key" {
   sensitive = true
   value     = tls_private_key.acme_account_key.private_key_pem
 }
+
+output "acme_account_url" {
+  sensitive = true
+  value     = tls_private_key.acme_account_key.id
+}

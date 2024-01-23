@@ -9,6 +9,7 @@ let
   inherit (lib.strings) concatMapStringsSep;
   inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
+  inherit (config.services.nginx) virtualHosts;
   inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.kanidm;
   access = config.services.nginx.access.kanidm;
@@ -39,16 +40,25 @@ in {
     };
     domain = mkOption {
       type = str;
+      default = "id.${config.networking.domain}";
     };
     localDomain = mkOption {
       type = str;
       default = "id.local.${config.networking.domain}";
+    };
+    tailDomain = mkOption {
+      type = str;
+      default = "id.tail.${config.networking.domain}";
     };
     port = mkOption {
       type = port;
     };
     ldapPort = mkOption {
       type = port;
+    };
+    useACMEHost = mkOption {
+      type = nullOr str;
+      default = virtualHosts.${access.domain}.useACMEHost;
     };
   };
   config = {
@@ -59,7 +69,17 @@ in {
         port = mkOptionDefault cfg.server.frontend.port;
         ldapPort = mkOptionDefault cfg.server.ldap.port;
       };
-      streamConfig = ''
+      streamConfig = let
+        inherit (config.security.acme) certs;
+        sslConfig = if access.useACMEHost != null then ''
+          ssl_certificate ${certs.${access.useACMEHost}.directory}/fullchain.pem;
+          ssl_certificate_key ${certs.${access.useACMEHost}.directory}/key.pem;
+          ssl_trusted_certificate ${certs.${access.useACMEHost}.directory}/chain.pem;
+        '' else ''
+          ssl_certificate ${cfg.serverSettings.tls_chain};
+          ssl_certificate_key ${cfg.serverSettings.tls_key};
+        '';
+      in ''
         server {
           listen 0.0.0.0:389;
           listen [::]:389;
@@ -71,8 +91,7 @@ in {
         server {
           listen 0.0.0.0:636 ssl;
           listen [::]:636 ssl;
-          ssl_certificate ${cfg.serverSettings.tls_chain};
-          ssl_certificate_key ${cfg.serverSettings.tls_key};
+          ${sslConfig}
           proxy_pass ${access.host}:${toString access.ldapPort};
           proxy_ssl on;
           proxy_ssl_verify off;
@@ -84,10 +103,14 @@ in {
           inherit locations;
         };
         ${access.localDomain} = {
+          inherit (virtualHosts.${access.domain}) useACMEHost;
+          addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
           local.enable = true;
           inherit locations;
         };
-        "id.tail.${config.networking.domain}" = mkIf config.services.tailscale.enable {
+        ${access.tailDomain} = mkIf config.services.tailscale.enable {
+          inherit (virtualHosts.${access.domain}) useACMEHost;
+          addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
           local.enable = true;
           inherit locations;
         };

@@ -4,20 +4,39 @@
   pkgs,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.strings) escapeRegex;
   inherit (lib.lists) singleton optional;
   inherit (config.services) tailscale;
+  inherit (config.services.nginx) virtualHosts;
+  access = config.services.nginx.access.proxmox;
   proxyPass = "https://reisen.local.gensokyo.zone:8006/";
   unencrypted = pkgs.mkSnakeOil {
     name = "prox-local-cert";
     domain = singleton "prox.local.${config.networking.domain}"
       ++ optional tailscale.enable "prox.tail.${config.networking.domain}";
   };
-  sslCertificate = unencrypted.fullchain;
-  sslCertificateKey = unencrypted.key;
+  sslHost = { config, ... }: {
+    sslCertificate = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.fullchain;
+    sslCertificateKey = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.key;
+  };
 in {
-  services.nginx.virtualHosts."prox.${config.networking.domain}" = {
+  options.services.nginx.access.proxmox = with lib.types; {
+    domain = mkOption {
+      type = str;
+      default = "prox.${config.networking.domain}";
+    };
+    localDomain = mkOption {
+      type = str;
+      default = "prox.local.${config.networking.domain}";
+    };
+    tailDomain = mkOption {
+      type = str;
+      default = "prox.tail.${config.networking.domain}";
+    };
+  };
+  config.services.nginx.virtualHosts = let
     locations."/" = {
       extraConfig = ''
         if ($http_x_forwarded_proto = http) {
@@ -65,26 +84,31 @@ in {
         internal;
       '';
     };
-  };
-  services.nginx.virtualHosts."prox.local.${config.networking.domain}" = {
-    local.enable = mkDefault true;
-    forceSSL = mkDefault true;
-    inherit sslCertificate sslCertificateKey;
-    locations."/" = {
-      proxy.websocket.enable = true;
-      inherit proxyPass;
+  in {
+    ${access.domain} = {
+      inherit locations;
     };
-  };
-  services.nginx.virtualHosts."prox.tail.${config.networking.domain}" = mkIf tailscale.enable {
-    local.enable = mkDefault true;
-    inherit sslCertificate sslCertificateKey;
-    locations."/" = {
-      proxy.websocket.enable = true;
-      inherit proxyPass;
-    };
+    ${access.localDomain} = mkMerge [ {
+      inherit (virtualHosts.${access.domain}) useACMEHost;
+      local.enable = mkDefault true;
+      forceSSL = mkDefault true;
+      locations."/" = {
+        proxy.websocket.enable = true;
+        inherit proxyPass;
+      };
+    } sslHost ];
+    ${access.tailDomain} = mkIf tailscale.enable (mkMerge [ {
+      inherit (virtualHosts.${access.domain}) useACMEHost;
+      addSSL = mkDefault true;
+      local.enable = mkDefault true;
+      locations."/" = {
+        proxy.websocket.enable = true;
+        inherit proxyPass;
+      };
+    } sslHost ]);
   };
 
-  sops.secrets.access-proxmox = {
+  config.sops.secrets.access-proxmox = {
     sopsFile = mkDefault ../secrets/access-proxmox.yaml;
     owner = config.services.nginx.user;
     group = config.services.nginx.group;
