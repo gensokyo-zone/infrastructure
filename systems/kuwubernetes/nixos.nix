@@ -75,13 +75,15 @@ in {
     };
   };
 
-  systemd.network.networks.eth0 = {
-    name = "eth0";
+  systemd.network.networks.ens18 = {
+    name = "ens18";
     matchConfig = {
       MACAddress = "BC:24:11:49:FE:DC";
       Type = "ether";
     };
-    DHCP = "ipv4";
+    address = [ "10.1.1.42/24" ];
+    gateway = [ "10.1.1.1" ];
+    DHCP = "no";
   };
 
   sops.defaultSopsFile = ./secrets.yaml;
