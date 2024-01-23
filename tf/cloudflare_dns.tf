@@ -1,3 +1,8 @@
+locals {
+  dyndns_cidr6    = cidrsubnet("${cloudflare_record.dyndns_aaaa.value}/64", 0, 0)
+  dyndns_address4 = cloudflare_record.dyndns_a.value
+}
+
 resource "cloudflare_api_token" "dyndns" {
   name = "infra-dyndns"
   policy {
@@ -54,4 +59,12 @@ output "cloudflare_dyndns_record_a" {
 
 output "cloudflare_dyndns_record_aaaa" {
   value = cloudflare_record.dyndns_aaaa.id
+}
+
+output "cloudflare_dyndns_prefix" {
+  value = local.dyndns_cidr6
+}
+
+output "cloudflare_dyndns_address" {
+  value = local.dyndns_address4
 }
