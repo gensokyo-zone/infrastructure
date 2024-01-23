@@ -6,8 +6,14 @@
   inherit (lib.modules) mkIf mkMerge mkOptionDefault mkDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) any;
+  inherit (lib.strings) hasInfix;
   inherit (config) networking;
   cfg = config.services.postgresql;
+  formatHost = host:
+    if hasInfix "/" host then host
+    else if hasInfix ":" host then "${host}/128"
+    else if hasInfix "." host then "${host}/32"
+    else throw "unsupported IP address ${host}";
   ensureUserModule = { config, ... }: {
     options = with lib.types; {
       authentication = {
@@ -46,7 +52,7 @@
           (mkIf config.authentication.local.allow (cidrForNetwork.loopback.all ++ cidrForNetwork.local.all))
         ];
         authentication = mkMerge (map (host: ''
-          host ${config.authentication.database} ${config.name} ${host} ${config.authentication.method}
+          host ${config.authentication.database} ${config.name} ${formatHost host} ${config.authentication.method}
         '') config.authentication.hosts);
       };
       authentication.database = mkIf (config.ensureDBOwnership) (
