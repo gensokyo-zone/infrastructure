@@ -24,7 +24,7 @@
     };
     config = {
       paths = let
-        paths = map (path: "${config.path}/media/${path}") config.subdirectories;
+        paths = map (path: "${config.path}/${path}") config.subdirectories;
         path = singleton config.path;
       in mkOptionDefault (if config.subdirectories != null then paths else path);
       recursive = mkDefault true;

@@ -18,7 +18,7 @@ let
     "/" = {
       inherit proxyPass;
     };
-    "=/ca.pem" = {
+    "=/ca.pem" = mkIf cfg.server.unencrypted.enable {
       alias = "${cfg.server.unencrypted.package.ca}";
     };
   };

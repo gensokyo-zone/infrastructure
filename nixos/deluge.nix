@@ -17,7 +17,7 @@ in {
     declarative = mkDefault true;
     openFirewall = mkDefault true;
     web = {
-      enable = true;
+      enable = mkDefault true;
     };
     config = {
       max_upload_speed = 10.0;
@@ -27,7 +27,7 @@ in {
       max_active_limit = 100;
       max_active_downloading = 75;
       max_upload_slots_global = 25;
-      max_active_seeding = 1;
+      max_active_seeding = 8;
       allow_remote = true;
       daemon_port = 58846;
       listen_ports = [6881 6889];
@@ -37,24 +37,24 @@ in {
   };
 
   services.mediatomb.mediaDirectories = let
-    downloadLocation = cfg.config.download_location or (cfg.dataDir + "/Downloads");
-    parent = builtins.dirOf downloadLocation;
-    hasCompletedSubdir = cfg.config.move_completed or false && hasPrefix parent cfg.config.move_completed_path;
-    completedSubdir = removePrefix parent cfg.config.move_completed_path;
-    downloadDir = if hasCompletedSubdir then {
+    inherit (cfg) downloadDir completedDir;
+    parent = builtins.dirOf downloadDir;
+    hasCompletedSubdir = completedDir != null && hasPrefix parent completedDir;
+    completedSubdir = removePrefix parent completedDir;
+    download = if hasCompletedSubdir then {
       path = parent;
       subdirectories = [
-        (builtins.baseNameOf downloadLocation)
+        (builtins.baseNameOf downloadDir)
         completedSubdir
       ];
     } else {
-      path = downloadLocation;
+      path = downloadDir;
     };
-    completedDir = {
+    completed = {
       path = cfg.config.move_completed_path;
     };
   in mkIf cfg.enable (mkAfter [
-    downloadDir
-    (mkIf (cfg.config.move_completed or false && !hasCompletedSubdir) completedDir)
+    download
+    (mkIf (completedDir != null && !hasCompletedSubdir) completed)
   ]);
 }

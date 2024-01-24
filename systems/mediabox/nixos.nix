@@ -4,8 +4,23 @@
   lib,
   pkgs,
   ...
-}: {
-  imports = with meta; [
+}: let
+  inherit (lib.modules) mkIf mkMerge;
+  inherit (lib.attrsets) mapAttrs mapAttrsToList;
+  inherit (lib.strings) removePrefix;
+  inherit (config.services) deluge plex tautulli ombi sonarr radarr bazarr jackett cloudflared;
+  kyuuto = "/mnt/kyuuto-media";
+  kyuuto-library = kyuuto + "/library";
+  plexLibrary = {
+    "/mnt/Anime".hostPath = kyuuto-library + "/anime";
+    "/mnt/Shows".hostPath = kyuuto-library + "/tv";
+    "/mnt/Movies".hostPath = kyuuto-library + "/movies";
+    "/mnt/Music".hostPath = kyuuto-library + "/music";
+  };
+in {
+  imports = let
+    inherit (meta) nixos;
+  in [
     nixos.reisen-ct
     nixos.sops
     nixos.nginx
@@ -27,7 +42,7 @@
   ];
 
   sops.secrets.cloudflare_mediabox_tunnel = {
-    owner = config.services.cloudflared.user;
+    owner = cloudflared.user;
   };
 
   services.cloudflared = let
@@ -37,38 +52,69 @@
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflare_mediabox_tunnel.path;
       ingress = {
-        "tautulli.gensokyo.zone".service = "http://localhost:${toString config.services.tautulli.port}";
-        "ombi.gensokyo.zone".service = "http://localhost:${toString config.services.ombi.port}";
-        "sonarr.gensokyo.zone".service = "http://localhost:8989";
-        "radarr.gensokyo.zone".service = "http://localhost:7878";
-        "bazarr.gensokyo.zone".service = "http://localhost:6767";
-        "jackett.gensokyo.zone".service = "http://localhost:9117";
-        "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
+        "tautulli.gensokyo.zone".service = "http://localhost:${toString tautulli.port}";
+        "ombi.gensokyo.zone".service = "http://localhost:${toString ombi.port}";
+        "sonarr.gensokyo.zone".service = "http://localhost:${toString sonarr.port}";
+        "radarr.gensokyo.zone".service = "http://localhost:${toString radarr.port}";
+        "bazarr.gensokyo.zone".service = "http://localhost:${toString bazarr.listenPort}";
+        "jackett.gensokyo.zone".service = "http://localhost:${toString jackett.port}";
+        "deluge.gensokyo.zone".service = "http://localhost:${toString deluge.web.port}";
       };
     };
   };
 
   services.mediatomb = {
     serverName = "tewi";
-    mediaDirectories = [
-      rec {
-        path = "/mnt/Anime";
-        mountPoint = path;
-      }
-      rec {
-        path = "/mnt/Shows";
-        mountPoint = path;
-      }
-      rec {
-        path = "/mnt/Movies";
-        mountPoint = path;
-      }
-    ];
+    mediaDirectories = let
+      mkLibraryDir = dir: {
+        path = kyuuto-library + "/${dir}";
+        mountPoint = kyuuto-library;
+      };
+      libraryDir = {
+        path = kyuuto-library;
+        mountPoint = kyuuto-library;
+        subdirectories =
+          mapAttrsToList (_: { hostPath, ... }:
+            removePrefix "${kyuuto-library}/" hostPath
+          ) plexLibrary
+          ++ [ "tlmc" "music-raw" ];
+      };
+    in [ libraryDir ] ++ map mkLibraryDir [ "tlmc" "music-raw" "lewd" ];
   };
 
   hardware.opengl = {
     enable = true;
     extraPackages = with pkgs; [ mesa.drivers vaapiVdpau libvdpau-va-gl ];
+  };
+
+  fileSystems = let
+    bind = {
+      fsType = "none";
+      options = [ "bind" "nofail" ];
+    };
+    fsPlex = mapAttrs (_: { hostPath, ... }: mkMerge [
+      bind
+      {
+        device = hostPath;
+      }
+    ]) plexLibrary;
+    fsDeluge = {
+      "${deluge.downloadDir}" = mkIf deluge.enable (mkMerge [ bind {
+        device = kyuuto + "/downloads/deluge/download";
+      } ]);
+    };
+  in mkMerge [
+    fsPlex
+    (mkIf deluge.enable fsDeluge)
+  ];
+
+  systemd.services.deluged = mkIf deluge.enable {
+    unitConfig.RequiresMountsFor = [
+      "${deluge.downloadDir}"
+    ];
+  };
+  systemd.services.plex = mkIf plex.enable {
+    unitConfig.RequiresMountsFor = mapAttrsToList (path: _: path) plexLibrary;
   };
 
   systemd.network.networks.eth0 = {
