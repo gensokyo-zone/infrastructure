@@ -15,7 +15,10 @@
   # Tautulli and Ombi will also be reverse proxied, presumably
 
   networking.firewall = {
-    allowedTCPPorts = [32400 8324 32469 8181 5000];
+    interfaces.local.allowedTCPPorts = [
+      32400
+    ];
+    allowedTCPPorts = [8324 32469 8181 5000];
     allowedUDPPorts = [1900 5353 32410 32412 32413 32414];
   };
 }
