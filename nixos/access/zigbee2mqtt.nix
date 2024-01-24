@@ -24,6 +24,10 @@ in {
       type = str;
       default = "z2m.local.${config.networking.domain}";
     };
+    tailDomain = mkOption {
+      type = str;
+      default = "z2m.tail.${config.networking.domain}";
+    };
     port = mkOption {
       type = port;
     };
@@ -42,10 +46,7 @@ in {
         locations."/" = location;
       };
       ${access.localDomain} = {
-        local.enable = true;
-        locations."/" = location;
-      };
-      "z2m.tail.${config.networking.domain}" = mkIf config.services.tailscale.enable {
+        serverAliases = mkIf config.services.tailscale.enable [ access.tailDomain ];
         local.enable = true;
         locations."/" = location;
       };

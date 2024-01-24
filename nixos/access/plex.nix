@@ -4,7 +4,7 @@
   ...
 }: let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   cfg = config.services.plex;
   access = config.services.nginx.access.plex;
 in {
@@ -53,11 +53,13 @@ in {
     in {
       ${access.domain} = {
         locations."/" = location;
+        kTLS = mkDefault true;
         inherit extraConfig;
       };
       ${access.localDomain} = {
         local.enable = true;
         locations."/" = location;
+        kTLS = mkDefault true;
         inherit extraConfig;
       };
     };

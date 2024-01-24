@@ -10,6 +10,7 @@ module "hakurei" {
   account_id = var.cloudflare_account_id
   zone_id    = cloudflare_zone.gensokyo-zone_zone.id
   subdomains = [
+    "@",
     "prox",
   ]
 }
