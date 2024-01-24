@@ -30,7 +30,6 @@ in {
     persistence = mkDefault true;
     listeners = [
       {
-        openFirewall = mkDefault true;
         acl = [
           "pattern readwrite #"
         ];

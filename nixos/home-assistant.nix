@@ -22,7 +22,6 @@ in {
 
   services.home-assistant = {
     enable = mkDefault true;
-    openFirewall = mkDefault true;
     mutableUiConfig = mkDefault true;
     domain = mkDefault "home.${config.networking.domain}";
     config = {

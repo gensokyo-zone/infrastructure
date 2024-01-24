@@ -1,6 +1,11 @@
-{ pkgs, lib, config, modulesPath, ... }:
+{ lib, config, ... }:
 
 let
+  inherit (lib) types;
+  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf;
+  inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.strings) optionalString concatStringsSep concatMapStringsSep;
   fwcfg = config.networking.firewall;
   cfg = config.networking.nftables;
 
@@ -9,8 +14,8 @@ let
   mkPorts = cond: ports: ranges: action: let
     portStrings = (map (range: "${toString range.from}-${toString range.to}") ranges)
                ++ (map toString ports);
-  in lib.optionalString (portStrings != []) ''
-    ${cond} dport { ${lib.concatStringsSep ", " portStrings} } ${action}
+  in optionalString (portStrings != []) ''
+    ${cond} dport { ${concatStringsSep "," portStrings} } ${action}
   '';
 
   ruleset = ''
@@ -26,17 +31,17 @@ let
         ct state established,related accept
 
         iifname { ${
-          lib.concatStringsSep "," (["lo"] ++ fwcfg.trustedInterfaces)
+          concatStringsSep "," (["lo"] ++ fwcfg.trustedInterfaces)
         } } accept
 
         ${mkPorts "tcp" fwcfg.allowedTCPPorts fwcfg.allowedTCPPortRanges "accept"}
         ${mkPorts "udp" fwcfg.allowedUDPPorts fwcfg.allowedUDPPortRanges "accept"}
 
         ${
-          lib.concatStringsSep "\n" (lib.mapAttrsToList (name: ifcfg:
-              mkPorts "iifname ${name} tcp" ifcfg.allowedTCPPorts ifcfg.allowedTCPPortRanges "accept"
-            + mkPorts "iifname ${name} udp" ifcfg.allowedUDPPorts ifcfg.allowedUDPPortRanges "accept"
-          ) fwcfg.interfaces)
+          concatStringsSep "\n" (mapAttrsToList (name: ifcfg: concatMapStringsSep "\n" (cond:
+              mkPorts "${cond} tcp" ifcfg.allowedTCPPorts ifcfg.allowedTCPPortRanges "accept"
+            + mkPorts "${cond} udp" ifcfg.allowedUDPPorts ifcfg.allowedUDPPortRanges "accept"
+          ) ifcfg.nftables.conditions) fwcfg.interfaces)
         }
 
         # DHCPv6
@@ -58,7 +63,7 @@ let
         type filter hook forward priority filter
         policy ${cfg.forwardPolicy}
 
-        ${lib.optionalString doDocker ''
+        ${optionalString doDocker ''
           oifname docker0 ct state invalid drop
           oifname docker0 ct state established,related accept
           iifname docker0 accept
@@ -69,7 +74,7 @@ let
         counter
       }
     }
-    ${lib.optionalString doDocker ''
+    ${optionalString doDocker ''
       table ip nat {
         chain docker-postrouting {
           type nat hook postrouting priority 10
@@ -79,9 +84,17 @@ let
     ''}
     ${cfg.extraConfig}
   '';
+  interfaceModule = { config, name, ... }: {
+    options = {
+      nftables.conditions = mkOption {
+        type = types.listOf types.str;
+        default = "iifname ${name}";
+      };
+    };
+  };
 
 in {
-  options = with lib; {
+  options = {
     networking.nftables = {
       extraConfig = mkOption {
         type = types.lines;
@@ -116,15 +129,18 @@ in {
         default = true;
       };
     };
+    networking.firewall.interfaces = mkOption {
+      type = types.attrsOf (types.submodule interfaceModule);
+    };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     networking.firewall.enable = false;
     networking.nftables = {
       inherit ruleset;
     };
 
-    virtualisation.docker = lib.mkIf doDocker {
+    virtualisation.docker = mkIf doDocker {
       extraOptions = "--iptables=false";
     };
   };

@@ -6,6 +6,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.options) mkOption;
   inherit (lib.lists) optionals;
+  inherit (lib.strings) concatStringsSep;
   inherit (config.services) tailscale avahi;
   inherit (config) networking;
   inherit (networking) hostName;
@@ -81,6 +82,17 @@ in {
           "fd7a:115c:a1e0:ab12::/64"
         ];
       };
+    };
+  };
+
+  config.networking.firewall = {
+    interfaces.local = {
+      nftables.conditions = [
+        "ip saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v4} }"
+        (mkIf networking.enableIPv6
+          "ip6 saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v6} }"
+        )
+      ];
     };
   };
 }

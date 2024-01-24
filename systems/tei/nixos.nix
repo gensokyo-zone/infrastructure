@@ -1,7 +1,12 @@
 {
+  config,
+  lib,
   meta,
   ...
-}: {
+}: let
+  inherit (lib.modules) mkIf mkMerge;
+  inherit (config.services) kanidm mosquitto home-assistant;
+in {
   imports = let
     inherit (meta) nixos;
   in [
@@ -24,8 +29,19 @@
 
   sops.defaultSopsFile = ./secrets.yaml;
 
-  services.kanidm = {
-    server.openFirewall = true;
+  networking.firewall = {
+    interfaces.local.allowedTCPPorts = mkMerge [
+      (mkIf kanidm.enableServer [
+        kanidm.server.frontend.port
+        (mkIf kanidm.server.ldap.enable kanidm.server.ldap.port)
+      ])
+      (mkIf home-assistant.enable [
+        home-assistant.config.http.server_port
+      ])
+      (mkIf mosquitto.enable (map (listener:
+        listener.port
+      ) mosquitto.listeners))
+    ];
   };
 
   systemd.network.networks.eth0 = {
