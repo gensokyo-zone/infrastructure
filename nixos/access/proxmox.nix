@@ -8,8 +8,8 @@
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.strings) escapeRegex;
   inherit (lib.lists) singleton optional;
-  inherit (config.services) tailscale;
-  inherit (config.services.nginx) virtualHosts;
+  inherit (config.services) nginx tailscale;
+  inherit (nginx) virtualHosts;
   access = config.services.nginx.access.proxmox;
   proxyPass = "https://reisen.local.gensokyo.zone:8006/";
   unencrypted = pkgs.mkSnakeOil {
@@ -111,6 +111,6 @@ in {
   config.sops.secrets.access-proxmox = {
     sopsFile = mkDefault ../secrets/access-proxmox.yaml;
     owner = config.services.nginx.user;
-    group = config.services.nginx.group;
+    inherit (nginx) group;
   };
 }

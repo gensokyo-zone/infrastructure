@@ -18,7 +18,7 @@ with lib; {
   };
   config = {
     network.importing = {
-      nixosImports = mkDefault (map (path: toString path) [
+      nixosImports = mkDefault (map toString [
         (root + "/nixos/systems/HN.nix")
         (root + "/nixos/systems/HN/nixos.nix")
       ]);

@@ -55,7 +55,7 @@
           host ${config.authentication.database} ${config.name} ${formatHost host} ${config.authentication.method}
         '') config.authentication.hosts);
       };
-      authentication.database = mkIf (config.ensureDBOwnership) (
+      authentication.database = mkIf config.ensureDBOwnership (
         mkOptionDefault config.name
       );
     };

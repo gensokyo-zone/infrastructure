@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge;
+  inherit (lib.modules) mkIf;
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (access) systemFor;
   inherit (config.networking) hostName;

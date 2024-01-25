@@ -89,9 +89,8 @@ in {
       url = "http://${mediabox.networking.access.hostnameForNetwork.local}:32400";
     };
     access.kanidm = assert kanidm.enableServer; {
-      domain = kanidm.server.frontend.domain;
+      inherit (kanidm.server.frontend) domain port;
       host = tei.networking.access.hostnameForNetwork.local;
-      port = kanidm.server.frontend.port;
       ldapPort = kanidm.server.ldap.port;
       ldapEnable = kanidm.server.ldap.enable;
     };

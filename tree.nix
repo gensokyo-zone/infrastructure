@@ -25,7 +25,7 @@
       "modules/nixos" = {
         functor = {
           external =
-            (with (import (inputs.arcexprs + "/modules")).nixos; [
+            with (import (inputs.arcexprs + "/modules")).nixos; [
               nix
               systemd
               dht22-exporter
@@ -46,7 +46,7 @@
               mosh
               doc-warnings
               inputs.systemd2mqtt.nixosModules.default
-            ]);
+            ];
         };
       };
       "modules/nixos".functor.enable = true;

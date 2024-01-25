@@ -35,6 +35,26 @@
     cd "$NF_CONFIG_ROOT/tf"
     exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-lint-tf" -- "$@"
   '';
+  nf-lint-nix = pkgs.writeShellScriptBin "nf-lint-nix" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-lint-nix" -- "$@"
+  '';
+  nf-fmt-nix = pkgs.writeShellScriptBin "nf-fmt-nix" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-fmt-nix" -- "$@"
+  '';
+  nf-alejandra = pkgs.writeShellScriptBin "alejandra" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-alejandra" -- "$@"
+  '';
+  nf-statix = pkgs.writeShellScriptBin "statix" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-statix" -- "$@"
+  '';
+  nf-deadnix = pkgs.writeShellScriptBin "deadnix" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-deadnix" -- "$@"
+  '';
   nf-kustomize = pkgs.writeShellScriptBin "kustomize" ''
     exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#pkgs.kustomize" -- "$@"
   '';
@@ -52,6 +72,11 @@ in
       nf-deploy
       nf-tf
       nf-lint-tf
+      nf-lint-nix
+      nf-fmt-nix
+      nf-alejandra
+      nf-statix
+      nf-deadnix
       nf-kustomize
       nf-argocd
     ];
