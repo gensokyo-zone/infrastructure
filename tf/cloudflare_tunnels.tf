@@ -77,6 +77,7 @@ module "mediabox" {
     "radarr",
     "bazarr",
     "lidarr",
+    "readarr",
     "radarr",
     "prowlarr",
     "tautulli",

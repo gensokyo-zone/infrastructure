@@ -62,7 +62,6 @@ in {
         "lidarr.gensokyo.zone".service = "http://localhost:8686";
         "readarr.gensokyo.zone".service = "http://localhost:8787";
         "prowlarr.gensokyo.zone".service = "http://localhost:9696";
-        "jackett.gensokyo.zone".service = "http://localhost:9117";
         "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
       };
     };
