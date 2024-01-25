@@ -27,7 +27,7 @@ in {
   };
   users.groups.${cfg.group} = {};
 
-  networking.firewall.allowedTCPPorts = [cfg.port];
+  networking.firewall.interfaces.local.allowedTCPPorts = [cfg.port];
 
   services.syncplay = {
     enable = true;

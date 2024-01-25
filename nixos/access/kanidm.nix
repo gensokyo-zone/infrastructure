@@ -146,8 +146,13 @@ in {
       ])
     ];
 
-    networking.firewall.allowedTCPPorts = [
-      389 636
-    ];
+    networking.firewall = {
+      interfaces.local.allowedTCPPorts = [
+        389
+      ];
+      allowedTCPPorts = [
+        636
+      ];
+    };
   };
 }
