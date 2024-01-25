@@ -71,9 +71,9 @@ with lib; {
     enable = true;
     publicKey = "arc.cachix.org-1:DZmhclLkB6UO0rc0rBzNpwFbbaeLfyn+fYccuAy7YVY=";
   };
-  cache.cachix.kittywitch = {
+  cache.cachix.gensokyo-infrastructure = {
     enable = true;
-    publicKey = "kittywitch.cachix.org-1:KIzX/G5cuPw5WgrXad6UnrRZ8UDr7jhXzRTK/lmqyK0=";
+    publicKey = "gensokyo-infrastructure.cachix.org-1:CY6ChfQ8KTUdwWoMbo8ZWr2QCLMXUQspHAxywnS2FyI=";
     signingKey = "mewp";
   };
 }
