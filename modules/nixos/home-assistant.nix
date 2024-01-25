@@ -7,7 +7,7 @@
   cfg = config.services.home-assistant;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.lists) optional optionals elem;
+  inherit (lib.lists) optional optionals elem unique;
   inherit (lib.strings) toLower;
 in {
   options.services.home-assistant = with lib.types; {
@@ -152,13 +152,21 @@ in {
               then lib.warn "brother override no longer needed" true
               else true;
           });
+          mpd2 = super.mpd2.overridePythonAttrs (old: {
+            patches = old.patches or [ ] ++ [
+              ../../packages/mpd2-skip-flaky-test.patch
+            ];
+            disabledTests = unique (old.disabledTests or [ ] ++ [
+              "test_idle_timeout"
+            ]);
+          });
         };
       };
     in home-assistant.overrideAttrs (old: {
       makeWrapperArgs = old.makeWrapperArgs ++ optional (cfg.brother.enable && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
-      disabledTests = old.disabledTests or [ ] ++ [
+      disabledTests = unique (old.disabledTests or [ ] ++ [
         "test_check_config"
-      ];
+      ]);
     });
     extraPackages = python3Packages: with python3Packages; mkMerge [
       [

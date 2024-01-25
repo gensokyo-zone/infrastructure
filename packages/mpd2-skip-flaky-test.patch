@@ -1,0 +1,13 @@
+diff --git a/mpd/tests.py b/mpd/tests.py
+index 9789c86..469133e 100755
+--- a/mpd/tests.py
++++ b/mpd/tests.py
+@@ -1555,7 +1555,7 @@ class TestAsyncioMPD(unittest.IsolatedAsyncioTestCase):
+         self.client.disconnect()
+ 
+     @unittest.skipIf(
+-        sys.version_info >= (3, 12),
++        sys.version_info >= (3, 11),
+         "In Python 3.12 we see a timeout error triggering idle instead of the bug described in https://github.com/Mic92/python-mpd2/pull/199",
+     )
+     async def test_idle_timeout(self) -> None:
