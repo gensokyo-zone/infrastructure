@@ -22,6 +22,7 @@ in {
     nixos.ddclient
     nixos.acme
     nixos.nginx
+    nixos.access.nginx
     nixos.access.global
     nixos.access.gensokyo
     nixos.access.kanidm

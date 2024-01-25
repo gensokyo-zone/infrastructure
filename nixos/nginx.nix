@@ -5,7 +5,7 @@
   ...
 }:
 with lib; {
-  networking.firewall.allowedTCPPorts = [
+  networking.firewall.interfaces.local.allowedTCPPorts = [
     443
     80
   ];
