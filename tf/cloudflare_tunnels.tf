@@ -75,8 +75,10 @@ module "mediabox" {
     "deluge",
     "sonarr",
     "radarr",
-    "jackett",
     "bazarr",
+    "lidarr",
+    "radarr",
+    "prowlarr",
     "tautulli",
     "ombi",
   ]

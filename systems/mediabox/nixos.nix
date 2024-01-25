@@ -38,7 +38,9 @@ in {
     nixos.radarr
     nixos.sonarr
     nixos.bazarr
-    nixos.jackett
+    nixos.lidarr
+    nixos.readarr
+    nixos.prowlarr
   ];
 
   sops.secrets.cloudflare_mediabox_tunnel = {
@@ -52,13 +54,16 @@ in {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflare_mediabox_tunnel.path;
       ingress = {
-        "tautulli.gensokyo.zone".service = "http://localhost:${toString tautulli.port}";
-        "ombi.gensokyo.zone".service = "http://localhost:${toString ombi.port}";
-        "sonarr.gensokyo.zone".service = "http://localhost:${toString sonarr.port}";
-        "radarr.gensokyo.zone".service = "http://localhost:${toString radarr.port}";
-        "bazarr.gensokyo.zone".service = "http://localhost:${toString bazarr.listenPort}";
-        "jackett.gensokyo.zone".service = "http://localhost:${toString jackett.port}";
-        "deluge.gensokyo.zone".service = "http://localhost:${toString deluge.web.port}";
+        "tautulli.gensokyo.zone".service = "http://localhost:${toString config.services.tautulli.port}";
+        "ombi.gensokyo.zone".service = "http://localhost:${toString config.services.ombi.port}";
+        "sonarr.gensokyo.zone".service = "http://localhost:8989";
+        "radarr.gensokyo.zone".service = "http://localhost:7878";
+        "bazarr.gensokyo.zone".service = "http://localhost:6767";
+        "lidarr.gensokyo.zone".service = "http://localhost:8686";
+        "readarr.gensokyo.zone".service = "http://localhost:8787";
+        "prowlarr.gensokyo.zone".service = "http://localhost:9696";
+        "jackett.gensokyo.zone".service = "http://localhost:9117";
+        "deluge.gensokyo.zone".service = "http://localhost:${toString config.services.deluge.web.port}";
       };
     };
   };
@@ -74,39 +79,48 @@ in {
         path = kyuuto-library;
         mountPoint = kyuuto-library;
         subdirectories =
-          mapAttrsToList (_: { hostPath, ... }:
-            removePrefix "${kyuuto-library}/" hostPath
-          ) plexLibrary
-          ++ [ "tlmc" "music-raw" ];
+          mapAttrsToList (
+            _: {hostPath, ...}:
+              removePrefix "${kyuuto-library}/" hostPath
+          )
+          plexLibrary
+          ++ ["tlmc" "music-raw"];
       };
-    in [ libraryDir ] ++ map mkLibraryDir [ "tlmc" "music-raw" "lewd" ];
+    in
+      [libraryDir] ++ map mkLibraryDir ["tlmc" "music-raw" "lewd"];
   };
 
   hardware.opengl = {
     enable = true;
-    extraPackages = with pkgs; [ mesa.drivers vaapiVdpau libvdpau-va-gl ];
+    extraPackages = with pkgs; [mesa.drivers vaapiVdpau libvdpau-va-gl];
   };
 
   fileSystems = let
     bind = {
       fsType = "none";
-      options = [ "bind" "nofail" ];
+      options = ["bind" "nofail"];
     };
-    fsPlex = mapAttrs (_: { hostPath, ... }: mkMerge [
-      bind
-      {
-        device = hostPath;
-      }
-    ]) plexLibrary;
+    fsPlex = mapAttrs (_: {hostPath, ...}:
+      mkMerge [
+        bind
+        {
+          device = hostPath;
+        }
+      ])
+    plexLibrary;
     fsDeluge = {
-      "${deluge.downloadDir}" = mkIf deluge.enable (mkMerge [ bind {
-        device = kyuuto + "/downloads/deluge/download";
-      } ]);
+      "${deluge.downloadDir}" = mkIf deluge.enable (mkMerge [
+        bind
+        {
+          device = kyuuto + "/downloads/deluge/download";
+        }
+      ]);
     };
-  in mkMerge [
-    fsPlex
-    (mkIf deluge.enable fsDeluge)
-  ];
+  in
+    mkMerge [
+      fsPlex
+      (mkIf deluge.enable fsDeluge)
+    ];
 
   systemd.services.deluged = mkIf deluge.enable {
     unitConfig.RequiresMountsFor = [
@@ -123,8 +137,8 @@ in {
       MACAddress = "BC:24:11:34:F4:A8";
       Type = "ether";
     };
-    address = [ "10.1.1.44/24" ];
-    gateway = [ "10.1.1.1" ];
+    address = ["10.1.1.44/24"];
+    gateway = ["10.1.1.1"];
     DHCP = "no";
   };
 
