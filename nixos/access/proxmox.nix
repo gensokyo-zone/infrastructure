@@ -11,7 +11,7 @@
   inherit (config.services) nginx tailscale;
   inherit (nginx) virtualHosts;
   access = config.services.nginx.access.proxmox;
-  proxyPass = "https://reisen.local.gensokyo.zone:8006/";
+  proxyPass = "https://reisen.local.${config.networking.domain}:8006/";
   unencrypted = pkgs.mkSnakeOil {
     name = "prox-local-cert";
     domain = singleton "prox.local.${config.networking.domain}"
@@ -84,9 +84,12 @@ in {
         internal;
       '';
     };
+    extraConfig = ''
+      client_max_body_size 2048M;
+    '';
   in {
     ${access.domain} = {
-      inherit locations;
+      inherit locations extraConfig;
     };
     ${access.localDomain} = mkMerge [ {
       inherit (virtualHosts.${access.domain}) useACMEHost;
@@ -94,7 +97,7 @@ in {
       forceSSL = mkDefault true;
       locations."/" = {
         proxy.websocket.enable = true;
-        inherit proxyPass;
+        inherit proxyPass extraConfig;
       };
     } sslHost ];
     ${access.tailDomain} = mkIf tailscale.enable (mkMerge [ {
@@ -103,7 +106,7 @@ in {
       local.enable = mkDefault true;
       locations."/" = {
         proxy.websocket.enable = true;
-        inherit proxyPass;
+        inherit proxyPass extraConfig;
       };
     } sslHost ]);
   };
