@@ -14,6 +14,10 @@ terraform {
       source  = "hashicorp/tls"
       version = ">= 4.0.5"
     }
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">= 0.42.1"
+    }
   }
 
   cloud {

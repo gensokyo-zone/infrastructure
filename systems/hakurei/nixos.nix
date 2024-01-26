@@ -28,6 +28,7 @@ in {
     nixos.access.kanidm
     nixos.access.proxmox
     nixos.access.plex
+    ./reisen-ssh.nix
   ];
 
   sops.secrets.cloudflared-tunnel-hakurei = {

@@ -4,8 +4,9 @@
   pkgs,
   ...
 }: let
+  inherit (lib.modules) mkDefault;
   publicPort = 62954;
-in with lib; {
+in {
   /*
   security.pam.services.sshd.text = mkDefault (mkAfter ''
     session required pam_exec.so ${katnotify}/bin/notify
@@ -13,17 +14,17 @@ in with lib; {
   */
 
   services.openssh = {
-    enable = true;
-    ports = lib.mkDefault [publicPort 22];
-    openFirewall = false;
+    enable = mkDefault true;
+    ports = mkDefault [publicPort 22];
+    openFirewall = mkDefault false;
     settings = {
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      PermitRootLogin = lib.mkDefault "prohibit-password";
+      PasswordAuthentication = mkDefault false;
+      KbdInteractiveAuthentication = mkDefault false;
+      PermitRootLogin = mkDefault "prohibit-password";
       KexAlgorithms = ["curve25519-sha256@libssh.org"];
-      PubkeyAcceptedAlgorithms = "+ssh-rsa";
-      StreamLocalBindUnlink = "yes";
-      LogLevel = "VERBOSE";
+      PubkeyAcceptedAlgorithms = mkDefault "+ssh-rsa";
+      StreamLocalBindUnlink = mkDefault "yes";
+      LogLevel = mkDefault "VERBOSE";
     };
   };
   networking.firewall = {
