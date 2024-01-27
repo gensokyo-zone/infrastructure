@@ -6,6 +6,9 @@
       url = "github:arcnmx/nixexprs/master";
       flake = false;
     };
+    std = {
+      url = "github:chessai/nix-std";
+    };
     ci = {
       url = "github:arcnmx/ci/v0.6";
       flake = false;
@@ -18,6 +21,11 @@
     flake-utils.url = "github:numtide/flake-utils";
     sops-nix = {
       url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    tree = {
+      url = "github:kittywitch/tree";
+      inputs.std.follows = "std";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     systemd2mqtt = {

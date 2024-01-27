@@ -87,7 +87,7 @@
     "flakelib": {
       "inputs": {
         "fl-config": "fl-config",
-        "std": "std"
+        "std": "std_2"
       },
       "locked": {
         "lastModified": 1683326042,
@@ -175,7 +175,9 @@
         "nixpkgs": "nixpkgs",
         "nur": "nur",
         "sops-nix": "sops-nix",
-        "systemd2mqtt": "systemd2mqtt"
+        "std": "std",
+        "systemd2mqtt": "systemd2mqtt",
+        "tree": "tree"
       }
     },
     "rust": {
@@ -221,6 +223,21 @@
       }
     },
     "std": {
+      "locked": {
+        "lastModified": 1701658249,
+        "narHash": "sha256-KIt1TUuBvldhaVRta010MI5FeQlB8WadjqljybjesN0=",
+        "owner": "chessai",
+        "repo": "nix-std",
+        "rev": "715db541ffff4194620e48d210b76f73a74b5b5d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "chessai",
+        "repo": "nix-std",
+        "type": "github"
+      }
+    },
+    "std_2": {
       "inputs": {
         "nix-std": "nix-std"
       },
@@ -272,6 +289,29 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "tree": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "std": [
+          "std"
+        ]
+      },
+      "locked": {
+        "lastModified": 1676505934,
+        "narHash": "sha256-jeqZtNLOKXRSDmD1v+b9+v+hwVyH6kcKzZ9f0gcJpdk=",
+        "owner": "kittywitch",
+        "repo": "tree",
+        "rev": "a831f6fd209e3d00c5026303994de28d0031ab3b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kittywitch",
+        "repo": "tree",
         "type": "github"
       }
     }
