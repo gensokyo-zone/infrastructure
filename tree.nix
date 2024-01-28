@@ -20,6 +20,9 @@
         "default"
       ];
     };
+    "systems/*" = {
+      aliasDefault = true;
+    };
     "modules/nixos" = {
       functor = {
         external = with (import (inputs.arcexprs + "/modules")).nixos; [

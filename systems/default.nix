@@ -137,7 +137,7 @@
           machine = name;
         };
     })
-  (set.map (_: c: c.config) tree.systems);
+  (set.map (_: c: c) tree.systems);
   processHost = name: cfg: let
     host = cfg.config;
   in {
