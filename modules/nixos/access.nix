@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   lib,
   ...
@@ -94,5 +95,17 @@ in {
         )
       ];
     };
+  };
+
+  config._module.args.access = let
+    systemFor = hostName: inputs.self.nixosConfigurations.${hostName}.config;
+    systemForOrNull = hostName: inputs.self.nixosConfigurations.${hostName}.config or null;
+  in {
+    systemFor = hostName: if hostName == config.networking.hostName
+      then config
+      else systemFor hostName;
+    systemForOrNull = hostName: if hostName == config.networking.hostName
+      then config
+      else systemForOrNull hostName;
   };
 }

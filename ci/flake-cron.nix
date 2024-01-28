@@ -98,14 +98,14 @@ in {
         command = let
           filteredHosts = [ "hakurei" "tei" "mediabox" ];
           gcBetweenHosts = false;
-          nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . network.nodes.${node}.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
+          nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
         in ''
           # ${toString builtins.currentTime}
           nix flake update
 
           if git status --porcelain | grep -qF flake.lock; then
             git -P diff flake.lock
-            echo "checking that network.nodes.still build..." >&2
+            echo "checking that nodes still build..." >&2
             if ${nodeBuildString}; then
               if [[ -n $CACHIX_SIGNING_KEY ]]; then
                 cachix push gensokyo-infrastructure result*/ &

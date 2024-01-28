@@ -20,6 +20,11 @@
     (system: rec {
       devShells.default = import ./devShell.nix {inherit system inputs;};
     });
+  packages =
+    inputs.flake-utils.lib.eachDefaultSystem
+    (system: rec {
+      packages = import ./packages {inherit system inputs lib;};
+    });
   std = import ./std.nix {inherit inputs;};
   inherit (std) set;
   checks = set.map (_: deployLib: deployLib.deployChecks inputs.self.deploy) inputs.deploy-rs.lib;
@@ -31,3 +36,4 @@ in
   }
   // systems
   // shells
+  // packages

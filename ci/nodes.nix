@@ -60,10 +60,10 @@ with lib; {
   };
 
   jobs = let
-    enabledHosts = ["hakurei" "tei" "mediabox" "reisen-ct"];
+    enabledHosts = ["hakurei" "tei" "mediabox" "ct"];
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
-      tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.system.build.toplevel;
+      tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;
     }));
 
   ci.gh-actions.checkoutOptions.submodules = false;

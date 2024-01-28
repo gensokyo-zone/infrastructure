@@ -51,5 +51,5 @@ vim .sops.yaml
 ### Template
 
 ```shell
-NF_HOST=reisen-ct nf-deploy tarball
+NF_HOST=ct nf-deploy tarball
 ```

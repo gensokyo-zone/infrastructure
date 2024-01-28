@@ -1,7 +1,11 @@
 {
   "nodes": {
     "arcexprs": {
-      "flake": false,
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
         "lastModified": 1706385294,
         "narHash": "sha256-mGqas+TDp2DtR7ufx10SDlKnL+aRZ/jhbkGYlF8NLO4=",

@@ -2,8 +2,7 @@
   inputs,
   system,
 }: let
-  meta = import ./outputs.nix {inherit inputs;};
-  pkgs = meta.legacyPackages.${system};
+  pkgs = inputs.nixpkgs.legacyPackages.${system};
   nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
     NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
     for f in "''${NF_CONFIG_FILES[@]}"; do
@@ -13,7 +12,7 @@
   '';
   nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
     set -eu
-    for host in hakurei tei mediabox reisen-ct; do
+    for host in hakurei tei mediabox ct; do
       nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.$host.test
     done
   '';

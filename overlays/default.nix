@@ -8,16 +8,14 @@ inputs.flake-utils.lib.eachDefaultSystem (system: {
         (import ./local)
         (import ./lib)
         inputs.deploy-rs.overlay
+        inputs.arcexprs.overlays.default
         (final: prev: {
           jemalloc =
             if final.hostPlatform != "aarch64-darwin"
             then prev.jemalloc
             else null;
         })
-      ]
-      ++ (map (path: import "${path}/overlay.nix") [
-        inputs.arcexprs
-      ]);
+      ];
     config = {
       allowUnfree = true;
       allowBroken = true;

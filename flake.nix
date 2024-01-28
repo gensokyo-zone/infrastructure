@@ -4,7 +4,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     arcexprs = {
       url = "github:arcnmx/nixexprs/master";
-      flake = false;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     std = {
       url = "github:chessai/nix-std";

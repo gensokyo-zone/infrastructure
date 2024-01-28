@@ -4,7 +4,7 @@ set -eu
 NF_CONFIG_ROOT=${NF_CONFIG_ROOT-.}
 
 NF_HOST=${NF_HOST-tewi}
-NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.toplevel
+NIXOS_TOPLEVEL=nixosConfigurations.$NF_HOST.config.system.build.toplevel
 NF_ADDR=${NF_ADDR-${NF_HOST}.local}
 
 if [[ $NF_ADDR = tewi.local ]]; then
@@ -19,7 +19,7 @@ fi
 if [[ $1 = tarball ]]; then
 	shift
 	set -- build "$@"
-	NIXOS_TOPLEVEL=network.nodes.$NF_HOST.system.build.tarball
+	NIXOS_TOPLEVEL=nixosConfigurations.$NF_HOST.config.system.build.tarball
 fi
 
 if [[ $1 = build ]]; then
