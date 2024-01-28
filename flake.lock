@@ -118,34 +118,21 @@
     "flakelib": {
       "inputs": {
         "fl-config": "fl-config",
-        "std": "std_2"
+        "std": [
+          "std-fl"
+        ]
       },
       "locked": {
-        "lastModified": 1683326042,
-        "narHash": "sha256-PRjFKmEzzoE0BeDM8zRdwMcUkMq4Ue340O4jv71PzBw=",
+        "lastModified": 1701802971,
+        "narHash": "sha256-Zo5fJpXbe+xXOTiDT4JG2rExobMJTmFZ72+3XTMMHrQ=",
         "owner": "flakelib",
         "repo": "fl",
-        "rev": "d4be0a0007aeae09b8faced2e297b1062dc05b1e",
+        "rev": "b71a91517f6b16aa5faefe8ec491d9f3062d7a20",
         "type": "github"
       },
       "original": {
         "owner": "flakelib",
         "repo": "fl",
-        "type": "github"
-      }
-    },
-    "nix-std": {
-      "locked": {
-        "lastModified": 1671170529,
-        "narHash": "sha256-015C6x3tZMEd83Vd2rpfLC86PSRJrbUca1U3Rysranw=",
-        "owner": "chessai",
-        "repo": "nix-std",
-        "rev": "3b307d64ef7d7e8769d36b8c8bf33983efd1415a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "chessai",
-        "repo": "nix-std",
         "type": "github"
       }
     },
@@ -204,10 +191,12 @@
         "deploy-rs": "deploy-rs",
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
+        "flakelib": "flakelib",
         "nixpkgs": "nixpkgs",
         "nur": "nur",
         "sops-nix": "sops-nix",
         "std": "std",
+        "std-fl": "std-fl",
         "systemd2mqtt": "systemd2mqtt",
         "tree": "tree"
       }
@@ -269,16 +258,18 @@
         "type": "github"
       }
     },
-    "std_2": {
+    "std-fl": {
       "inputs": {
-        "nix-std": "nix-std"
+        "nix-std": [
+          "std"
+        ]
       },
       "locked": {
-        "lastModified": 1671225084,
-        "narHash": "sha256-EzqxFHRifPyjUXQY4B8GJH75fTmWqFnQdj10Q984bR8=",
+        "lastModified": 1701802337,
+        "narHash": "sha256-JCVCyjDZ6LA0xyVoDZzRXjy0OgWOZo3OpeZEVm/U97w=",
         "owner": "flakelib",
         "repo": "std",
-        "rev": "8546115941a5498ddb03a239aacdba151d433f09",
+        "rev": "443d1c8246b3d96a4822b02af907ca0d833e8b63",
         "type": "github"
       },
       "original": {
@@ -289,7 +280,9 @@
     },
     "systemd2mqtt": {
       "inputs": {
-        "flakelib": "flakelib",
+        "flakelib": [
+          "flakelib"
+        ],
         "nixpkgs": [
           "nixpkgs"
         ],

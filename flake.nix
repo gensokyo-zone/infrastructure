@@ -19,6 +19,14 @@
     };
     nur.url = "github:nix-community/nur/master";
     flake-utils.url = "github:numtide/flake-utils";
+    flakelib = {
+      url = "github:flakelib/fl";
+      inputs.std.follows = "std-fl";
+    };
+    std-fl = {
+      url = "github:flakelib/std";
+      inputs.nix-std.follows = "std";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -40,6 +48,7 @@
       url = "github:arcnmx/systemd2mqtt";
       inputs = {
         nixpkgs.follows = "nixpkgs";
+        flakelib.follows = "flakelib";
       };
     };
   };
