@@ -18,19 +18,13 @@ Welcome to the Palace of the Earth Spirits!
 
 ## Build and Deploy
 
-```shell
-:; export NF_HOST=tewi
-:; nf-deploy build
-# switch without committing to it...
-:; nf-deploy test
-# then deploy..!
-:; nf-deploy switch
-```
-
-The above is just a convenience wrapper around `nixos-rebuild`:
+The `-s` disables flake checks.
 
 ```shell
-:; nixos-rebuild switch --flake .#tewi --target-host tewi --use-remote-sudo
+# without trace
+deploy -s .#<hostname>
+# with trace
+deploy -s .#<hostname> -- --show-trace
 ```
 
 ## Editing Secrets
