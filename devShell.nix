@@ -2,8 +2,8 @@
   inputs,
   system,
 }: let
-  meta = import ./meta.nix {inherit inputs system;};
-  inherit (meta) pkgs;
+  meta = import ./outputs.nix {inherit inputs;};
+  pkgs = meta.legacyPackages.${system};
   nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
     NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
     for f in "''${NF_CONFIG_FILES[@]}"; do
@@ -79,6 +79,7 @@ in
       nf-deadnix
       nf-kustomize
       nf-argocd
+      deploy-rs
     ];
     shellHook = ''
       export NIX_BIN_DIR=$(dirname $(readlink -f $(type -P nix)))

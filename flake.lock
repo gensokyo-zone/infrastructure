@@ -34,6 +34,33 @@
         "type": "github"
       }
     },
+    "deploy-rs": {
+      "inputs": {
+        "flake-compat": [
+          "flake-compat"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "utils": [
+          "flake-utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1704875591,
+        "narHash": "sha256-eWRLbqRcrILgztU/m/k7CYLzETKNbv0OsT2GjkaNm8A=",
+        "owner": "serokell",
+        "repo": "deploy-rs",
+        "rev": "1776009f1f3fb2b5d236b84d9815f2edee463a9b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "serokell",
+        "ref": "master",
+        "repo": "deploy-rs",
+        "type": "github"
+      }
+    },
     "fl-config": {
       "locked": {
         "lastModified": 1653159448,
@@ -170,6 +197,7 @@
       "inputs": {
         "arcexprs": "arcexprs",
         "ci": "ci",
+        "deploy-rs": "deploy-rs",
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",

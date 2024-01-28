@@ -28,6 +28,14 @@
       inputs.std.follows = "std";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    deploy-rs = {
+      url = "github:serokell/deploy-rs/master";
+      inputs = {
+        flake-compat.follows = "flake-compat";
+        nixpkgs.follows = "nixpkgs";
+        utils.follows = "flake-utils";
+      };
+    };
     systemd2mqtt = {
       url = "github:arcnmx/systemd2mqtt";
       inputs = {
@@ -46,7 +54,9 @@
     ];
   };
 
-  outputs = {
+  outputs = inputs: import ./outputs.nix {inherit inputs;};
+  /*
+    outputs = {
     self,
     nixpkgs,
     flake-utils,
@@ -69,4 +79,5 @@
         })
       self.legacyPackages.x86_64-linux.network.nodes;
     };
+  */
 }

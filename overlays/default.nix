@@ -1,8 +1,5 @@
-{
-  inputs,
-  system ? builtins.currentSystem,
-  ...
-} @ args: let
+{inputs, ...} @ args:
+inputs.flake-utils.lib.eachDefaultSystem (system: {
   pkgs = import inputs.nixpkgs {
     inherit system;
     overlays =
@@ -10,6 +7,7 @@
         (import ./nur {inherit inputs;})
         (import ./local)
         (import ./lib)
+        inputs.deploy-rs.overlay
         (final: prev: {
           jemalloc =
             if final.hostPlatform != "aarch64-darwin"
@@ -31,5 +29,4 @@
       ];
     };
   };
-in
-  pkgs
+})

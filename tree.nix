@@ -1,8 +1,4 @@
-{
-  inputs,
-  lib,
-  ...
-}: (inputs.tree.tree {
+{inputs, ...}: (inputs.tree.tree {
   inherit inputs;
   folder = ./.;
   config = {
@@ -12,12 +8,16 @@
         "inputs"
         "default"
         "patchedInputs"
-        "mkTree"
         "outputs"
         "tree"
         "flake"
         "meta"
         "inputs"
+      ];
+    };
+    systems = {
+      excludes = [
+        "default"
       ];
     };
     "modules/nixos" = {
@@ -54,7 +54,6 @@
     "nixos/*".functor = {
       enable = true;
     };
-    "system".functor.enable = true;
     "hardware".evaluateDefault = true;
     "nixos/cross".evaluateDefault = true;
     "hardware/*".evaluateDefault = true;
