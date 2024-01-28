@@ -51,6 +51,13 @@
         flakelib.follows = "flakelib";
       };
     };
+    website = {
+      url = "github:gensokyo-zone/website";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flakelib.follows = "flakelib";
+      };
+    };
   };
   nixConfig = {
     extra-substituters = [

@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  inputs,
   pkgs,
   ...
 }: let
@@ -8,7 +9,7 @@
 in {
   services.nginx.virtualHosts.${config.networking.domain} = {
     locations."/" = {
-      root = pkgs.gensokyoZone;
+      root = inputs.website.packages.${pkgs.system}.gensokyoZone;
     };
   };
 }

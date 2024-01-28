@@ -198,7 +198,8 @@
         "std": "std",
         "std-fl": "std-fl",
         "systemd2mqtt": "systemd2mqtt",
-        "tree": "tree"
+        "tree": "tree",
+        "website": "website"
       }
     },
     "rust": {
@@ -337,6 +338,29 @@
       "original": {
         "owner": "kittywitch",
         "repo": "tree",
+        "type": "github"
+      }
+    },
+    "website": {
+      "inputs": {
+        "flakelib": [
+          "flakelib"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1706423113,
+        "narHash": "sha256-1i8FO7L+MpDlgfx3wTW7NkojdHGFEE3qy/s1n+wjGlU=",
+        "owner": "gensokyo-zone",
+        "repo": "website",
+        "rev": "88d31fa2f9d622f0076481e5949ce7e07723043e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gensokyo-zone",
+        "repo": "website",
         "type": "github"
       }
     }
