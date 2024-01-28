@@ -3,11 +3,11 @@
     "arcexprs": {
       "flake": false,
       "locked": {
-        "lastModified": 1706196577,
-        "narHash": "sha256-lFG8gaadISrBFAYRcdEeWMoZuZD1QWFLeP0fHCHQPIE=",
+        "lastModified": 1706385294,
+        "narHash": "sha256-mGqas+TDp2DtR7ufx10SDlKnL+aRZ/jhbkGYlF8NLO4=",
         "owner": "arcnmx",
         "repo": "nixexprs",
-        "rev": "d7ed162f0b61e1657955446d239e4eddba116f61",
+        "rev": "aa081527557408f1fb5dca56a19f817cd3577b47",
         "type": "github"
       },
       "original": {
@@ -152,11 +152,11 @@
     },
     "nur": {
       "locked": {
-        "lastModified": 1706312665,
-        "narHash": "sha256-UcIACtb5+PocrtEaeB7U9pd+95AOD6jekxLoyebspOE=",
+        "lastModified": 1706403900,
+        "narHash": "sha256-uOdjtOnPyGybrlHeRig9/CLVHjM4QPeSty+AzQsoOFk=",
         "owner": "nix-community",
         "repo": "nur",
-        "rev": "fa82aede91c5640c359c9cabc616a3450d217e9c",
+        "rev": "aa29a73b660e5292878c6db313f341bcf6e43895",
         "type": "github"
       },
       "original": {
