@@ -63,7 +63,7 @@ with lib; {
     enabledHosts = ["hakurei" "tei" "mediabox" "reisen-ct"];
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
-      tasks.${host}.inputs = channels.nixfiles.network.nodes.${host}.system.build.toplevel;
+      tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.system.build.toplevel;
     }));
 
   ci.gh-actions.checkoutOptions.submodules = false;
