@@ -65,6 +65,7 @@
         autoRollback = mkOptionDefault true;
         magicRollback = mkOptionDefault true;
         fastConnection = mkOptionDefault false;
+        hostname = mkOptionDefault "${machine}.local.gensokyo.zone";
         profiles.system = {
           user = "root";
           path = inputs.deploy-rs.lib.${system}.activate.nixos inputs.self.nixosConfigurations.${machine};
