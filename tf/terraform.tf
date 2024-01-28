@@ -10,13 +10,17 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = ">= 4.22.0"
     }
-    tls = {
-      source  = "hashicorp/tls"
-      version = ">= 4.0.5"
-    }
     proxmox = {
       source  = "bpg/proxmox"
       version = ">= 0.42.1"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.6.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = ">= 4.0.5"
     }
   }
 

@@ -22,6 +22,9 @@
   nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
     exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-deploy" -- "$@"
   '';
+  nf-setup-reisen = pkgs.writeShellScriptBin "nf-setup-reisen" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-setup-reisen" -- "$@"
+  '';
   nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
     if [[ $# -eq 0 ]]; then
@@ -73,6 +76,7 @@ in
       nf-actions-test
       nf-update
       nf-deploy
+      nf-setup-reisen
       nf-tf
       nf-lint-tf
       nf-lint-nix

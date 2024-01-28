@@ -31,7 +31,7 @@
       };
       type = mkOption {
         description = "Operating system type of the host";
-        type = str;
+        type = nullOr str;
         default = "NixOS";
       };
       folder = mkOption {
@@ -141,7 +141,7 @@
   (set.map (_: c: c) tree.systems);
   processHost = name: cfg: let
     host = cfg.config;
-  in {
+  in set.optional (host.type != null) {
     deploy.nodes.${name} = host.deploy;
 
     "${host.folder}Configurations".${name} = host.builder {

@@ -1,0 +1,1 @@
+SUBSYSTEM=="drm", KERNEL=="renderD128", OWNER="100193"

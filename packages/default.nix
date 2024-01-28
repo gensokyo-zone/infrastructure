@@ -17,6 +17,16 @@
     nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
       exec ${pkgs.runtimeShell} ${../ci/deploy.sh} "$@"
     '';
+    nf-setup-reisen = let
+      bin = ../../systems/reisen/bin;
+    in pkgs.writeShellScriptBin "nf-setup-reisen" ''
+      ssh root@reisen env \
+        INPUT_INFRA_SETUP="$(base64 -w0 < ${bin + "/setup.sh"})" \
+        INPUT_INFRA_PUTFILE64="$(base64 -w0 < ${bin + "/putfile64.sh"})" \
+        INPUT_INFRA_PVE="$(base64 -w0 < ${bin + "/pve.sh"})" \
+        INPUT_INFRA_LXC_CONFIG="$(base64 -w0 < ${bin + "/lxc-config.sh"})" \
+        "bash -c \"eval \\\"\\\$(base64 -d <<<\\\$INPUT_INFRA_SETUP)\\\"\""
+    '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''
       if [[ $# -eq 0 ]]; then
         set -- check
