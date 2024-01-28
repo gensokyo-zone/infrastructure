@@ -351,11 +351,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706423113,
-        "narHash": "sha256-1i8FO7L+MpDlgfx3wTW7NkojdHGFEE3qy/s1n+wjGlU=",
+        "lastModified": 1706465820,
+        "narHash": "sha256-L55+TMngnjDcTXkqvxxSfjYaOrZiz3t7yjLVPMGEtpA=",
         "owner": "gensokyo-zone",
         "repo": "website",
-        "rev": "88d31fa2f9d622f0076481e5949ce7e07723043e",
+        "rev": "3644e7f3d96eeffb4aafddc2138552ce189dd2c1",
         "type": "github"
       },
       "original": {
