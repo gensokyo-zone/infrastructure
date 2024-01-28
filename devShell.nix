@@ -2,7 +2,7 @@
   inputs,
   system,
 }: let
-  pkgs = inputs.nixpkgs.legacyPackages.${system};
+  inherit (inputs.self.legacyPackages.${system}) pkgs;
   nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
     NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
     for f in "''${NF_CONFIG_FILES[@]}"; do
@@ -60,6 +60,10 @@
   nf-argocd = pkgs.writeShellScriptBin "argocd" ''
     exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#pkgs.argocd" -- "$@"
   '';
+  nf-deploy-rs = pkgs.writeShellScriptBin "deploy" ''
+    cd "$NF_CONFIG_ROOT"
+    exec nix shell ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#deploy-rs" -c deploy "$@"
+  '';
 in
   pkgs.mkShell {
     nativeBuildInputs = with pkgs; [
@@ -78,7 +82,7 @@ in
       nf-deadnix
       nf-kustomize
       nf-argocd
-      deploy-rs
+      nf-deploy-rs
     ];
     shellHook = ''
       export NIX_BIN_DIR=$(dirname $(readlink -f $(type -P nix)))

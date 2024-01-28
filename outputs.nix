@@ -15,15 +15,12 @@
     inherit inputs lib std pkgs;
     tree = tree.impure;
   };
-  shells =
+  outputs =
     inputs.flake-utils.lib.eachDefaultSystem
     (system: rec {
       devShells.default = import ./devShell.nix {inherit system inputs;};
-    });
-  packages =
-    inputs.flake-utils.lib.eachDefaultSystem
-    (system: rec {
       packages = import ./packages {inherit system inputs lib;};
+      legacyPackages.pkgs = pkgs.${system};
     });
   std = import ./std.nix {inherit inputs;};
   inherit (std) set;
@@ -32,8 +29,6 @@ in
   {
     inherit tree std lib checks;
     inputs = patchedInputs;
-    legacyPackages = pkgs;
   }
   // systems
-  // shells
-  // packages
+  // outputs

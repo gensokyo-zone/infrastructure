@@ -3,18 +3,17 @@
   inputs,
   lib,
 }: let
-  inherit (lib.options) mkOption;
-  inherit (lib.types) attrsOf package;
   inherit (lib.meta) getExe;
   inherit (lib.strings) concatStringsSep concatMapStringsSep;
   packages = inputs.self.packages.${system};
-  pkgs = inputs.nixpkgs.legacyPackages.${system};
+  inherit (inputs.self.legacyPackages.${system}) pkgs;
   fmt = import ../ci/fmt.nix;
   output = {
     inherit (pkgs.buildPackages)
       terraform tflint
       alejandra deadnix statix
     ;
+    inherit (inputs.deploy-rs.packages.${system}) deploy-rs;
     nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
       exec ${pkgs.runtimeShell} ${../ci/deploy.sh} "$@"
     '';
