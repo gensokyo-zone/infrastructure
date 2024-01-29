@@ -22,8 +22,20 @@
   nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
     exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-deploy" -- "$@"
   '';
-  nf-setup-reisen = pkgs.writeShellScriptBin "nf-setup-reisen" ''
-    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-setup-reisen" -- "$@"
+  nf-setup-node = pkgs.writeShellScriptBin "nf-setup-node" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-setup-node" -- "$@"
+  '';
+  nf-sops-keyscan = pkgs.writeShellScriptBin "nf-sops-keyscan" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-sops-keyscan" -- "$@"
+  '';
+  nf-ssh = pkgs.writeShellScriptBin "nf-ssh" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-ssh" -- "$@"
+  '';
+  nf-build = pkgs.writeShellScriptBin "nf-build" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-build" -- "$@"
+  '';
+  nf-tarball = pkgs.writeShellScriptBin "nf-tarball" ''
+    exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#nf-tarball" -- "$@"
   '';
   nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
@@ -76,7 +88,11 @@ in
       nf-actions-test
       nf-update
       nf-deploy
-      nf-setup-reisen
+      nf-setup-node
+      nf-sops-keyscan
+      nf-ssh
+      nf-build
+      nf-tarball
       nf-tf
       nf-lint-tf
       nf-lint-nix

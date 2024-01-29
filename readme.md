@@ -25,6 +25,8 @@ The `-s` disables flake checks.
 deploy -s .#<hostname>
 # with trace
 deploy -s .#<hostname> -- --show-trace
+# deploy a fresh container
+deploy -s .#<hostname> --hostname ct.local
 ```
 
 ## Editing Secrets
@@ -36,7 +38,9 @@ sops nixos/systems/tewi/secrets.yaml
 ### Adding Hosts
 
 ```shell
-NF_ADDR=10.1.1.xxx nf-deploy sops-keyscan
+nf-sops-keyscan <hostname>
+# or on a fresh container...
+nf-sops-keyscan ct.local
 vim .sops.yaml
 ```
 
@@ -45,5 +49,5 @@ vim .sops.yaml
 ### Template
 
 ```shell
-NF_HOST=ct nf-deploy tarball
+nf-tarball ct
 ```

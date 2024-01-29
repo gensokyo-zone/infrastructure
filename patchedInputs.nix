@@ -20,5 +20,7 @@ in
           sha256 = "sha256-boJLCdgamzX0fhLifdsxsFF/f7oXZwWJ7+WAkcA2GBg=";
         })
       ];
+    } // {
+      inherit (inputs.nixpkgs) sourceInfo;
     };
   }
