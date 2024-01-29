@@ -9,9 +9,10 @@ data "proxmox_virtual_environment_vm" "kubernetes" {
 }
 
 resource "proxmox_virtual_environment_container" "reimu" {
-  node_name = "reisen"
-  vm_id     = 104
-  tags      = ["tf"]
+  node_name   = "reisen"
+  vm_id       = 104
+  tags        = ["tf"]
+  description = "big hakurei"
 
   memory {
     dedicated = 512
@@ -51,6 +52,10 @@ resource "proxmox_virtual_environment_container" "reimu" {
     type = "console"
   }
   started = false
+
+  lifecycle {
+    ignore_changes = [started]
+  }
 }
 
 resource "terraform_data" "proxmox_reimu_config" {

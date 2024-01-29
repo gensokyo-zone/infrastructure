@@ -26,6 +26,14 @@ module "hakurei_system_records" {
   ]
 }
 
+module "reimu_system_records" {
+  source    = "./system/records"
+  name      = "reimu"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fec4:66a8"
+}
+
 module "tewi_system_records" {
   source       = "./system/records"
   name         = "tei"
