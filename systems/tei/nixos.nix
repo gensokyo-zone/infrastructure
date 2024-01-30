@@ -30,6 +30,8 @@ in {
 
   sops.defaultSopsFile = ./secrets.yaml;
 
+  services.home-assistant.homekit.openFirewall = true;
+
   services.kanidm = {
     package =
       lib.warnIf

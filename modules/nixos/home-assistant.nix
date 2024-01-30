@@ -16,8 +16,13 @@ in {
       type = str;
       default = config.networking.domain;
     };
-    homekit.enable = mkEnableOption "homekit" // {
-      default = cfg.config.homekit or [ ] != [ ];
+    homekit = {
+      enable = mkEnableOption "homekit" // {
+        default = cfg.config.homekit or [ ] != [ ];
+      };
+      openFirewall = mkEnableOption "homekit ports" // {
+        default = cfg.openFirewall;
+      };
     };
     googleAssistant.enable = mkEnableOption "Google Assistant" // {
       default = cfg.config.google_assistant or { } != { };
@@ -40,7 +45,7 @@ in {
 
   config = {
     networking.firewall = mkIf cfg.enable {
-      allowedTCPPorts = mkIf (cfg.openFirewall && cfg.homekit.enable) (
+      allowedTCPPorts = mkIf (cfg.homekit.enable && cfg.homekit.openFirewall) (
         map ({ port, ... }: port) cfg.config.homekit or [ ]
       );
 

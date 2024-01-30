@@ -80,7 +80,7 @@ in {
         exposed_domains = [
           "scene"
           "script"
-          "climate"
+          #"climate"
           #"sensor"
         ];
         entity_config = {};
