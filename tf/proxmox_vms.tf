@@ -101,23 +101,15 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
     down_delay = "60"
   }
 
-  disk {
-    datastore_id = "local-zfs"
-    file_id      = "local:iso/Fedora-Server-dvd-x86_64-39-1.5.iso"
-    interface    = "scsi0"
-    size         = 32
+  cdrom {
+    file_id      = "local:iso/Fedora-Server-netinst-x86_64-39-1.5.iso"
   }
 
-  initialization {
+  disk {
     datastore_id = "local-zfs"
-    ip_config {
-      ipv4 {
-        address = "dhcp"
-      }
-      ipv6 {
-        address = "auto"
-      }
-    }
+    format = "raw"
+    interface    = "scsi0"
+    size         = 32
   }
 
   network_device {
