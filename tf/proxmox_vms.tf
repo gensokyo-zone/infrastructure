@@ -1,6 +1,6 @@
 variable "proxmox_container_template" {
   type    = string
-  default = "local:vztmpl/reisen-ct-2024-01-26-nixos-system-x86_64-linux.tar.xz"
+  default = "local:vztmpl/ct-20240127-nixos-system-x86_64-linux.tar.xz"
 }
 
 data "proxmox_virtual_environment_vm" "kubernetes" {
@@ -54,7 +54,7 @@ resource "proxmox_virtual_environment_container" "reimu" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, description]
+    ignore_changes = [started, description, operating_system[0].template_file_id]
   }
 }
 
@@ -112,7 +112,7 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
 
   disk {
     datastore_id = "local-zfs"
-    file_format       = "raw"
+    file_format  = "raw"
     interface    = "scsi0"
     size         = 32
   }

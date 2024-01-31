@@ -190,7 +190,6 @@ in {
     };
     nftables = mkIf (networking.nftables.enable && cfg.localaddrs.enable) rec {
       wants = [ "localaddrs.service" ];
-      after = wants;
       serviceConfig = {
         ExecReload = mkBefore [
           "+${localaddrs-reload}"
