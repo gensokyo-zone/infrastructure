@@ -15,7 +15,6 @@
   hasIpv4 = any (hasInfix ".") config.systemd.network.networks.eth0.address or [ ];
 in {
   services.samba = {
-    openFirewall = mkDefault true;
     enable = mkDefault true;
     enableWinbindd = mkDefault false;
     enableNmbd = mkDefault hasIpv4;
@@ -73,7 +72,6 @@ in {
 
   services.samba-wsdd = mkIf samba.enable {
     enable = mkDefault true;
-    openFirewall = mkDefault true;
     hostname = mkDefault config.networking.hostName;
   };
 

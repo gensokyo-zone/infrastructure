@@ -10,7 +10,7 @@ let
   inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
   inherit (config.services.nginx) virtualHosts;
-  inherit (config.networking.access) cidrForNetwork;
+  inherit (config.networking.access) cidrForNetwork localaddrs;
   access = config.services.nginx.access.ldap;
   allows = let
     mkAllow = cidr: "allow ${cidr};";
@@ -18,7 +18,9 @@ let
       cidrForNetwork.loopback.all
       ++ cidrForNetwork.local.all
       ++ optionals tailscale.enable cidrForNetwork.tail.all;
-    allows = concatMapStringsSep "\n" mkAllow allowAddresses;
+    allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
+      include ${localaddrs.stateDir}/*.nginx.conf;
+    '';
   in ''
     ${allows}
     deny all;

@@ -5,10 +5,10 @@
 }: let
   inherit (lib.modules) mkIf mkBefore;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.strings) concatMapStringsSep;
+  inherit (lib.strings) concatMapStringsSep optionalString;
   inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
-  inherit (config.networking.access) cidrForNetwork;
+  inherit (config.networking.access) cidrForNetwork localaddrs;
   localModule = { config, ... }: {
     options = with lib.types; {
       local = {
@@ -22,7 +22,9 @@
           cidrForNetwork.loopback.all
           ++ cidrForNetwork.local.all
           ++ optionals tailscale.enable cidrForNetwork.tail.all;
-        allows = concatMapStringsSep "\n" mkAllow allowAddresses;
+        allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
+          include ${localaddrs.stateDir}/*.nginx.conf;
+        '';
       in mkBefore ''
         ${allows}
         deny all;

@@ -85,7 +85,7 @@ in {
       '';
     };
     extraConfig = ''
-      client_max_body_size 2048M;
+      client_max_body_size 16384M;
     '';
   in {
     ${access.domain} = {

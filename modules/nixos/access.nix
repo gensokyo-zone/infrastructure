@@ -1,16 +1,18 @@
 {
+  pkgs,
   inputs,
   config,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkDefault mkOptionDefault;
+  inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) optionals;
-  inherit (lib.strings) concatStringsSep;
+  inherit (lib.strings) concatStringsSep optionalString;
   inherit (config.services) tailscale avahi;
   inherit (config) networking;
   inherit (networking) hostName;
+  cfg = config.networking.access;
   cidrModule = { config, ... }: {
     options = with lib.types; {
       all = mkOption {
@@ -41,6 +43,15 @@ in {
       type = attrsOf (submodule cidrModule);
       default = { };
     };
+    localaddrs = {
+      enable = mkEnableOption "localaddrs" // {
+        default = networking.firewall.interfaces.local.nftables.enable;
+      };
+      stateDir = mkOption {
+        type = path;
+        default = "/var/lib/localaddrs";
+      };
+    };
   };
 
   config.networking.access = {
@@ -50,11 +61,11 @@ in {
         hasStaticAddress = eth0.address or [ ] != [ ] || eth0.addresses or [ ] != [ ];
         hasSLAAC = eth0.slaac.enable or false;
       in mkMerge [
-        (mkIf (hasStaticAddress || hasSLAAC) (mkDefault "${hostName}.local.${config.networking.domain}"))
+        (mkIf (hasStaticAddress || hasSLAAC) (mkDefault "${hostName}.local.${networking.domain}"))
         (mkIf (avahi.enable && avahi.publish.enable) (mkOptionDefault "${hostName}.local"))
       ];
-      tail = mkIf tailscale.enable "${hostName}.tail.${config.networking.domain}";
-      global = mkIf (networking.enableIPv6 && networking.tempAddresses == "disabled") "${hostName}.${config.networking.domain}";
+      tail = mkIf tailscale.enable "${hostName}.tail.${networking.domain}";
+      global = mkIf (networking.enableIPv6 && networking.tempAddresses == "disabled") "${hostName}.${networking.domain}";
     };
     cidrForNetwork = {
       loopback = {
@@ -86,14 +97,114 @@ in {
     };
   };
 
-  config.networking.firewall = {
-    interfaces.local = {
-      nftables.conditions = [
-        "ip saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v4} }"
-        (mkIf networking.enableIPv6
-          "ip6 saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v6} }"
-        )
-      ];
+  config.networking = {
+    nftables.ruleset = mkBefore (''
+      define localrange6 = 2001:568::/29
+    '' + optionalString cfg.localaddrs.enable ''
+      include "${cfg.localaddrs.stateDir}/*.nft"
+    '');
+    firewall = {
+      interfaces.local = {
+        nftables.conditions = [
+          "ip saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v4} }"
+          (mkIf networking.enableIPv6
+            "ip6 saddr { $localrange6, ${concatStringsSep ", " networking.access.cidrForNetwork.local.v6} }"
+          )
+        ];
+      };
+    };
+  };
+  config.systemd.services = let
+    localaddrs = pkgs.writeShellScript "localaddrs" ''
+      set -eu
+      getaddrs() {
+        local PREFIX=$1 PATTERN=$2 IPADDRS
+        IPADDRS=$(${pkgs.iproute2}/bin/ip -o addr show to "$PREFIX") || return $?
+        IPADDRS=$(printf '%s\n' "$IPADDRS" | ${pkgs.gnugrep}/bin/grep -o "$PATTERN") || return $?
+        if [[ -z $IPADDRS ]]; then
+          return 1
+        fi
+        printf '%s\n' "$IPADDRS"
+      }
+      getaddrs4() {
+        getaddrs 10.1.1.0/24 '[0-9]*\.[0-9.]*/[0-9]*'
+      }
+      getaddrs6() {
+        getaddrs 2001:568::/29 '[0-9a-f:]*:[0-9a-f:]*/[0-9]*'
+      }
+      mkdir -p $STATE_DIRECTORY
+      if LOCALADDRS4=$(getaddrs4); then
+        printf '%s\n' "$LOCALADDRS4" > $STATE_DIRECTORY/localaddrs4
+      else
+        echo WARNING: localaddr4 not found >&2
+      fi
+      if LOCALADDRS6=$(getaddrs6); then
+        echo "$LOCALADDRS6" > $STATE_DIRECTORY/localaddrs6
+      else
+        echo WARNING: localaddr6 not found >&2
+      fi
+    '';
+    localaddrs-nftables = pkgs.writeShellScript "localaddrs-nftables" ''
+      set -eu
+      LOCALADDR6=$(head -n1 "${cfg.localaddrs.stateDir}/localaddrs6" || true)
+      if [[ -n $LOCALADDR6 ]]; then
+        printf 'redefine localrange6 = %s\n' "$LOCALADDR6" > ${cfg.localaddrs.stateDir}/ranges.nft
+      fi
+    '';
+    localaddrs-nginx = pkgs.writeShellScript "localaddrs-nginx" ''
+      set -eu
+      LOCALADDR6=$(head -n1 "${cfg.localaddrs.stateDir}/localaddrs6" || true)
+      if [[ -n $LOCALADDR6 ]]; then
+        printf 'allow %s;\n' "$LOCALADDR6" > ${cfg.localaddrs.stateDir}/allow.nginx.conf
+      fi
+      LOCALADDR4=$(head -n1 "${cfg.localaddrs.stateDir}/localaddrs4" || true)
+      if [[ -n $LOCALADDR4 ]]; then
+        printf 'allow %s;\n' "$LOCALADDR4" >> ${cfg.localaddrs.stateDir}/allow.nginx.conf
+      fi
+    '';
+    localaddrs-reload = pkgs.writeShellScript "localaddrs-reload" ''
+      ${config.systemd.package}/bin/systemctl reload localaddrs 2>/dev/null ||
+      ${config.systemd.package}/bin/systemctl restart localaddrs ||
+      true
+    '';
+  in {
+    localaddrs = mkIf cfg.localaddrs.enable {
+      unitConfig = {
+        After = [ "network-online.target" ];
+      };
+      serviceConfig = rec {
+        StateDirectory = "localaddrs";
+        ExecStart = mkMerge [
+          [ "${localaddrs}" ]
+          (mkIf networking.nftables.enable (mkAfter [
+            "${localaddrs-nftables}"
+          ]))
+          (mkIf config.services.nginx.enable (mkAfter [
+            "${localaddrs-nginx}"
+          ]))
+        ];
+        ExecReload = ExecStart;
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+    };
+    nftables = mkIf (networking.nftables.enable && cfg.localaddrs.enable) rec {
+      wants = [ "localaddrs.service" ];
+      after = wants;
+      serviceConfig = {
+        ExecReload = mkBefore [
+          "+${localaddrs-reload}"
+        ];
+      };
+    };
+    nginx = mkIf (config.services.nginx.enable && cfg.localaddrs.enable) rec {
+      wants = [ "localaddrs.service" ];
+      after = wants;
+      serviceConfig = {
+        ExecReload = mkBefore [
+          "+${localaddrs-reload}"
+        ];
+      };
     };
   };
 
@@ -101,10 +212,10 @@ in {
     systemFor = hostName: inputs.self.nixosConfigurations.${hostName}.config;
     systemForOrNull = hostName: inputs.self.nixosConfigurations.${hostName}.config or null;
   in {
-    systemFor = hostName: if hostName == config.networking.hostName
+    systemFor = hostName: if hostName == networking.hostName
       then config
       else systemFor hostName;
-    systemForOrNull = hostName: if hostName == config.networking.hostName
+    systemForOrNull = hostName: if hostName == networking.hostName
       then config
       else systemForOrNull hostName;
   };

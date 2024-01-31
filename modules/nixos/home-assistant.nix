@@ -44,17 +44,24 @@ in {
   };
 
   config = {
-    networking.firewall = mkIf cfg.enable {
-      allowedTCPPorts = mkIf (cfg.homekit.enable && cfg.homekit.openFirewall) (
+    networking.firewall = let
+      homekitTcp = mkIf cfg.homekit.enable (
         map ({ port, ... }: port) cfg.config.homekit or [ ]
       );
 
-      allowedUDPPortRanges = [
-        (mkIf (cfg.cast.enable && cfg.cast.openFirewall) {
+      castUdpRanges = mkIf cfg.cast.enable [
+        {
           from = 32768;
           to = 60999;
-        })
+        }
       ];
+    in mkIf cfg.enable {
+      interfaces.local = {
+        allowedTCPPorts = mkIf (!cfg.homekit.openFirewall) homekitTcp;
+        allowedUDPPortRanges = mkIf (!cfg.cast.openFirewall) castUdpRanges;
+      };
+      allowedTCPPorts = mkIf cfg.homekit.openFirewall homekitTcp;
+      allowedUDPPortRanges = mkIf cfg.cast.openFirewall castUdpRanges;
     };
 
     # MDNS

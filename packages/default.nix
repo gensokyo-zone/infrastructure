@@ -50,7 +50,7 @@
           if DEPLOY_HOSTNAME=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}"#"deploy.nodes.$ARG_HOSTNAME.hostname" 2>/dev/null); then
             DEPLOY_USER=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}"#"deploy.nodes.$ARG_HOSTNAME.sshUser" 2>/dev/null || true)
             ARG_HOSTNAME=$DEPLOY_HOSTNAME
-            if ! timeout 2 ping -c1 "$DEPLOY_HOSTNAME" >/dev/null 2>&1; then
+            if ! ping -w2 -c1 "$DEPLOY_HOSTNAME" >/dev/null 2>&1; then
               ARG_HOSTNAME="$ARG_NODE.local"
             fi
           else
@@ -58,15 +58,15 @@
           fi
         fi
       fi
-      if ! timeout 2 ping -c1 "$ARG_HOSTNAME" >/dev/null 2>&1; then
+      if ! ping -w2 -c1 "$ARG_HOSTNAME" >/dev/null 2>&1; then
         LOCAL_HOSTNAME=$ARG_NODE.local.gensokyo.zone
         TAIL_HOSTNAME=$ARG_NODE.tail.gensokyo.zone
         GLOBAL_HOSTNAME=$ARG_NODE.gensokyo.zone
-        if timeout 2 ping -c1 "$LOCAL_HOSTNAME" >/dev/null 2>&1; then
+        if ping -w2 -c1 "$LOCAL_HOSTNAME" >/dev/null 2>&1; then
           ARG_HOSTNAME=$LOCAL_HOSTNAME
-        elif timeout 2 ping -c1 "$TAIL_HOSTNAME" >/dev/null 2>&1; then
+        elif ping -w2 -c1 "$TAIL_HOSTNAME" >/dev/null 2>&1; then
           ARG_HOSTNAME=$TAIL_HOSTNAME
-        elif timeout 2 ping -c1 "$GLOBAL_HOSTNAME" >/dev/null 2>&1; then
+        elif ping -w2 -c1 "$GLOBAL_HOSTNAME" >/dev/null 2>&1; then
           ARG_HOSTNAME=$GLOBAL_HOSTNAME
         fi
       fi

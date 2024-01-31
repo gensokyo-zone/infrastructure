@@ -2,10 +2,11 @@
 
 let
   inherit (lib) types;
-  inherit (lib.options) mkOption;
+  inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) optionalString concatStringsSep concatMapStringsSep;
+  inherit (lib.lists) optionals;
   fwcfg = config.networking.firewall;
   cfg = config.networking.nftables;
 
@@ -41,7 +42,7 @@ let
           concatStringsSep "\n" (mapAttrsToList (name: ifcfg: concatMapStringsSep "\n" (cond:
               mkPorts "${cond} tcp" ifcfg.allowedTCPPorts ifcfg.allowedTCPPortRanges "accept"
             + mkPorts "${cond} udp" ifcfg.allowedUDPPorts ifcfg.allowedUDPPortRanges "accept"
-          ) ifcfg.nftables.conditions) fwcfg.interfaces)
+          ) (optionals ifcfg.nftables.enable ifcfg.nftables.conditions)) fwcfg.interfaces)
         }
 
         # DHCPv6
@@ -86,9 +87,16 @@ let
   '';
   interfaceModule = { config, name, ... }: {
     options = {
-      nftables.conditions = mkOption {
-        type = types.listOf types.str;
-        default = "iifname ${name}";
+      nftables = {
+        enable = mkEnableOption "nftables firewall" // {
+          default =
+            config.allowedTCPPorts != [ ] || config.allowedTCPPortRanges != [ ]
+            || config.allowedUDPPorts != [ ] || config.allowedUDPPortRanges != [ ];
+        };
+        conditions = mkOption {
+          type = types.listOf types.str;
+          default = "iifname ${name}";
+        };
       };
     };
   };
