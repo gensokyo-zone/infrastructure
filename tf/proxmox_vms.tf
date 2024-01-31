@@ -102,8 +102,8 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   disk {
-    datastore_id = "local-lvm"
-    file_id      = proxmox_virtual_environment_file.fedora39_netinstall_image.id
+    datastore_id = "local-zfs"
+    file_id      = "local:iso/Fedora-Server-netinst-x86_64-39-1.5.iso"
     interface    = "scsi0"
   }
 
@@ -116,6 +116,7 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   initialization {
+    datastore_id = "local-zfs"
     ip_config {
       ipv4 {
         address = "dhcp"
@@ -135,6 +136,7 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   tpm_state {
+    datastore_id = "local-zfs"
     version = "v2.0"
   }
 
