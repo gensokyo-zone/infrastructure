@@ -120,9 +120,9 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
       ipv4 {
         address = "dhcp"
       }
-    }
-    ipv6 {
-      address = "auto"
+      ipv6 {
+        address = "auto"
+      }
     }
   }
 
@@ -139,10 +139,4 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   serial_device {}
-}
-
-resource "random_password" "fedora_vm_password" {
-  length           = 16
-  override_special = "_%@"
-  special          = true
 }
