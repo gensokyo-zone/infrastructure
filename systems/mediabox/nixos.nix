@@ -26,6 +26,7 @@ in {
     nixos.nginx
     nixos.access.plex
     nixos.cloudflared
+    ./cloudflared.nix
 
     # media
     nixos.plex
