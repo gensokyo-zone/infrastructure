@@ -8,6 +8,7 @@
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.tailscale
     nixos.nfs
     nixos.samba
     ./nfs.nix
@@ -21,6 +22,8 @@
     };
     DHCP = "no";
   };
+
+  sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "23.11";
 }
