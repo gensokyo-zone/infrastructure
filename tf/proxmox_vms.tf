@@ -85,7 +85,7 @@ resource "terraform_data" "proxmox_reimu_config" {
 resource "proxmox_virtual_environment_vm" "freeipa" {
   name        = "freeipa"
   description = "FreeIPA, our identity management system"
-  tags        = ["terraform", "ubuntu"]
+  tags        = ["tf"]
 
   node_name = "reisen"
   vm_id     = 202
