@@ -102,12 +102,17 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   cdrom {
+    enabled = true
     file_id = "local:iso/Fedora-Server-netinst-x86_64-39-1.5.iso"
+  }
+
+  memory {
+    dedicated = 2048
   }
 
   disk {
     datastore_id = "local-zfs"
-    format       = "raw"
+    file_format       = "raw"
     interface    = "scsi0"
     size         = 32
   }
