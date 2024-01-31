@@ -27,13 +27,13 @@ module "hakurei_system_records" {
 }
 
 module "reimu_system_records" {
-  source    = "./system/records"
-  name      = "reimu"
-  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  source       = "./system/records"
+  name         = "reimu"
+  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
   tailscale_v4 = "100.113.253.48"
   tailscale_v6 = "fd7a:115c:a1e0::f1b1:fd30"
-  local_v6  = "fd0a::be24:11ff:fec4:66a8"
+  local_v6     = "fd0a::be24:11ff:fec4:66a8"
   local_subdomains = [
     "nfs",
     "smb",

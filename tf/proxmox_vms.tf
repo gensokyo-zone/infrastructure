@@ -102,12 +102,12 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   cdrom {
-    file_id      = "local:iso/Fedora-Server-netinst-x86_64-39-1.5.iso"
+    file_id = "local:iso/Fedora-Server-netinst-x86_64-39-1.5.iso"
   }
 
   disk {
     datastore_id = "local-zfs"
-    format = "raw"
+    format       = "raw"
     interface    = "scsi0"
     size         = 32
   }
@@ -122,7 +122,7 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
 
   tpm_state {
     datastore_id = "local-zfs"
-    version = "v2.0"
+    version      = "v2.0"
   }
 
   serial_device {}
