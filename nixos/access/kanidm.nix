@@ -65,6 +65,10 @@ in {
     port = mkOption {
       type = port;
     };
+    ldapHost = mkOption {
+      type = str;
+      default = access.host;
+    };
     ldapPort = mkOption {
       type = port;
     };
@@ -101,7 +105,7 @@ in {
           listen 0.0.0.0:389;
           listen [::]:389;
           ${allows}
-          proxy_pass ${access.host}:${toString access.ldapPort};
+          proxy_pass ${access.ldapHost}:${toString access.ldapPort};
           proxy_ssl on;
           proxy_ssl_verify off;
         }
@@ -109,7 +113,7 @@ in {
           listen 0.0.0.0:636 ssl;
           listen [::]:636 ssl;
           ${sslConfig}
-          proxy_pass ${access.host}:${toString access.ldapPort};
+          proxy_pass ${access.ldapHost}:${toString access.ldapPort};
           proxy_ssl on;
           proxy_ssl_verify off;
         }

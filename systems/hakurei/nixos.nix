@@ -92,8 +92,9 @@ in {
     access.kanidm = assert kanidm.enableServer; {
       inherit (kanidm.server.frontend) domain port;
       host = tei.networking.access.hostnameForNetwork.local;
-      ldapPort = kanidm.server.ldap.port;
-      ldapEnable = kanidm.server.ldap.enable;
+      ldapHost = "idp.local.${config.networking.domain}";
+      ldapPort = 389;
+      ldapEnable = true;
     };
     virtualHosts = {
       ${access.kanidm.domain} = {

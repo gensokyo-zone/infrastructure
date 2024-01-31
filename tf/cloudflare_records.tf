@@ -69,6 +69,15 @@ module "mediabox_system_records" {
   ]
 }
 
+module "idp_system_records" {
+  source    = "./system/records"
+  name      = "idp"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v4  = "10.1.1.46"
+  local_v6  = "fd0a::be24:11ff:fe3d:3991"
+}
+
 module "kubernetes_system_records" {
   source    = "./system/records"
   name      = "kubernetes"
