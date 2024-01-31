@@ -1,16 +1,14 @@
 {
   config,
+  meta,
   lib,
   ...
 }:
 let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (lib.strings) concatMapStringsSep;
-  inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
   inherit (config.services.nginx) virtualHosts;
-  inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.kanidm;
   access = config.services.nginx.access.kanidm;
   proxyPass = mkDefault "https://${access.host}:${toString access.port}";
@@ -22,18 +20,13 @@ let
       alias = "${cfg.server.unencrypted.package.ca}";
     };
   };
-  allows = let
-    mkAllow = cidr: "allow ${cidr};";
-    allowAddresses =
-      cidrForNetwork.loopback.all
-      ++ cidrForNetwork.local.all
-      ++ optionals tailscale.enable cidrForNetwork.tail.all;
-    allows = concatMapStringsSep "\n" mkAllow allowAddresses;
-  in ''
-    ${allows}
-    deny all;
-  '';
 in {
+  imports = let
+    inherit (meta) nixos;
+  in [
+    nixos.access.ldap
+  ];
+
   options.services.nginx.access.kanidm = with lib.types; {
     host = mkOption {
       type = str;
@@ -50,18 +43,6 @@ in {
       type = str;
       default = "id.tail.${config.networking.domain}";
     };
-    ldapDomain = mkOption {
-      type = str;
-      default = "ldap.${config.networking.domain}";
-    };
-    ldapLocalDomain = mkOption {
-      type = str;
-      default = "ldap.local.${config.networking.domain}";
-    };
-    ldapTailDomain = mkOption {
-      type = str;
-      default = "ldap.tail.${config.networking.domain}";
-    };
     port = mkOption {
       type = port;
     };
@@ -74,7 +55,7 @@ in {
     };
     ldapEnable = mkOption {
       type = bool;
-      default = true;
+      default = false;
     };
     useACMEHost = mkOption {
       type = nullOr str;
@@ -90,35 +71,12 @@ in {
         ldapPort = mkOptionDefault cfg.server.ldap.port;
         ldapEnable = mkDefault cfg.server.ldap.enable;
       };
-      streamConfig = let
-        inherit (config.security.acme) certs;
-        sslConfig = if access.useACMEHost != null then ''
-          ssl_certificate ${certs.${access.useACMEHost}.directory}/fullchain.pem;
-          ssl_certificate_key ${certs.${access.useACMEHost}.directory}/key.pem;
-          ssl_trusted_certificate ${certs.${access.useACMEHost}.directory}/chain.pem;
-        '' else ''
-          ssl_certificate ${cfg.serverSettings.tls_chain};
-          ssl_certificate_key ${cfg.serverSettings.tls_key};
-        '';
-      in mkIf access.ldapEnable ''
-        server {
-          listen 0.0.0.0:389;
-          listen [::]:389;
-          ${allows}
-          proxy_pass ${access.ldapHost}:${toString access.ldapPort};
-          proxy_ssl on;
-          proxy_ssl_verify off;
-        }
-        server {
-          listen 0.0.0.0:636 ssl;
-          listen [::]:636 ssl;
-          ${sslConfig}
-          proxy_pass ${access.ldapHost}:${toString access.ldapPort};
-          proxy_ssl on;
-          proxy_ssl_verify off;
-        }
-      '';
-
+      access.ldap = mkIf (cfg.enableServer && cfg.ldapEnable) {
+        enable = mkDefault true;
+        host = mkOptionDefault access.kanidm.ldapHost;
+        port = mkOptionDefault access.kanidm.ldapPort;
+        useACMEHost = mkDefault access.kanidm.useACMEHost;
+      };
       virtualHosts = {
         ${access.domain} = {
           inherit locations;
@@ -129,7 +87,7 @@ in {
           local.enable = true;
           inherit locations;
         };
-        ${access.tailDomain} = mkIf config.services.tailscale.enable {
+        ${access.tailDomain} = mkIf tailscale.enable {
           inherit (virtualHosts.${access.domain}) useACMEHost;
           addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
           local.enable = true;
@@ -144,7 +102,7 @@ in {
         config.networking.fqdn
         config.networking.access.hostnameForNetwork.local
       ]
-      (mkIf config.services.tailscale.enable [
+      (mkIf tailscale.enable [
         "id.tail.${config.networking.domain}"
         config.networking.access.hostnameForNetwork.tail
       ])

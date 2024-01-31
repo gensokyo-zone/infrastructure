@@ -26,6 +26,7 @@ in {
     nixos.access.global
     nixos.access.gensokyo
     nixos.access.kanidm
+    nixos.access.freeipa
     nixos.access.proxmox
     nixos.access.plex
     ./reisen-ssh.nix
@@ -56,15 +57,29 @@ in {
       inherit (nginx) group;
       extraDomainNames = mkMerge [
         [access.kanidm.localDomain]
-        (mkIf kanidm.server.ldap.enable [
+        (mkIf access.kanidm.ldapEnable [
           access.kanidm.ldapDomain
           access.kanidm.ldapLocalDomain
         ])
         (mkIf tailscale.enable [
           access.kanidm.tailDomain
         ])
-        (mkIf (kanidm.server.ldap.enable && tailscale.enable) [
+        (mkIf (access.kanidm.ldapEnable && tailscale.enable) [
           access.kanidm.ldapTailDomain
+        ])
+      ];
+    };
+    ${access.freeipa.domain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        [
+          access.freeipa.localDomain
+          access.ldap.domain
+          access.ldap.localDomain
+        ]
+        (mkIf tailscale.enable [
+          access.freeipa.tailDomain
+          access.ldap.tailDomain
         ])
       ];
     };
@@ -92,13 +107,18 @@ in {
     access.kanidm = assert kanidm.enableServer; {
       inherit (kanidm.server.frontend) domain port;
       host = tei.networking.access.hostnameForNetwork.local;
-      ldapHost = "idp.local.${config.networking.domain}";
-      ldapPort = 389;
-      ldapEnable = true;
+      ldapEnable = false;
+    };
+    access.freeipa = {
+      host = "idp.local.${config.networking.domain}";
     };
     virtualHosts = {
       ${access.kanidm.domain} = {
         useACMEHost = access.kanidm.domain;
+      };
+      ${access.freeipa.domain} = {
+        forceSSL = true;
+        useACMEHost = access.freeipa.domain;
       };
       ${access.proxmox.domain} = {
         useACMEHost = access.proxmox.domain;

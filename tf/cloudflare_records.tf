@@ -19,9 +19,11 @@ module "hakurei_system_records" {
     "prox",
     "id",
     "ldap",
+    "freeipa",
   ]
   global_subdomains = [
     "plex",
+    "idp",
     "ldap",
   ]
 }
