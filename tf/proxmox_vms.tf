@@ -81,3 +81,68 @@ resource "terraform_data" "proxmox_reimu_config" {
     ]
   }
 }
+
+resource "proxmox_virtual_environment_vm" "freeipa" {
+  name        = "freeipa"
+  description = "FreeIPA, our identity management system"
+  tags        = ["terraform", "ubuntu"]
+
+  node_name = "reisen"
+  vm_id     = 202
+
+  agent {
+    # read 'Qemu guest agent' section, change to true only when ready
+    enabled = false
+  }
+
+  startup {
+    order      = "3"
+    up_delay   = "60"
+    down_delay = "60"
+  }
+
+  disk {
+    datastore_id = "local-lvm"
+    file_id      = proxmox_virtual_environment_file.fedora39_netinstall_image.id
+    interface    = "scsi0"
+  }
+
+
+  disk {
+    datastore_id = "local-zfs"
+    file_format  = "raw"
+    interface    = "scsi1"
+    size         = 32
+  }
+
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+    ipv6 {
+      address = "auto"
+    }
+  }
+
+  network_device {
+    bridge = "vmbr0"
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  tpm_state {
+    version = "v2.0"
+  }
+
+  serial_device {}
+}
+
+resource "random_password" "fedora_vm_password" {
+  length           = 16
+  override_special = "_%@"
+  special          = true
+}
