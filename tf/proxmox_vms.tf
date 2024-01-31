@@ -105,13 +105,6 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
     datastore_id = "local-zfs"
     file_id      = "local:iso/Fedora-Server-dvd-x86_64-39-1.5.iso"
     interface    = "scsi0"
-  }
-
-
-  disk {
-    datastore_id = "local-zfs"
-    file_format  = "raw"
-    interface    = "scsi1"
     size         = 32
   }
 
