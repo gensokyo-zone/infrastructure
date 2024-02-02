@@ -152,6 +152,18 @@
         "type": "github"
       }
     },
+    "nixpkgs-patch-k8s-pki": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-Qz3TV1Z/pdKxLqOoV/bmprlmlAfJpTsHUCiWXVgoukw=",
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/pull/275896/commits/9c870ac78f6157260ba1f96f9ce077ce84478532.patch"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/pull/275896/commits/9c870ac78f6157260ba1f96f9ce077ce84478532.patch"
+      }
+    },
     "nixpkgs-stable": {
       "locked": {
         "lastModified": 1705957679,
@@ -193,6 +205,7 @@
         "flake-utils": "flake-utils",
         "flakelib": "flakelib",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-patch-k8s-pki": "nixpkgs-patch-k8s-pki",
         "nur": "nur",
         "sops-nix": "sops-nix",
         "std": "std",

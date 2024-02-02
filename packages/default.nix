@@ -1,8 +1,8 @@
 {
   system,
   inputs,
-  lib,
 }: let
+  lib = inputs.self.lib.nixlib;
   inherit (lib.meta) getExe;
   inherit (inputs.std.lib) string list;
   packages = inputs.self.packages.${system};

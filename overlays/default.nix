@@ -1,5 +1,4 @@
-{inputs, ...} @ args:
-inputs.flake-utils.lib.eachDefaultSystem (system: {
+{inputs, system}: {
   pkgs = import inputs.nixpkgs {
     inherit system;
     overlays =
@@ -27,4 +26,4 @@ inputs.flake-utils.lib.eachDefaultSystem (system: {
       ];
     };
   };
-})
+}

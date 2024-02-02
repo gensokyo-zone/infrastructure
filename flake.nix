@@ -2,6 +2,11 @@
   description = "kat's nixfiles";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-patch-k8s-pki = {
+      # https://github.com/NixOS/nixpkgs/pull/275896
+      url = "https://github.com/NixOS/nixpkgs/pull/275896/commits/9c870ac78f6157260ba1f96f9ce077ce84478532.patch";
+      flake = false;
+    };
     arcexprs = {
       url = "github:arcnmx/nixexprs/master";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -1,18 +1,22 @@
-{inputs, ...}: (inputs.tree.tree {
+{inputs}: (inputs.tree.tree {
   inherit inputs;
   folder = ./.;
   config = {
     "/" = {
       excludes = [
         "tf"
-        "inputs"
         "default"
-        "patchedInputs"
+        "devShells"
         "outputs"
         "tree"
         "flake"
-        "meta"
+        "std"
         "inputs"
+      ];
+    };
+    packages = {
+      excludes = [
+        "default"
       ];
     };
     systems = {

@@ -1,1 +1,1 @@
-import ./devShell.nix { inputs = import ./inputs.nix; system = builtins.currentSystem; }
+(import ./.).devShells.${builtins.currentSystem or "x86_64-linux"}.default

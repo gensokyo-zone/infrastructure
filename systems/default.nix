@@ -1,15 +1,12 @@
 {
   inputs,
   tree,
-  pkgs,
-  lib,
-  std,
-  system ? builtins.currentSystem or "x86_64-linux",
-  ...
 }: let
   # The purpose of this file is to set up the host module which allows assigning of the system, e.g. aarch64-linux and the builder used with less pain.
+  lib = inputs.self.lib.nixlib;
   inherit (lib.modules) evalModules mkOptionDefault;
-  inherit (std) string types optional set list;
+  inherit (inputs.self.lib) std;
+  inherit (std) string set;
   defaultSpecialArgs = {
     inherit inputs std;
     meta = tree;
@@ -21,7 +18,7 @@
   }: {
     options = let
       inherit (lib.types) str listOf attrs unspecified attrsOf nullOr;
-      jsonType = (pkgs.${system}.formats.json {}).type;
+      jsonAttrsType = inputs.arcexprs.lib.json.types.attrs;
       inherit (lib.options) mkOption;
     in {
       arch = mkOption {
@@ -54,21 +51,26 @@
         internal = true;
       };
       deploy = mkOption {
-        type = nullOr jsonType;
+        type = nullOr jsonAttrsType;
       };
     };
     config = {
-      deploy = {
+      deploy = let
+        nixos = inputs.self.nixosConfigurations.${machine};
+      in {
         sshUser = mkOptionDefault "root";
         user = mkOptionDefault "root";
-        sshOpts = mkOptionDefault ["-p" "${builtins.toString (builtins.head inputs.self.nixosConfigurations.${machine}.config.services.openssh.ports)}"];
+        sshOpts = mkOptionDefault ["-p" "${builtins.toString (builtins.head nixos.config.services.openssh.ports)}"];
         autoRollback = mkOptionDefault true;
         magicRollback = mkOptionDefault true;
         fastConnection = mkOptionDefault false;
         hostname = mkOptionDefault "${machine}.local.gensokyo.zone";
         profiles.system = {
           user = "root";
-          path = inputs.deploy-rs.lib.${system}.activate.nixos inputs.self.nixosConfigurations.${machine};
+          path = let
+            inherit (inputs.self.legacyPackages.${config.system}.deploy-rs) activate;
+          in
+            activate.nixos nixos;
         };
       };
       system = let
@@ -141,12 +143,13 @@
   (set.map (_: c: c) tree.systems);
   processHost = name: cfg: let
     host = cfg.config;
-  in set.optional (host.type != null) {
-    deploy.nodes.${name} = host.deploy;
+  in
+    set.optional (host.type != null) {
+      deploy.nodes.${name} = host.deploy;
 
-    "${host.folder}Configurations".${name} = host.builder {
-      inherit (host) system modules specialArgs;
+      "${host.folder}Configurations".${name} = host.builder {
+        inherit (host) system modules specialArgs;
+      };
     };
-  };
 in
   set.merge (set.mapToValues processHost hostConfigs)
