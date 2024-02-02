@@ -1,11 +1,11 @@
 {
   lib,
-  pkgs,
   config,
   ...
 }: let
   inherit (lib) mkIf mkMerge mkBefore mkDefault mkOptionDefault mkEnableOption mkOption;
   inherit (lib.strings) splitString concatMapStringsSep;
+  inherit (config.lib.access) mkSnakeOil;
   cfg = config.services.kanidm;
 in {
   options.services.kanidm = with lib.types; {
@@ -62,7 +62,7 @@ in {
       server.unencrypted = {
         domain = mkBefore [ cfg.server.frontend.domain ];
         package = let
-          cert = pkgs.mkSnakeOil {
+          cert = mkSnakeOil {
             name = "kanidm-cert";
             inherit (cfg.server.unencrypted) domain;
           };

@@ -3,9 +3,6 @@
     inherit system;
     overlays =
       [
-        (import ./nur {inherit inputs;})
-        (import ./local)
-        (import ./lib)
         inputs.deploy-rs.overlay
         inputs.arcexprs.overlays.default
         (final: prev: {

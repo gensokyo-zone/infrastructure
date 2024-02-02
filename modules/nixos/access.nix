@@ -218,4 +218,5 @@ in {
       then config
       else systemForOrNull hostName;
   };
+  config.lib.access.mkSnakeOil = pkgs.callPackage ../../packages/snakeoil.nix { };
 }

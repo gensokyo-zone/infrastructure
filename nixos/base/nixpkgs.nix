@@ -4,7 +4,6 @@
 }: {
   nixpkgs = {
     overlays = [
-      (import ../../overlays/local)
       inputs.arcexprs.overlays.default
     ];
     config = {

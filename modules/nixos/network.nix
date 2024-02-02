@@ -1,11 +1,12 @@
 {
+  inputs,
   config,
   lib,
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-  inherit (lib.trivial) eui64;
+  inherit (inputs.self.lib.lib) eui64;
   inherit (config) networking services;
   networkModule = { config, ... }: {
     options = with lib.types; {

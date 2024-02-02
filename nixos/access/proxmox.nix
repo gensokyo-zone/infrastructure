@@ -1,18 +1,18 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.strings) escapeRegex;
   inherit (lib.lists) singleton optional;
+  inherit (config.lib.access) mkSnakeOil;
   inherit (config.services) nginx tailscale;
   inherit (nginx) virtualHosts;
   access = config.services.nginx.access.proxmox;
   proxyPass = "https://reisen.local.${config.networking.domain}:8006/";
-  unencrypted = pkgs.mkSnakeOil {
+  unencrypted = mkSnakeOil {
     name = "prox-local-cert";
     domain = singleton "prox.local.${config.networking.domain}"
       ++ optional tailscale.enable "prox.tail.${config.networking.domain}";

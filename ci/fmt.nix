@@ -18,6 +18,7 @@
       "overlays/default.nix"
       "devShells.nix"
       "shell.nix"
+      "lib.nix"
       "outputs.nix"
       "tree.nix"
     ];

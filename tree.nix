@@ -12,6 +12,7 @@
         "flake"
         "std"
         "inputs"
+        "lib"
       ];
     };
     packages = {

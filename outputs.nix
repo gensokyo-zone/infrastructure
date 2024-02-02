@@ -50,9 +50,5 @@
 in {
   inherit (outputs) devShells legacyPackages packages checks;
   inherit (systems) deploy nixosConfigurations;
-  lib = {
-    std = import ./std.nix {inherit inputs;};
-    nixlib = inputs.nixpkgs.lib;
-    inherit tree;
-  };
+  lib = import ./lib.nix {inherit tree inputs;};
 }
