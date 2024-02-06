@@ -32,7 +32,7 @@
         INPUT_INFRA_SETUP="$(base64 -w0 < ${reisen + "/setup.sh"})" \
         INPUT_INFRA_PUTFILE64="$(base64 -w0 < ${reisen + "/bin/putfile64.sh"})" \
         INPUT_INFRA_PVE="$(base64 -w0 < ${reisen + "/bin/pve.sh"})" \
-        INPUT_INFRA_LXC_CONFIG="$(base64 -w0 < ${reisen + "/bin/lxc-config.sh"})" \
+        INPUT_INFRA_CT_CONFIG="$(base64 -w0 < ${reisen + "/bin/ct-config.sh"})" \
         "bash -c \"eval \\\"\\\$(base64 -d <<<\\\$INPUT_INFRA_SETUP)\\\"\""
     '';
     nf-hostname = pkgs.writeShellScriptBin "nf-hostname" ''

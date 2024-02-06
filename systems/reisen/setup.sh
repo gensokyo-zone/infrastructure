@@ -31,7 +31,10 @@ $INPUT_TF_SSH_AUTHORIZEDKEYS
 EOF
 chown -R tf:tf /home/tf/.ssh
 
-if ! pveum user list --noborder --noheader | grep -q tf@pam; then
+pveum acl delete / --users tf@pam --roles Terraform 2> /dev/null || true
+pveum role delete Terraform 2> /dev/null || true
+
+if ! pveum user list --noborder --noheader 2> /dev/null | grep -q tf@pam; then
 	pveum user add tf@pam --firstname Terraform --lastname Cloud
 fi
 
@@ -39,27 +42,45 @@ echo setting up pve terraform role... >&2
 # https://pve.proxmox.com/wiki/User_Management#_privileges
 TF_ROLE_PRIVS=(
 	Group.Allocate Realm.AllocateUser User.Modify Permissions.Modify
-	Sys.Audit
-	VM.Audit VM.Allocate
-	VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.PowerMgmt
-	Datastore.Audit Datastore.Allocate Datastore.AllocateSpace
+	Sys.Audit # Sys.Console Sys.Incoming Sys.Modify Sys.PowerMgmt Sys.Syslog
+	VM.Audit VM.Allocate VM.PowerMgmt
+	VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options
+	VM.Backup VM.Clone VM.Migrate VM.Snapshot VM.Snapshot.Rollback # VM.Console VM.Monitor
+	SDN.Audit SDN.Use # SDN.Allocate
+	Datastore.Audit Datastore.Allocate Datastore.AllocateSpace # Datastore.AllocateTemplate
+	Mapping.Audit Mapping.Use # Mapping.Modify
+	Pool.Audit # Pool.Allocate
 )
-pveum role delete Terraform 2> /dev/null || true
 pveum role add Terraform --privs "${TF_ROLE_PRIVS[*]}"
 pveum acl modify / --users tf@pam --roles Terraform
 
-mkdir -m 0755 -p /opt/infra/bin
-base64 -d > /opt/infra/bin/putfile64 <<EOF
-$INPUT_INFRA_PUTFILE64
-EOF
-base64 -d > /opt/infra/bin/pve <<EOF
-$INPUT_INFRA_PVE
-EOF
-base64 -d > /opt/infra/bin/lxc-config <<EOF
-$INPUT_INFRA_LXC_CONFIG
-EOF
-chmod 0770 /opt/infra/bin/*
+INFRABIN=/opt/infra/bin
+WRAPPERBIN=/opt/infra/sbin
+SUDOERS_INFRABINS=
+rm -f "$INFRABIN/"* "$WRAPPERBIN/"*
+mkdir -m 0755 -p "$INFRABIN" "$WRAPPERBIN"
+for infrabin in putfile64 pve ct-config; do
+	infrainput="${infrabin//-/_}"
+	infrainput="INPUT_INFRA_${infrainput^^}"
+	printf '%s\n' "${!infrainput}" | base64 -d > "$WRAPPERBIN/$infrabin"
+	chmod 0750 "$WRAPPERBIN/$infrabin"
+
+	printf '#!/bin/bash\nsudo "%s" "$@"\n' "$WRAPPERBIN/$infrabin" > "$INFRABIN/$infrabin"
+	chmod 0755 "$INFRABIN/$infrabin"
+
+	SUDOERS_WRAPPERS="${SUDOERS_WRAPPERS-}${SUDOERS_WRAPPERS:+, }$WRAPPERBIN/$infrabin"
+done
+
+# provider also needs to be able to run:
+# sudo qm importdisk VMID $(sudo pvesm path local:iso/ISO.iso) DATASTORE -format qcow2
+# sudo qm set VMID -scsi0 DATASTORE:disk,etc
+# sudo qm resize VMID scsi0 SIZE
+SUDOERS_TF="/usr/sbin/pvesm, /usr/sbin/qm"
+
+echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/tf/.bash_profile
+echo "export PATH=\$PATH:$INFRABIN" > /home/tf/.bashrc
+chown tf:tf /home/tf/.bash{rc,_profile}
 
 cat > /etc/sudoers.d/tf <<EOF
-tf ALL=(root:root) NOPASSWD: NOSETENV: /opt/infra/bin/putfile64, /opt/infra/bin/pve, /opt/infra/bin/lxc-config
+tf ALL=(root:root) NOPASSWD: NOSETENV: $SUDOERS_WRAPPERS, $SUDOERS_TF
 EOF
