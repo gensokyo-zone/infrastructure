@@ -3,14 +3,48 @@ variable "proxmox_container_template" {
   default = "local:vztmpl/ct-20240127-nixos-system-x86_64-linux.tar.xz"
 }
 
+locals {
+  proxmox_reimu_vm_id      = 104
+  proxmox_reimu_config     = jsondecode(file("${path.root}/../systems/reimu/lxc.json"))
+  proxmox_hakurei_vm_id    = 103
+  proxmox_hakurei_config   = jsondecode(file("${path.root}/../systems/hakurei/lxc.json"))
+  proxmox_tei_vm_id        = 101
+  proxmox_tei_config       = jsondecode(file("${path.root}/../systems/tei/lxc.json"))
+  proxmox_mediabox_vm_id   = 102
+  proxmox_mediabox_config  = jsondecode(file("${path.root}/../systems/mediabox/lxc.json"))
+  proxmox_kubernetes_vm_id = 201
+  proxmox_freeipa_vm_id    = 202
+}
+
 data "proxmox_virtual_environment_vm" "kubernetes" {
   node_name = "reisen"
-  vm_id     = 201
+  vm_id     = local.proxmox_kubernetes_vm_id
+}
+
+module "hakurei_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  vm_id      = local.proxmox_hakurei_vm_id
+  config     = local.proxmox_hakurei_config.lxc
+}
+
+module "tei_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  vm_id      = local.proxmox_tei_vm_id
+  config     = local.proxmox_tei_config.lxc
+}
+
+module "mediabox_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  vm_id      = local.proxmox_mediabox_vm_id
+  config     = local.proxmox_mediabox_config.lxc
 }
 
 resource "proxmox_virtual_environment_container" "reimu" {
   node_name   = "reisen"
-  vm_id       = 104
+  vm_id       = local.proxmox_reimu_vm_id
   tags        = ["tf"]
   description = "big hakurei"
 
@@ -58,28 +92,11 @@ resource "proxmox_virtual_environment_container" "reimu" {
   }
 }
 
-resource "terraform_data" "proxmox_reimu_config" {
-  depends_on = [
-    proxmox_virtual_environment_container.reimu
-  ]
-
-  triggers_replace = [
-    proxmox_virtual_environment_container.reimu.id
-  ]
-
-  connection {
-    type     = "ssh"
-    user     = var.proxmox_reisen_ssh_username
-    password = var.proxmox_reisen_password
-    host     = var.proxmox_reisen_ssh_host
-    port     = var.proxmox_reisen_ssh_port
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "ct-config ${proxmox_virtual_environment_container.reimu.vm_id} unprivileged 0 features 'nesting=1,mount=nfs,mknod=1' lxc.mount.entry '/dev/net/tun dev/net/tun none bind,optional,create=file' lxc.mount.entry '/mnt/kyuuto-media mnt/kyuuto-media none bind,optional,create=dir' lxc.cgroup2.devices.allow 'c 10:200 rwm'",
-    ]
-  }
+module "reimu_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  container  = proxmox_virtual_environment_container.reimu
+  config     = local.proxmox_reimu_config.lxc
 }
 
 resource "proxmox_virtual_environment_vm" "freeipa" {
@@ -88,7 +105,7 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   tags        = ["tf"]
 
   node_name = "reisen"
-  vm_id     = 202
+  vm_id     = local.proxmox_freeipa_vm_id
 
   agent {
     # read 'Qemu guest agent' section, change to true only when ready
@@ -131,4 +148,8 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   serial_device {}
+
+  lifecycle {
+    ignore_changes = [started, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
+  }
 }

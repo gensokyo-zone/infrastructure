@@ -1,0 +1,8 @@
+{
+	"lxc": {
+		"lxc.mount.entry": [
+			"/dev/ttyZigbee dev/ttyZigbee none bind,optional,create=file",
+			"/dev/net/tun dev/net/tun none bind,optional,create=file"
+		]
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"lxc": {
+		"lxc.mount.entry": [
+			"/mnt/kyuuto-media mnt/kyuuto-media none bind,optional,create=dir",
+			"/dev/net/tun dev/net/tun none bind,optional,create=file"
+		],
+		"lxc.cgroup2.devices.allow": [
+			"c 10:200 rwm"
+		],
+		"features": ["nesting=1,mount=nfs,mknod=1"],
+		"unprivileged": ["0"]
+	}
+}

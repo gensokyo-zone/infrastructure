@@ -1,0 +1,9 @@
+{
+	"lxc": {
+		"lxc.mount.entry": [
+			"/mnt/kyuuto-media/library mnt/kyuuto-media/library none bind,optional,create=dir",
+			"/mnt/kyuuto-media/downloads/deluge mnt/kyuuto-media/downloads/deluge none bind,optional,create=dir",
+			"/dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file"
+		]
+	}
+}
