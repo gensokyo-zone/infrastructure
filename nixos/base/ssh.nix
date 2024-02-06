@@ -15,7 +15,7 @@ in {
 
   services.openssh = {
     enable = mkDefault true;
-    ports = mkDefault [publicPort 22];
+    ports = [publicPort 22];
     openFirewall = mkDefault false;
     settings = {
       PasswordAuthentication = mkDefault false;

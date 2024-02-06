@@ -5,6 +5,7 @@
   ...
 }: let
   inherit (lib.modules) mkAfter;
+  sshPort = 41022;
   username = "tf-proxmox";
   sshJump = pkgs.writeShellScript "ssh-jump-${username}" ''
     exec ssh -T \
@@ -18,7 +19,9 @@ in {
     hashedPasswordFile = config.sops.secrets.tf-proxmox-passwd.path;
     isNormalUser = true;
   };
+
   services.openssh = {
+    ports = mkAfter [ sshPort ];
     settings = {
       KbdInteractiveAuthentication = true;
       PasswordAuthentication = true;
@@ -28,6 +31,9 @@ in {
         ForceCommand ${sshJump}
     '';
   };
+
+  networking.firewall.allowedTCPPorts = [ sshPort ];
+
   sops.secrets = {
     tf-proxmox-passwd = { };
     tf-proxmox-identity = {
