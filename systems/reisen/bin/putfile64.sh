@@ -9,6 +9,9 @@ case "$ARG_DEST" in
 		echo ugh >&2
 		exit 1
 		;;
+	/etc/network/interfaces*)
+		ARG_IS_INTERFACES=1
+		;;
 	/etc/sysctl.d/*.conf)
 		ARG_IS_SYSCTL=1
 		;;
