@@ -13,7 +13,6 @@
   ];
 
   services.kanidm.serverSettings.db_fs_type = "zfs";
-  services.tailscale.advertiseExitNode = true;
   services.postgresql.package = pkgs.postgresql_14;
 
   sops.defaultSopsFile = ./secrets.yaml;

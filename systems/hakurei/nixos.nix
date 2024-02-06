@@ -130,6 +130,8 @@ in {
     };
   };
 
+  services.tailscale.advertiseExitNode = true;
+
   systemd.network.networks.eth0 = {
     name = "eth0";
     matchConfig = {

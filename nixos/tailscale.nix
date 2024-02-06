@@ -46,13 +46,19 @@ in {
         fixResolved = optionalString config.services.resolved.enable ''
           resolvectl revert ${config.services.tailscale.interfaceName} || true
         '';
-        advertiseExitNode = optionalString cfg.advertiseExitNode " --advertise-exit-node";
+        # https://tailscale.com/kb/1320/performance-best-practices#ethtool-configuration
+        exitNodeRouting = optionalString cfg.advertiseExitNode ''
+          netdev=$(${pkgs.iproute2}/bin/ip route show 0/0 | ${pkgs.coreutils}/bin/cut -f5 -d' ' || echo eth0)
+          ${getExe pkgs.ethtool} -K "$netdev" rx-udp-gro-forwarding on rx-gro-list off || true
+        '';
+        advertiseExitNode = "--advertise-exit-node" + optionalString (!cfg.advertiseExitNode) "=false";
       in
         with pkgs; ''
           # wait for tailscaled to settle
           sleep 5
 
           ${fixResolved}
+          ${exitNodeRouting}
 
           # check if we are already authenticated to tailscale
           status="$(${getExe tailscale} status -json | ${getExe jq} -r .BackendState)"
@@ -62,7 +68,7 @@ in {
           fi
 
           # otherwise authenticate with tailscale
-          ${getExe tailscale} up${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+          ${getExe tailscale} up ${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
         '';
     };
   };
