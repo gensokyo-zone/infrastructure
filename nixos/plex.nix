@@ -1,5 +1,14 @@
-{...}: {
+{config, lib, ...}: let
+  inherit (lib.modules) mkIf mkDefault;
+  cfg = config.services.plex;
+in {
   services.plex.enable = true;
+  systemd.services.plex = mkIf cfg.enable {
+    # /var/lib/plex/mesa_shader_cache
+    environment.MESA_SHADER_CACHE_DIR = mkDefault cfg.dataDir;
+    # KillMode = "mixed" doesn't behave as expected...
+    serviceConfig.TimeoutStopSec = 5;
+  };
 
   # Plex Media Server:
   #

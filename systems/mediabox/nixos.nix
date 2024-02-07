@@ -68,7 +68,7 @@ in {
 
   hardware.opengl = {
     enable = true;
-    extraPackages = with pkgs; [mesa.drivers vaapiVdpau libvdpau-va-gl];
+    extraPackages = with pkgs; [mesa.drivers];
   };
 
   fileSystems = let
