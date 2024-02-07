@@ -30,7 +30,8 @@
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 in {
   inherit tree nixlib;
-  std = import ./std.nix {inherit inputs;};
+  std = inputs.self.lib.Std.Std.compat;
+  Std = inputs.std-fl.lib;
   lib = {
     inherit eui64 toHexStringLower hexCharToInt;
   };
