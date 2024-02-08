@@ -67,6 +67,12 @@ resource "proxmox_virtual_environment_container" "reimu" {
     }
   }
 
+  startup {
+    order      = 4
+    up_delay   = 0
+    down_delay = 0
+  }
+
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:A8"
@@ -113,9 +119,9 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   }
 
   startup {
-    order      = "3"
-    up_delay   = "60"
-    down_delay = "60"
+    order      = 8
+    up_delay   = 0
+    down_delay = 2
   }
 
   cdrom {
