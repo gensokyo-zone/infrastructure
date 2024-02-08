@@ -42,13 +42,13 @@ echo setting up pve terraform role... >&2
 # https://pve.proxmox.com/wiki/User_Management#_privileges
 TF_ROLE_PRIVS=(
 	Group.Allocate Realm.AllocateUser User.Modify Permissions.Modify
-	Sys.Audit # Sys.Console Sys.Incoming Sys.Modify Sys.PowerMgmt Sys.Syslog
+	Sys.Audit Sys.Modify # Sys.Console Sys.Incoming Sys.PowerMgmt Sys.Syslog
 	VM.Audit VM.Allocate VM.PowerMgmt
 	VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options
-	VM.Backup VM.Clone VM.Migrate VM.Snapshot VM.Snapshot.Rollback # VM.Console VM.Monitor
-	SDN.Audit SDN.Use # SDN.Allocate
+	VM.Backup VM.Clone VM.Migrate VM.Snapshot VM.Snapshot.Rollback VM.Console VM.Monitor
+	SDN.Audit SDN.Use SDN.Allocate
 	Datastore.Audit Datastore.Allocate Datastore.AllocateSpace # Datastore.AllocateTemplate
-	Mapping.Audit Mapping.Use # Mapping.Modify
+	Mapping.Audit Mapping.Use Mapping.Modify
 	Pool.Audit # Pool.Allocate
 )
 pveum role add Terraform --privs "${TF_ROLE_PRIVS[*]}"
