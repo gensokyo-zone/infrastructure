@@ -126,7 +126,7 @@
         "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.system.build.tarball" \
         --show-trace "$@")
       if [[ $ARG_NODE = ct ]]; then
-        DATESTAMP=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#inputs.nixpkgs.sourceInfo.lastModifiedDate")
+        DATESTAMP=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#lib.inputs.nixpkgs.sourceInfo.lastModifiedDate")
         DATENAME=''${DATESTAMP:0:4}''${DATESTAMP:4:2}''${DATESTAMP:6:2}
         SYSARCH=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.nixpkgs.system")
         TAREXT=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.system.build.tarball.extension")

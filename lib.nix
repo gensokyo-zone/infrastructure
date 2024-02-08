@@ -29,7 +29,7 @@
       nibble0 + (fixedWidthString 1 "0" (toHexStringLower nibble1));
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 in {
-  inherit tree nixlib;
+  inherit tree nixlib inputs;
   std = inputs.self.lib.Std.Std.compat;
   Std = inputs.std-fl.lib;
   lib = {
