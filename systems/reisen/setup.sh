@@ -16,6 +16,13 @@ EOF
 cat $TMP_KEYFILE > /etc/pve/priv/authorized_keys
 rm $TMP_KEYFILE
 
+base64 -d > /etc/subuid <<EOF
+$INPUT_SUBUID
+EOF
+base64 -d > /etc/subgid <<EOF
+$INPUT_SUBGID
+EOF
+
 if [[ ! -d /home/tf ]]; then
 	echo setting up pve terraform user... >&2
 	groupadd -g 1001 tf

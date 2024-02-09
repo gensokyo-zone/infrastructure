@@ -16,8 +16,14 @@
   '';
 in {
   users.users.${username} = {
+    uid = 4000;
     hashedPasswordFile = config.sops.secrets.tf-proxmox-passwd.path;
     isNormalUser = true;
+    autoSubUidGidRange = false;
+    group = username;
+  };
+  users.groups.${username} = {
+    gid = config.users.users.${username}.uid;
   };
 
   services.openssh = {

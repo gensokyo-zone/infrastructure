@@ -4,6 +4,18 @@
 			"/mnt/kyuuto-media/library mnt/kyuuto-media/library none bind,optional,create=dir",
 			"/mnt/kyuuto-media/downloads/deluge mnt/kyuuto-media/downloads/deluge none bind,optional,create=dir",
 			"/dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file"
+		],
+		"lxc.idmap": [
+			"u 0 100000 8000",
+			"g 0 100000 8000",
+			"u 8000 8000 128",
+			"g 8000 8000 256",
+			"u 8128 108128 57406",
+			"g 8256 108256 57278",
+			"u 65534 65534 1",
+			"g 65534 65534 1",
+			"u 65535 165535 1",
+			"g 65535 165535 1"
 		]
 	}
 }

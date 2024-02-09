@@ -29,6 +29,8 @@
       exec ssh root@$SETUP_HOSTNAME env \
         INPUT_ROOT_SSH_AUTHORIZEDKEYS="$(base64 -w0 <<<"$INPUT_ROOT_SSH_AUTHORIZEDKEYS")" \
         INPUT_TF_SSH_AUTHORIZEDKEYS="$(base64 -w0 < ${reisen + "/tf.authorized_keys"})" \
+        INPUT_SUBUID="$(base64 -w0 < ${reisen + "/subuid"})" \
+        INPUT_SUBGID="$(base64 -w0 < ${reisen + "/subgid"})" \
         INPUT_INFRA_SETUP="$(base64 -w0 < ${reisen + "/setup.sh"})" \
         INPUT_INFRA_PUTFILE64="$(base64 -w0 < ${reisen + "/bin/putfile64.sh"})" \
         INPUT_INFRA_PVE="$(base64 -w0 < ${reisen + "/bin/pve.sh"})" \

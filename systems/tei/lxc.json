@@ -3,6 +3,18 @@
 		"lxc.mount.entry": [
 			"/dev/ttyZigbee dev/ttyZigbee none bind,optional,create=file",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
+		],
+		"lxc.idmap": [
+			"u 0 100000 8000",
+			"g 0 100000 8000",
+			"u 8000 8000 128",
+			"g 8000 8000 256",
+			"u 8128 108128 57406",
+			"g 8256 108256 57278",
+			"u 65534 65534 1",
+			"g 65534 65534 1",
+			"u 65535 165535 1",
+			"g 65535 165535 1"
 		]
 	}
 }
