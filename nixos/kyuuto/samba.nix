@@ -19,31 +19,41 @@ in {
     };
     shares = mkIf cfg.enable {
       kyuuto-transfer = {
+        comment = "Kyuuto Media Transfer Area";
         path = kyuuto.transferDir;
         writeable = true;
         browseable = true;
         public = true;
-        "acl group control" = true;
         #"guest only" = true;
-        comment = "Kyuuto Media Transfer Area";
         "hosts allow" = localAddrs;
+        "acl group control" = true;
+        "create mask" = "0664";
+        "force directory mode" = "3000";
+        "directory mask" = "7775";
       };
       kyuuto-access = {
         path = kyuuto.libraryDir;
+        comment = "Kyuuto Media Access";
         writeable = false;
         browseable = true;
         public = true;
-        comment = "Kyuuto Media Access";
         "hosts allow" = localAddrs;
       };
       kyuuto-media = {
         path = kyuuto.mountDir;
+        comment = "Kyuuto Media";
         writeable = true;
         browseable = true;
         public = false;
-        comment = "Kyuuto Media";
-        "valid users" = [ "@kyuuto" ];
+        "valid users" = [ "@kyuuto-peeps" ];
+        "acl group control" = true;
+        "create mask" = "0664";
+        "force directory mode" = "3000";
+        "directory mask" = "7775";
       };
     };
   };
+
+  # give guest users proper access to the transfer share
+  users.users.guest.extraGroups = [ "kyuuto" ];
 }

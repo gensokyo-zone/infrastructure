@@ -37,8 +37,12 @@ provider "proxmox" {
   }
 }
 
-data "proxmox_virtual_environment_role" "vm_admin" {
-  role_id = "PVEVMAdmin"
+data "proxmox_virtual_environment_role" "vm_user" {
+  role_id = "PVEVMUser"
+}
+
+data "proxmox_virtual_environment_role" "auditor" {
+  role_id = "PVEAuditor"
 }
 
 data "proxmox_virtual_environment_role" "administrator" {
@@ -53,6 +57,22 @@ resource "proxmox_virtual_environment_group" "admin" {
     path      = "/"
     propagate = true
     role_id   = data.proxmox_virtual_environment_role.administrator.id
+  }
+}
+
+resource "proxmox_virtual_environment_group" "user" {
+  group_id = "user"
+  comment  = "Users"
+
+  acl {
+    path      = "/"
+    propagate = true
+    role_id   = data.proxmox_virtual_environment_role.auditor.id
+  }
+  acl {
+    path      = "/"
+    propagate = true
+    role_id   = data.proxmox_virtual_environment_role.vm_user.id
   }
 }
 
@@ -103,15 +123,46 @@ resource "proxmox_virtual_environment_user" "kat" {
   }
 }
 
-variable "proxmox_user_liz_last_name" {
+variable "proxmox_user_kaosubaloo_email" {
   type = string
 }
 
-resource "proxmox_virtual_environment_user" "liz" {
-  user_id    = "liz@pve"
-  first_name = "Elizabeth"
-  last_name  = var.proxmox_user_liz_last_name
+variable "proxmox_user_kaosubaloo_first_name" {
+  type = string
+}
+
+variable "proxmox_user_kaosubaloo_last_name" {
+  type = string
+}
+
+resource "proxmox_virtual_environment_user" "kaosubaloo" {
+  user_id    = "kaosubaloo@pve"
+  email      = var.proxmox_user_kaosubaloo_email
+  first_name = var.proxmox_user_kaosubaloo_first_name
+  last_name  = var.proxmox_user_kaosubaloo_last_name
   password   = random_password.proxmox_initial.result
+  groups     = [proxmox_virtual_environment_group.user.id]
+
+  lifecycle {
+    ignore_changes = [password]
+  }
+}
+
+variable "proxmox_user_connieallure_email" {
+  type = string
+}
+
+variable "proxmox_user_connieallure_last_name" {
+  type = string
+}
+
+resource "proxmox_virtual_environment_user" "connieallure" {
+  user_id    = "connieallure@pve"
+  email      = var.proxmox_user_connieallure_email
+  first_name = "Connie"
+  last_name  = var.proxmox_user_connieallure_last_name
+  password   = random_password.proxmox_initial.result
+  groups     = [proxmox_virtual_environment_group.user.id]
 
   lifecycle {
     ignore_changes = [password]

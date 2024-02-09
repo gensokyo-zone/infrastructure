@@ -56,6 +56,13 @@ in {
         default = "usershare-template";
       };
     };
+    guest = {
+      enable = mkEnableOption "guest account";
+      user = mkOption {
+        type = str;
+        default = "nobody";
+      };
+    };
     idmap = let
       idmapModule = { config, name, ... }: {
         options = {
@@ -133,7 +140,7 @@ in {
       ];
       settings = mkMerge ([
         (mkIf (cfg.passdb.smbpasswd.path != null) {
-          "passdb backend" = "smbpasswd:${cfg.passdb.smbpasswd.path}";
+          "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
         })
         (mkIf cfg.ldap.enable {
           "passdb backend" = mkOptionDefault ''ldapsam:"${cfg.ldap.url}"'';
@@ -152,6 +159,11 @@ in {
           "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
           "usershare path" = mkOptionDefault cfg.usershare.path;
           "usershare prefix allow list" = mkOptionDefault [ cfg.usershare.path ];
+        })
+        (mkIf cfg.guest.enable {
+          "map to guest" = mkOptionDefault "Bad User";
+          "guest account" = mkOptionDefault cfg.guest.user;
+          "valid users" = [ cfg.guest.user ];
         })
       ] ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
       extraConfig = mkMerge (mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings);

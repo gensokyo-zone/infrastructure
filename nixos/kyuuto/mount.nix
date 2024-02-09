@@ -41,7 +41,7 @@ in {
         group ? name,
         enable ? !config.services.${serviceName}.enable, serviceName ? name,
         uid ? config.ids.uids.${name},
-        gid ? config.ids.gids.${group}
+        gid ? config.ids.gids.${group},
       }: mkIf enable {
         users.${name} = {
           group = mkIf (group != null) group;

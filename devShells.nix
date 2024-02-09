@@ -8,10 +8,13 @@
     name,
     attr ? name,
     subdir ? null,
-  }:
-    pkgs.writeShellScriptBin name ''
+    exe ? null,
+  }: let
+    subcommand = if exe == null then "run" else "shell";
+    exeArg = if exe == null then "--" else "-c ${exe}";
+  in pkgs.writeShellScriptBin name ''
       ${optionalString (subdir != null) ''cd "$NF_CONFIG_ROOT${subdir}"''}
-      exec nix run ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#${attr}" -- "$@"
+      exec nix ${subcommand} ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#${attr}" ${exeArg} "$@"
     '';
   nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
     NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
@@ -83,6 +86,11 @@
       (mkWrapper {
         name = "deploy";
         attr = "deploy-rs";
+      })
+      (mkWrapper rec {
+        name = "smbencrypt";
+        attr = "pkgs.freeradius";
+        exe = name;
       })
     ];
     shellHook = ''

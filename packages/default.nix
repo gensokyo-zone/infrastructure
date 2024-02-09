@@ -140,6 +140,7 @@
       fi
     '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''
+      set -eu
       if [[ $# -eq 0 ]]; then
         set -- check
       fi

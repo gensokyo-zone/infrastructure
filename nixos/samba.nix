@@ -1,17 +1,12 @@
 {
   config,
   lib,
-  access,
-  pkgs,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (lib.lists) any;
   inherit (lib.strings) hasInfix concatMapStringsSep splitString;
-  inherit (config.services) samba samba-wsdd;
-  system = access.systemFor "tei";
-  inherit (system.services) kanidm;
-  enableLdap = false;
+  cfg =  config.services.samba;
   hasIpv4 = any (hasInfix ".") config.systemd.network.networks.eth0.address or [ ];
 in {
   services.samba = {
@@ -26,6 +21,10 @@ in {
     usershare = {
       group = mkDefault "peeps";
     };
+    guest = {
+      enable = mkDefault true;
+      user = mkDefault "guest";
+    };
     passdb.smbpasswd.path = mkDefault config.sops.secrets.smbpasswd.path;
     settings = {
       workgroup = "GENSOKYO";
@@ -35,17 +34,15 @@ in {
       "winbind scan trusted domains" = false;
       "winbind use default domain" = true;
       "domain master" = false;
-      "valid users" = [ "nobody" "@peeps" ];
-      "map to guest" = "Bad User";
-      "guest account" = "nobody";
+      "valid users" = [ "@peeps" ];
       "remote announce" = mkIf hasIpv4 [
-        "10.1.1.255/${samba.settings.workgroup}"
+        "10.1.1.255/${cfg.settings.workgroup}"
       ];
     };
   };
 
-  services.samba-wsdd = mkIf samba.enable {
-    enable = mkDefault true;
+  services.samba-wsdd = {
+    enable = mkIf cfg.enable (mkDefault true);
     hostname = mkDefault config.networking.hostName;
   };
 
