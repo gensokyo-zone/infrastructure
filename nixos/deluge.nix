@@ -57,4 +57,7 @@ in {
     download
     (mkIf (completedDir != null && !hasCompletedSubdir) completed)
   ]);
+  users.users.deluge = mkIf cfg.enable {
+    extraGroups = [ "kyuuto" ];
+  };
 }

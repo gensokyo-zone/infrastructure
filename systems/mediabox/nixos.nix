@@ -9,13 +9,12 @@
   inherit (lib.attrsets) mapAttrs mapAttrsToList;
   inherit (lib.strings) removePrefix;
   inherit (config.services) deluge plex tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
-  kyuuto = "/mnt/kyuuto-media";
-  kyuuto-library = kyuuto + "/library";
+  inherit (config) kyuuto;
   plexLibrary = {
-    "/mnt/Anime".hostPath = kyuuto-library + "/anime";
-    "/mnt/Shows".hostPath = kyuuto-library + "/tv";
-    "/mnt/Movies".hostPath = kyuuto-library + "/movies";
-    "/mnt/Music".hostPath = kyuuto-library + "/music";
+    "/mnt/Anime".hostPath = kyuuto.libraryDir + "/anime";
+    "/mnt/Shows".hostPath = kyuuto.libraryDir + "/tv";
+    "/mnt/Movies".hostPath = kyuuto.libraryDir + "/movies";
+    "/mnt/Music".hostPath = kyuuto.libraryDir + "/music";
   };
 in {
   imports = let
@@ -29,6 +28,7 @@ in {
     ./cloudflared.nix
 
     # media
+    nixos.kyuuto
     nixos.plex
     nixos.tautulli
     nixos.ombi
@@ -48,16 +48,16 @@ in {
     serverName = "tewi";
     mediaDirectories = let
       mkLibraryDir = dir: {
-        path = kyuuto-library + "/${dir}";
-        mountPoint = kyuuto-library;
+        path = kyuuto.libraryDir + "/${dir}";
+        mountPoint = kyuuto.libraryDir;
       };
       libraryDir = {
-        path = kyuuto-library;
-        mountPoint = kyuuto-library;
+        path = kyuuto.libraryDir;
+        mountPoint = kyuuto.libraryDir;
         subdirectories =
           mapAttrsToList (
             _: {hostPath, ...}:
-              removePrefix "${kyuuto-library}/" hostPath
+              removePrefix "${kyuuto.libraryDir}/" hostPath
           )
           plexLibrary
           ++ ["tlmc" "music-raw"];
@@ -88,7 +88,7 @@ in {
       "${deluge.downloadDir}" = mkIf deluge.enable (mkMerge [
         bind
         {
-          device = kyuuto + "/downloads/deluge/download";
+          device = kyuuto.mountDir + "/downloads/deluge/download";
         }
       ]);
     };

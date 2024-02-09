@@ -8,11 +8,15 @@
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.kyuuto
     nixos.tailscale
     nixos.nfs
     nixos.samba
-    ./nfs.nix
   ];
+
+  kyuuto.setup = true;
+
+  proxmoxLXC.privileged = true;
 
   systemd.network.networks.eth0 = {
     name = "eth0";

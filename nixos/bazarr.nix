@@ -8,4 +8,5 @@ in {
     enable = mkDefault true;
     listenPort = mkDefault 6767;
   };
+  users.users.bazarr.extraGroups = [ "kyuuto" ];
 }
