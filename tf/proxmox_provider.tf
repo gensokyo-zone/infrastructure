@@ -94,7 +94,7 @@ variable "proxmox_user_arc_last_name" {
 }
 
 resource "proxmox_virtual_environment_user" "arc" {
-  user_id    = "arc@pve"
+  user_id    = "arc@pam"
   email      = var.proxmox_user_arc_email
   first_name = var.proxmox_user_arc_first_name
   last_name  = var.proxmox_user_arc_last_name
@@ -104,6 +104,10 @@ resource "proxmox_virtual_environment_user" "arc" {
   lifecycle {
     ignore_changes = [password]
   }
+
+  depends_on = [
+    terraform_data.proxmox_reisen_users,
+  ]
 }
 
 variable "proxmox_user_kat_email" {
@@ -111,7 +115,7 @@ variable "proxmox_user_kat_email" {
 }
 
 resource "proxmox_virtual_environment_user" "kat" {
-  user_id    = "kat@pve"
+  user_id    = "kat@pam"
   email      = var.proxmox_user_kat_email
   first_name = "Kat"
   last_name  = "Inskip"
@@ -121,6 +125,10 @@ resource "proxmox_virtual_environment_user" "kat" {
   lifecycle {
     ignore_changes = [password]
   }
+
+  depends_on = [
+    terraform_data.proxmox_reisen_users,
+  ]
 }
 
 variable "proxmox_user_kaosubaloo_email" {
@@ -136,7 +144,7 @@ variable "proxmox_user_kaosubaloo_last_name" {
 }
 
 resource "proxmox_virtual_environment_user" "kaosubaloo" {
-  user_id    = "kaosubaloo@pve"
+  user_id    = "kaosubaloo@pam"
   email      = var.proxmox_user_kaosubaloo_email
   first_name = var.proxmox_user_kaosubaloo_first_name
   last_name  = var.proxmox_user_kaosubaloo_last_name
@@ -157,7 +165,7 @@ variable "proxmox_user_connieallure_last_name" {
 }
 
 resource "proxmox_virtual_environment_user" "connieallure" {
-  user_id    = "connieallure@pve"
+  user_id    = "connieallure@pam"
   email      = var.proxmox_user_connieallure_email
   first_name = "Connie"
   last_name  = var.proxmox_user_connieallure_last_name
@@ -167,4 +175,8 @@ resource "proxmox_virtual_environment_user" "connieallure" {
   lifecycle {
     ignore_changes = [password]
   }
+
+  depends_on = [
+    terraform_data.proxmox_reisen_users,
+  ]
 }

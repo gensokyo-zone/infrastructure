@@ -66,7 +66,7 @@ WRAPPERBIN=/opt/infra/sbin
 SUDOERS_INFRABINS=
 rm -f "$INFRABIN/"* "$WRAPPERBIN/"*
 mkdir -m 0755 -p "$INFRABIN" "$WRAPPERBIN"
-for infrabin in putfile64 pve ct-config; do
+for infrabin in putfile64 pve mkpam ct-config; do
 	infrainput="${infrabin//-/_}"
 	infrainput="INPUT_INFRA_${infrainput^^}"
 	printf '%s\n' "${!infrainput}" | base64 -d > "$WRAPPERBIN/$infrabin"

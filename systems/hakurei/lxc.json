@@ -1,6 +1,7 @@
 {
 	"lxc": {
 		"lxc.mount.entry": [
+			"/mnt/kyuuto-media mnt/kyuuto-media none bind,optional,create=dir",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
 		],
 		"lxc.idmap": [

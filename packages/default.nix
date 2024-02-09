@@ -34,6 +34,7 @@
         INPUT_INFRA_SETUP="$(base64 -w0 < ${reisen + "/setup.sh"})" \
         INPUT_INFRA_PUTFILE64="$(base64 -w0 < ${reisen + "/bin/putfile64.sh"})" \
         INPUT_INFRA_PVE="$(base64 -w0 < ${reisen + "/bin/pve.sh"})" \
+        INPUT_INFRA_MKPAM="$(base64 -w0 < ${reisen + "/bin/mkpam.sh"})" \
         INPUT_INFRA_CT_CONFIG="$(base64 -w0 < ${reisen + "/bin/ct-config.sh"})" \
         "bash -c \"eval \\\"\\\$(base64 -d <<<\\\$INPUT_INFRA_SETUP)\\\"\""
     '';
@@ -138,6 +139,13 @@
         echo $OUTNAME
         ls -l $OUTNAME
       fi
+    '';
+    nf-generate = pkgs.writeShellScriptBin "nf-generate" ''
+      set -eu
+
+      for node in reisen; do
+        nix eval --json "''${NF_CONFIG_ROOT-${toString ../.}}"#"lib.generate.$node.users" | jq -M . > "$NF_CONFIG_ROOT/systems/$node/users.json"
+      done
     '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''
       set -eu

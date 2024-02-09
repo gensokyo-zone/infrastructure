@@ -20,11 +20,13 @@ module "hakurei_system_records" {
     "id",
     "ldap",
     "freeipa",
+    "smb",
   ]
   global_subdomains = [
     "plex",
     "idp",
     "ldap",
+    "smb",
   ]
 }
 
@@ -38,7 +40,6 @@ module "reimu_system_records" {
   local_v6     = "fd0a::be24:11ff:fec4:66a8"
   local_subdomains = [
     "nfs",
-    "smb",
   ]
 }
 

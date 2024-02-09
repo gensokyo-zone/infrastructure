@@ -48,6 +48,7 @@
       nf-actions-test
       nf-update
       nf-tf
+      (mkWrapper {name = "nf-generate";})
       (mkWrapper {name = "nf-deploy";})
       (mkWrapper {name = "nf-setup-node";})
       (mkWrapper {name = "nf-sops-keyscan";})

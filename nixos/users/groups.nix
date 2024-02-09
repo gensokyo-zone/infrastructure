@@ -1,11 +1,11 @@
 {
   config,
   lib,
+  inputs,
   ...
 }: let
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
-  inherit (lib.lists) elem;
-  userIs = group: user: elem group (user.extraGroups ++ [ user.group ]);
+  inherit (inputs.self.lib.lib) userIs;
 in {
   users.groups = {
     peeps = {

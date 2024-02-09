@@ -17,6 +17,7 @@ in {
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.kyuuto
     nixos.tailscale
     nixos.cloudflared
     nixos.ddclient
@@ -29,6 +30,7 @@ in {
     nixos.access.freeipa
     nixos.access.proxmox
     nixos.access.plex
+    nixos.samba
     ./reisen-ssh.nix
   ];
 
@@ -131,6 +133,8 @@ in {
   };
 
   services.tailscale.advertiseExitNode = true;
+
+  services.samba.openFirewall = true;
 
   systemd.network.networks.eth0 = {
     name = "eth0";

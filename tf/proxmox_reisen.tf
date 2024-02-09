@@ -11,6 +11,8 @@ locals {
   proxmox_reisen_net_vmbr0_ipv6 = file("${path.root}/../systems/reisen/net.50-vmbr0-ipv6.conf")
   proxmox_reisen_udev_dri       = file("${path.root}/../systems/reisen/udev.90-dri.rules")
   proxmox_reisen_udev_z2m       = file("${path.root}/../systems/reisen/udev.90-z2m.rules")
+
+  proxmox_reisen_users = jsondecode(file("${path.root}/../systems/reisen/users.json"))
 }
 
 resource "terraform_data" "proxmox_reisen_etc" {
@@ -35,6 +37,26 @@ resource "terraform_data" "proxmox_reisen_etc" {
       "putfile64 /etc/sysctl.d/50-net.conf ${base64encode(local.proxmox_reisen_sysctl_net)}",
       "putfile64 /etc/udev/rules.d/90-dri.rules ${base64encode(local.proxmox_reisen_udev_dri)}",
       "putfile64 /etc/udev/rules.d/90-z2m.rules ${base64encode(local.proxmox_reisen_udev_z2m)}",
+    ]
+  }
+}
+
+resource "terraform_data" "proxmox_reisen_users" {
+  triggers_replace = {
+    users = local.proxmox_reisen_users
+  }
+
+  connection {
+    type     = local.proxmox_reisen_connection.type
+    user     = local.proxmox_reisen_connection.user
+    password = local.proxmox_reisen_connection.password
+    host     = local.proxmox_reisen_connection.host
+    port     = local.proxmox_reisen_connection.port
+  }
+
+  provisioner "remote-exec" {
+    inline = [for user in local.proxmox_reisen_users :
+      "mkpam '${user.name}' '${user.uid}'"
     ]
   }
 }

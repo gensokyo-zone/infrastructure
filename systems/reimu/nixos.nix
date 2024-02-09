@@ -11,7 +11,6 @@
     nixos.kyuuto
     nixos.tailscale
     nixos.nfs
-    nixos.samba
   ];
 
   kyuuto.setup = true;

@@ -25,9 +25,9 @@ in {
 
   config = {
     systemd.tmpfiles.rules = mkIf cfg.setup [
-      "d ${cfg.transferDir} 3775 root kyuuto"
-      "d ${cfg.libraryDir} 3775 root kyuuto"
-      "d ${cfg.libraryDir}/unsorted 3775 root kyuuto"
+      "d ${cfg.transferDir} 3775 guest kyuuto"
+      "d ${cfg.libraryDir} 3775 kat kyuuto"
+      "d ${cfg.libraryDir}/unsorted 3775 guest kyuuto"
       "d ${cfg.libraryDir}/music 7775 sonarr kyuuto"
       "d ${cfg.libraryDir}/anime 7775 sonarr kyuuto"
       "d ${cfg.libraryDir}/tv 7775 sonarr kyuuto"
