@@ -34,10 +34,16 @@ in {
       "winbind scan trusted domains" = false;
       "winbind use default domain" = true;
       "domain master" = false;
-      "valid users" = [ "@peeps" ];
       "remote announce" = mkIf hasIpv4 [
         "10.1.1.255/${cfg.settings.workgroup}"
       ];
+    };
+    idmap.domains = mkIf (!cfg.ldap.enable) {
+      nss = {
+        backend = "nss";
+        domain = "*";
+        range.min = 8000;
+      };
     };
   };
 

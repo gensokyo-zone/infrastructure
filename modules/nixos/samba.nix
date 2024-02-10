@@ -139,6 +139,9 @@ in {
         })
       ];
       settings = mkMerge ([
+        {
+          "use sendfile" = mkOptionDefault true;
+        }
         (mkIf (cfg.passdb.smbpasswd.path != null) {
           "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
         })
@@ -163,7 +166,6 @@ in {
         (mkIf cfg.guest.enable {
           "map to guest" = mkOptionDefault "Bad User";
           "guest account" = mkOptionDefault cfg.guest.user;
-          "valid users" = [ cfg.guest.user ];
         })
       ] ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
       extraConfig = mkMerge (mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings);
