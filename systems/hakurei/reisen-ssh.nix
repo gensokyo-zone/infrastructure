@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkAfter;
+  inherit (lib.modules) mkAfter mkForce;
   sshPort = 41022;
   username = "tf-proxmox";
   sshJump = pkgs.writeShellScript "ssh-jump-${username}" ''
@@ -28,15 +28,14 @@ in {
 
   services.openssh = {
     ports = mkAfter [ sshPort ];
-    settings = {
-      KbdInteractiveAuthentication = true;
-      PasswordAuthentication = true;
-    };
     extraConfig = mkAfter ''
       Match User ${username}
+        KbdInteractiveAuthentication yes
         ForceCommand ${sshJump}
     '';
   };
+  # required for kbd or password authentication
+  security.pam.services.sshd.unixAuth = mkForce true;
 
   networking.firewall.allowedTCPPorts = [ sshPort ];
 
