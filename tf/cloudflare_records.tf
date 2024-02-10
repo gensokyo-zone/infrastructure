@@ -21,12 +21,14 @@ module "hakurei_system_records" {
     "ldap",
     "freeipa",
     "smb",
+    "kitchen",
   ]
   global_subdomains = [
     "plex",
     "idp",
     "ldap",
     "smb",
+    "kitchen",
   ]
 }
 
@@ -87,6 +89,14 @@ module "kubernetes_system_records" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
   local_v6  = "fd0a::be24:11ff:fe49:fedc"
+}
+
+module "kitchencam_system_records" {
+  source    = "./system/records"
+  name      = "kitchencam"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::ba27:ebff:fea8:f4ff"
 }
 
 module "tewi_legacy_system_records" {

@@ -9,7 +9,7 @@
   mediabox = access.systemFor "mediabox";
   tei = access.systemFor "tei";
   inherit (mediabox.services) plex;
-  inherit (tei.services) kanidm;
+  inherit (tei.services) kanidm vouch-proxy;
 in {
   imports = let
     inherit (meta) nixos;
@@ -28,6 +28,7 @@ in {
     nixos.access.gensokyo
     nixos.access.kanidm
     nixos.access.freeipa
+    nixos.access.kitchencam
     nixos.access.proxmox
     nixos.access.plex
     nixos.samba
@@ -98,6 +99,17 @@ in {
       inherit (nginx) group;
       extraDomainNames = [access.plex.localDomain];
     };
+    ${access.kitchencam.domain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        [
+          access.kitchencam.localDomain
+        ]
+        (mkIf tailscale.enable [
+          access.kitchencam.tailDomain
+        ])
+      ];
+    };
   };
 
   services.nginx = let
@@ -114,6 +126,9 @@ in {
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";
     };
+    access.kitchencam = {
+      useACMEHost = access.kitchencam.domain;
+    };
     virtualHosts = {
       ${access.kanidm.domain} = {
         useACMEHost = access.kanidm.domain;
@@ -128,6 +143,13 @@ in {
       ${access.plex.domain} = {
         addSSL = true;
         useACMEHost = access.plex.domain;
+      };
+      ${access.kitchencam.domain} = {
+        vouch = {
+          authUrl = vouch-proxy.authUrl;
+          url = vouch-proxy.url;
+          proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+        };
       };
     };
   };
