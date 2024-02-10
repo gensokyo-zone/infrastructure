@@ -127,6 +127,7 @@ in {
       host = "idp.local.${config.networking.domain}";
     };
     access.kitchencam = {
+      streamPort = 41081;
       useACMEHost = access.kitchencam.domain;
     };
     virtualHosts = {
