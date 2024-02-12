@@ -15,7 +15,7 @@
       url = "github:chessai/nix-std";
     };
     ci = {
-      url = "github:arcnmx/ci/v0.6";
+      url = "github:arcnmx/ci/v0.7";
       flake = false;
     };
     flake-compat = {

@@ -24,16 +24,16 @@
     "ci": {
       "flake": false,
       "locked": {
-        "lastModified": 1702334111,
-        "narHash": "sha256-BLk0GUHGSxW3h35nlRjXzb3tKFC2rq29PLGMNxMtlVc=",
+        "lastModified": 1707782685,
+        "narHash": "sha256-1in0xT0MKHZn/1jrNMUp7rbVCgVj79HF0Fmao1IsTE0=",
         "owner": "arcnmx",
         "repo": "ci",
-        "rev": "1176d85875516e5dcff58333feb46f570187c4da",
+        "rev": "fc284b03f16fa9cb82ca93bdef8106866f1d7287",
         "type": "github"
       },
       "original": {
         "owner": "arcnmx",
-        "ref": "v0.6",
+        "ref": "v0.7",
         "repo": "ci",
         "type": "github"
       }

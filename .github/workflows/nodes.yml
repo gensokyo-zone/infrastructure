@@ -9,26 +9,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.aya.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.aya.run.test
         command: ci-build-dirty
@@ -36,7 +25,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.aya.run.test
         command: ci-build-realise
@@ -47,7 +36,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.aya.run.test
         command: ci-build-summarise
@@ -59,7 +48,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.aya.run.test
         command: ci-build-cache
@@ -71,21 +60,21 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-action-build
       name: nix build ci.gh-actions.configFile
-      uses: arcnmx/ci/actions/nix/build@v0.6
+      uses: arcnmx/ci/actions/nix/build@v0.7
       with:
         attrs: ci.gh-actions.configFile
         out-link: .ci/workflow.yml
     - id: ci-action-compare
       name: gh-actions compare
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         args: -u .github/workflows/nodes.yml .ci/workflow.yml
         attrs: nixpkgs.diffutils
@@ -96,26 +85,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.ct.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.ct.run.test
         command: ci-build-dirty
@@ -123,7 +101,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.ct.run.test
         command: ci-build-realise
@@ -134,7 +112,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.ct.run.test
         command: ci-build-summarise
@@ -146,7 +124,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.ct.run.test
         command: ci-build-cache
@@ -158,26 +136,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.hakurei.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.hakurei.run.test
         command: ci-build-dirty
@@ -185,7 +152,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.hakurei.run.test
         command: ci-build-realise
@@ -196,7 +163,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.hakurei.run.test
         command: ci-build-summarise
@@ -208,7 +175,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.hakurei.run.test
         command: ci-build-cache
@@ -220,26 +187,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.mediabox.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.mediabox.run.test
         command: ci-build-dirty
@@ -247,7 +203,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.mediabox.run.test
         command: ci-build-realise
@@ -258,7 +214,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.mediabox.run.test
         command: ci-build-summarise
@@ -270,7 +226,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.mediabox.run.test
         command: ci-build-cache
@@ -282,26 +238,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.reimu.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.reimu.run.test
         command: ci-build-dirty
@@ -309,7 +254,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.reimu.run.test
         command: ci-build-realise
@@ -320,7 +265,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.reimu.run.test
         command: ci-build-summarise
@@ -332,7 +277,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.reimu.run.test
         command: ci-build-cache
@@ -344,26 +289,15 @@ jobs:
     steps:
     - id: checkout
       name: git clone
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: false
     - id: nix-install
       name: nix install
-      uses: arcnmx/ci/actions/nix/install@v0.6
-    - id: ci-setup
-      name: nix setup
-      uses: arcnmx/ci/actions/nix/run@v0.6
-      with:
-        attrs: ci.job.tei.run.bootstrap
-        quiet: false
-    - id: architectures
-      name: prepare for emulated builds
-      run: 'sudo $(which archbinfmt)
-
-        '
+      uses: arcnmx/ci/actions/nix/install@v0.7
     - id: ci-dirty
       name: nix test dirty
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.tei.run.test
         command: ci-build-dirty
@@ -371,7 +305,7 @@ jobs:
         stdout: ${{ runner.temp }}/ci.build.dirty
     - id: ci-test
       name: nix test build
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.tei.run.test
         command: ci-build-realise
@@ -382,7 +316,7 @@ jobs:
         CI_EXIT_CODE: ${{ steps.ci-test.outputs.exit-code }}
       id: ci-summary
       name: nix test results
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.tei.run.test
         command: ci-build-summarise
@@ -394,7 +328,7 @@ jobs:
       id: ci-cache
       if: always()
       name: nix test cache
-      uses: arcnmx/ci/actions/nix/run@v0.6
+      uses: arcnmx/ci/actions/nix/run@v0.7
       with:
         attrs: ci.job.tei.run.test
         command: ci-build-cache
