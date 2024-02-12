@@ -1,0 +1,25 @@
+{
+	"lxc": {
+		"lxc.mount.entry": [
+			"/rpool/shared/nix/store nix/store none bind,create=dir",
+			"/rpool/shared/nix/var nix/var none bind,create=dir",
+			"/dev/net/tun dev/net/tun none bind,optional,create=file"
+		],
+		"lxc.idmap": [
+			"u 0 100000 8000",
+			"g 0 100000 8000",
+			"u 8000 8000 128",
+			"g 8000 8000 256",
+			"u 8128 108128 21872",
+			"g 8256 108256 21744",
+			"u 30000 30000 256",
+			"g 30000 30000 256",
+			"u 30256 130256 35278",
+			"g 30256 130256 35278",
+			"u 65534 65534 1",
+			"g 65534 65534 1",
+			"u 65535 165535 1",
+			"g 65535 165535 1"
+		]
+	}
+}

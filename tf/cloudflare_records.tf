@@ -45,6 +45,17 @@ module "reimu_system_records" {
   ]
 }
 
+module "aya_system_records" {
+  source    = "./system/records"
+  name      = "aya"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fec4:66a9"
+  local_subdomains = [
+    "nixbld",
+  ]
+}
+
 module "tewi_system_records" {
   source       = "./system/records"
   name         = "tei"

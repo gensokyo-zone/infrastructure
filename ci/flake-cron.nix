@@ -96,7 +96,7 @@ in {
         displayName = "flake update build";
         environment = ["CACHIX_SIGNING_KEY" "GITHUB_REF"];
         command = let
-          filteredHosts = [ "hakurei" "reimu" "tei" "mediabox" ];
+          filteredHosts = [ "hakurei" "reimu" "aya" "tei" "mediabox" ];
           gcBetweenHosts = false;
           nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
         in ''

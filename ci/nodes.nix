@@ -60,7 +60,7 @@ with lib; {
   };
 
   jobs = let
-    enabledHosts = ["hakurei" "reimu" "tei" "mediabox" "ct"];
+    enabledHosts = ["hakurei" "reimu" "aya" "tei" "mediabox" "ct"];
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
       tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;

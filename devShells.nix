@@ -25,7 +25,7 @@
   '';
   nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
     set -eu
-    for host in hakurei reimu tei mediabox ct; do
+    for host in hakurei reimu aya tei mediabox ct; do
       nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.$host.test
     done
   '';

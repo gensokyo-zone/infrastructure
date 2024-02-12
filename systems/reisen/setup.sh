@@ -91,3 +91,21 @@ chown tf:tf /home/tf/.bash{rc,_profile}
 cat > /etc/sudoers.d/tf <<EOF
 tf ALL=(root:root) NOPASSWD: NOSETENV: $SUDOERS_WRAPPERS, $SUDOERS_TF
 EOF
+
+if [[ ! -d /rpool/shared ]]; then
+	zfs create rpool/shared
+fi
+if [[ ! -d /rpool/shared/nix ]]; then
+	zfs create rpool/shared/nix
+fi
+
+if [[ ! -d /rpool/shared/nix/store ]]; then
+	zfs create -o compression=zstd rpool/shared/nix/store
+fi
+chown 100000:30000 /rpool/shared/nix/store
+chmod 1775 /rpool/shared/nix/store
+
+if [[ ! -d /rpool/shared/nix/var ]]; then
+	mkdir /rpool/shared/nix/var
+fi
+chown 100000:100000 /rpool/shared/nix/var
