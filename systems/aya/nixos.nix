@@ -20,6 +20,8 @@
       MACAddress = "BC:24:11:C4:66:A9";
       Type = "ether";
     };
+    address = ["10.1.1.47/24"];
+    gateway = ["10.1.1.1"];
     DHCP = "no";
   };
 

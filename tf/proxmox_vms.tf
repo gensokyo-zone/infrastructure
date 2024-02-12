@@ -100,7 +100,7 @@ resource "proxmox_virtual_environment_container" "reimu" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, unprivileged, description, operating_system[0].template_file_id]
+    ignore_changes = [started, unprivileged, description, initialization[0].dns, operating_system[0].template_file_id]
   }
 }
 
@@ -138,6 +138,10 @@ resource "proxmox_virtual_environment_container" "aya" {
       ipv6 {
         address = "auto"
       }
+      ipv4 {
+        address = "10.1.1.47/24"
+        gateway = "10.1.1.1"
+      }
     }
   }
 
@@ -168,7 +172,7 @@ resource "proxmox_virtual_environment_container" "aya" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, description, operating_system[0].template_file_id]
+    ignore_changes = [started, description, initialization[0].dns, operating_system[0].template_file_id]
   }
 }
 
