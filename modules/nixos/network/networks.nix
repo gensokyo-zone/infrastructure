@@ -42,14 +42,9 @@
     };
   };
 in {
-  options.deploy.system = mkOption {
-    type = lib.types.unspecified;
-    readOnly = true;
-  };
-  options.systemd.network.networks = mkOption {
-    type = with lib.types; attrsOf (submodule networkModule);
-  };
-  config = {
-    deploy.system = config.system.build.toplevel;
+  options = with lib.types; {
+    systemd.network.networks = mkOption {
+      type = attrsOf (submodule networkModule);
+    };
   };
 }

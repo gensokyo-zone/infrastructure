@@ -51,6 +51,14 @@ in {
         type = path;
         default = "/var/lib/localaddrs";
       };
+      reloadScript = mkOption {
+        type = path;
+        readOnly = true;
+      };
+      nftablesInclude = mkOption {
+        type = lines;
+        readOnly = true;
+      };
     };
   };
 
@@ -95,20 +103,30 @@ in {
         ];
       };
     };
+    localaddrs = {
+      nftablesInclude = mkBefore (''
+        define localrange6 = 2001:568::/29
+      '' + optionalString cfg.localaddrs.enable ''
+        include "${cfg.localaddrs.stateDir}/*.nft"
+      '');
+      reloadScript = let
+        localaddrs-reload = pkgs.writeShellScript "localaddrs-reload" ''
+          ${config.systemd.package}/bin/systemctl reload localaddrs 2>/dev/null ||
+          ${config.systemd.package}/bin/systemctl restart localaddrs ||
+          true
+        '';
+      in "${localaddrs-reload}";
+    };
   };
 
   config.networking = {
-    nftables.ruleset = mkBefore (''
-      define localrange6 = 2001:568::/29
-    '' + optionalString cfg.localaddrs.enable ''
-      include "${cfg.localaddrs.stateDir}/*.nft"
-    '');
+    nftables.ruleset = mkBefore cfg.localaddrs.nftablesInclude;
     firewall = {
       interfaces.local = {
         nftables.conditions = [
-          "ip saddr { ${concatStringsSep ", " networking.access.cidrForNetwork.local.v4} }"
+          "ip saddr { ${concatStringsSep ", " cfg.cidrForNetwork.local.v4} }"
           (mkIf networking.enableIPv6
-            "ip6 saddr { $localrange6, ${concatStringsSep ", " networking.access.cidrForNetwork.local.v6} }"
+            "ip6 saddr { $localrange6, ${concatStringsSep ", " cfg.cidrForNetwork.local.v6} }"
           )
         ];
       };
@@ -162,11 +180,6 @@ in {
         printf 'allow %s;\n' "$LOCALADDR4" >> ${cfg.localaddrs.stateDir}/allow.nginx.conf
       fi
     '';
-    localaddrs-reload = pkgs.writeShellScript "localaddrs-reload" ''
-      ${config.systemd.package}/bin/systemctl reload localaddrs 2>/dev/null ||
-      ${config.systemd.package}/bin/systemctl restart localaddrs ||
-      true
-    '';
   in {
     localaddrs = mkIf cfg.localaddrs.enable {
       unitConfig = {
@@ -192,7 +205,7 @@ in {
       wants = [ "localaddrs.service" ];
       serviceConfig = {
         ExecReload = mkBefore [
-          "+${localaddrs-reload}"
+          "+${cfg.localaddrs.reloadScript}"
         ];
       };
     };
@@ -201,7 +214,7 @@ in {
       after = wants;
       serviceConfig = {
         ExecReload = mkBefore [
-          "+${localaddrs-reload}"
+          "+${cfg.localaddrs.reloadScript}"
         ];
       };
     };
@@ -211,6 +224,7 @@ in {
     systemFor = hostName: inputs.self.nixosConfigurations.${hostName}.config;
     systemForOrNull = hostName: inputs.self.nixosConfigurations.${hostName}.config or null;
   in {
+    inherit (cfg) hostnameForNetwork cidrForNetwork localaddrs;
     systemFor = hostName: if hostName == networking.hostName
       then config
       else systemFor hostName;

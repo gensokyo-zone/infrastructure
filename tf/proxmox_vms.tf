@@ -144,12 +144,6 @@ resource "proxmox_virtual_environment_container" "aya" {
       }
     }
     ip_config {
-      ipv6 {
-        address = "auto"
-      }
-      ipv4 {
-        address = "dhcp"
-      }
     }
   }
 

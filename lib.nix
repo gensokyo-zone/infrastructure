@@ -38,6 +38,7 @@ in {
   Std = inputs.std-fl.lib;
   lib = {
     inherit mkWinPath userIs eui64 toHexStringLower hexCharToInt;
+    inherit (inputs.arcexprs.lib) unmerged;
   };
   generate = import ./generate.nix { inherit inputs tree; };
 }
