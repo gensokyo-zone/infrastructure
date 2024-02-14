@@ -6,7 +6,11 @@
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = name;
-    extraGroups = [ "users" "peeps" "kyuuto" ];
+    extraGroups = [
+      "users" "peeps"
+      "kyuuto"
+      "steamaccount" "beatsaber"
+    ];
   };
   users.groups.kaosubaloo = { name, ... }: {
     gid = config.users.users.${name}.uid;

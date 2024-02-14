@@ -18,6 +18,8 @@ in {
     nixos.base
     nixos.reisen-ct
     nixos.kyuuto
+    nixos.steam.account-switch
+    nixos.steam.beatsaber
     nixos.tailscale
     nixos.cloudflared
     nixos.ddclient

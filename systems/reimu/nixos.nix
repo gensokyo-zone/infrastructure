@@ -9,11 +9,17 @@
     nixos.base
     nixos.reisen-ct
     nixos.kyuuto
+    nixos.steam.account-switch
+    nixos.steam.beatsaber
     nixos.tailscale
     nixos.nfs
   ];
 
   kyuuto.setup = true;
+  services.steam = {
+    accountSwitch.enable = false;
+    beatsaber.enable = false;
+  };
 
   proxmoxLXC.privileged = true;
 

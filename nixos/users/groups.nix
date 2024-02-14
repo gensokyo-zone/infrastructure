@@ -20,11 +20,29 @@ in {
         filterAttrs (_: user: userIs "peeps" user && userIs "kyuuto" user) config.users.users
       );
     };
+    steamaccount = {
+      gid = 8131;
+    };
+    beatsaber = {
+      gid = 8132;
+    };
+
+    admin = {
+      gid = 8126;
+      members = mapAttrsToList (_: user: user.name) (
+        filterAttrs (_: user: userIs "peeps" user && userIs "wheel" user) config.users.users
+      );
+    };
   };
   users.users = {
     guest = {
       uid = 8127;
       group = "nogroup";
+      isSystemUser = true;
+    };
+    admin = {
+      uid = 8126;
+      group = "admin";
       isSystemUser = true;
     };
   };

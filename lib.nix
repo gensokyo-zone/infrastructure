@@ -6,7 +6,7 @@
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt;
   inherit (nixlib.attrsets) listToAttrs nameValuePair;
-  inherit (nixlib.strings) substring fixedWidthString;
+  inherit (nixlib.strings) substring fixedWidthString replaceStrings;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
   toHexStringLower = v: toLower (toHexString v);
@@ -30,12 +30,14 @@
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 
   userIs = group: user: builtins.elem group (user.extraGroups ++ [ user.group ]);
+
+  mkWinPath = replaceStrings [ "/" ] [ "\\" ];
 in {
   inherit tree nixlib inputs;
   std = inputs.self.lib.Std.Std.compat;
   Std = inputs.std-fl.lib;
   lib = {
-    inherit userIs eui64 toHexStringLower hexCharToInt;
+    inherit mkWinPath userIs eui64 toHexStringLower hexCharToInt;
   };
   generate = import ./generate.nix { inherit inputs tree; };
 }

@@ -30,6 +30,7 @@
     };
     "modules/nixos" = {
       functor = {
+        enable = true;
         external = with (import (inputs.arcexprs + "/modules")).nixos; [
           nix
           systemd
@@ -54,7 +55,7 @@
         ];
       };
     };
-    "modules/nixos".functor.enable = true;
+    "modules/nixos/steam".functor.enable = true;
     "modules/meta".functor.enable = true;
     "modules/system".functor.enable = true;
     "modules/home".functor.enable = true;

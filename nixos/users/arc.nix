@@ -6,7 +6,12 @@
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = name;
-    extraGroups = [ "users" "peeps" "kyuuto" "wheel" ];
+    extraGroups = [
+      "users" "peeps"
+      "kyuuto"
+      "steamaccount" "beatsaber"
+      "wheel"
+    ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ8Z6briIboxIdedPGObEWB6QEQkvxKvnMW/UVU9t/ac mew-pgp"
     ];

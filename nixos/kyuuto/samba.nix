@@ -78,8 +78,8 @@ in {
         public = false;
         browseable = false;
         "valid users" = [ "@peeps" ];
-        "acl group control" = true;
-        "create mask" = "0664";
+        "create mask" = "0775";
+        "force file mode" = "3010";
         "force directory mode" = "3000";
         "directory mask" = "7775";
       };

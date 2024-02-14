@@ -6,7 +6,10 @@
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = name;
-    extraGroups = [ "users" "peeps" "kyuuto" ];
+    extraGroups = [
+      "users" "peeps"
+      "kyuuto"
+    ];
   };
   users.groups.connieallure = { name, ... }: {
     gid = config.users.users.${name}.uid;

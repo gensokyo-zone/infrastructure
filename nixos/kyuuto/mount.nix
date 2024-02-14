@@ -4,9 +4,10 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge;
-  inherit (lib.strings) match concatStringsSep;
-  inherit (lib.lists) optional;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.strings) removePrefix;
+  inherit (lib.attrsets) listToAttrs nameValuePair;
+  inherit (config.services.steam) accountSwitch;
   cfg = config.kyuuto;
 in {
   options.kyuuto = with lib.types; {
@@ -15,49 +16,96 @@ in {
       type = path;
       default = "/mnt/kyuuto-media";
     };
-    libraryDir = mkOption {
+    shareDir = mkOption {
       type = path;
-      default = cfg.mountDir + "/library";
+      default = cfg.mountDir + "/shared";
     };
     transferDir = mkOption {
       type = path;
       default = cfg.mountDir + "/transfer";
     };
-    shareDir = mkOption {
+    libraryDir = mkOption {
       type = path;
-      default = cfg.mountDir + "/shared";
+      default = cfg.mountDir + "/library";
+    };
+    gameLibraryDir = mkOption {
+      type = path;
+      default = cfg.libraryDir + "/games";
+    };
+    gameLibraries = mkOption {
+      type = listOf str;
+      default = [ "PC" ];
     };
   };
 
   config = {
-    systemd.tmpfiles.rules = let
-      isGroupWritable = mode: match "[375][0-7][76][0-7]" mode != null;
-      isOtherWritable = mode: match "[375][0-7][0-7][76]" mode != null;
-      mkKyuutoDir = {
-        path,
-        mode ? "3775",
-        owner ? "guest",
-        group ? "kyuuto",
-        acls ? optional (isGroupWritable mode) "default:group::rwx"
-          ++ optional (isOtherWritable mode) "default:other::rwx",
-      }: [
-        "d ${path} ${mode} ${owner} ${group}"
-      ] ++ optional (acls != [ ]) "a+ ${path} - - - - ${concatStringsSep "," acls}";
-    in mkIf cfg.setup (
-      mkKyuutoDir { path = cfg.transferDir; }
-      ++ mkKyuutoDir { path = cfg.shareDir; owner = "root"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir; owner = "root"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/unsorted"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/music"; owner = "root"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/music/assorted"; owner = "sonarr"; mode = "7775"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/music/collections"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/anime"; owner = "sonarr"; mode = "7775"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/tv"; owner = "sonarr"; mode = "7775"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/movies"; owner = "radarr"; mode = "7775"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/software"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/books"; }
-      ++ mkKyuutoDir { path = cfg.libraryDir + "/games"; }
-    );
+    kyuuto = {
+      gameLibraries = [
+        "PC"
+        "Wii" "Gamecube" "N64" "SNES" "NES"
+        "NDS" "GBA" "GBC"
+        "PS3" "PS2" "PS1"
+        "PSVita" "PSP"
+        "Genesis"
+      ];
+    };
+    services.steam = {
+      library = {
+        setup = mkDefault cfg.setup;
+        rootDir = cfg.shareDir + "/steam/library";
+      };
+      accountSwitch = {
+        setup = mkDefault cfg.setup;
+        sharePath = removePrefix "${cfg.shareDir}/" accountSwitch.rootDir;
+        rootDir = cfg.shareDir + "/steam";
+      };
+    };
+    services.tmpfiles = let
+      shared = {
+        owner = mkDefault "admin";
+        group = mkDefault "kyuuto";
+        mode = mkDefault "3775";
+      };
+      leaf = {
+        inherit (shared) owner group;
+        mode = mkDefault "2775";
+      };
+      setupFiles = [
+        {
+          ${cfg.shareDir} = mkMerge [
+            shared
+            { group = "peeps"; }
+          ];
+          ${cfg.transferDir} = shared;
+          ${cfg.libraryDir} = shared;
+          ${cfg.libraryDir + "/unsorted"} = shared;
+          ${cfg.libraryDir + "/music"} = shared;
+          ${cfg.libraryDir + "/music/assorted"} = leaf;
+          ${cfg.libraryDir + "/music/collections"} = shared;
+          ${cfg.libraryDir + "/anime"} = leaf;
+          ${cfg.libraryDir + "/tv"} = leaf;
+          ${cfg.libraryDir + "/movies"} = leaf;
+          ${cfg.libraryDir + "/software"} = leaf;
+          ${cfg.libraryDir + "/books"} = leaf;
+          ${cfg.gameLibraryDir} = shared;
+        }
+        (listToAttrs (
+          map (gameLibrary: nameValuePair (cfg.gameLibraryDir + "/${gameLibrary}") leaf) cfg.gameLibraries
+        ))
+      ];
+    in {
+      enable = mkIf cfg.setup true;
+      files = mkMerge [
+        (mkIf cfg.setup (mkMerge setupFiles))
+        (mkIf accountSwitch.enable {
+          ${accountSwitch.gamesDir} = {
+            type = "bind";
+            bindReadOnly = true;
+            src = cfg.gameLibraryDir + "/PC";
+          };
+        })
+      ];
+    };
 
     users = let
       mapId = id: if config.proxmoxLXC.privileged or true then 100000 + id else id;
