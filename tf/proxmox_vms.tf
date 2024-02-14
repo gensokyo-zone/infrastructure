@@ -1,6 +1,6 @@
 variable "proxmox_container_template" {
   type    = string
-  default = "local:vztmpl/ct-20240205-nixos-system-x86_64-linux.tar.xz"
+  default = "local:vztmpl/ct-20240211-nixos-system-x86_64-linux.tar.xz"
 }
 
 locals {
@@ -143,6 +143,14 @@ resource "proxmox_virtual_environment_container" "aya" {
         gateway = "10.1.1.1"
       }
     }
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "dhcp"
+      }
+    }
   }
 
   startup {
@@ -154,6 +162,10 @@ resource "proxmox_virtual_environment_container" "aya" {
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:A9"
+  }
+  network_interface {
+    name        = "eth1"
+    mac_address = "BC:24:11:C4:66:AA"
   }
 
   operating_system {
