@@ -11,6 +11,17 @@
   cfg = config.services.samba;
   localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all
     ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all;
+  kyuuto-media = {
+    path = kyuuto.mountDir;
+    comment = "Kyuuto Media";
+    writeable = true;
+    public = false;
+    "valid users" = [ "@kyuuto-peeps" ];
+    "acl group control" = true;
+    "create mask" = "0664";
+    "force directory mode" = "3000";
+    "directory mask" = "7775";
+  };
 in {
   services.samba = {
     usershare = {
@@ -35,9 +46,9 @@ in {
         "force directory mode" = "3000";
         "directory mask" = "7775";
       };
-      kyuuto-access = {
+      kyuuto-library-access = {
         path = kyuuto.libraryDir;
-        comment = "Kyuuto Media Access";
+        comment = "Kyuuto Library Access";
         writeable = false;
         browseable = true;
         public = true;
@@ -47,13 +58,26 @@ in {
         ];
         "hosts allow" = localAddrs;
       };
-      kyuuto-media = {
-        path = kyuuto.mountDir;
-        comment = "Kyuuto Media";
+      kyuuto-media = mkMerge [
+        kyuuto-media
+        {
+          browseable = true;
+          "hosts allow" = localAddrs;
+        }
+      ];
+      kyuuto-media-global = mkMerge [
+        kyuuto-media
+        {
+          browseable = false;
+        }
+      ];
+      shared = {
+        path = kyuuto.shareDir;
+        comment = "Shared Data";
         writeable = true;
-        browseable = true;
         public = false;
-        "valid users" = [ "@kyuuto-peeps" ];
+        browseable = false;
+        "valid users" = [ "@peeps" ];
         "acl group control" = true;
         "create mask" = "0664";
         "force directory mode" = "3000";

@@ -14,7 +14,7 @@
     "/mnt/Anime".hostPath = kyuuto.libraryDir + "/anime";
     "/mnt/Shows".hostPath = kyuuto.libraryDir + "/tv";
     "/mnt/Movies".hostPath = kyuuto.libraryDir + "/movies";
-    "/mnt/Music".hostPath = kyuuto.libraryDir + "/music";
+    "/mnt/Music".hostPath = kyuuto.libraryDir + "/music/assorted";
   };
 in {
   imports = let
