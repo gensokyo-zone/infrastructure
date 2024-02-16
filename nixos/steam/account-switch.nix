@@ -3,5 +3,9 @@
 in {
   services.steam.accountSwitch = {
     enable = mkDefault true;
+    machines = {
+      hourai.owner = "arc";
+      chen.owner = "kat";
+    };
   };
 }

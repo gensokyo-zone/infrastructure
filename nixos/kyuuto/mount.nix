@@ -7,7 +7,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.strings) removePrefix;
   inherit (lib.attrsets) listToAttrs nameValuePair;
-  inherit (config.services.steam) accountSwitch;
+  inherit (config.services.steam) accountSwitch beatsaber;
   cfg = config.kyuuto;
 in {
   options.kyuuto = with lib.types; {
@@ -106,11 +106,15 @@ in {
       enable = mkIf cfg.setup true;
       files = mkMerge [
         (mkIf cfg.setup (mkMerge setupFiles))
-        (mkIf accountSwitch.enable {
+        (mkIf (accountSwitch.enable || beatsaber.setup) {
           ${accountSwitch.gamesDir} = {
             type = "bind";
             bindReadOnly = true;
             src = cfg.gameLibraryDir + "/PC";
+            systemd.mountSettings = rec {
+              wantedBy = mkIf beatsaber.setup beatsaber.setupServiceNames;
+              before = wantedBy;
+            };
           };
         })
       ];
