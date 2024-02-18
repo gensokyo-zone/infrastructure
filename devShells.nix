@@ -84,9 +84,10 @@
         name = "argocd";
         attr = "pkgs.argocd";
       })
-      (mkWrapper {
+      (mkWrapper rec {
         name = "deploy";
         attr = "deploy-rs";
+        exe = name;
       })
       (mkWrapper rec {
         name = "smbencrypt";

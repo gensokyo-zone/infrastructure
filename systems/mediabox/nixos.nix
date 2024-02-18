@@ -34,6 +34,7 @@ in {
     nixos.ombi
     nixos.deluge
     nixos.mediatomb
+    nixos.invidious
 
     # yarr harr fiddle dee dee >w<
     nixos.radarr
