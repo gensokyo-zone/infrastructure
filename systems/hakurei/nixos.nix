@@ -33,6 +33,7 @@ in {
     nixos.access.kitchencam
     nixos.access.proxmox
     nixos.access.plex
+    nixos.access.invidious
     nixos.samba
     ./reisen-ssh.nix
   ];
@@ -112,6 +113,12 @@ in {
         ])
       ];
     };
+    ${access.invidious.domain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        access.invidious.localDomain
+      ];
+    };
   };
 
   services.nginx = let
@@ -132,6 +139,9 @@ in {
       streamPort = 41081;
       useACMEHost = access.kitchencam.domain;
     };
+    access.invidious = {
+      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${mediabox.services.invidious.port}";
+    };
     virtualHosts = {
       ${access.kanidm.domain} = {
         useACMEHost = access.kanidm.domain;
@@ -148,6 +158,13 @@ in {
         useACMEHost = access.plex.domain;
       };
       ${access.kitchencam.domain} = {
+        vouch = {
+          authUrl = vouch-proxy.authUrl;
+          url = vouch-proxy.url;
+          proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+        };
+      };
+      ${access.invidious.domain} = {
         vouch = {
           authUrl = vouch-proxy.authUrl;
           url = vouch-proxy.url;
