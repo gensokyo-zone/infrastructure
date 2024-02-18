@@ -178,7 +178,7 @@ resource "proxmox_virtual_environment_container" "aya" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, description, initialization[0].dns, operating_system[0].template_file_id]
+    ignore_changes = [started, description, initialization[0].dns, initialization[0].ip_config, operating_system[0].template_file_id]
   }
 }
 
@@ -240,6 +240,6 @@ resource "proxmox_virtual_environment_vm" "freeipa" {
   serial_device {}
 
   lifecycle {
-    ignore_changes = [started, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
+    ignore_changes = [started, description, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
   }
 }
