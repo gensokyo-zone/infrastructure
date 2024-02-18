@@ -23,7 +23,7 @@ in {
   };
   config.services.nginx = {
     access.invidious = mkIf cfg.enable {
-      url = mkOptionDefault "http://localhost:${cfg.port}";
+      url = mkOptionDefault "http://localhost:${toString cfg.port}";
     };
     virtualHosts = let
       extraConfig = ''

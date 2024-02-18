@@ -140,7 +140,7 @@ in {
       useACMEHost = access.kitchencam.domain;
     };
     access.invidious = {
-      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${mediabox.services.invidious.port}";
+      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
       ${access.kanidm.domain} = {
