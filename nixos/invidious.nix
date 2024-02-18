@@ -2,11 +2,9 @@
   sops.secrets = {
     invidious_db_password = {
       sopsFile = ./secrets/invidious.yaml;
-      owner = "invidious";
     };
     invidious_hmac_key = {
       sopsFile = ./secrets/invidious.yaml;
-      owner = "invidious";
     };
   };
   services.invidious = {
