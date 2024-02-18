@@ -46,14 +46,14 @@ module "reimu_system_records" {
 }
 
 module "aya_system_records" {
-  source    = "./system/records"
-  name      = "aya"
-  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  source       = "./system/records"
+  name         = "aya"
+  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
   tailscale_v4 = "100.109.213.94"
   tailscale_v6 = "fd7a:115c:a1e0::eaed:d55e"
-  local_v4  = "10.1.1.47"
-  local_v6  = "fd0a::be24:11ff:fec4:66a9"
+  local_v4     = "10.1.1.47"
+  local_v6     = "fd0a::be24:11ff:fec4:66a9"
   local_subdomains = [
     "nixbld",
   ]
