@@ -115,7 +115,7 @@ in {
     };
     ${access.invidious.domain} = {
       inherit (nginx) group;
-      extraDomainNames = mkMerge [
+      extraDomainNames = [
         access.invidious.localDomain
       ];
     };
