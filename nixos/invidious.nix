@@ -25,7 +25,7 @@ in {
     enable = true;
     hmacKeyFile = config.sops.secrets.invidious_hmac_key.path;
     settings = {
-      domain = "yt.gensokyo.zone";
+      domain = "yt.${config.networking.domain}";
       external_port = 443;
       hsts = false;
       db = {
@@ -34,7 +34,7 @@ in {
       };
     };
     database = {
-      host = "postgresql.local.gensokyo.zone";
+      host = "postgresql.local.${config.networking.domain}";
       passwordFile = config.sops.secrets.invidious_db_password.path;
       createLocally = false;
     };
