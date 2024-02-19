@@ -70,10 +70,6 @@ in {
         default = "http_status:404";
         ingress = listToAttrs [
           (ingressForNginx {
-            host = config.networking.domain;
-            inherit hostName;
-          })
-          (ingressForNginx {
             host = config.services.zigbee2mqtt.domain;
             inherit hostName;
           })

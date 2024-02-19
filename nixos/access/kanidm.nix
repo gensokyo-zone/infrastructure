@@ -7,10 +7,11 @@
 let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (config.services) tailscale;
-  inherit (config.services.nginx) virtualHosts;
+  inherit (config) networking;
+  inherit (config.services) tailscale nginx;
+  inherit (nginx) virtualHosts;
   cfg = config.services.kanidm;
-  access = config.services.nginx.access.kanidm;
+  access = nginx.access.kanidm;
   proxyPass = mkDefault "https://${access.host}:${toString access.port}";
   locations = {
     "/" = {
@@ -19,6 +20,11 @@ let
     "=/ca.pem" = mkIf cfg.server.unencrypted.enable {
       alias = "${cfg.server.unencrypted.package.ca}";
     };
+  };
+  localLocations = vouchDomain: {
+    "/".extraConfig = ''
+      proxy_redirect $scheme://${nginx.access.vouch.domain or "login.${networking.domain}"}/ $scheme://${vouchDomain}/;
+    '';
   };
 in {
   imports = let
@@ -33,15 +39,15 @@ in {
     };
     domain = mkOption {
       type = str;
-      default = "id.${config.networking.domain}";
+      default = "id.${networking.domain}";
     };
     localDomain = mkOption {
       type = str;
-      default = "id.local.${config.networking.domain}";
+      default = "id.local.${networking.domain}";
     };
     tailDomain = mkOption {
       type = str;
-      default = "id.tail.${config.networking.domain}";
+      default = "id.tail.${networking.domain}";
     };
     port = mkOption {
       type = port;
@@ -85,13 +91,19 @@ in {
           inherit (virtualHosts.${access.domain}) useACMEHost;
           addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
           local.enable = true;
-          inherit locations;
+          locations = mkMerge [
+            locations
+            (localLocations nginx.access.vouch.localDomain or "login.local.${networking.domain}")
+          ];
         };
         ${access.tailDomain} = mkIf tailscale.enable {
           inherit (virtualHosts.${access.domain}) useACMEHost;
           addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
           local.enable = true;
-          inherit locations;
+          locations = mkMerge [
+            locations
+            (localLocations nginx.access.vouch.tailDomain or "login.tail.${networking.domain}")
+          ];
         };
       };
     };

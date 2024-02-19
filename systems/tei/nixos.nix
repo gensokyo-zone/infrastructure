@@ -27,6 +27,16 @@ in {
     ./cloudflared.nix
   ];
 
+  services.nginx = let
+    inherit (config.services.nginx) access;
+  in {
+    virtualHosts = {
+      ${access.zigbee2mqtt.domain} = {
+        local.denyGlobal = true;
+      };
+    };
+  };
+
   sops.defaultSopsFile = ./secrets.yaml;
 
   networking.firewall = {
