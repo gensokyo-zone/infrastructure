@@ -45,5 +45,10 @@ in {
       group = "admin";
       isSystemUser = true;
     };
+    opl = {
+      uid = 8125;
+      group = "nogroup";
+      isSystemUser = true;
+    };
   };
 }

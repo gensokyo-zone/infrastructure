@@ -3,6 +3,7 @@
 include::{inc}attrs.adoc[]
 :toc:
 
+[[setup]]
 == Setup
 
 Environment Variables::
@@ -14,6 +15,12 @@ Advanced System Settings (System Properties -> Advanced) -> Environment Variable
 * `GENSO_STEAM_MACHINE` = [.value]`mypc` your computer's name goes here
 * [[env_GENSO_STEAM_LOCAL_DATA]] `GENSO_STEAM_LOCAL_DATA` = [.value]`+C:\Program Files\GensokyoZone+` or somewhere local to be used as scratch space
 * [[env_GENSO_STEAM_INSTALL]] `GENSO_STEAM_INSTALL` = [.value]`+C:\Program Files (x86)\Steam+` or wherever Steam is installed to
+
+[[library]]
+=== Library
+
+A network share folder is reserved for storing and sharing Steam games.
+Add a new library in Steam's settings to <<env_GENSO_SMB_SHARED_MOUNT,[.pathvalue]#%GENSO_SMB_SHARED_MOUNT%\steam\library#>> for access.
 
 [[beatsaber]]
 == Beat Saber

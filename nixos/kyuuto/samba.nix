@@ -11,16 +11,14 @@
   cfg = config.services.samba;
   localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all
     ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all;
+  guestUsers = mkIf cfg.guest.enable [ cfg.guest.user ];
   kyuuto-media = {
-    path = kyuuto.mountDir;
-    comment = "Kyuuto Media";
-    writeable = true;
-    public = false;
-    "valid users" = [ "@kyuuto-peeps" ];
-    "acl group control" = true;
     "create mask" = "0664";
     "force directory mode" = "3000";
     "directory mask" = "7775";
+  };
+  kyuuto-library = kyuuto-media // {
+    "acl group control" = true;
   };
 in {
   services.samba = {
@@ -29,6 +27,19 @@ in {
       path = mkDefault (kyuuto.mountDir + "/usershares");
     };
     shares = mkIf cfg.enable {
+      opl = {
+        comment = "Kyuuto Media OPL";
+        path = kyuuto.libraryDir + "/games/PS2";
+        writeable = false;
+        browseable = false;
+        public = false;
+        "valid users" = [
+          "opl"
+          "@kyuuto-peeps"
+        ];
+        "read list" = [ "opl" ];
+        "hosts allow" = localAddrs;
+      };
       kyuuto-transfer = {
         comment = "Kyuuto Media Transfer Area";
         path = kyuuto.transferDir;
@@ -36,7 +47,7 @@ in {
         browseable = true;
         public = true;
         "valid users" = mkMerge [
-          (mkIf cfg.guest.enable [ cfg.guest.user ])
+          guestUsers
           [ "@peeps" ]
         ];
         #"guest only" = true;
@@ -46,29 +57,43 @@ in {
         "force directory mode" = "3000";
         "directory mask" = "7775";
       };
-      kyuuto-library-access = {
-        path = kyuuto.libraryDir;
-        comment = "Kyuuto Library Access";
-        writeable = false;
-        browseable = true;
-        public = true;
-        "valid users" = mkMerge [
-          (mkIf cfg.guest.enable [ cfg.guest.user ])
-          [ "@kyuuto-peeps" ]
-        ];
-        "hosts allow" = localAddrs;
-      };
-      kyuuto-media = mkMerge [
-        kyuuto-media
+      kyuuto-library = mkMerge [
+        kyuuto-library
         {
+          path = kyuuto.libraryDir;
+          comment = "Kyuuto Library";
+          writeable = false;
           browseable = true;
+          public = true;
+          "valid users" = mkMerge [
+            guestUsers
+            [ "@kyuuto-peeps" ]
+          ];
+          "read list" = guestUsers;
+          "write list" = [ "@kyuuto-peeps" ];
           "hosts allow" = localAddrs;
         }
       ];
-      kyuuto-media-global = mkMerge [
+      kyuuto-library-net = mkMerge [
+        kyuuto-library
+        {
+          path = kyuuto.libraryDir;
+          comment = "Kyuuto Library Access";
+          writeable = true;
+          public = false;
+          browseable = false;
+          "valid users" = [ "@kyuuto-peeps" ];
+        }
+      ];
+      kyuuto-media = mkMerge [
         kyuuto-media
         {
+          path = kyuuto.mountDir;
+          comment = "Kyuuto Media";
+          writeable = true;
+          public = false;
           browseable = false;
+          "valid users" = [ "@kyuuto-peeps" ];
         }
       ];
       shared = {
@@ -79,8 +104,8 @@ in {
         browseable = false;
         "valid users" = [ "@peeps" ];
         "create mask" = "0775";
-        "force file mode" = "3010";
-        "force directory mode" = "3000";
+        "force create mode" = "0010";
+        "force directory mode" = "2000";
         "directory mask" = "7775";
       };
       ${cfg.usershare.templateShare} = mkIf cfg.usershare.enable {

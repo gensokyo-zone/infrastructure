@@ -1,0 +1,44 @@
+= SMB
+:guest: Guest access is available by logging in with a non-existent username and password.
+
+== Shares
+
+[[transfer]]
+kyuuto-transfer::
+
+Accessible via LAN only ([.pathvalue]#\\smb.local.gensokyo.zone\kyuuto-transfer#) with guest access{empty}footnote:guest[{guest}].
+The transfer share used for quick file transfers onto the server for temporary sharing purposes.
+Make sure to let someone know when you've added something here that should be moved to a media library or organized for some specific service!
+
+[[library]]
+kyuuto-library::
+
+Accessible via LAN only ([.pathvalue]#\\smb.local.gensokyo.zone\kyuuto-library#) with read-only guest access{empty}footnote:guest[{guest}].
++
+The Kyuuto library directory is where most media and shared data belongs.
+Adding new files to an appropriate directory will typically automatically add it to the corresponding Plex library or similar.
+
+[[library-net]]
+kyuuto-library-net::
+
+The <<library,Kyuuto library>> share is also available globally via [.pathvalue]#\\smb.gensokyo.zone\kyuuto-library-net#
+
+kyuuto-media::
+
+Top-level access to the disk containing the <<library,Kyuuto library>>.
+
+shared::
+
+Accessible both via LAN ([.pathvalue]#\\smb.local.gensokyo.zone\shared#) or globally ([.pathvalue]#\\smb.gensokyo.zone\shared#).
++
+A special share used for remote working data, typically used to set up mount points or similar.
+
+Services:::
+
+* <<./steam.adoc#library,Steam Library>>
+* <<./steam.adoc#setup,Steam>>
+** <<./steam.adoc#beatsaber,Beat Saber>>
+
+opl::
+
+For local use by OPL only.

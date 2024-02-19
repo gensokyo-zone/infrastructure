@@ -15,6 +15,9 @@ Links::
 https://gensokyo.zone[Homepage]::
 Service listing
 
+<<./smb.adoc#,SMB Shares>>::
+Network file shares
+
 <<./network.adoc#,Home Network>>::
 Local network subnets and IP address reservations
 
