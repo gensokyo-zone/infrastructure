@@ -14,11 +14,11 @@ in {
     };
     domain = mkOption {
       type = str;
-      default = "invidious.${config.networking.domain}";
+      default = "yt.${config.networking.domain}";
     };
     localDomain = mkOption {
       type = str;
-      default = "invidious.local.${config.networking.domain}";
+      default = "yt.local.${config.networking.domain}";
     };
   };
   config.services.nginx = {

@@ -22,6 +22,7 @@ module "hakurei_system_records" {
     "freeipa",
     "smb",
     "kitchen",
+    "yt",
   ]
   global_subdomains = [
     "plex",
