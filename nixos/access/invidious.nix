@@ -5,6 +5,7 @@
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (config.services.nginx) virtualHosts;
   cfg = config.services.invidious;
   access = config.services.nginx.access.invidious;
 in {
@@ -44,9 +45,11 @@ in {
         kTLS = mkDefault true;
         inherit extraConfig;
       };
-      ${access.localDomain} = {
+      ${access.localDomain} = { config, ... }: {
         local.enable = true;
         locations."/" = location;
+        useACMEHost = mkDefault virtualHosts.${access.domain}.useACMEHost;
+        addSSL = mkIf (config.useACMEHost != null) (mkDefault true);
         kTLS = mkDefault true;
         inherit extraConfig;
       };

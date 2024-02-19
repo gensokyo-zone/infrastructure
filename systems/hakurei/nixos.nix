@@ -123,6 +123,11 @@ in {
 
   services.nginx = let
     inherit (config.services.nginx) access;
+    vouch = {
+      authUrl = vouch-proxy.authUrl;
+      url = vouch-proxy.url;
+      proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+    };
   in {
     access.plex = assert plex.enable; {
       url = "http://${mediabox.networking.access.hostnameForNetwork.local}:32400";
@@ -158,18 +163,12 @@ in {
         useACMEHost = access.plex.domain;
       };
       ${access.kitchencam.domain} = {
-        vouch = {
-          authUrl = vouch-proxy.authUrl;
-          url = vouch-proxy.url;
-          proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
-        };
+        inherit vouch;
       };
       ${access.invidious.domain} = {
-        vouch = {
-          authUrl = vouch-proxy.authUrl;
-          url = vouch-proxy.url;
-          proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
-        };
+        inherit vouch;
+        useACMEHost = access.invidious.domain;
+        forceSSL = true;
       };
     };
   };
