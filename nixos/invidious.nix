@@ -1,5 +1,6 @@
 { config, lib, ... }: let
   inherit (lib.modules) mkForce;
+  cfg = config.services.invidious;
 in {
   sops.secrets = let
     commonSecret = {
@@ -10,7 +11,7 @@ in {
     invidious_hmac_key = commonSecret;
   };
 
-  networking.firewall.allowedTCPPorts = [ 3000 ];
+  networking.firewall.interfaces.local.allowedTCPPorts = [ cfg.port ];
   users.groups.invidious = {};
   users.users.invidious = {
     isSystemUser = true;
@@ -28,7 +29,7 @@ in {
       external_port = 443;
       hsts = false;
       db = {
-        user = "kemal";
+        user = "invidious";
         dbname = "invidious";
       };
     };

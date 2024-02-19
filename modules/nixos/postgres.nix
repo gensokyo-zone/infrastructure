@@ -74,4 +74,7 @@ in {
       mkIf user.authentication.enable user.authentication.authentication
     ) cfg.ensureUsers);
   };
+  config.networking.firewall.interfaces.local = mkIf cfg.enable {
+    allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [ cfg.port ];
+  };
 }
