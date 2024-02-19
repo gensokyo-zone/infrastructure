@@ -115,8 +115,13 @@ in {
     };
     ${access.invidious.domain} = {
       inherit (nginx) group;
-      extraDomainNames = [
-        access.invidious.localDomain
+      extraDomainNames = mkMerge [
+        [
+          access.invidious.localDomain
+        ]
+        (mkIf tailscale.enable [
+          access.invidious.tailDomain
+        ])
       ];
     };
   };

@@ -6,6 +6,7 @@
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   inherit (config.services.nginx) virtualHosts;
+  inherit (config.services) tailscale;
   cfg = config.services.invidious;
   access = config.services.nginx.access.invidious;
 in {
@@ -20,6 +21,10 @@ in {
     localDomain = mkOption {
       type = str;
       default = "yt.local.${config.networking.domain}";
+    };
+    tailDomain = mkOption {
+      type = str;
+      default = "yt.tail.${config.networking.domain}";
     };
   };
   config.services.nginx = {
@@ -46,6 +51,7 @@ in {
         inherit extraConfig;
       };
       ${access.localDomain} = { config, ... }: {
+        serverAliases = mkIf tailscale.enable [ access.tailDomain ];
         local.enable = true;
         locations."/" = location;
         useACMEHost = mkDefault virtualHosts.${access.domain}.useACMEHost;
