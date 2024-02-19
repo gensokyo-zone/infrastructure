@@ -12,21 +12,6 @@
   kubeMasterHostname = "k8s.gensokyo.zone";
   kubeMasterAPIServerPort = 6443;
 in {
-  # apply fix: https://github.com/NixOS/nixpkgs/pull/275896
-  imports = let
-    pkiModulePath = "services/cluster/kubernetes/pki.nix";
-    inherit (inputs.self.legacyPackages.${system}) patchedNixpkgs;
-  in [
-    (_: {
-      imports = [
-        (patchedNixpkgs + "/nixos/modules/${pkiModulePath}")
-      ];
-      disabledModules = [
-        pkiModulePath
-      ];
-    })
-  ];
-
   # packages for administration tasks
   environment.systemPackages = with pkgs; [
     kompose

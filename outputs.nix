@@ -20,7 +20,6 @@
           name = "nixpkgs";
           src = inputs.nixpkgs;
           patches = [
-            inputs.nixpkgs-patch-k8s-pki
           ];
         };
         deploy-rs = let
