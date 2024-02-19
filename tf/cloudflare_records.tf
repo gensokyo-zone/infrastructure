@@ -30,6 +30,7 @@ module "hakurei_system_records" {
     "ldap",
     "smb",
     "kitchen",
+    "yt",
   ]
 }
 
