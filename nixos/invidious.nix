@@ -1,17 +1,31 @@
-{ config, ... }: {
-  sops.secrets = {
-    invidious_db_password = {
+{ config, lib, ... }: let
+  inherit (lib.modules) mkForce;
+in {
+  sops.secrets = let
+    commonSecret = {
       sopsFile = ./secrets/invidious.yaml;
-    };
-    invidious_hmac_key = {
-      sopsFile = ./secrets/invidious.yaml;
-    };
+      owner = "invidious";
+    }; in {
+    invidious_db_password = commonSecret;
+    invidious_hmac_key = commonSecret;
+  };
+
+  networking.firewall.allowedTCPPorts = [ 3000 ];
+  users.groups.invidious = {};
+  users.users.invidious = {
+    isSystemUser = true;
+    group = "invidious";
+  };
+  systemd.services.invidious.serviceConfig = {
+    DynamicUser = mkForce false;
+    User = "invidious";
   };
   services.invidious = {
     enable = true;
     hmacKeyFile = config.sops.secrets.invidious_hmac_key.path;
     settings = {
       domain = "yt.gensokyo.zone";
+      external_port = 443;
       hsts = false;
       db = {
         user = "kemal";
