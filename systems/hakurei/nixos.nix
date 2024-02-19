@@ -28,6 +28,7 @@ in {
     nixos.access.nginx
     nixos.access.global
     nixos.access.gensokyo
+    nixos.access.vouch
     nixos.access.kanidm
     nixos.access.freeipa
     nixos.access.kitchencam
@@ -59,6 +60,14 @@ in {
     inherit (config.services) nginx tailscale;
     inherit (nginx) access;
   in {
+    ${access.vouch.localDomain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        (mkIf tailscale.enable [
+          access.vouch.tailDomain
+        ])
+      ];
+    };
     ${access.kanidm.domain} = {
       inherit (nginx) group;
       extraDomainNames = mkMerge [
@@ -128,14 +137,13 @@ in {
 
   services.nginx = let
     inherit (config.services.nginx) access;
-    vouch = {
-      authUrl = vouch-proxy.authUrl;
-      url = vouch-proxy.url;
-      proxyOrigin = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
-    };
   in {
     access.plex = assert plex.enable; {
       url = "http://${mediabox.networking.access.hostnameForNetwork.local}:32400";
+    };
+    access.vouch = assert vouch-proxy.enable; {
+      url = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+      useACMEHost = access.vouch.localDomain;
     };
     access.kanidm = assert kanidm.enableServer; {
       inherit (kanidm.server.frontend) domain port;
@@ -168,10 +176,8 @@ in {
         useACMEHost = access.plex.domain;
       };
       ${access.kitchencam.domain} = {
-        inherit vouch;
       };
       ${access.invidious.domain} = {
-        inherit vouch;
         useACMEHost = access.invidious.domain;
         forceSSL = true;
       };

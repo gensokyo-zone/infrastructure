@@ -18,6 +18,7 @@ module "hakurei_system_records" {
   local_subdomains = [
     "prox",
     "id",
+    "login",
     "ldap",
     "freeipa",
     "smb",

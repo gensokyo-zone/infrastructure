@@ -2,7 +2,6 @@
   config,
   lib,
   meta,
-  pkgs,
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
