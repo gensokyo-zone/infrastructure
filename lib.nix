@@ -34,11 +34,13 @@
   mkWinPath = replaceStrings ["/"] ["\\"];
 in {
   inherit tree nixlib inputs;
+  meta = tree.impure;
   std = inputs.self.lib.Std.Std.compat;
   Std = inputs.std-fl.lib;
   lib = {
+    domain = "gensokyo.zone";
     inherit mkWinPath userIs eui64 toHexStringLower hexCharToInt;
-    inherit (inputs.arcexprs.lib) unmerged;
+    inherit (inputs.arcexprs.lib) unmerged json;
   };
   generate = import ./generate.nix {inherit inputs tree;};
 }

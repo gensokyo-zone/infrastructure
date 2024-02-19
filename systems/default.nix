@@ -1,15 +1,11 @@
-{
-  inputs,
-  tree,
-}: let
+{inputs}: let
   # The purpose of this file is to set up the host module which allows assigning of the system, e.g. aarch64-linux and the builder used with less pain.
   lib = inputs.self.lib.nixlib;
+  inherit (inputs.self.lib) meta std;
   inherit (lib.modules) evalModules mkOptionDefault;
-  inherit (inputs.self.lib) std;
   inherit (std) string set;
   defaultSpecialArgs = {
-    inherit inputs std;
-    meta = tree;
+    inherit inputs std meta;
   };
   hostModule = {
     config,
@@ -17,8 +13,8 @@
     ...
   }: {
     options = let
+      inherit (inputs.self.lib.lib) json;
       inherit (lib.types) str listOf attrs unspecified attrsOf nullOr;
-      jsonAttrsType = inputs.arcexprs.lib.json.types.attrs;
       inherit (lib.options) mkOption;
     in {
       arch = mkOption {
@@ -51,7 +47,7 @@
         internal = true;
       };
       deploy = mkOption {
-        type = nullOr jsonAttrsType;
+        type = nullOr json.types.attrs;
       };
     };
     config = {
@@ -91,11 +87,11 @@
           linux = "linux";
         }
         .${string.toLower config.type};
-      modules = with tree; [
+      modules = [
         # per-OS modules
-        tree.modules.${config.folder}
+        meta.modules.${config.folder}
         # per-OS configuration
-        tree.${config.folder}.base
+        meta.${config.folder}.base
       ];
       builder =
         {
@@ -140,7 +136,7 @@
           machine = name;
         };
     })
-  (set.map (_: c: c) tree.systems);
+  (set.map (_: c: c) meta.systems);
   processHost = name: cfg: let
     host = cfg.config;
   in

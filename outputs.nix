@@ -4,7 +4,6 @@
   };
   systems = import ./systems {
     inherit inputs;
-    tree = tree.impure;
   };
   outputs =
     inputs.flake-utils.lib.eachDefaultSystem

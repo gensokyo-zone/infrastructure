@@ -1,9 +1,15 @@
-{ config, name, lib, ... }: with lib;
-
 {
+  inputs,
+  name,
+  lib,
+  ...
+}: let
+  inherit (lib.modules) mkDefault mkOverride;
+  inherit (inputs.self.lib.lib) domain;
+in {
   networking = {
     nftables.enable = true;
-    domain = mkDefault "gensokyo.zone";
+    domain = mkDefault domain;
     hostName = mkOverride 25 name;
   };
 }
