@@ -35,6 +35,16 @@
   mkWinPath = replaceStrings ["/"] ["\\"];
   mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
 
+  treeToModulesOutput = modules:
+    {
+      ${
+        if modules ? __functor
+        then "default"
+        else null
+      } =
+        modules.__functor modules;
+    }
+    // builtins.removeAttrs modules ["__functor"];
 in {
   inherit tree nixlib inputs systems;
   meta = tree.impure;
@@ -42,7 +52,7 @@ in {
   Std = inputs.std-fl.lib;
   lib = {
     domain = "gensokyo.zone";
-    inherit mkWinPath mkBaseDn userIs eui64 toHexStringLower hexCharToInt;
+    inherit treeToModulesOutput mkWinPath mkBaseDn userIs eui64 toHexStringLower hexCharToInt;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   generate = import ./generate.nix {inherit inputs tree;};

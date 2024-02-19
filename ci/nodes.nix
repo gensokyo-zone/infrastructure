@@ -29,7 +29,11 @@ with lib; {
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs nixosSystems (host: {
       tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;
-    }));
+    })) // {
+      extern = {
+        tasks.test.inputs = channels.nixfiles.nixosConfigurations.extern-test.config.system.build.toplevel;
+      };
+    };
 
   ci.gh-actions.checkoutOptions.submodules = false;
   cache.cachix.arc = {

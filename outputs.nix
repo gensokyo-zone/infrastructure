@@ -46,9 +46,13 @@
       };
       checks = legacyPackages.deploy-rs.deployChecks inputs.self.deploy;
     });
+  inherit (inputs.self.lib.lib) treeToModulesOutput;
 in {
   inherit (outputs) devShells legacyPackages packages checks;
   inherit (systems) deploy nixosConfigurations;
+  nixosModules = treeToModulesOutput tree.impure.modules.extern.nixos;
+  homeModules = treeToModulesOutput tree.impure.modules.extern.home;
+  miscModules = treeToModulesOutput tree.impure.modules.extern.misc;
   lib = import ./lib.nix {
     inherit tree inputs;
     inherit (systems) systems;

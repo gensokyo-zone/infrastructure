@@ -64,6 +64,11 @@
     "modules/system/extern".functor.enable = true;
     "modules/home".functor.enable = true;
     "modules/type".functor.enable = true;
+    "modules/extern/home".functor.enable = true;
+    "modules/extern/home/args".evaluate = true;
+    "modules/extern/nixos".functor.enable = true;
+    "modules/extern/nixos/args".evaluate = true;
+    "modules/extern/misc/args".evaluate = true;
     "nixos/*".functor = {
       enable = true;
     };

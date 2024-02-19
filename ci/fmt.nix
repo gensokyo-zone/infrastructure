@@ -10,6 +10,7 @@
       "tree.nix"
     ];
     whitelistDirs = [
+      "modules/extern"
       "modules/system"
       "systems"
     ];
