@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.strings) optionalString concatStringsSep;
   inherit (config.services) tailscale;
   inherit (config.services) nginx;
@@ -87,6 +87,10 @@ in {
         };
         kpasswd = mkOption {
           type = port;
+          default = 464;
+        };
+        kadmin = mkOption {
+          type = port;
           default = 749;
         };
       };
@@ -108,46 +112,58 @@ in {
   };
   config = {
     services.nginx = {
-      access.ldap = {
-        enable = mkDefault true;
-        host = mkDefault access.host;
-        port = mkDefault 389;
-        sslPort = mkDefault access.ldapPort;
-        useACMEHost = mkDefault virtualHosts.freeipa.ssl.cert.name;
-        bind.sslPort = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
+      access.freeipa = {
+        host = mkOptionDefault (config.lib.access.getAddressFor (config.lib.access.systemForService "freeipa").name "lan");
       };
       resolver.addresses = mkIf access.preread.enable (mkMerge [
         (mkDefault [ "[::1]:5353" "127.0.0.1:5353" ])
         (mkIf config.systemd.network.enable [ "127.0.0.53" ])
       ]);
       defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
-      streamConfig = let
-        upstreams' = {
-          freeipa = "${access.host}:${toString access.port}";
-          ldap_freeipa = "${nginx.access.ldap.host}:${toString nginx.access.ldap.sslPort}";
-          ldap = "localhost:${toString nginx.access.ldap.bind.sslPort}";
-          nginx = "localhost:${toString nginx.defaultSSLListenPort}";
-          samba = if config.services.samba.enable
-            then "localhost:445"
-            else "smb.local.${config.networking.domain}:445";
+      stream = {
+        upstreams = {
+          freeipa.servers.access = let
+            system = config.lib.access.systemForService "freeipa";
+            inherit (system.exports.services) freeipa;
+          in {
+            addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
+            port = mkOptionDefault freeipa.ports.default.port;
+          };
+          samba_access.servers.access = let
+            system = config.lib.access.systemForService "samba";
+            inherit (system.exports.services) samba;
+          in {
+            addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
+            port = mkOptionDefault samba.ports.default.port;
+          };
+          ldaps_access.servers.access = {
+            addr = mkDefault "localhost";
+            port = mkOptionDefault nginx.stream.servers.ldap.listen.ldaps.port;
+          };
+          nginx.servers.access = {
+            addr = mkDefault "localhost";
+            port = mkOptionDefault nginx.defaultSSLListenPort;
+          };
         };
-        upstreams = builtins.mapAttrs (name: _: name) upstreams';
+        servers = {
+          ldap = {
+            listen = {
+              ldaps.port = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
+            };
+            proxy.upstream = mkDefault "ldap";
+            ssl.cert.copyFromVhost = mkDefault "freeipa";
+          };
+        };
+      };
+      streamConfig = let
+        upstreams = {
+          freeipa = "freeipa";
+          ldap = "ldaps_access";
+          ldap_freeipa = "ldaps";
+          samba = "samba_access";
+          nginx = "nginx";
+        };
         preread = ''
-          upstream freeipa {
-            server ${upstreams'.freeipa};
-          }
-          upstream ldap_freeipa {
-            server ${upstreams'.ldap_freeipa};
-          }
-          upstream ldap {
-            server ${upstreams'.ldap};
-          }
-          upstream samba {
-            server ${upstreams'.samba};
-          }
-          upstream nginx {
-            server ${upstreams'.nginx};
-          }
           map $ssl_preread_server_name $ssl_server_name {
             hostnames;
             ${virtualHosts.freeipa.serverName} ${upstreams.freeipa};
@@ -203,6 +219,11 @@ in {
             listen 0.0.0.0:${toString access.kerberos.ports.kpasswd} udp;
             listen [::]:${toString access.kerberos.ports.kpasswd} udp;
             proxy_pass ${access.host}:${toString access.kerberos.ports.kpasswd};
+          }
+          server {
+            listen 0.0.0.0:${toString access.kerberos.ports.kadmin};
+            listen [::]:${toString access.kerberos.ports.kadmin};
+            proxy_pass ${access.host}:${toString access.kerberos.ports.kadmin};
           }
         '';
       in mkMerge [
@@ -265,6 +286,7 @@ in {
         (mkIf access.kerberos.enable [
           access.kerberos.ports.ticket
           access.kerberos.ports.kpasswd
+          access.kerberos.ports.kadmin
         ])
         (mkIf access.preread.enable [
           636

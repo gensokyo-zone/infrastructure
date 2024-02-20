@@ -100,7 +100,6 @@ module "tewi" {
   zone_id    = cloudflare_zone.gensokyo-zone_zone.id
   subdomains = [
     "home",
-    "id",
     "z2m",
     "grocy",
     "bbuddy",

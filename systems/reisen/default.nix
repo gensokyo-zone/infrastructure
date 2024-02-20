@@ -10,4 +10,9 @@ _: {
       address6 = "fd0c::2";
     };
   };
+  exports = {
+    services = {
+      proxmox.enable = true;
+    };
+  };
 }

@@ -1,9 +1,10 @@
 {
   config,
+  access,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
+  inherit (lib.modules) mkMerge mkBefore mkDefault;
   inherit (lib.strings) replaceStrings concatStringsSep concatMapStringsSep escapeRegex;
   inherit (config.services.nginx) virtualHosts;
   cfg = config.services.invidious;
@@ -86,8 +87,9 @@ in {
             location
             {
               vouch.requireAuth = true;
-              proxyPass = mkIf cfg.enable (
-                mkDefault "http://localhost:${toString cfg.port}"
+              proxyPass = mkDefault (if cfg.enable
+                then "http://localhost:${toString cfg.port}"
+                else access.proxyUrlFor { serviceName = "invidious"; }
               );
             }
           ];

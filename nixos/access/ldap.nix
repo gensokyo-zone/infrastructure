@@ -1,32 +1,21 @@
 {
   config,
   lib,
+  gensokyo-zone,
+  access,
   ...
 }:
 let
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge;
-  inherit (lib.strings) concatMapStringsSep optionalString;
-  inherit (config.services.nginx) virtualHosts;
-  inherit (config.networking.access) cidrForNetwork localaddrs;
-  access = config.services.nginx.access.ldap;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (config.services) nginx;
   portPlaintext = 389;
   portSsl = 636;
-  allows = let
-    mkAllow = cidr: "allow ${cidr};";
-    allows = concatMapStringsSep "\n" mkAllow cidrForNetwork.allLocal.all + optionalString localaddrs.enable ''
-      include ${localaddrs.stateDir}/*.nginx.conf;
-    '';
-  in ''
-    ${allows}
-    deny all;
-  '';
+  system = access.systemForService "ldap";
+  inherit (system.exports.services) ldap;
 in {
   options.services.nginx.access.ldap = with lib.types; {
-    enable = mkEnableOption "LDAP proxy";
-    host = mkOption {
-      type = str;
-    };
     domain = mkOption {
       type = str;
       default = "ldap.${config.networking.domain}";
@@ -43,67 +32,49 @@ in {
       type = str;
       default = "ldap.tail.${config.networking.domain}";
     };
-    port = mkOption {
-      type = port;
-      default = portSsl;
-    };
-    sslPort = mkOption {
-      type = port;
-      default = portSsl;
-    };
-    bind = {
-      sslPort = mkOption {
-        type = port;
-        default = portSsl;
-      };
-      port = mkOption {
-        type = port;
-        default = portPlaintext;
-      };
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = virtualHosts.${access.domain}.useACMEHost or null;
-    };
   };
   config = {
     services.nginx = {
-      streamConfig = let
-        cert = config.security.acme.certs.${access.useACMEHost};
-        proxySsl = port: optionalString (port == portSsl) ''
-          proxy_ssl on;
-          proxy_ssl_verify off;
-        '';
-      in mkIf access.enable (mkMerge [
-        ''
-          server {
-            listen 0.0.0.0:${toString access.bind.port};
-            listen [::]:${toString access.bind.port};
-            ${allows}
-            proxy_pass ${access.host}:${toString access.port};
-            ${proxySsl access.port}
-          }
-        ''
-        (mkIf (access.useACMEHost != null) ''
-          server {
-            listen 0.0.0.0:${toString access.bind.sslPort} ssl;
-            listen [::]:${toString access.bind.sslPort} ssl;
-            ssl_certificate ${cert.directory}/fullchain.pem;
-            ssl_certificate_key ${cert.directory}/key.pem;
-            ssl_trusted_certificate ${cert.directory}/chain.pem;
-            proxy_pass ${access.host}:${toString access.sslPort};
-            ${proxySsl access.sslPort}
-          }
-        '')
-      ]);
+      stream = {
+        upstreams = let
+          addr = mkAlmostOptionDefault (access.getAddressFor system.name "lan");
+        in {
+          ldap.servers.access = {
+            inherit addr;
+            port = mkOptionDefault ldap.ports.default.port;
+          };
+          ldaps = {
+            enable = mkAlmostOptionDefault ldap.ports.ssl.enable;
+            ssl.enable = mkAlmostOptionDefault true;
+            servers.access = {
+              inherit addr;
+              port = mkOptionDefault ldap.ports.ssl.port;
+            };
+          };
+        };
+        servers.ldap = {
+          listen = {
+            ldap.port = mkOptionDefault portPlaintext;
+            ldaps = {
+              port = mkOptionDefault portSsl;
+              ssl = true;
+            };
+          };
+          proxy.upstream = mkAlmostOptionDefault (
+            if nginx.stream.upstreams.ldaps.enable then "ldaps" else "ldap"
+          );
+        };
+      };
     };
 
-    networking.firewall = {
+    networking.firewall = let
+      inherit (nginx.stream.servers.ldap) listen;
+    in {
       interfaces.local.allowedTCPPorts = [
-        access.bind.port
+        listen.ldap.port
       ];
-      allowedTCPPorts = [
-        access.bind.sslPort
+      allowedTCPPorts = mkIf listen.ldaps.enable [
+        listen.ldaps.port
       ];
     };
   };

@@ -73,14 +73,14 @@
         cert = let
           mkCopyCert = copyCert: {
             name = mkDefault copyCert.name;
-            keyPath = mkAlmostOptionDefault copyCert.keyPath;
-            path = mkAlmostOptionDefault copyCert.path;
+            keyPath = mkDefault copyCert.keyPath;
+            path = mkDefault copyCert.path;
           };
           copyCertVhost = mkCopyCert nginx.virtualHosts.${cfg.cert.copyFromVhost}.ssl.cert;
           copyCertStreamServer = mkCopyCert nginx.stream.servers.${cfg.cert.copyFromStreamServer}.ssl.cert;
         in mkMerge [
-          (mkIf (cfg.cert.copyFromVhost != null) copyCertVhost)
           (mkIf (cfg.cert.copyFromStreamServer != null) copyCertStreamServer)
+          (mkIf (cfg.cert.copyFromVhost != null) copyCertVhost)
         ];
       };
     };

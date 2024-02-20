@@ -1,4 +1,4 @@
-{meta, config, ...}: {
+{meta, config, access, ...}: {
   imports = let
     inherit (meta) nixos;
   in [
@@ -13,21 +13,25 @@
 
   services.cloudflared = let
     tunnelId = "c9a4b8c9-42d9-4566-8cff-eb63ca26809d";
-    inherit (config.services) keycloak vouch-proxy;
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-keycloak.path;
       ingress = let
-        keycloakHost = if keycloak.settings.hostname != null then keycloak.settings.hostname else "sso.${config.networking.domain}";
-        keyCloakScheme = if keycloak.sslCertificate != null then "https" else "http";
-        keycloakPort = keycloak.settings."${keyCloakScheme}-port";
+        keycloak'system = access.systemForService "keycloak";
+        inherit (keycloak'system.exports.services) keycloak;
+        vouch'system = access.systemForServiceId "login";
+        inherit (vouch'system.exports.services) vouch-proxy;
       in {
-        ${keycloakHost} = assert keycloak.enable; {
-          service = "${keyCloakScheme}://localhost:${toString keycloakPort}";
-          originRequest.${if keyCloakScheme == "https" then "noTLSVerify" else null} = true;
+        "${keycloak.id}.${config.networking.domain}" = let
+          portName = if keycloak.ports.https.enable then "https" else "http";
+        in {
+          service = access.proxyUrlFor { system = keycloak'system; service = keycloak; inherit portName; };
+          originRequest.${if keycloak.ports.${portName}.protocol == "https" then "noTLSVerify" else null} = true;
         };
-        ${vouch-proxy.domain}.service = assert vouch-proxy.enable; "http://localhost:${toString vouch-proxy.settings.vouch.port}";
+        "${vouch-proxy.id}.${config.networking.domain}" = {
+          service = access.proxyUrlFor { system = vouch'system; service = vouch-proxy; };
+        };
       };
     };
   };

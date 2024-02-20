@@ -8,7 +8,7 @@
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt;
   inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
-  inherit (nixlib.strings) substring fixedWidthString replaceStrings concatMapStringsSep;
+  inherit (nixlib.strings) hasPrefix hasInfix substring fixedWidthString replaceStrings concatMapStringsSep;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
   toHexStringLower = v: toLower (toHexString v);
@@ -35,6 +35,7 @@
 
   mkWinPath = replaceStrings ["/"] ["\\"];
   mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
+  mkAddress6 = addr: if hasInfix ":" addr && ! hasPrefix "[" addr then "[${addr}]" else addr;
 
   mapListToAttrs = f: l: listToAttrs (map f l);
 
@@ -77,7 +78,7 @@ in {
   lib = {
     domain = "gensokyo.zone";
     inherit treeToModulesOutput userIs
-      eui64 mkWinPath mkBaseDn
+      eui64 mkWinPath mkBaseDn mkAddress6
       toHexStringLower hexCharToInt
       mapListToAttrs
       mkAlmostOptionDefault mkAlmostDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults

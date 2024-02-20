@@ -29,7 +29,7 @@ in {
     networkConfig.MulticastDNS = true;
   };
   networking.nameservers' = mkIf enableDns (mkBefore [
-    { address = access.getAddressFor "utsuho" "lan"; }
+    { address = access.getAddressFor (access.systemForService "dnsmasq").name "lan"; }
   ]);
   # prioritize our resolver over systemd-resolved!
   system.nssDatabases.hosts = let

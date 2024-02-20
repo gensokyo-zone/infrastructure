@@ -7,4 +7,10 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  exports = {
+    services = {
+      plex.enable = true;
+      invidious.enable = true;
+    };
+  };
 }

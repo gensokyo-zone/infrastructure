@@ -7,4 +7,11 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  exports = {
+    services = {
+      unifi.enable = true;
+      mosquitto.enable = true;
+      dnsmasq.enable = true;
+    };
+  };
 }

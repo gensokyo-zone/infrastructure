@@ -1,72 +1,59 @@
 {
   config,
   lib,
-  inputs,
+  access,
+  gensokyo-zone,
   ...
 }:
 let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+  inherit (lib.modules) mkIf mkOptionDefault;
   inherit (config.services) nginx;
-  access = nginx.access.mosquitto;
   portPlaintext = 1883;
   portSsl = 8883;
+  system = access.systemForService "mosquitto";
+  inherit (system.exports.services) mosquitto;
 in {
-  options.services.nginx.access.mosquitto = with lib.types; {
-    enable = mkEnableOption "MQTT proxy";
-    host = mkOption {
-      type = str;
-    };
-    port = mkOption {
-      type = port;
-      default = portPlaintext;
-    };
-    bind = {
-      sslPort = mkOption {
-        type = port;
-        default = portSsl;
-      };
-      port = mkOption {
-        type = port;
-        default = portPlaintext;
-      };
-    };
-  };
   config = {
     services.nginx = {
       stream = {
-        upstreams.mosquitto = {
-          servers.access = {
-            addr = mkAlmostOptionDefault access.host;
-            port = mkOptionDefault access.port;
+        upstreams = let
+          addr = mkAlmostOptionDefault (access.getAddressFor system.name "lan");
+        in {
+          mqtt.servers.access = {
+            inherit addr;
+            port = mkOptionDefault mosquitto.ports.default.port;
+          };
+          mqtts = {
+            enable = mkAlmostOptionDefault mosquitto.ports.ssl.enable;
+            ssl.enable = true;
+            servers.access = {
+              inherit addr;
+              port = mkOptionDefault mosquitto.ports.ssl.port;
+            };
           };
         };
         servers.mosquitto = {
           listen = {
-            mqtt.port = portPlaintext;
+            mqtt.port = mkOptionDefault portPlaintext;
             mqtts = {
               ssl = true;
-              port = portSsl;
+              port = mkOptionDefault portSsl;
             };
           };
-          extraConfig = let
-            proxySsl = port: mkIf (port == portSsl) ''
-              proxy_ssl on;
-              proxy_ssl_verify off;
-            '';
-          in mkMerge [
-            "proxy_pass ${nginx.stream.upstreams.mosquitto.name};"
-            (proxySsl access.port)
-          ];
+          proxy.upstream = mkAlmostOptionDefault (
+            if nginx.stream.upstreams.mqtts.enable then "mqtts" else "mqtt"
+          );
         };
       };
     };
 
     networking.firewall = {
-      interfaces.local.allowedTCPPorts = [
-        access.bind.port
-        (mkIf nginx.stream.servers.mosquitto.listen.mqtts.enable access.bind.sslPort)
+      interfaces.local.allowedTCPPorts = let
+        inherit (nginx.stream.servers.mosquitto) listen;
+      in [
+        listen.mqtt.port
+        (mkIf listen.mqtts.enable listen.mqtts.port)
       ];
     };
   };

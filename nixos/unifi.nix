@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.unifi;
 in {
   services.unifi = {
@@ -14,21 +14,25 @@ in {
     #mongodbPackage = mkDefault pkgs.mongodb-5_0;
   };
 
-  networking.firewall.interfaces.local = mkIf cfg.enable {
-    allowedTCPPorts = mkMerge [
-      [
+  networking.firewall = mkIf cfg.enable {
+    interfaces.int = {
+      allowedTCPPorts = [
         8443 # remote login
-      ]
-      (mkIf (!cfg.openFirewall) [
+      ];
+    };
+    interfaces.local = {
+      allowedTCPPorts = mkIf (!cfg.openFirewall) [
         8080 # Port for UAP to inform controller.
         8880 # Port for HTTP portal redirect, if guest portal is enabled.
         8843 # Port for HTTPS portal redirect, ditto.
         6789 # Port for UniFi mobile speed test.
-      ])
-    ];
+      ];
+      allowedUDPPorts = mkIf (!cfg.openFirewall) [
+        10001 # UDP port used for device discovery.
+      ];
+    };
     allowedUDPPorts = mkIf (!cfg.openFirewall) [
       3478 # UDP port used for STUN.
-      10001 # UDP port used for device discovery.
     ];
   };
 

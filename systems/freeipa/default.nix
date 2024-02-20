@@ -30,4 +30,11 @@ _: {
       mode = "0600";
     };
   };
+  exports = {
+    services = {
+      freeipa.enable = true;
+      ldap.enable = true;
+      kerberos.enable = true;
+    };
+  };
 }

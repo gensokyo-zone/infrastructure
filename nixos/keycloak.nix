@@ -34,7 +34,7 @@ in {
   };
 
   networking.firewall.interfaces.int.allowedTCPPorts = mkIf cfg.enable [
-    (if cfg.sslCertificate != null then cfg.settings.https-port else cfg.settings.http-port)
+    cfg.port
   ];
   systemd.services.keycloak = mkIf cfg.enable {
     serviceConfig.DynamicUser = mkForce false;
@@ -52,7 +52,7 @@ in {
 
     settings = {
       hostname = mkDefault (if hostname-strict then hostname else null);
-      proxy = mkDefault (if cfg.sslCertificate != null then "reencrypt" else "edge");
+      proxy = mkDefault (if cfg.protocol == "https" then "reencrypt" else "edge");
       hostname-strict = mkDefault hostname-strict;
       hostname-strict-https = mkDefault hostname-strict;
       proxy-headers = mkDefault "xforwarded";

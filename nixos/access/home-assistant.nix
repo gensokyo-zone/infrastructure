@@ -1,9 +1,10 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkDefault;
   inherit (config.services) home-assistant nginx;
   name.shortServer = mkDefault "home";
   listen' = {
@@ -24,8 +25,9 @@ in {
           websocket.enable = true;
           headers.enableRecommended = true;
         };
-        proxyPass = mkIf home-assistant.enable (mkDefault
-          "http://localhost:${toString home-assistant.config.http.server_port}"
+        proxyPass = mkDefault (
+          if home-assistant.enable then "http://localhost:${toString home-assistant.config.http.server_port}"
+          else access.proxyUrlFor { serviceName = "home-assistant"; }
         );
       };
     };

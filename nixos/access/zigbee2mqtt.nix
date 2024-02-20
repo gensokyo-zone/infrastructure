@@ -1,9 +1,10 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkDefault;
   inherit (config.services) nginx zigbee2mqtt;
   name.shortServer = mkDefault "z2m";
 in {
@@ -12,8 +13,9 @@ in {
       zigbee2mqtt = {
         locations."/" = {
           proxy.websocket.enable = true;
-          proxyPass = mkIf zigbee2mqtt.enable (
-            mkDefault "http://localhost:${toString zigbee2mqtt.settings.frontend.port}"
+          proxyPass = mkDefault (
+            if zigbee2mqtt.enable then "http://localhost:${toString zigbee2mqtt.settings.frontend.port}"
+            else access.proxyUrlFor { serviceName = "zigbee2mqtt"; }
           );
         };
         inherit name;

@@ -14,7 +14,19 @@ _: {
     };
   };
   access = {
-    tailscale.enable = true;
     global.enable = true;
+  };
+  exports = {
+    services = {
+      tailscale.enable = true;
+      samba.enable = true;
+      vouch-proxy = {
+        enable = true;
+        id = "login.local";
+      };
+    };
+    exports = {
+      plex.enable = true;
+    };
   };
 }

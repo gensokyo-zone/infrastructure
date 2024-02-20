@@ -1,49 +1,21 @@
 {
   config,
+  access,
   lib,
   ...
 }: let
-  inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault;
-  inherit (lib.lists) head optional;
-  inherit (lib.strings) splitString;
+  inherit (lib.lists) optional;
   inherit (config.services) nginx;
-  access = nginx.access.freepbx;
-  hasSsl = nginx.virtualHosts.freepbx'ucp.listen'.ucpSsl.enable;
+  system = access.systemForService "freepbx";
+  inherit (system.exports.services) freepbx;
 in {
-  options.services.nginx.access.freepbx = with lib.types; {
-    host = mkOption {
-      type = str;
-      default = config.lib.access.getHostnameFor "freepbx" "lan";
-    };
-    url = mkOption {
-      type = str;
-      default = "https://${access.host}";
-    };
-    asteriskPort = mkOption {
-      type = port;
-      default = 8088;
-    };
-    asteriskSslPort = mkOption {
-      type = port;
-      default = 8089;
-    };
-    ucpPort = mkOption {
-      type = port;
-      default = 8001;
-    };
-    ucpSslPort = mkOption {
-      type = port;
-      default = 8003;
-    };
-    ucpUrl = mkOption {
-      type = str;
-      default = "https://${access.host}:${toString access.ucpSslPort}";
-    };
-  };
   config.services.nginx = {
     virtualHosts = let
-      proxyScheme = head (splitString ":" access.url);
+      proxyScheme = "https";
+      url = access.proxyUrlFor { serviceName = "freepbx"; portName = proxyScheme; };
+      ucpUrl = access.proxyUrlFor { serviceName = "freepbx"; portName = "ucp-ssl"; };
+      # TODO: ports.asterisk/asterisk-ssl?
       extraConfig = ''
         proxy_buffer_size 128k;
         proxy_buffers 4 256k;
@@ -57,11 +29,11 @@ in {
       '';
       locations = {
         "/" = {
-          proxyPass = access.url;
+          proxyPass = mkDefault url;
         };
         "/socket.io" = {
           proxy.websocket.enable = true;
-          proxyPass = "${access.ucpUrl}/socket.io";
+          proxyPass = mkDefault "${ucpUrl}/socket.io";
           extraConfig = ''
             proxy_hide_header Access-Control-Allow-Origin;
             add_header Access-Control-Allow-Origin $pbx_scheme://$host;
@@ -81,11 +53,11 @@ in {
         ssl.cert.copyFromVhost = "freepbx";
         listen' = {
           ucp = {
-            port = access.ucpPort;
+            port = mkDefault freepbx.ports.ucp.port;
             extraParameters = [ "default_server" ];
           };
           ucpSsl = {
-            port = access.ucpSslPort;
+            port = mkDefault freepbx.ports.ucp-ssl.port;
             ssl = true;
             extraParameters = [ "default_server" ];
           };
@@ -93,8 +65,9 @@ in {
         proxy.websocket.enable = true;
         vouch.enable = mkDefault true;
         local.denyGlobal = mkDefault nginx.virtualHosts.freepbx.local.denyGlobal;
-        locations = {
-          inherit (locations) "/socket.io";
+        locations."/socket.io" = {
+          inherit (locations."/socket.io") proxy extraConfig;
+          proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/socket.io".proxyPass;
         };
         inherit extraConfig kTLS;
       };
@@ -103,23 +76,34 @@ in {
           http = { };
           https.ssl = true;
           ucp = {
-            port = access.ucpPort;
+            port = mkDefault nginx.virtualHosts.freepbx'ucp.listen'.ucp.port;
           };
           ucpSsl = {
-            port = access.ucpSslPort;
+            port = mkDefault nginx.virtualHosts.freepbx'ucp.listen'.ucpSsl.port;
             ssl = true;
           };
         };
         ssl.cert.copyFromVhost = "freepbx";
         local.enable = true;
-        inherit name locations extraConfig kTLS;
+        locations = {
+          "/" = {
+            proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/".proxyPass;
+          };
+          "/socket.io" = {
+            inherit (locations."/socket.io") proxy extraConfig;
+            proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/socket.io".proxyPass;
+          };
+        };
+        inherit name extraConfig kTLS;
       };
     };
   };
   config.networking.firewall = let
-    websocketPorts = [access.ucpPort] ++ optional hasSsl access.ucpSslPort;
+    websocketPorts = virtualHost: [
+      virtualHost.listen'.ucp.port
+    ] ++ optional virtualHost.listen'.ucpSsl.enable virtualHost.listen'.ucpSsl.port;
   in {
-    interfaces.local.allowedTCPPorts = websocketPorts;
-    allowedTCPPorts = mkIf (!nginx.virtualHosts.freepbx'ucp.local.denyGlobal) websocketPorts;
+    interfaces.local.allowedTCPPorts = websocketPorts nginx.virtualHosts.freepbx'local;
+    allowedTCPPorts = mkIf (!nginx.virtualHosts.freepbx'ucp.local.denyGlobal) (websocketPorts nginx.virtualHosts.freepbx'ucp);
   };
 }

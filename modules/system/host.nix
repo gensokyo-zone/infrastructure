@@ -15,6 +15,11 @@ in {
     inherit (lib.types) str listOf attrs unspecified enum;
     inherit (lib.options) mkOption;
   in {
+    name = mkOption {
+      type = str;
+      default = name;
+      readOnly = true;
+    };
     arch = mkOption {
       description = "Processor architecture of the host";
       type = str;

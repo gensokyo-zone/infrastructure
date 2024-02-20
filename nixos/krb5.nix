@@ -18,8 +18,9 @@ in {
       };
       gensokyo-zone = let
         toLdap = replaceStrings [ "idp." ] [ "ldap." ];
-        lanName = access.getHostnameFor "freeipa" "lan";
-        localName = access.getHostnameFor "freeipa" "local";
+        system = access.systemForService "kerberos";
+        lanName = access.getHostnameFor system.name "lan";
+        localName = access.getHostnameFor system.name "local";
         ldapLan = toLdap lanName;
         ldapLocal = toLdap localName;
       in {

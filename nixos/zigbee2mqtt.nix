@@ -27,10 +27,9 @@ in {
         user = "z2m";
         password = "!secret z2m_pass";
         server = let
-          utsuho = access.nixosFor "utsuho";
-          mqttHost = access.getHostnameFor "utsuho" "lan";
+          url = access.proxyUrlFor { serviceName = "mosquitto"; scheme = "mqtt"; };
         in mkIf (!config.services.mosquitto.enable) (
-          assert utsuho.services.mosquitto.enable; mkAlmostDefault "mqtt://${mqttHost}:1883"
+          mkAlmostDefault url
         );
       };
       homeassistant = true;

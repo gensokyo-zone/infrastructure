@@ -1,6 +1,6 @@
 {config, lib, ...}: let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.lists) filter optional;
   inherit (lib.strings) hasInfix concatStrings;
   inherit (config.services) resolved;

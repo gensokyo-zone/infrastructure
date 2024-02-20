@@ -7,5 +7,9 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  access.tailscale.enable = true;
+  exports = {
+    services = {
+      tailscale.enable = true;
+    };
+  };
 }

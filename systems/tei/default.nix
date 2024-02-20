@@ -7,5 +7,12 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  access.tailscale.enable = true;
+  exports = {
+    services = {
+      tailscale.enable = true;
+      home-assistant.enable = true;
+      zigbee2mqtt.enable = true;
+      postgresql.enable = true;
+    };
+  };
 }

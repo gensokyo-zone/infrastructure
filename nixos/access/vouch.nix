@@ -1,23 +1,16 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (config) networking;
   inherit (config.services) tailscale nginx;
   cfg = config.services.vouch-proxy;
 in {
   config.services.nginx = {
     virtualHosts = let
-      localVouchUrl = let
-        inherit (cfg.settings.vouch) listen;
-        host =
-          if listen == "0.0.0.0" || listen == "[::]"
-          then "localhost"
-          else listen;
-      in
-        "http://${host}:${toString cfg.settings.vouch.port}";
       locations = {
         "/" = {
           ssl.force = true;
@@ -54,7 +47,9 @@ in {
         locations = mkMerge [
           locations
           {
-            "/".proxyPass = mkIf cfg.enable (mkDefault localVouchUrl);
+            "/".proxyPass = mkDefault (
+              access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login"; }
+            );
           }
         ];
       };
@@ -73,7 +68,9 @@ in {
         locations = mkMerge [
           locations
           {
-            "/".proxyPass = mkDefault nginx.virtualHosts.vouch.locations."/".proxyPass;
+            "/".proxyPass = mkDefault (
+              access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login.local"; }
+            );
           }
           (localLocations "sso.local.${networking.domain}")
         ];

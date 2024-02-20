@@ -3,16 +3,11 @@
   meta,
   lib,
   access,
+  gensokyo-zone,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mkAddress6;
   inherit (lib.modules) mkIf mkMerge;
-  keycloak = access.nixosFor "keycloak";
-  mediabox = access.nixosFor "mediabox";
-  tei = access.nixosFor "tei";
-  utsuho = access.nixosFor "utsuho";
-  inherit (mediabox.services) plex;
-  inherit (tei.services) home-assistant zigbee2mqtt;
-  inherit (utsuho.services) unifi mosquitto;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
 in {
@@ -218,29 +213,8 @@ in {
     };
   };
 
-  services.nginx = let
-    inherit (nginx) access;
-    #inherit (config.lib.access) getHostnameFor;
-    getHostnameFor = config.lib.access.getAddress4For;
-  in {
+  services.nginx = {
     vouch.enableLocal = false;
-    access.mosquitto = assert mosquitto.enable; {
-      host = getHostnameFor "utsuho" "lan";
-    };
-    access.plex = assert plex.enable; {
-      url = "http://${getHostnameFor "mediabox" "lan"}:${toString plex.port}";
-      externalPort = 41324;
-    };
-    access.unifi = assert unifi.enable; {
-      host = getHostnameFor "utsuho" "lan";
-    };
-    access.freeipa = {
-      host = getHostnameFor "freeipa" "lan";
-      kerberos.ports.kpasswd = 464;
-    };
-    access.kitchencam = {
-      streamPort = 41081;
-    };
     stream.servers = {
       mosquitto.ssl.cert.name = "mosquitto";
     };
@@ -254,18 +228,11 @@ in {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "https://${getHostnameFor "keycloak" "lan"}:8443";
       };
-      vouch = let
-        inherit (keycloak.services) vouch-proxy;
-      in assert vouch-proxy.enable; {
+      vouch = {
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${getHostnameFor "keycloak" "lan"}:${toString vouch-proxy.settings.vouch.port}";
       };
-      vouch'local = let
-        vouch-proxy = config.services.vouch-proxy;
-      in assert vouch-proxy.enable; {
-        locations."/".proxyPass = "http://localhost:${toString vouch-proxy.settings.vouch.port}";
+      vouch'local = {
         # we're not running another for tailscale sorry...
         name.includeTailscale = true;
       };
@@ -274,29 +241,27 @@ in {
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
-      home-assistant = assert  home-assistant.enable; {
+      home-assistant = {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}:${toString home-assistant.config.http.server_port}";
       };
-      zigbee2mqtt = assert zigbee2mqtt.enable; {
+      zigbee2mqtt = {
         # not the real z2m record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}:${toString zigbee2mqtt.settings.frontend.port}";
       };
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}";
+        locations."/".proxyPass = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
       };
       barcodebuddy = {
         # not the real bbuddy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}";
+        locations."/".proxyPass = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
       };
       freepbx = {
         ssl.cert.enable = true;
@@ -305,13 +270,16 @@ in {
         proxied.enable = "cloudflared";
         ssl.cert.enable = true;
       };
-      plex.ssl.cert.enable = true;
+      plex = {
+        ssl.cert.enable = true;
+        listen'.external = {
+          enable = true;
+          port = 41324;
+        };
+      };
       kitchencam.ssl.cert.enable = true;
       invidious = {
         ssl.cert.enable = true;
-      };
-      invidious'int = {
-        locations."/".proxyPass = "http://${getHostnameFor "mediabox" "lan"}:${toString mediabox.services.invidious.port}";
       };
     };
   };

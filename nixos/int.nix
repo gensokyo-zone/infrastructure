@@ -1,4 +1,4 @@
-{config, lib, access, ...}: let
+{lib, access, ...}: let
   inherit (lib.modules) mkDefault;
 in {
   config = {
@@ -9,7 +9,7 @@ in {
       ipv6SendRAConfig = {
         Managed = mkDefault false;
         EmitDNS = mkDefault true;
-        DNS = [ (access.getAddress6For "utsuho" "int") ];
+        DNS = [ (access.systemForService "dnsmasq").access.address6ForNetwork.int ];
         # Domains = [ "int.${networking.domain}" ];
         EmitDomains = mkDefault false;
         RouterPreference = mkDefault "low";

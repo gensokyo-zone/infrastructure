@@ -1,27 +1,14 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) nginx;
   cfg = config.services.plex;
-  access = nginx.access.plex;
 in {
-  options.services.nginx.access.plex = with lib.types; {
-    url = mkOption {
-      type = str;
-    };
-    externalPort = mkOption {
-      type = nullOr port;
-      default = null;
-    };
-  };
   config.services.nginx = {
-    access.plex = mkIf cfg.enable {
-      url = mkOptionDefault "http://localhost:${toString cfg.port}";
-    };
     virtualHosts = let
       extraConfig = ''
         # Some players don't reopen a socket and playback stops totally instead of resuming after an extended pause
@@ -44,8 +31,11 @@ in {
         proxy_buffering off;
       '';
       locations."/" = {
-        proxy.websocket.enable = true;
-        proxyPass = access.url;
+        proxy.websocket.enable = mkDefault true;
+        proxyPass = mkDefault (if cfg.enable
+          then "http://localhost:${toString cfg.port}"
+          else access.proxyUrlFor { serviceName = "plex"; }
+        );
       };
       name.shortServer = mkDefault "plex";
       kTLS = mkDefault true;
@@ -56,8 +46,8 @@ in {
           http = { };
           https.ssl = true;
           external = {
-            enable = mkDefault (access.externalPort != null);
-            port = mkDefault access.externalPort;
+            enable = mkDefault false;
+            port = mkDefault 32400;
             extraParameters = [ "default_server" ];
           };
         };
@@ -69,7 +59,9 @@ in {
       };
     };
   };
-  config.networking.firewall.allowedTCPPorts = mkIf (access.externalPort != null) [
-    access.externalPort
+  config.networking.firewall.allowedTCPPorts = let
+    inherit (nginx.virtualHosts.plex) listen';
+  in mkIf listen'.external.enable [
+    listen'.external.port
   ];
 }

@@ -67,6 +67,7 @@
     "modules/system/network".functor.enable = true;
     "modules/system/proxmox".functor.enable = true;
     "modules/system/extern".functor.enable = true;
+    "modules/system/exports".functor.enable = true;
     "modules/home".functor.enable = true;
     "modules/type".functor.enable = true;
     "modules/extern/home".functor.enable = true;

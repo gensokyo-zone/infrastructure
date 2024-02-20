@@ -12,6 +12,7 @@
       ];
       specialArgs = {
         inherit name inputs std meta;
+        inherit (inputs.self.lib) gensokyo-zone;
       };
     })
   (set.map (_: c: c) meta.systems);

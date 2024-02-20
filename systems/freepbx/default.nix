@@ -14,4 +14,9 @@ _: {
       };
     };
   };
+  exports = {
+    services = {
+      freepbx.enable = true;
+    };
+  };
 }

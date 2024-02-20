@@ -4,12 +4,11 @@
   inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mkAddress6;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault mkForce;
   inherit (lib.attrsets) attrValues mapAttrs;
   inherit (lib.lists) optional filter concatMap;
-  inherit (lib.strings) hasPrefix hasInfix;
   inherit (config.services) nginx;
   listenModule = { config, virtualHost, listenKind, ... }: {
     options = with lib.types; {
@@ -76,9 +75,8 @@
       listenConfigs = let
         # TODO: handle quic listener..?
         mkListenHost = { addr, port }: let
-          addr' = if hasInfix ":" addr && !hasPrefix "[" addr then "[${addr}]" else addr;
           host =
-            if addr != null then "${addr'}:${toString port}"
+            if addr != null then "${mkAddress6 addr}:${toString port}"
             else toString port;
         in assert port != null; host;
         mkDirective = addr: let

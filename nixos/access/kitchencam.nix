@@ -1,60 +1,44 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault;
-  inherit (lib.lists) concatMap;
+  inherit (lib.modules) mkDefault;
+  inherit (lib.attrsets) mapAttrs;
   inherit (config.services) nginx;
-  inherit (config.services.nginx) virtualHosts;
-  access = config.services.nginx.access.kitchencam;
+  system = access.systemForServiceId "kitchen";
+  inherit (system.exports.services) motion;
 in {
-  options.services.nginx.access.kitchencam = with lib.types; {
-    streamPort = mkOption {
-      type = port;
-      default = 8081;
-    };
-    host = mkOption {
-      type = str;
-      default = "kitchencam.local.${config.networking.domain}";
-    };
-    url = mkOption {
-      type = str;
-      default = "http://${access.host}:8080";
-    };
-    streamUrl = mkOption {
-      type = str;
-      default = "http://${access.host}:${toString access.streamPort}";
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = null;
-    };
-  };
   config.services.nginx = {
     virtualHosts = let
+      url = access.proxyUrlFor { inherit system; service = motion; };
+      streamUrl = access.proxyUrlFor { inherit system; service = motion; portName = "stream"; };
       extraConfig = ''
         proxy_redirect off;
         proxy_buffering off;
       '';
       locations = {
         "/" = {
-          proxyPass = access.url;
+          proxyPass = mkDefault url;
         };
         "~ ^/[0-9]+/(stream|motion|substream|current|source|status\\.json)$" = {
-          proxyPass = access.streamUrl;
+          proxyPass = mkDefault streamUrl;
           inherit extraConfig;
         };
         "~ ^/(stream|motion|substream|current|source|cameras\\.json|status\\.json)$" = {
-          proxyPass = access.streamUrl;
+          proxyPass = mkDefault streamUrl;
           inherit extraConfig;
         };
       };
       listen' = {
         http = { };
         https.ssl = true;
-        stream.port = mkDefault access.streamPort;
+        stream = {
+          enable = mkDefault motion.ports.stream.enable;
+          port = mkDefault motion.ports.stream.port;
+        };
       };
       name.shortServer = mkDefault "kitchen";
       kTLS = mkDefault true;
@@ -64,13 +48,18 @@ in {
         vouch.enable = true;
       };
       kitchencam'local = {
-        inherit name locations listen' kTLS;
+        inherit name listen' kTLS;
         ssl.cert.copyFromVhost = "kitchencam";
         local.enable = true;
+        locations = mapAttrs (name: location: location // {
+          proxyPass = mkDefault nginx.virtualHosts.kitchencam.locations.${name}.proxyPass;
+        }) locations;
       };
     };
   };
-  config.networking.firewall.allowedTCPPorts = [
-    access.streamPort
+  config.networking.firewall.allowedTCPPorts = let
+    inherit (nginx.virtualHosts.kitchencam) listen';
+  in [
+    listen'.stream.port
   ];
 }

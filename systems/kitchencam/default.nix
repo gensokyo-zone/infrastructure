@@ -15,4 +15,13 @@ _: {
       address6 = "fd0a::ba27:ebff:fea8:f4ff";
     };
   };
+  exports = {
+    services = {
+      motion = {
+        id = "kitchen";
+        enable = true;
+        ports.stream.port = 41081;
+      };
+    };
+  };
 }

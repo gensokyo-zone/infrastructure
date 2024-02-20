@@ -18,7 +18,6 @@ in {
   ];
 
   services.cloudflared = let
-    inherit (config.services) unifi;
     inherit (nginx) virtualHosts defaultHTTPListenPort;
     tunnelId = "28bcd3fc-3467-4997-806b-546ba9995028";
     localNginx = "http://localhost:${toString defaultHTTPListenPort}";
@@ -27,7 +26,7 @@ in {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
       ingress = {
-        ${virtualHosts.unifi.serverName} = assert unifi.enable; {
+        ${virtualHosts.unifi.serverName} = {
           service = localNginx;
         };
       };

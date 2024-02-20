@@ -1,9 +1,10 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkDefault;
   cfg = config.services.keycloak;
   inherit (config.services) nginx;
 in {
@@ -13,11 +14,11 @@ in {
         name.shortServer = mkDefault "sso";
         ssl.force = mkDefault true;
         locations."/".proxyPass = let
-          url = mkDefault (if cfg.sslCertificate != null
-            then "https://localhost:${toString cfg.settings.https-port}"
-            else "http://localhost:${toString cfg.settings.http-port}"
-          );
-        in mkIf cfg.enable (mkDefault url);
+          url = mkDefault "${cfg.protocol}://localhost:${toString cfg.port}";
+        in mkDefault (
+          if cfg.enable then url
+          else access.proxyUrlFor { serviceName = "keycloak"; portName = "https"; }
+        );
       };
       keycloak'local = {
         name.shortServer = mkDefault "sso";

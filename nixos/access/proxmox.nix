@@ -1,12 +1,13 @@
 {
   config,
   lib,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkMerge mkDefault;
+  inherit (lib.modules) mkDefault;
   inherit (lib.strings) escapeRegex;
   inherit (config.services) nginx tailscale;
-  proxyPass = "https://reisen.local.${config.networking.domain}:8006/";
+  proxyPass = access.proxyUrlFor { serviceName = "proxmox"; } + "/";
 in {
   config.services.nginx.virtualHosts = let
     locations."/" = {
