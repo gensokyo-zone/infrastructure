@@ -16,7 +16,7 @@
     (mkIf (cfg.server.mountdPort != null) cfg.server.mountdPort)
   ];
   enableLdap = false;
-  system = access.systemFor "tei";
+  system = access.nixosFor "tei";
   inherit (system.services) kanidm;
 in {
   services.nfs = {

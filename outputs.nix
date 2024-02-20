@@ -48,5 +48,8 @@
 in {
   inherit (outputs) devShells legacyPackages packages checks;
   inherit (systems) deploy nixosConfigurations;
-  lib = import ./lib.nix {inherit tree inputs;};
+  lib = import ./lib.nix {
+    inherit tree inputs;
+    inherit (systems) systems;
+  };
 }

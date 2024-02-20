@@ -112,11 +112,11 @@ in {
       [
         access.localDomain
         config.networking.fqdn
-        config.networking.access.hostnameForNetwork.local
+        config.lib.access.hostnameForNetwork.local
       ]
       (mkIf tailscale.enable [
         "id.tail.${config.networking.domain}"
-        config.networking.access.hostnameForNetwork.tail
+        config.lib.access.hostnameForNetwork.tail
       ])
     ];
 

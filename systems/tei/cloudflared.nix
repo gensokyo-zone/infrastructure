@@ -6,17 +6,17 @@
 }: let
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) listToAttrs nameValuePair;
-  inherit (access) systemFor;
+  inherit (access) nixosFor;
   inherit (config.networking) hostName;
   cfg = config.services.cloudflared;
   apartment = "5e85d878-c6b2-4b15-b803-9aeb63d63543";
   accessHostFor = {
     hostName,
-    system ? systemFor hostName,
+    system ? nixosFor hostName,
     access ? "local",
     ...
   }: let
-    host = system.networking.access.hostnameForNetwork.${access} or (throw "unsupported access ${access}");
+    host = system.lib.access.hostnameForNetwork.${access} or (throw "unsupported access ${access}");
   in
     if hostName == config.networking.hostName
     then "localhost"
@@ -25,7 +25,7 @@
     host ? system.networking.fqdn,
     port ? 80,
     hostName,
-    system ? systemFor hostName,
+    system ? nixosFor hostName,
   } @ args:
     nameValuePair host {
       service = "http://${accessHostFor args}:${toString port}";
@@ -34,7 +34,7 @@
     host ? system.services.home-assistant.domain,
     port ? system.services.home-assistant.config.http.server_port,
     hostName,
-    system ? systemFor hostName,
+    system ? nixosFor hostName,
     ...
   } @ args:
     nameValuePair host {
@@ -44,7 +44,7 @@
     host ? system.services.vouch-proxy.domain,
     port ? system.services.vouch-proxy.settings.vouch.port,
     hostName,
-    system ? systemFor hostName,
+    system ? nixosFor hostName,
     ...
   } @ args:
     nameValuePair host {
@@ -54,7 +54,7 @@
     host ? system.services.kanidm.server.frontend.domain,
     port ? system.services.kanidm.server.frontend.port,
     hostName,
-    system ? systemFor hostName,
+    system ? nixosFor hostName,
     ...
   } @ args:
     nameValuePair host {

@@ -1,17 +1,15 @@
 {
   pkgs,
-  inputs,
   config,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) optionals;
   inherit (lib.strings) concatStringsSep optionalString;
-  inherit (config.services) tailscale avahi;
+  inherit (config.services) tailscale;
   inherit (config) networking;
-  inherit (networking) hostName;
   cfg = config.networking.access;
   cidrModule = { config, ... }: {
     options = with lib.types; {
@@ -35,10 +33,6 @@
   };
 in {
   options.networking.access = with lib.types; {
-    hostnameForNetwork = mkOption {
-      type = attrsOf str;
-      default = { };
-    };
     cidrForNetwork = mkOption {
       type = attrsOf (submodule cidrModule);
       default = { };
@@ -63,18 +57,6 @@ in {
   };
 
   config.networking.access = {
-    hostnameForNetwork = {
-      local = let
-        eth0 = config.systemd.network.networks.eth0 or { };
-        hasStaticAddress = eth0.address or [ ] != [ ] || eth0.addresses or [ ] != [ ];
-        hasSLAAC = eth0.slaac.enable or false;
-      in mkMerge [
-        (mkIf (hasStaticAddress || hasSLAAC) (mkDefault "${hostName}.local.${networking.domain}"))
-        (mkIf (avahi.enable && avahi.publish.enable) (mkOptionDefault "${hostName}.local"))
-      ];
-      tail = mkIf tailscale.enable "${hostName}.tail.${networking.domain}";
-      global = mkIf (networking.enableIPv6 && networking.tempAddresses == "disabled") "${hostName}.${networking.domain}";
-    };
     cidrForNetwork = {
       loopback = {
         v4 = [
@@ -116,6 +98,10 @@ in {
           true
         '';
       in "${localaddrs-reload}";
+    };
+    moduleArgAttrs = {
+      inherit (cfg) cidrForNetwork localaddrs;
+      mkSnakeOil = pkgs.callPackage ../../packages/snakeoil.nix { };
     };
   };
 
@@ -219,18 +205,4 @@ in {
       };
     };
   };
-
-  config._module.args.access = let
-    systemFor = hostName: inputs.self.nixosConfigurations.${hostName}.config;
-    systemForOrNull = hostName: inputs.self.nixosConfigurations.${hostName}.config or null;
-  in {
-    inherit (cfg) hostnameForNetwork cidrForNetwork localaddrs;
-    systemFor = hostName: if hostName == networking.hostName
-      then config
-      else systemFor hostName;
-    systemForOrNull = hostName: if hostName == networking.hostName
-      then config
-      else systemForOrNull hostName;
-  };
-  config.lib.access.mkSnakeOil = pkgs.callPackage ../../packages/snakeoil.nix { };
 }

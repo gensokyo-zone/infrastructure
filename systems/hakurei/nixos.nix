@@ -6,8 +6,8 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
-  mediabox = access.systemFor "mediabox";
-  tei = access.systemFor "tei";
+  mediabox = access.nixosFor "mediabox";
+  tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
   inherit (tei.services) kanidm vouch-proxy;
 in {
@@ -139,16 +139,16 @@ in {
     inherit (config.services.nginx) access;
   in {
     access.plex = assert plex.enable; {
-      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${toString plex.port}";
+      url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString plex.port}";
       externalPort = 41324;
     };
     access.vouch = assert vouch-proxy.enable; {
-      url = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+      url = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
       useACMEHost = access.vouch.localDomain;
     };
     access.kanidm = assert kanidm.enableServer; {
       inherit (kanidm.server.frontend) domain port;
-      host = tei.networking.access.hostnameForNetwork.local;
+      host = tei.lib.access.hostnameForNetwork.local;
       ldapEnable = false;
     };
     access.freeipa = {
@@ -159,7 +159,7 @@ in {
       useACMEHost = access.kitchencam.domain;
     };
     access.invidious = {
-      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
+      url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
       ${access.kanidm.domain} = {

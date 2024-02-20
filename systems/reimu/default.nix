@@ -4,4 +4,5 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  access.tailscale.enable = true;
 }

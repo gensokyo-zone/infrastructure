@@ -1,6 +1,7 @@
 {
   inputs,
   tree,
+  systems,
 }: let
   nixlib = inputs.nixpkgs.lib;
   inherit (nixlib.strings) splitString toLower;
@@ -33,7 +34,7 @@
 
   mkWinPath = replaceStrings ["/"] ["\\"];
 in {
-  inherit tree nixlib inputs;
+  inherit tree nixlib inputs systems;
   meta = tree.impure;
   std = inputs.self.lib.Std.Std.compat;
   Std = inputs.std-fl.lib;
