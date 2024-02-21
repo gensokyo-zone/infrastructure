@@ -67,8 +67,11 @@ in {
           filteredHosts = [ "hakurei" "reimu" "aya" "tei" "mediabox" ];
           gcBetweenHosts = false;
           nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
+          hostPath = builtins.getEnv "PATH";
         in ''
           # ${toString builtins.currentTime}
+          export PATH="${hostPath}:$PATH"
+          export NIX_CONFIG="$(printf '%s\naccept-flake-config = true\n' "''${NIX_CONFIG-}")"
           nix flake update
 
           if git status --porcelain | grep -qF flake.lock; then

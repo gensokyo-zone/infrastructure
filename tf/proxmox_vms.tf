@@ -119,7 +119,7 @@ resource "proxmox_virtual_environment_container" "aya" {
 
   memory {
     dedicated = 16384
-    swap      = 8192
+    swap      = 12288
   }
 
   cpu {

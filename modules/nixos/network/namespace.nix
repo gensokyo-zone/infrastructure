@@ -236,6 +236,9 @@
           ExecStart = [
             ''${ip} netns add ${escapeSystemdExecArg config.name}''
           ];
+          ExecStartPost = [
+            ''-${ip-n config} link set dev lo up''
+          ];
           ExecStop = [
             ''${ip} netns delete ${escapeSystemdExecArg config.name}''
           ];
@@ -420,6 +423,10 @@
         type = bool;
         default = false;
       };
+      privateMounts = mkOption {
+        type = bool;
+        default = true;
+      };
       name = mkOption {
         type = nullOr str;
         default = null;
@@ -456,6 +463,7 @@
         ];
         serviceConfig = {
           NetworkNamespacePath = mkOptionDefault cfg.path;
+          PrivateMounts = mkIf (!cfg.privateMounts) (mkDefault false);
           BindReadOnlyPaths = mkIf (cfg.bindResolvConf != null) [
             "${cfg.bindResolvConf}:/etc/resolv.conf"
           ];

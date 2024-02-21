@@ -19,7 +19,7 @@
 
   services.github-runner-zone = {
     count = 16;
-    runnerSettings.networkNamespace.name = "ns1";
+    networkNamespace.name = "ns1";
   };
 
   networking.namespaces.ns1 = {
