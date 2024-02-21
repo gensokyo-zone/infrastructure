@@ -21,6 +21,11 @@ in {
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = username;
+    openssh.matchBlock.settings = {
+      # PasswordAuthentication works too
+      KbdInteractiveAuthentication = true;
+      ForceCommand = sshJump;
+    };
   };
   users.groups.${username} = {
     gid = config.users.users.${username}.uid;
@@ -28,11 +33,6 @@ in {
 
   services.openssh = {
     ports = mkAfter [ sshPort ];
-    extraConfig = mkAfter ''
-      Match User ${username}
-        KbdInteractiveAuthentication yes
-        ForceCommand ${sshJump}
-    '';
   };
   # required for kbd or password authentication
   security.pam.services.sshd.unixAuth = mkForce true;
