@@ -10,8 +10,8 @@ locals {
   proxmox_reimu_config     = jsondecode(file("${path.root}/../systems/reimu/lxc.json"))
   proxmox_hakurei_vm_id    = 103
   proxmox_hakurei_config   = jsondecode(file("${path.root}/../systems/hakurei/lxc.json"))
-  proxmox_tei_vm_id        = 101
-  proxmox_tei_config       = jsondecode(file("${path.root}/../systems/tei/lxc.json"))
+  proxmox_tewi_vm_id       = 101
+  proxmox_tewi_config      = jsondecode(file("${path.root}/../systems/tei/lxc.json"))
   proxmox_mediabox_vm_id   = 102
   proxmox_mediabox_config  = jsondecode(file("${path.root}/../systems/mediabox/lxc.json"))
   proxmox_kubernetes_vm_id = 201
@@ -30,17 +30,149 @@ module "hakurei_config" {
   config     = local.proxmox_hakurei_config.lxc
 }
 
-module "tei_config" {
+resource "proxmox_virtual_environment_container" "tewi" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_tewi_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+tewi
+EOT
+
+  memory {
+    dedicated = 2048
+    swap      = 4096
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 32
+  }
+
+  initialization {
+    hostname = "tei"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "10.1.1.39/24"
+        gateway = "10.1.1.1"
+      }
+    }
+  }
+
+  startup {
+    order      = 16
+    up_delay   = 0
+    down_delay = 8
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:CC:66:57"
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, initialization[0].dns, operating_system[0].template_file_id]
+  }
+}
+
+module "tewi_config" {
   source     = "./system/proxmox/lxc/config"
   connection = local.proxmox_reisen_connection
-  vm_id      = local.proxmox_tei_vm_id
-  config     = local.proxmox_tei_config.lxc
+  container  = proxmox_virtual_environment_container.tewi
+  config     = local.proxmox_tewi_config.lxc
+}
+
+resource "proxmox_virtual_environment_container" "mediabox" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_mediabox_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+plex
+EOT
+
+  memory {
+    dedicated = 8192
+    swap      = 4096
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 30
+  }
+
+  initialization {
+    hostname = "mediabox"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "10.1.1.44/24"
+        gateway = "10.1.1.1"
+      }
+    }
+  }
+
+  startup {
+    order      = 32
+    up_delay   = 0
+    down_delay = 4
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:34:F4:A8"
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, initialization[0].dns, operating_system[0].template_file_id]
+  }
 }
 
 module "mediabox_config" {
   source     = "./system/proxmox/lxc/config"
   connection = local.proxmox_reisen_connection
-  vm_id      = local.proxmox_mediabox_vm_id
+  container  = proxmox_virtual_environment_container.mediabox
   config     = local.proxmox_mediabox_config.lxc
 }
 
@@ -48,7 +180,9 @@ resource "proxmox_virtual_environment_container" "reimu" {
   node_name   = "reisen"
   vm_id       = local.proxmox_reimu_vm_id
   tags        = ["tf"]
-  description = "big hakurei"
+  description = <<EOT
+big hakurei
+EOT
 
   memory {
     dedicated = 512
@@ -100,7 +234,7 @@ resource "proxmox_virtual_environment_container" "reimu" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, unprivileged, description, initialization[0].dns, operating_system[0].template_file_id]
+    ignore_changes = [started, unprivileged, initialization[0].dns, operating_system[0].template_file_id]
   }
 }
 
@@ -115,7 +249,9 @@ resource "proxmox_virtual_environment_container" "aya" {
   node_name   = "reisen"
   vm_id       = local.proxmox_aya_vm_id
   tags        = ["tf"]
-  description = "zoomzoom"
+  description = <<EOT
+zoomzoom
+EOT
 
   memory {
     dedicated = 16384
@@ -143,8 +279,8 @@ resource "proxmox_virtual_environment_container" "aya" {
         gateway = "10.1.1.1"
       }
     }
-    ip_config {
-    }
+    # empty block required if additional interfaces are added, but causes state sync issues
+    # ip_config {}
   }
 
   startup {
@@ -178,7 +314,7 @@ resource "proxmox_virtual_environment_container" "aya" {
   started = false
 
   lifecycle {
-    ignore_changes = [started, description, initialization[0].dns, initialization[0].ip_config, operating_system[0].template_file_id]
+    ignore_changes = [started, initialization[0].dns, operating_system[0].template_file_id]
   }
 }
 
@@ -191,8 +327,10 @@ module "aya_config" {
 
 resource "proxmox_virtual_environment_vm" "freeipa" {
   name        = "freeipa"
-  description = "FreeIPA, our identity management system"
   tags        = ["tf"]
+  description = <<EOT
+FreeIPA, our identity management system
+EOT
 
   node_name = "reisen"
   vm_id     = local.proxmox_freeipa_vm_id
