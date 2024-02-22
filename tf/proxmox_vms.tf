@@ -409,7 +409,7 @@ EOT
         address = "auto"
       }
       ipv4 {
-        address = "auto"
+        address = "dhcp"
       }
     }
   }
