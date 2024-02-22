@@ -1,0 +1,56 @@
+= Home Network
+:inc: ./_inc/
+include::{inc}attrs.adoc[]
+:toc:
+
+== Reserved Subnets
+
+* `10.1.1.0/24`
+* `fd0a::/64` (SLAAC)
+
+== Reserved IPv4 Addresses
+
+router:: `10.1.1.1`
+gensokyo:: `10.1.1.4`
+eientei:: `10.1.1.5`
+
+shanghai:: `10.1.1.32`
+
+hourai:: `10.1.1.36`
+
+tewi:: `10.1.1.38`
+
+tei:: `10.1.1.39`
+reisen:: `10.1.1.40`
+hakurei:: `10.1.1.41`
+kuwubernetes:: `10.1.1.42`
+mediabox:: `10.1.1.44`
+reimu:: `10.1.1.45`
+idp:: `10.1.1.46`
+aya:: `10.1.1.47`
+
+nue:: `10.1.1.62`
+koishi:: `10.1.1.63`
+satorin:: `10.1.1.64`
+fire10:: `10.1.1.65`
+chromecast:: `10.1.1.66`
+
+outdoor-friend:: `10.1.1.81`
+bedroom-friend:: `10.1.1.82`
+bedroom-colour-strip:: `10.1.1.85`
+
+net_ac_9628:: `10.1.1.90`
+
+pinecube:: `10.1.1.97`
+
+DHCP:: `10.1.1.98` to `10.1.1.252`
+
+== Exposed Ports
+
+hakurei::
+* ^UDP:^[.value]##137##, ^UDP:^[.value]##138##, ^TCP:^[.value]##139##, ^TCP:^[.value]##445##
+* ^TCP:^[.value]##80##, ^TCP:^[.value]##443##
+* ^TCP:^[.value]##636##
+* ^TCP:^[.value]##41022##, ^TCP:^[.value]##62954##
+* ^UDP:^[.value]##41641##
+* ^UDP:^[.value]##5353##

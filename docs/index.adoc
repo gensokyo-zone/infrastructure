@@ -1,0 +1,24 @@
+= https://gensokyo.zone[gensokyo.zone] Documentation
+:inc: ./_inc/
+include::{inc}attrs.adoc[]
+
+Welcome to the Palace of the Earth Spirits!
+
+== Infrastructure
+
+Links::
+* https://github.com/gensokyo-zone/infrastructure[GitHub Repository]
+* https://github.com/gensokyo-zone/infrastructure#readme[README]
+
+== Uncategorized
+
+https://gensokyo.zone[Homepage]::
+Service listing
+
+<<./network.adoc#,Home Network>>::
+Local network subnets and IP address reservations
+
+<<./steam.adoc#,Steam>>::
+
+<<./steam.adoc#beatsaber,Beat Saber>>:::
+Individual user and game version profiles deployed over the network

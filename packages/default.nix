@@ -133,5 +133,13 @@
       export PATH=":{makeBinPath [ packages.nf-alejandra ]}:$PATH"
       source ${../ci/fmt-nix.sh}
     '';
+    nf-docs = pkgs.writeShellScriptBin "nf-docs" ''
+      ${exports}
+      export NF_DOCS_PATH=${packages.docs}
+      source ${../ci/docs.sh}
+    '';
+    docs = pkgs.callPackage ../docs/derivation.nix {
+      inherit (inputs) self;
+    };
   };
 in output

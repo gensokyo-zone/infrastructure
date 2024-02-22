@@ -1,0 +1,67 @@
+= Steam
+:inc: ./_inc/
+include::{inc}attrs.adoc[]
+:toc:
+
+== Setup
+
+Environment Variables::
+
+Advanced System Settings (System Properties -> Advanced) -> Environment Variables
+
+* `GENSO_SMB_HOST` = [.value]`smb.gensokyo.zone`
+* [[env_GENSO_SMB_SHARED_MOUNT]] `GENSO_SMB_SHARED_MOUNT` = [.value]`\\smb.gensokyo.zone\shared` or `X:` if mapped as a network drive (recommended)
+* `GENSO_STEAM_MACHINE` = [.value]`mypc` your computer's name goes here
+* [[env_GENSO_STEAM_LOCAL_DATA]] `GENSO_STEAM_LOCAL_DATA` = [.value]`+C:\Program Files\GensokyoZone+` or somewhere local to be used as scratch space
+* [[env_GENSO_STEAM_INSTALL]] `GENSO_STEAM_INSTALL` = [.value]`+C:\Program Files (x86)\Steam+` or wherever Steam is installed to
+
+[[beatsaber]]
+== Beat Saber
+
+=== Setup
+
+Environment Variables::
+
+* `GENSO_STEAM_LIBRARY_BS` = [.value]`+G:\SteamLibrary+` if Beat Saber is installed to a different disk than <<env_GENSO_STEAM_INSTALL,`%GENSO_STEAM_INSTALL%`>>
+
+The scripts to manage the Beat Saber install are found under <<env_GENSO_SMB_SHARED_MOUNT,[.pathvalue]#%GENSO_SMB_SHARED_MOUNT%\steam\bin#>>.
+It is recommended to create a shortcut to this folder for convenient access by holding Alt and dragging it onto your Windows desktop.
+
+[[beatsaber_Vanilla]]
+To start initial setup, an existing Beat Saber install must be moved to its new home under <<env_GENSO_STEAM_LOCAL_DATA,[.pathvalue]#%GENSO_STEAM_LOCAL_DATA%\Beat Saber\Vanilla#>> by running [.pathvalue]#beatsaber/setup.bat#.
+
+[source,bat]
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\beatsaber\setup.bat
+
+=== Updates
+
+It is recommended that the Steam `Automatic Updates` setting is changed to "Only update this game when I launch it" under the game's right click `Properties` -> `Updates` to avoid issues later on.
+
+When Steam does need to update the game, the <<beatsaber_Vanilla,vanilla local install>> must be restored for it to successfully perform the update and then allow you to continue playing the game. This just requires running [.pathvalue]#beatsaber/local-vanilla# prior to clicking the "Update" button in Steam.
+
+[source,bat]
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\beatsaber\local-vanilla.bat
+
+=== Play
+
+Before playing the game, you must first select your user and game version:
+
+[[beatsaber_UserVersion]]
+[source,bat]
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\steam\arc.bat
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\beatsaber\1_34_2.bat
+
+These will be saved as environment variables to be used the next time the game is launched.
+
+Now to prepare the game:
+
+[source,bat]
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\beatsaber\mount.bat
+
+This will set up directory links for the <<beatsaber_UserVersion,user and version previously selected>>.
+The game can now be launched normally through steam.
+
+Alternatively, you can mount and launch the game in one convenient command:
+
+[source,bat]
+%GENSO_SMB_SHARED_MOUNT%\steam\bin\beatsaber\launch.bat

@@ -1,5 +1,7 @@
 # gensokyo.zone's Infrastructure
 
+[![docs-badge][]][docs]
+
 Welcome to the Palace of the Earth Spirits!
 
 ## Contribution Guidelines
@@ -51,3 +53,6 @@ vim .sops.yaml
 ```shell
 nf-tarball ct
 ```
+
+[docs-badge]: https://img.shields.io/badge/API-docs-blue.svg?style=flat-square
+[docs]: https://gensokyo.zone/docs/
