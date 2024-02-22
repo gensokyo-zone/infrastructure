@@ -5,7 +5,7 @@ variable "proxmox_container_template" {
 
 locals {
   proxmox_katbox_vm_id        = 106
-  proxmox_katbox_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
+  proxmox_katbox_config       = jsondecode(file("${path.root}/../systems/katbox/lxc.json"))
   proxmox_aya_vm_id        = 105
   proxmox_aya_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
   proxmox_reimu_vm_id      = 104
