@@ -1,0 +1,7 @@
+{
+	"lxc": {
+		"lxc.mount.entry": [
+			"/dev/net/tun dev/net/tun none bind,optional,create=file"
+		]
+	}
+}

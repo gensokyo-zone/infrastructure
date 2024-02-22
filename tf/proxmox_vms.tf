@@ -4,6 +4,8 @@ variable "proxmox_container_template" {
 }
 
 locals {
+  proxmox_katbox_vm_id        = 106
+  proxmox_katbox_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
   proxmox_aya_vm_id        = 105
   proxmox_aya_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
   proxmox_reimu_vm_id      = 104
@@ -380,4 +382,72 @@ EOT
   lifecycle {
     ignore_changes = [started, description, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
   }
+}
+
+resource "proxmox_virtual_environment_container" "katbox" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_katbox_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+kat's box
+EOT
+
+  memory {
+    dedicated = 512
+    swap      = 512
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 64
+  }
+
+  initialization {
+    hostname = "katbox"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "auto"
+      }
+    }
+  }
+
+  startup {
+    order      = 4
+    up_delay   = 0
+    down_delay = 0
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:C4:66:AB"
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, unprivileged, initialization[0].dns, operating_system[0].template_file_id]
+  }
+}
+
+module "katbox_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  container  = proxmox_virtual_environment_container.katbox
+  config     = local.proxmox_katbox_config.lxc
 }
