@@ -3,11 +3,21 @@
   inputs,
 }: let
   lib = inputs.self.lib.nixlib;
-  inherit (lib.meta) getExe;
-  inherit (inputs.std.lib) string list;
+  inherit (lib.strings) makeBinPath;
+  inherit (inputs.std.lib) string list set;
   packages = inputs.self.packages.${system};
   inherit (inputs.self.legacyPackages.${system}) pkgs;
   fmt = import ../ci/fmt.nix;
+  exports = ''
+    export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ../.}}
+  '';
+  exportsSsh = ''
+    export PATH="${makeBinPath [ packages.nf-hostname packages.nf-sshopts ]}:$PATH"
+  '';
+  exportsFmtNix = ''
+    NF_NIX_BLACKLIST_DIRS=(${string.concatMapSep " " string.escapeShellArg fmt.nix.blacklistDirs})
+    NF_NIX_WHITELIST_FILES=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelist})
+  '';
   output = {
     inherit (pkgs.buildPackages)
       terraform tflint
@@ -16,179 +26,112 @@
     ;
     inherit (inputs.deploy-rs.packages.${system}) deploy-rs;
     nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
+      ${exports}
+      ${exportsSsh}
       exec ${pkgs.runtimeShell} ${../ci/deploy.sh} "$@"
     '';
     nf-setup-node = let
       reisen = ../systems/reisen;
-      inherit (inputs.self.nixosConfigurations.hakurei.config.users.users) arc kat;
-      authorizedKeys = string.intercalate "\n" (arc.openssh.authorizedKeys.keys ++ kat.openssh.authorizedKeys.keys);
+      inherit (inputs.self.lib.lib) userIs;
+      inherit (inputs.self.nixosConfigurations.hakurei.config) users;
+      authorizedKeys = list.concatMap (user: user.openssh.authorizedKeys.keys) (
+        list.filter (userIs "wheel") users.users
+      );
+      inputs = {
+        INPUT_ROOT_SSH_AUTHORIZEDKEYS = pkgs.writeTextFile "root.authorized_keys" (
+          string.intercalate "\n" authorizedKeys
+        );
+        INPUT_TF_SSH_AUTHORIZEDKEYS = reisen + "/tf.authorized_keys";
+        INPUT_SUBUID = reisen + "/subuid";
+        INPUT_SUBGID = reisen + "/subgid";
+        INPUT_INFRA_SETUP = reisen + "/setup.sh";
+        INPUT_INFRA_PUTFILE64 = reisen + "/bin/putfile64.sh";
+        INPUT_INFRA_PVE = reisen + "/bin/pve.sh";
+        INPUT_INFRA_MKPAM = reisen + "/bin/mkpam.sh";
+        INPUT_INFRA_CT_CONFIG = reisen + "/bin/ct-config.sh";
+      };
+      inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputs;
     in pkgs.writeShellScriptBin "nf-setup-node" ''
-      set -eu
-      SETUP_HOSTNAME=''${1-reisen}
-      export INPUT_ROOT_SSH_AUTHORIZEDKEYS=${string.escapeShellArg authorizedKeys}
-      exec ssh root@$SETUP_HOSTNAME env \
-        INPUT_ROOT_SSH_AUTHORIZEDKEYS="$(base64 -w0 <<<"$INPUT_ROOT_SSH_AUTHORIZEDKEYS")" \
-        INPUT_TF_SSH_AUTHORIZEDKEYS="$(base64 -w0 < ${reisen + "/tf.authorized_keys"})" \
-        INPUT_SUBUID="$(base64 -w0 < ${reisen + "/subuid"})" \
-        INPUT_SUBGID="$(base64 -w0 < ${reisen + "/subgid"})" \
-        INPUT_INFRA_SETUP="$(base64 -w0 < ${reisen + "/setup.sh"})" \
-        INPUT_INFRA_PUTFILE64="$(base64 -w0 < ${reisen + "/bin/putfile64.sh"})" \
-        INPUT_INFRA_PVE="$(base64 -w0 < ${reisen + "/bin/pve.sh"})" \
-        INPUT_INFRA_MKPAM="$(base64 -w0 < ${reisen + "/bin/mkpam.sh"})" \
-        INPUT_INFRA_CT_CONFIG="$(base64 -w0 < ${reisen + "/bin/ct-config.sh"})" \
-        "bash -c \"eval \\\"\\\$(base64 -d <<<\\\$INPUT_INFRA_SETUP)\\\"\""
+      ${exports}
+      NF_SETUP_INPUTS=(
+        ${string.intercalate "\n" inputVars}
+      )
+      source ${../ci/setup.sh}
     '';
     nf-hostname = pkgs.writeShellScriptBin "nf-hostname" ''
-      set -eu
-      DEPLOY_USER=
-      if [[ $# -gt 1 ]]; then
-        ARG_NODE=$1
-        ARG_HOSTNAME=$2
-        shift 2
-      else
-        ARG_HOSTNAME=$1
-        shift
-        ARG_NODE=''${ARG_HOSTNAME%%.*}
-        if [[ $ARG_HOSTNAME = $ARG_NODE ]]; then
-          if DEPLOY_HOSTNAME=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}"#"deploy.nodes.$ARG_HOSTNAME.hostname" 2>/dev/null); then
-            DEPLOY_USER=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}"#"deploy.nodes.$ARG_HOSTNAME.sshUser" 2>/dev/null || true)
-            ARG_HOSTNAME=$DEPLOY_HOSTNAME
-            if ! ping -w2 -c1 "$DEPLOY_HOSTNAME" >/dev/null 2>&1; then
-              ARG_HOSTNAME="$ARG_NODE.local"
-            fi
-          else
-            ARG_HOSTNAME="$ARG_NODE.local"
-          fi
-        fi
-      fi
-      if ! ping -w2 -c1 "$ARG_HOSTNAME" >/dev/null 2>&1; then
-        LOCAL_HOSTNAME=$ARG_NODE.local.gensokyo.zone
-        TAIL_HOSTNAME=$ARG_NODE.tail.gensokyo.zone
-        GLOBAL_HOSTNAME=$ARG_NODE.gensokyo.zone
-        if ping -w2 -c1 "$LOCAL_HOSTNAME" >/dev/null 2>&1; then
-          ARG_HOSTNAME=$LOCAL_HOSTNAME
-        elif ping -w2 -c1 "$TAIL_HOSTNAME" >/dev/null 2>&1; then
-          ARG_HOSTNAME=$TAIL_HOSTNAME
-        elif ping -w2 -c1 "$GLOBAL_HOSTNAME" >/dev/null 2>&1; then
-          ARG_HOSTNAME=$GLOBAL_HOSTNAME
-        fi
-      fi
-      echo "''${DEPLOY_USER-}''${DEPLOY_USER+@}$ARG_HOSTNAME"
+      ${exports}
+      source ${../ci/hostname.sh}
     '';
     nf-sshopts = pkgs.writeShellScriptBin "nf-sshopts" ''
-      set -eu
-      ARG_HOSTNAME=$1
-      ARG_NODE=''${ARG_HOSTNAME%%.*}
-      if DEPLOY_SSHOPTS=$(nix eval --json "''${NF_CONFIG_ROOT-${toString ../.}}"#"deploy.nodes.$ARG_HOSTNAME.sshOpts" 2>/dev/null); then
-        SSHOPTS=($(${getExe packages.jq} -r '.[]' <<<"$DEPLOY_SSHOPTS"))
-        echo "''${SSHOPTS[*]}"
-      elif [[ $ARG_NODE = reisen ]]; then
-        SSHOPTS=()
-      else
-        SSHOPTS=(''${NIX_SSHOPTS--p62954})
-      fi
-      if [[ $ARG_NODE = ct || $ARG_NODE = reisen-ct ]]; then
-        SSHOPTS+=(-oUpdateHostKeys=no -oStrictHostKeyChecking=off)
-      else
-        SSHOPTS+=(-oHostKeyAlias=$ARG_NODE.gensokyo.zone)
-      fi
-      echo "''${SSHOPTS[*]}"
+      ${exports}
+      export PATH="$PATH:${makeBinPath [ pkgs.jq ]}"
+      source ${../ci/sshopts.sh}
     '';
     nf-sops-keyscan = pkgs.writeShellScriptBin "nf-sops-keyscan" ''
-      set -eu
-      ARG_NODE=$1
-      shift
-      ARG_HOSTNAME=$(${getExe packages.nf-hostname} "$ARG_NODE")
-      ssh-keyscan ''${NIX_SSHOPTS--p62954} "''${ARG_HOSTNAME#*@}" "$@" | ${getExe packages.ssh-to-age}
+      ${exports}
+      ${exportsSsh}
+      export PATH="$PATH:${makeBinPath [ pkgs.ssh-to-age ]}"
+      source ${../ci/sops-keyscan.sh}
     '';
     nf-ssh = pkgs.writeShellScriptBin "nf-ssh" ''
-      set -eu
-      ARG_NODE=$1
-      ARG_HOSTNAME=$(${getExe packages.nf-hostname} "$ARG_NODE")
-      NIX_SSHOPTS=$(${getExe packages.nf-sshopts} "$ARG_NODE")
-      exec ssh $NIX_SSHOPTS "$ARG_HOSTNAME"
+      ${exports}
+      ${exportsSsh}
+      source ${../ci/ssh.sh}
     '';
     nf-build = pkgs.writeShellScriptBin "nf-build" ''
-      set -eu
-      ARG_NODE=$1
-      shift
-      exec nix build --no-link --print-out-paths \
-        "''${NF_CONFIG_ROOT-${toString ../.}}#nixosConfigurations.$ARG_NODE.config.system.build.toplevel" \
-        --show-trace "$@"
+      ${exports}
+      source ${../ci/build.sh}
     '';
     nf-tarball = pkgs.writeShellScriptBin "nf-tarball" ''
-      set -eu
-      if [[ $# -gt 0 ]]; then
-        ARG_NODE=$1
-        shift
-      else
-        ARG_NODE=ct
-      fi
-      ARG_CONFIG_PATH=nixosConfigurations.$ARG_NODE.config
-      RESULT=$(nix build --no-link --print-out-paths \
-        "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.system.build.tarball" \
-        --show-trace "$@")
-      if [[ $ARG_NODE = ct ]]; then
-        DATESTAMP=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#lib.inputs.nixpkgs.sourceInfo.lastModifiedDate")
-        DATENAME=''${DATESTAMP:0:4}''${DATESTAMP:4:2}''${DATESTAMP:6:2}
-        SYSARCH=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.nixpkgs.system")
-        TAREXT=$(nix eval --raw "''${NF_CONFIG_ROOT-${toString ../.}}#$ARG_CONFIG_PATH.system.build.tarball.extension")
-        TARNAME=nixos-system-$SYSARCH.tar$TAREXT
-        OUTNAME="ct-$DATENAME-$TARNAME"
-        ln -sf "$RESULT/tarball/$TARNAME" "$OUTNAME"
-        echo $OUTNAME
-        ls -l $OUTNAME
-      fi
+      ${exports}
+      source ${../ci/tarball.sh}
+    '';
+    nf-switch = pkgs.writeShellScriptBin "nf-switch" ''
+      ${exports}
+      ${exportsSsh}
+      source ${../ci/switch.sh}
     '';
     nf-generate = pkgs.writeShellScriptBin "nf-generate" ''
-      set -eu
-
-      for node in reisen; do
-        nix eval --json "''${NF_CONFIG_ROOT-${toString ../.}}"#"lib.generate.$node.users" | jq -M . > "$NF_CONFIG_ROOT/systems/$node/users.json"
-      done
+      ${exports}
+      export PATH="$PATH:${makeBinPath [ pkgs.jq ]}"
+      source ${../ci/generate.sh}
     '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''
-      set -eu
-      if [[ $# -eq 0 ]]; then
-        set -- check
-      fi
-
-      if [[ ''${1-} = check ]]; then
-        shift
-        set -- check --config ${../ci/statix.toml} "$@"
-      fi
-
-      exec ${getExe packages.statix} "$@"
+      ${exports}
+      export PATH="${makeBinPath [ packages.statix ]}:$PATH"
+      source ${../ci/statix.sh}
     '';
-    nf-deadnix = let
-      inherit (fmt.nix) blacklistDirs;
-      excludes = "${getExe pkgs.buildPackages.findutils} ${string.intercalate " " blacklistDirs} -type f";
-    in pkgs.writeShellScriptBin "nf-deadnix" ''
-      exec ${getExe packages.deadnix} "$@" \
-        --no-lambda-arg \
-        --exclude $(${excludes})
+    nf-deadnix = pkgs.writeShellScriptBin "nf-deadnix" ''
+      ${exports}
+      ${exportsFmtNix}
+      export PATH="${makeBinPath [ packages.deadnix pkgs.findutils ]}:$PATH"
+      source ${../ci/deadnix.sh}
     '';
-    nf-alejandra = let
-      inherit (fmt.nix) blacklistDirs;
-      excludes = string.intercalate " " (list.map (dir: "--exclude ${dir}") blacklistDirs);
-    in pkgs.writeShellScriptBin "nf-alejandra" ''
-      exec ${getExe packages.alejandra} \
-        ${excludes} \
-        "$@"
+    nf-alejandra = pkgs.writeShellScriptBin "nf-alejandra" ''
+      ${exports}
+      ${exportsFmtNix}
+      source ${../ci/alejandra.sh}
     '';
     nf-lint-tf = pkgs.writeShellScriptBin "nf-lint-tf" ''
-      ${getExe packages.terraform} fmt "$@" &&
-      ${packages.tflint}/bin/tflint
+      ${exports}
+      export PATH="$PATH:${makeBinPath [ packages.tflint ]}"
+      source ${../ci/lint-tf.sh}
     '';
     nf-lint-nix = pkgs.writeShellScriptBin "nf-lint-nix" ''
-      ${getExe packages.nf-statix} check "$@" &&
-      ${getExe packages.nf-deadnix} -f "$@"
+      ${exports}
+      export PATH="${makeBinPath [ packages.nf-statix packages.nf-deadnix ]}:$PATH"
+      source ${../ci/lint-nix.sh}
     '';
-    nf-fmt-nix = let
-      inherit (fmt.nix) whitelist;
-      includes = string.intercalate " " whitelist;
-    in pkgs.writeShellScriptBin "nf-fmt-nix" ''
-      exec ${getExe packages.nf-alejandra} ${includes} "$@"
+    nf-fmt-tf = pkgs.writeShellScriptBin "nf-fmt-tf" ''
+      ${exports}
+      export PATH="${makeBinPath [ packages.terraform ]}:$PATH"
+      source ${../ci/fmt-tf.sh}
+    '';
+    nf-fmt-nix = pkgs.writeShellScriptBin "nf-fmt-nix" ''
+      ${exports}
+      ${exportsFmtNix}
+      export PATH=":{makeBinPath [ packages.nf-alejandra ]}:$PATH"
+      source ${../ci/fmt-nix.sh}
     '';
   };
 in output

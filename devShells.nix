@@ -49,14 +49,18 @@
       nf-update
       nf-tf
       (mkWrapper {name = "nf-generate";})
-      (mkWrapper {name = "nf-deploy";})
       (mkWrapper {name = "nf-setup-node";})
       (mkWrapper {name = "nf-sops-keyscan";})
       (mkWrapper {name = "nf-ssh";})
       (mkWrapper {name = "nf-build";})
       (mkWrapper {name = "nf-tarball";})
+      (mkWrapper {name = "nf-switch";})
       (mkWrapper {
         name = "nf-lint-tf";
+        subdir = "/tf";
+      })
+      (mkWrapper {
+        name = "nf-fmt-tf";
         subdir = "/tf";
       })
       (mkWrapper {
