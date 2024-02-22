@@ -4,8 +4,8 @@ variable "proxmox_container_template" {
 }
 
 locals {
-  proxmox_katbox_vm_id        = 106
-  proxmox_katbox_config       = jsondecode(file("${path.root}/../systems/katbox/lxc.json"))
+  proxmox_litterbox_vm_id        = 106
+  proxmox_litterbox_config       = jsondecode(file("${path.root}/../systems/litterbox/lxc.json"))
   proxmox_aya_vm_id        = 105
   proxmox_aya_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
   proxmox_reimu_vm_id      = 104
@@ -384,9 +384,9 @@ EOT
   }
 }
 
-resource "proxmox_virtual_environment_container" "katbox" {
+resource "proxmox_virtual_environment_container" "litterbox" {
   node_name   = "reisen"
-  vm_id       = local.proxmox_katbox_vm_id
+  vm_id       = local.proxmox_litterbox_vm_id
   tags        = ["tf"]
   description = <<EOT
 kat's box
@@ -403,7 +403,7 @@ EOT
   }
 
   initialization {
-    hostname = "katbox"
+    hostname = "litterbox"
     ip_config {
       ipv6 {
         address = "auto"
@@ -445,9 +445,9 @@ EOT
   }
 }
 
-module "katbox_config" {
+module "litterbox_config" {
   source     = "./system/proxmox/lxc/config"
   connection = local.proxmox_reisen_connection
-  container  = proxmox_virtual_environment_container.katbox
-  config     = local.proxmox_katbox_config.lxc
+  container  = proxmox_virtual_environment_container.litterbox
+  config     = local.proxmox_litterbox_config.lxc
 }

@@ -9,6 +9,7 @@
     nixos.base
     nixos.reisen-ct
     nixos.tailscale
+    nixos.syncthing-kat
   ];
 
   #sops.defaultSopsFile = ./secrets.yaml;
