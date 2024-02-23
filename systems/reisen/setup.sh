@@ -109,3 +109,20 @@ if [[ ! -d /rpool/shared/nix/var ]]; then
 	mkdir /rpool/shared/nix/var
 fi
 chown 100000:100000 /rpool/shared/nix/var
+
+if [[ ! -d /rpool/caches ]]; then
+	zfs create rpool/caches
+fi
+if [[ ! -d /rpool/caches/plex ]]; then
+	zfs create rpool/caches/plex
+fi
+if [[ ! -d /rpool/caches/plex/Cache ]]; then
+	mkdir /rpool/caches/plex/Cache
+fi
+if [[ ! -d /rpool/caches/plex/tautulli/cache ]]; then
+	mkdir -p /rpool/caches/plex/tautulli/cache
+fi
+chown 100193:100193 /rpool/caches/plex/Cache
+chmod 0775 /rpool/caches/plex/Cache
+chown 100195:65534 /rpool/caches/plex/tautulli/cache
+chmod 0755 /rpool/caches/plex/tautulli/cache

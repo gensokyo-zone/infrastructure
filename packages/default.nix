@@ -36,10 +36,10 @@
       inherit (inputs.self.lib.lib) userIs;
       inherit (inputs.self.nixosConfigurations.hakurei.config) users;
       authorizedKeys = list.concatMap (user: user.openssh.authorizedKeys.keys) (
-        list.filter (userIs "wheel") users.users
+        list.filter (userIs "wheel") (set.values users.users)
       );
-      inputs = {
-        INPUT_ROOT_SSH_AUTHORIZEDKEYS = pkgs.writeTextFile "root.authorized_keys" (
+      inputAttrs = {
+        INPUT_ROOT_SSH_AUTHORIZEDKEYS = pkgs.writeText "root.authorized_keys" (
           string.intercalate "\n" authorizedKeys
         );
         INPUT_TF_SSH_AUTHORIZEDKEYS = reisen + "/tf.authorized_keys";
@@ -51,7 +51,7 @@
         INPUT_INFRA_MKPAM = reisen + "/bin/mkpam.sh";
         INPUT_INFRA_CT_CONFIG = reisen + "/bin/ct-config.sh";
       };
-      inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputs;
+      inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputAttrs;
     in pkgs.writeShellScriptBin "nf-setup-node" ''
       ${exports}
       NF_SETUP_INPUTS=(
