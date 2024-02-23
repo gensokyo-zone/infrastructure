@@ -1,5 +1,5 @@
 { config, lib, ... }: let
-  inherit (lib.modules) mkForce;
+  inherit (lib.modules) mkIf mkDefault mkForce;
   cfg = config.services.invidious;
 in {
   sops.secrets = let
@@ -22,7 +22,8 @@ in {
     User = "invidious";
   };
   services.invidious = {
-    enable = true;
+    enable = mkDefault true;
+    address = mkIf config.networking.enableIPv6 (mkDefault "::");
     hmacKeyFile = config.sops.secrets.invidious_hmac_key.path;
     settings = {
       domain = "yt.${config.networking.domain}";
