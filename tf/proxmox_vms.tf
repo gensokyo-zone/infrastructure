@@ -119,7 +119,7 @@ EOT
   }
 
   cpu {
-    cores = 2
+    cores = 8
   }
 
   disk {
