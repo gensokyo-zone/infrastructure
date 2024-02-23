@@ -1,7 +1,4 @@
-{
-  meta,
-  ...
-}: {
+{meta, ...}: {
   imports = with meta; [
     nixos.reisen-ct
   ];

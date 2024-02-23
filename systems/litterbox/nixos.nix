@@ -1,7 +1,4 @@
-{
-  meta,
-  ...
-}: {
+{meta, ...}: {
   imports = let
     inherit (meta) nixos;
   in [

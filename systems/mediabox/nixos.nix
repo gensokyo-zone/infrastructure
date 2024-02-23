@@ -62,8 +62,7 @@ in {
             "music/raw"
           ];
       };
-    in
-      [libraryDir];
+    in [libraryDir];
   };
 
   hardware.opengl = {

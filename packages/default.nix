@@ -16,6 +16,7 @@
   '';
   exportsFmtNix = ''
     NF_NIX_BLACKLIST_DIRS=(${string.concatMapSep " " string.escapeShellArg fmt.nix.blacklistDirs})
+    NF_NIX_WHITELIST_DIRS=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelistDirs})
     NF_NIX_WHITELIST_FILES=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelist})
   '';
   output = {
@@ -110,6 +111,7 @@
     nf-alejandra = pkgs.writeShellScriptBin "nf-alejandra" ''
       ${exports}
       ${exportsFmtNix}
+      export PATH="${makeBinPath [ packages.alejandra ]}:$PATH"
       source ${../ci/alejandra.sh}
     '';
     nf-lint-tf = pkgs.writeShellScriptBin "nf-lint-tf" ''

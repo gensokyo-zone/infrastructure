@@ -10,9 +10,16 @@
     subdir ? null,
     exe ? null,
   }: let
-    subcommand = if exe == null then "run" else "shell";
-    exeArg = if exe == null then "--" else "-c ${exe}";
-  in pkgs.writeShellScriptBin name ''
+    subcommand =
+      if exe == null
+      then "run"
+      else "shell";
+    exeArg =
+      if exe == null
+      then "--"
+      else "-c ${exe}";
+  in
+    pkgs.writeShellScriptBin name ''
       ${optionalString (subdir != null) ''cd "$NF_CONFIG_ROOT${subdir}"''}
       exec nix ${subcommand} ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#${attr}" ${exeArg} "$@"
     '';

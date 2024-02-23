@@ -1,7 +1,4 @@
-{
-  meta,
-  ...
-}: {
+{meta, ...}: {
   imports = let
     inherit (meta) nixos;
   in [
@@ -28,11 +25,11 @@
       enable = true;
       rejectLocaladdrs = true;
       serviceSettings = rec {
-        wants = [ "localaddrs.service" ];
+        wants = ["localaddrs.service"];
         after = wants;
       };
     };
-    interfaces.eth1 = { };
+    interfaces.eth1 = {};
   };
   systemd.network.networks.eth0 = {
     name = "eth0";

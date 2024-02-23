@@ -32,15 +32,15 @@ in {
   };
 
   services.openssh = {
-    ports = mkAfter [ sshPort ];
+    ports = mkAfter [sshPort];
   };
   # required for kbd or password authentication
   security.pam.services.sshd.unixAuth = mkForce true;
 
-  networking.firewall.allowedTCPPorts = [ sshPort ];
+  networking.firewall.allowedTCPPorts = [sshPort];
 
   sops.secrets = {
-    tf-proxmox-passwd = { };
+    tf-proxmox-passwd = {};
     tf-proxmox-identity = {
       owner = username;
     };

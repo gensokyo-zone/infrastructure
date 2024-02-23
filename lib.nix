@@ -29,9 +29,9 @@
       nibble0 + (fixedWidthString 1 "0" (toHexStringLower nibble1));
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 
-  userIs = group: user: builtins.elem group (user.extraGroups ++ [ user.group ]);
+  userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
 
-  mkWinPath = replaceStrings [ "/" ] [ "\\" ];
+  mkWinPath = replaceStrings ["/"] ["\\"];
 in {
   inherit tree nixlib inputs;
   std = inputs.self.lib.Std.Std.compat;
@@ -40,5 +40,5 @@ in {
     inherit mkWinPath userIs eui64 toHexStringLower hexCharToInt;
     inherit (inputs.arcexprs.lib) unmerged;
   };
-  generate = import ./generate.nix { inherit inputs tree; };
+  generate = import ./generate.nix {inherit inputs tree;};
 }
