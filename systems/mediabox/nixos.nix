@@ -8,7 +8,7 @@
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.attrsets) mapAttrs mapAttrsToList;
   inherit (lib.strings) removePrefix;
-  inherit (config.services) deluge plex tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
+  inherit (config.services) deluge plex;
   inherit (config) kyuuto;
   plexLibrary = {
     "/mnt/Anime".hostPath = kyuuto.libraryDir + "/anime";
@@ -48,10 +48,6 @@ in {
   services.mediatomb = {
     serverName = "tewi";
     mediaDirectories = let
-      mkLibraryDir = dir: {
-        path = kyuuto.libraryDir + "/${dir}";
-        mountPoint = kyuuto.libraryDir;
-      };
       libraryDir = {
         path = kyuuto.libraryDir;
         mountPoint = kyuuto.libraryDir;
@@ -61,10 +57,13 @@ in {
               removePrefix "${kyuuto.libraryDir}/" hostPath
           )
           plexLibrary
-          ++ ["tlmc" "music-raw"];
+          ++ [
+            "music/collections"
+            "music/raw"
+          ];
       };
     in
-      [libraryDir] ++ map mkLibraryDir ["tlmc" "music-raw" "lewd"];
+      [libraryDir];
   };
 
   hardware.opengl = {

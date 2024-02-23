@@ -139,7 +139,8 @@ in {
     inherit (config.services.nginx) access;
   in {
     access.plex = assert plex.enable; {
-      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:32400";
+      url = "http://${mediabox.networking.access.hostnameForNetwork.local}:${toString plex.port}";
+      externalPort = 41324;
     };
     access.vouch = assert vouch-proxy.enable; {
       url = "http://${tei.networking.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";

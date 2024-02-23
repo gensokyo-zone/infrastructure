@@ -5,8 +5,9 @@
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (config.services) nginx;
   cfg = config.services.plex;
-  access = config.services.nginx.access.plex;
+  access = nginx.access.plex;
 in {
   options.services.nginx.access.plex = with lib.types; {
     url = mkOption {
@@ -20,10 +21,14 @@ in {
       type = str;
       default = "plex.local.${config.networking.domain}";
     };
+    externalPort = mkOption {
+      type = nullOr port;
+      default = null;
+    };
   };
   config.services.nginx = {
     access.plex = mkIf cfg.enable {
-      url = mkOptionDefault "http://localhost:32400";
+      url = mkOptionDefault "http://localhost:${toString cfg.port}";
     };
     virtualHosts = let
       extraConfig = ''
@@ -62,6 +67,19 @@ in {
         kTLS = mkDefault true;
         inherit extraConfig;
       };
+      plex-external = mkIf (access.externalPort != null) {
+        serverName = mkDefault access.domain;
+        default = mkDefault true;
+        listen = map (addr: {
+          inherit addr;
+          port = access.externalPort;
+        }) nginx.defaultListenAddresses;
+        locations."/" = location;
+        inherit extraConfig;
+      };
     };
   };
+  config.networking.firewall.allowedTCPPorts = mkIf (access.externalPort != null) [
+    access.externalPort
+  ];
 }

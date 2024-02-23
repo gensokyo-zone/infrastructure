@@ -52,5 +52,6 @@ hakurei::
 * ^TCP:^[.value]##80##, ^TCP:^[.value]##443##
 * ^TCP:^[.value]##636##
 * ^TCP:^[.value]##41022##, ^TCP:^[.value]##62954##
+* ^TCP:^[.value]##41324##
 * ^UDP:^[.value]##41641##
 * ^UDP:^[.value]##5353##

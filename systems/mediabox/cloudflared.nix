@@ -1,5 +1,5 @@
 {config, ...}: let
-  inherit (config.services) deluge plex tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
+  inherit (config.services) deluge tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
 in {
   sops.secrets.cloudflare_mediabox_tunnel = {
     owner = cloudflared.user;

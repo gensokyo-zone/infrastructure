@@ -21,7 +21,7 @@ in {
   # * 32410, 32412, 32413, 32414 - GDM Network Discovery
 
   networking.firewall.interfaces.local = {
-    allowedTCPPorts = [32400 8324 32469];
+    allowedTCPPorts = [cfg.port 8324 32469];
     allowedUDPPorts = [1900 32410 32412 32413 32414];
   };
 }

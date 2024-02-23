@@ -3,8 +3,9 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkAfter mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault;
   inherit (lib.strings) hasPrefix removePrefix;
+  inherit (config.services) mediatomb;
   cfg = config.services.deluge;
 in {
   sops.secrets.deluge-auth = {
@@ -57,7 +58,12 @@ in {
     download
     (mkIf (completedDir != null && !hasCompletedSubdir) completed)
   ]);
-  users.users.deluge = mkIf cfg.enable {
-    extraGroups = [ "kyuuto" ];
-  };
+  users.users = mkIf cfg.enable (mkMerge [
+    {
+      deluge.extraGroups = [ "kyuuto" ];
+    }
+    (mkIf mediatomb.enable {
+      ${mediatomb.user}.extraGroups = [ cfg.group ];
+    })
+  ]);
 }
