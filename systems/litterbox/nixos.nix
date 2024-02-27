@@ -14,7 +14,7 @@
   systemd.network.networks.eth0 = {
     name = "eth0";
     matchConfig = {
-      MACAddress = "BC:24:11:34:F4:AB";
+      MACAddress = "BC:24:11:C4:66:AB";
       Type = "ether";
     };
     DHCP = "yes";

@@ -93,6 +93,14 @@ module "mediabox_system_records" {
   ]
 }
 
+module "litterbox_system_records" {
+  source    = "./system/records"
+  name      = "litterbox"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fec4:66ab"
+}
+
 module "idp_system_records" {
   source    = "./system/records"
   name      = "idp"
