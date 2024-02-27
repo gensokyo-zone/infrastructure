@@ -31,6 +31,7 @@ in {
     nixos.access.vouch
     nixos.access.kanidm
     nixos.access.freeipa
+    nixos.access.unifi
     nixos.access.kitchencam
     nixos.access.proxmox
     nixos.access.plex
@@ -81,6 +82,15 @@ in {
         ])
         (mkIf (access.kanidm.ldapEnable && tailscale.enable) [
           access.kanidm.ldapTailDomain
+        ])
+      ];
+    };
+    ${access.unifi.domain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        [access.unifi.localDomain]
+        (mkIf tailscale.enable [
+          access.unifi.tailDomain
         ])
       ];
     };
@@ -150,6 +160,10 @@ in {
       inherit (kanidm.server.frontend) domain port;
       host = tei.lib.access.hostnameForNetwork.local;
       ldapEnable = false;
+    };
+    access.unifi = {
+      host = tei.lib.access.hostnameForNetwork.local;
+      useACMEHost = access.unifi.domain;
     };
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";

@@ -20,6 +20,7 @@ in {
     nixos.access.home-assistant
     nixos.vouch
     nixos.kanidm
+    nixos.unifi
     nixos.mosquitto
     nixos.home-assistant
     nixos.zigbee2mqtt
