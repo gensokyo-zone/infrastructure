@@ -18,6 +18,7 @@ locals {
   proxmox_mediabox_config  = jsondecode(file("${path.root}/../systems/mediabox/lxc.json"))
   proxmox_kubernetes_vm_id = 201
   proxmox_freeipa_vm_id    = 202
+  proxmox_freepbx_vm_id    = 203
 }
 
 data "proxmox_virtual_environment_vm" "kubernetes" {
@@ -450,4 +451,61 @@ module "litterbox_config" {
   connection = local.proxmox_reisen_connection
   container  = proxmox_virtual_environment_container.litterbox
   config     = local.proxmox_litterbox_config.lxc
+}
+
+resource "proxmox_virtual_environment_vm" "freepbx" {
+  name        = "freepbx"
+  tags        = ["tf"]
+  description = <<EOT
+FreePBX, our phone system
+EOT
+
+  node_name = "reisen"
+  vm_id     = local.proxmox_freepbx_vm_id
+
+  agent {
+    # read 'Qemu guest agent' section, change to true only when ready
+    enabled = false
+  }
+
+  startup {
+    order      = 8
+    up_delay   = 0
+    down_delay = 2
+  }
+
+  cdrom {
+    enabled = true
+    file_id = "local:iso/SNG7-PBX16-64bit-2302-1.iso"
+  }
+
+  memory {
+    dedicated = 2048
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    file_format  = "raw"
+    interface    = "scsi0"
+    size         = 32
+  }
+
+  network_device {
+    bridge = "vmbr0"
+  }
+
+  operating_system {
+    type = "l26"
+  }
+
+  tpm_state {
+    datastore_id = "local-zfs"
+    version      = "v2.0"
+  }
+
+  serial_device {}
+
+  lifecycle {
+    ignore_changes = [started, description, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
+  }
 }

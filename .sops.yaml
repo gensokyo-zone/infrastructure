@@ -8,6 +8,7 @@ keys:
 - &tewi_osh age172nhlv3py990k2rgw64hy27hffmnpv6ssxyu9fepww7zxfgg347qna4gzt
 - &tei_osh age1a2quf2ekkj94ygu7wgvhrvh44fwn32c0l2cwvgvjh23wst90s54szdsvgr
 - &mediabox_osh age16klpkaut5759dut8mdm3jn0rnp8w6kxyvs9n6ntqrdsayjtd7upqlvw489
+- &litterbox_osh age13qgddr326g5je0fpq2r3k940vsr3fh9nlvl9xtcxk3xg2x0k3vsq7pvzaj
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
 creation_rules:
@@ -23,6 +24,7 @@ creation_rules:
     - *aya_osh
     - *tei_osh
     - *mediabox_osh
+    - *litterbox_osh
 - path_regex: 'systems/hakurei/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
@@ -60,6 +62,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *mediabox_osh
+- path_regex: 'systems/litterbox/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *litterbox_osh
 - path_regex: 'systems/kuwubernetes/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
