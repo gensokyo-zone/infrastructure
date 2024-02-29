@@ -1,11 +1,13 @@
 {
   config,
   lib,
+  inputs,
   pkgs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) unmerged;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.strings) match concatStringsSep escapeShellArg optionalString;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) filter;
@@ -23,6 +25,8 @@
       };
       mkdirParent = mkEnableOption "mkdir";
       bindReadOnly = mkEnableOption "mount -oro";
+      relativeSymlink = mkEnableOption "ln -sr";
+      noOverwrite = mkEnableOption "disable overwrite";
       path = mkOption {
         type = path;
         default = name;
@@ -55,6 +59,9 @@
         rules = mkOption {
           type = listOf str;
         };
+        mountSettings = mkOption {
+          type = unmerged.type;
+        };
       };
       setup = {
         script = mkOption {
@@ -83,6 +90,7 @@
       chown = "chown ${escapeShellArg config.owner}:${escapeShellArg config.group} ${escapeShellArg config.path}";
       chmod = "chmod ${escapeShellArg config.mode} ${escapeShellArg config.path}";
       parentFlag = optionalString config.mkdirParent "p";
+      relativeFlag = optionalString config.relativeSymlink "r";
       scriptCatch = " || EXITCODE=$?";
       scriptFail = "EXITCODE=1";
       setupScript = {
@@ -99,27 +107,36 @@
           fi
         '';
         symlink = ''
-          if [[ ! -e ${escapeShellArg config.path} || -L ${escapeShellArg config.path} ]]; then
-            ln -sf ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
-          else
+          if [[ -e ${escapeShellArg config.path} && ! -L ${escapeShellArg config.path} ]]; then
             echo ${escapeShellArg config.path} exists but is not a symlink >&2
             ${scriptFail}
+          else
+            if [[ ! -L ${escapeShellArg config.path} || -z ${escapeShellArg config.noOverwrite} ]]; then
+              ln -s${relativeFlag}fT ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
+            fi
           fi
         '';
         link = ''
           if [[ -L ${escapeShellArg config.path} ]]; then
             rm -f ${escapeShellArg config.path}
           fi
-          ln -f ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
+          ln -fT ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
         '';
         copy = ''
-          if [[ ! -e ${escapeShellArg config.path} || -f ${escapeShellArg config.path} ]]; then
-            cp -f ${escapeShellArg config.src} ${escapeShellArg config.path} &&
-            ${chmod} &&
-            ${chown}${scriptCatch}
-          else
-            echo ${escapeShellArg config.path} exists but is not a file >&2
+          if [[ -d ${escapeShellArg config.src} ]]; then
+            echo TODO: copy directory to ${escapeShellArg config.path} >&2
             ${scriptFail}
+          else
+            if [[ -L ${escapeShellArg config.path} ]] || [[ -e ${escapeShellArg config.path} && ! -f ${escapeShellArg config.path} ]]; then
+              echo ${escapeShellArg config.path} exists but is not a file >&2
+              ${scriptFail}
+            else
+              if [[ ! -e ${escapeShellArg config.path} || -z ${escapeShellArg config.noOverwrite} ]]; then
+                cp -TPf ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
+              fi
+              ${chmod} &&
+              ${chown}${scriptCatch}
+            fi
           fi
         '';
         bind = ''
@@ -152,6 +169,22 @@
           systemdRule.${config.type}
           (mkIf enableAcls [ systemdAclRule ])
         ];
+        mountSettings = mkIf (config.type == "bind") {
+          enable = mkDefault config.enable;
+          type = mkDefault "none";
+          options = mkMerge [
+            "bind"
+            (mkIf config.bindReadOnly "ro")
+          ];
+          what = mkDefault config.src;
+          where = mkDefault config.path;
+          wantedBy = [
+            "tmpfiles.service"
+          ];
+          after = mkDefault [
+            "tmpfiles.service"
+          ];
+        };
       };
     };
   };
@@ -200,20 +233,7 @@ in {
           RemainAfterExit = mkOptionDefault true;
         };
       };
-      mounts = map (file: rec {
-        enable = file.enable;
-        type = "none";
-        options = mkMerge [
-          "bind"
-          (mkIf file.bindReadOnly "ro")
-        ];
-        what = file.src;
-        where = file.path;
-        wantedBy = [
-          "tmpfiles.service"
-        ];
-        after = wantedBy;
-      }) bindFiles;
+      mounts = map (file: unmerged.merge file.systemd.mountSettings) bindFiles;
     };
   };
 }

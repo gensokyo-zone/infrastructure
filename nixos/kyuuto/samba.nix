@@ -26,20 +26,7 @@ in {
       enable = mkDefault true;
       path = mkDefault (kyuuto.mountDir + "/usershares");
     };
-    shares = mkIf cfg.enable {
-      opl = {
-        comment = "Kyuuto Media OPL";
-        path = kyuuto.libraryDir + "/games/PS2";
-        writeable = false;
-        browseable = false;
-        public = false;
-        "valid users" = [
-          "opl"
-          "@kyuuto-peeps"
-        ];
-        "read list" = [ "opl" ];
-        "hosts allow" = localAddrs;
-      };
+    shares = {
       kyuuto-transfer = {
         comment = "Kyuuto Media Transfer Area";
         path = kyuuto.transferDir;
