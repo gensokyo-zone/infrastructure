@@ -80,6 +80,8 @@ in {
         "${cfg.gameLibraryDir}/games.bin" = {
           type = "symlink";
           src = cfg.rootDir + "/games.bin";
+          owner = mkDefault "admin";
+          group = mkDefault "kyuuto";
         };
       };
       files = {

@@ -112,7 +112,8 @@
             ${scriptFail}
           else
             if [[ ! -L ${escapeShellArg config.path} || -z ${escapeShellArg config.noOverwrite} ]]; then
-              ln -s${relativeFlag}fT ${escapeShellArg config.src} ${escapeShellArg config.path}${scriptCatch}
+              ln -s${relativeFlag}fT ${escapeShellArg config.src} ${escapeShellArg config.path} &&
+              ${chown} -h${scriptCatch}
             fi
           fi
         '';
