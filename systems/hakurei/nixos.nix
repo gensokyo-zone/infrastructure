@@ -54,7 +54,6 @@ in {
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
       ingress = {
         "prox.${config.networking.domain}".service = "http://localhost";
-        ${nginx.access.freepbx.domain} = "http://localhost";
         ${config.networking.domain}.service = "http://localhost";
       };
     };

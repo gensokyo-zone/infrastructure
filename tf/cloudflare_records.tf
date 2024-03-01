@@ -31,6 +31,7 @@ module "hakurei_system_records" {
     "plex",
     "idp",
     "ldap",
+    "pbx",
     "smb",
     "kitchen",
     "yt",

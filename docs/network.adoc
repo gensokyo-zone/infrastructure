@@ -23,6 +23,7 @@ tei:: `10.1.1.39`
 reisen:: `10.1.1.40`
 hakurei:: `10.1.1.41`
 kuwubernetes:: `10.1.1.42`
+freepbx:: `10.1.1.43`
 mediabox:: `10.1.1.44`
 reimu:: `10.1.1.45`
 idp:: `10.1.1.46`
@@ -55,3 +56,4 @@ hakurei::
 * ^TCP:^[.value]##41324##
 * ^UDP:^[.value]##41641##
 * ^UDP:^[.value]##5353##
+* ^TCP:^[.value]##8001##, ^TCP:^[.value]##8003##
