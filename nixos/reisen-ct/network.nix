@@ -24,4 +24,9 @@ in {
     linkConfig.Multicast = true;
     networkConfig.MulticastDNS = true;
   };
+
+  boot.kernel.sysctl = {
+    # not sure how to get it to overlap with subgid/idmap...
+    "net.ipv4.ping_group_range" = "0 7999";
+  };
 }
