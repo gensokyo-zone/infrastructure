@@ -22,6 +22,7 @@ module "hakurei_system_records" {
     "ldap",
     "freeipa",
     "unifi",
+    "pbx",
     "smb",
     "kitchen",
     "yt",
@@ -30,7 +31,6 @@ module "hakurei_system_records" {
     "plex",
     "idp",
     "ldap",
-    "unifi",
     "smb",
     "kitchen",
     "yt",
@@ -116,6 +116,14 @@ module "kubernetes_system_records" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
   local_v6  = "fd0a::be24:11ff:fe49:fedc"
+}
+
+module "freepbx_system_records" {
+  source    = "./system/records"
+  name      = "freepbx"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v6  = "fd0a::be24:11ff:fe33:1904"
 }
 
 module "kitchencam_system_records" {

@@ -367,6 +367,7 @@ EOT
 
   network_device {
     bridge = "vmbr0"
+    mac_address = "BC:24:11:3D:39:91"
   }
 
   operating_system {
@@ -492,6 +493,7 @@ EOT
 
   network_device {
     bridge = "vmbr0"
+    mac_address = "BC:24:11:33:19:04"
   }
 
   operating_system {

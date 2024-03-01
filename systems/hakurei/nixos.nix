@@ -10,6 +10,7 @@
   tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
   inherit (tei.services) kanidm vouch-proxy;
+  inherit (config.services) nginx tailscale;
 in {
   imports = let
     inherit (meta) nixos;
@@ -31,6 +32,7 @@ in {
     nixos.access.vouch
     nixos.access.kanidm
     nixos.access.freeipa
+    nixos.access.freepbx
     nixos.access.unifi
     nixos.access.kitchencam
     nixos.access.proxmox
@@ -52,13 +54,13 @@ in {
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
       ingress = {
         "prox.${config.networking.domain}".service = "http://localhost";
+        ${nginx.access.freepbx.domain} = "http://localhost";
         ${config.networking.domain}.service = "http://localhost";
       };
     };
   };
 
   security.acme.certs = let
-    inherit (config.services) nginx tailscale;
     inherit (nginx) access;
   in {
     ${access.vouch.localDomain} = {
@@ -108,6 +110,17 @@ in {
         ])
       ];
     };
+    ${access.freepbx.domain} = {
+      inherit (nginx) group;
+      extraDomainNames = mkMerge [
+        [
+          access.freepbx.localDomain
+        ]
+        (mkIf tailscale.enable [
+          access.freepbx.tailDomain
+        ])
+      ];
+    };
     ${access.proxmox.domain} = {
       inherit (nginx) group;
       extraDomainNames = mkMerge [
@@ -146,7 +159,7 @@ in {
   };
 
   services.nginx = let
-    inherit (config.services.nginx) access;
+    inherit (nginx) access;
   in {
     access.plex = assert plex.enable; {
       url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString plex.port}";
@@ -168,6 +181,9 @@ in {
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";
     };
+    access.freepbx = {
+      useACMEHost = access.freepbx.domain;
+    };
     access.kitchencam = {
       streamPort = 41081;
       useACMEHost = access.kitchencam.domain;
@@ -182,6 +198,9 @@ in {
       ${access.freeipa.domain} = {
         forceSSL = true;
         useACMEHost = access.freeipa.domain;
+      };
+      ${access.freepbx.domain} = {
+        local.enable = true;
       };
       ${access.proxmox.domain} = {
         useACMEHost = access.proxmox.domain;

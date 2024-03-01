@@ -73,6 +73,10 @@ in {
             host = config.services.zigbee2mqtt.domain;
             inherit hostName;
           })
+          (ingressForNginx {
+            host = config.services.nginx.access.unifi.domain;
+            inherit hostName;
+          })
           (ingressForHass {inherit hostName;})
           (ingressForVouch {inherit hostName;})
           (ingressForKanidm {inherit hostName;})

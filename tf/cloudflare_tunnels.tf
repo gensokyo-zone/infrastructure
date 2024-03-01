@@ -12,6 +12,7 @@ module "hakurei" {
   subdomains = [
     "@",
     "prox",
+    "pbx",
   ]
 }
 
@@ -44,6 +45,7 @@ module "tewi" {
     "id",
     "login",
     "z2m",
+    "unifi",
   ]
 }
 

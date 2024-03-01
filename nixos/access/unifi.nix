@@ -71,9 +71,11 @@ in {
         useACMEHost = mkDefault access.useACMEHost;
         inherit locations extraConfig;
       };
-      ${access.domain} = mkIf (access.global.enable || access.useACMEHost != null) {
+      ${access.domain} = {
         vouch.enable = mkDefault true;
-        forceSSL = mkDefault true;
+        local.enable = mkDefault (!access.global.enable);
+        forceSSL = mkDefault access.global.enable;
+        addSSL = mkDefault (!access.global.enable && access.useACMEHost != null);
         kTLS = mkDefault true;
         useACMEHost = mkDefault access.useACMEHost;
         inherit locations extraConfig;

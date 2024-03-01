@@ -18,6 +18,7 @@ in {
     nixos.nginx
     nixos.access.zigbee2mqtt
     nixos.access.home-assistant
+    nixos.access.unifi
     nixos.vouch
     nixos.kanidm
     nixos.unifi
