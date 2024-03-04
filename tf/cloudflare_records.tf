@@ -135,6 +135,19 @@ module "kitchencam_system_records" {
   local_v6  = "fd0a::ba27:ebff:fea8:f4ff"
 }
 
+variable "u7pro_ipv6_postfix" {
+  type = string
+}
+
+module "u7pro_system_records" {
+  source    = "./system/records"
+  name      = "u7-pro"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v4  = "10.1.1.3"
+  local_v6  = "fd0a::${var.u7pro_ipv6_postfix}"
+}
+
 module "tewi_legacy_system_records" {
   source       = "./system/records"
   name         = "tewi"
