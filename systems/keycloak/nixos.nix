@@ -17,18 +17,20 @@
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-keycloak.path;
-      ingress = {
-        ${keycloak.settings.hostname} = assert keycloak.enable; let
-          scheme = if keycloak.sslCertificate != null then "https" else "http";
-          port = keycloak.settings."${scheme}-port";
-        in {
-          service = "${scheme}://localhost:${toString port}";
-          originRequest.${if scheme == "https" then "noTLSVerify" else null} = true;
+      ingress = let
+        keycloakHost = if keycloak.settings.hostname != null then keycloak.settings.hostname else "sso.${config.networking.domain}";
+        keyCloakScheme = if keycloak.sslCertificate != null then "https" else "http";
+        keycloakPort = keycloak.settings."${keyCloakScheme}-port";
+      in {
+        ${keycloakHost} = assert keycloak.enable; {
+          service = "${keyCloakScheme}://localhost:${toString keycloakPort}";
+          originRequest.${if keyCloakScheme == "https" then "noTLSVerify" else null} = true;
         };
         ${vouch-proxy.domain}.service = assert vouch-proxy.enable; "http://localhost:${toString vouch-proxy.settings.vouch.port}";
       };
     };
   };
+
   sops.secrets.cloudflared-tunnel-keycloak = {
     owner = config.services.cloudflared.user;
   };

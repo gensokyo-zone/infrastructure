@@ -43,6 +43,7 @@ in {
     settings = {
       hostname = mkDefault hostname;
       proxy = mkDefault (if cfg.sslCertificate != null then "reencrypt" else "edge");
+      proxy-headers = mkDefault "xforwarded";
     };
 
     sslCertificate = mkDefault "${cert}/fullchain.pem";

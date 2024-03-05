@@ -19,12 +19,14 @@ module "hakurei_system_records" {
     "prox",
     "id",
     "login",
+    "sso",
     "ldap",
     "freeipa",
     "unifi",
     "pbx",
     "smb",
     "kitchen",
+    "home",
     "yt",
   ]
   global_subdomains = [
@@ -87,7 +89,6 @@ module "tewi_system_records" {
   local_subdomains = [
     "mqtt",
     "z2m",
-    "home",
     "postgresql",
   ]
 }

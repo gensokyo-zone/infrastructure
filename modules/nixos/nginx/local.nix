@@ -62,7 +62,7 @@
       enable = mkOptionDefault virtualHost.local.enable;
       denyGlobal = mkOptionDefault virtualHost.local.denyGlobal;
       trusted = mkOptionDefault virtualHost.local.trusted;
-      emitDenyGlobal = virtualHost.local.emitDenyGlobal;
+      emitDenyGlobal = config.local.denyGlobal && !virtualHost.local.emitDenyGlobal;
     };
   };
   hostModule = {config, ...}: {

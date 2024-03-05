@@ -153,9 +153,9 @@ chmod 0755 /rpool/caches/plex/tautulli/cache
 mkshared hass 100286 100286 0700
 mkshared kanidm 100994 100993 0700
 mkshared mosquitto 100246 100246 0700
-mkshared plex 100193 100193 0755
+mkshared plex 100193 100193 0750
 mkshared postgresql 100071 100071 0750
-mkshared unifi 100990 100990 0755
+mkshared unifi 100990 100990 0750
 mkshared zigbee2mqtt 100317 100317 0700
 
 ln -sf /lib/systemd/system/auth-rpcgss-module.service /etc/systemd/system/

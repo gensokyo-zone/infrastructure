@@ -13,14 +13,6 @@ in {
     url = mkOption {
       type = str;
     };
-    domain = mkOption {
-      type = str;
-      default = "plex.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "plex.local.${config.networking.domain}";
-    };
     externalPort = mkOption {
       type = nullOr port;
       default = null;
@@ -51,33 +43,25 @@ in {
         proxy_redirect off;
         proxy_buffering off;
       '';
-      location = {
+      locations."/" = {
         proxy.websocket.enable = true;
         proxyPass = access.url;
       };
+      name.shortServer = mkDefault "plex";
+      kTLS = mkDefault true;
     in {
-      ${access.domain} = {
-        locations."/" = location;
-        kTLS = mkDefault true;
-        inherit extraConfig;
+      plex = {
+        inherit name locations extraConfig kTLS;
       };
-      ${access.localDomain} = {
+      plex'local = {
+        inherit name locations extraConfig kTLS;
         local.enable = true;
-        locations."/" = location;
-        kTLS = mkDefault true;
-        inherit extraConfig;
       };
       plex-external = mkIf (access.externalPort != null) {
-        serverName = mkDefault access.domain;
+        serverName = mkDefault "plex.${config.networking.domain}";
         default = mkDefault true;
-        listen =
-          map (addr: {
-            inherit addr;
-            port = access.externalPort;
-          })
-          nginx.defaultListenAddresses;
-        locations."/" = location;
-        inherit extraConfig;
+        listenPorts.external.port = access.externalPort;
+        inherit extraConfig locations;
       };
     };
   };

@@ -27,18 +27,6 @@ in {
       type = str;
       default = "http://${access.host}:${toString access.streamPort}";
     };
-    domain = mkOption {
-      type = str;
-      default = "kitchen.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "kitchen.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "kitchen.tail.${config.networking.domain}";
-    };
     useACMEHost = mkOption {
       type = nullOr str;
       default = null;
@@ -46,7 +34,6 @@ in {
   };
   config.services.nginx = {
     virtualHosts = let
-      addSSL = access.useACMEHost != null || virtualHosts.${access.domain}.addSSL || virtualHosts.${access.domain}.forceSSL;
       extraConfig = ''
         proxy_redirect off;
         proxy_buffering off;
@@ -64,47 +51,22 @@ in {
           inherit extraConfig;
         };
       };
-      streamListen = {config, ...}: {
-        listen =
-          concatMap (addr: [
-            (mkIf config.addSSL {
-              inherit addr;
-              port = nginx.defaultSSLListenPort;
-              ssl = true;
-            })
-            {
-              inherit addr;
-              port = nginx.defaultHTTPListenPort;
-            }
-            {
-              inherit addr;
-              port = access.streamPort;
-            }
-          ])
-          nginx.defaultListenAddresses;
+      listenPorts = {
+        http = { };
+        https.ssl = true;
+        stream.port = mkDefault access.streamPort;
       };
+      name.shortServer = mkDefault "kitchen";
+      kTLS = mkDefault true;
     in {
-      ${access.domain} = mkMerge [
-        {
-          vouch.enable = true;
-          kTLS = mkDefault true;
-          inherit (access) useACMEHost;
-          addSSL = mkDefault (access.useACMEHost != null);
-          inherit locations;
-        }
-        streamListen
-      ];
-      ${access.localDomain} = mkMerge [
-        {
-          serverAliases = mkIf config.services.tailscale.enable [access.tailDomain];
-          inherit (virtualHosts.${access.domain}) useACMEHost;
-          addSSL = mkDefault addSSL;
-          kTLS = mkDefault true;
-          local.enable = true;
-          inherit locations;
-        }
-        streamListen
-      ];
+      kitchencam = {
+        inherit name locations listenPorts kTLS;
+        vouch.enable = true;
+      };
+      kitchencam'local = {
+        inherit name locations listenPorts kTLS;
+        local.enable = true;
+      };
     };
   };
   config.networking.firewall.allowedTCPPorts = [

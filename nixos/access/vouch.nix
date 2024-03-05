@@ -14,22 +14,6 @@ in {
     url = mkOption {
       type = str;
     };
-    domain = mkOption {
-      type = str;
-      default = "login.${networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "login.local.${networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "login.tail.${networking.domain}";
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = null;
-    };
   };
   config.services.nginx = {
     access.vouch = mkIf cfg.enable {
@@ -51,42 +35,52 @@ in {
           '';
         };
         "/validate" = {config, ...}: {
+          proxied.enable = true;
           proxyPass = mkDefault (access.url + "/validate");
-          recommendedProxySettings = mkDefault false;
-          extraConfig =
-            if config.local.trusted
-            then ''
-              if ($http_x_host = ''') {
-                set $http_x_host $host;
-              }
-              proxy_set_header Host $http_x_host;
-            ''
-            else ''
-              proxy_set_header Host $host;
-            '';
+          proxy.headers.enableRecommended = true;
+          local.denyGlobal = true;
+          extraConfig = ''
+            set $x_proxy_host $x_forwarded_host;
+          '';
         };
       };
-      localLocations = kanidmDomain: {
-        "/".extraConfig = ''
-          proxy_redirect $scheme://sso.${networking.domain}/ $scheme://${kanidmDomain}/;
-        '';
+      localLocations = kanidmDomain: mkIf nginx.vouch.localSso.enable {
+        "/" = {
+          proxied.xvars.enable = true;
+          extraConfig = ''
+            proxy_redirect https://sso.${networking.domain}/ $x_scheme://${kanidmDomain}/;
+          '';
+        };
       };
+      name.shortServer = mkDefault "login";
     in {
-      ${access.localDomain} = mkIf (access.useACMEHost != null) {
-        local.enable = true;
-        locations = mkMerge [
-          locations
-        ];
-        useACMEHost = mkDefault access.useACMEHost;
-        forceSSL = true;
+      vouch = {
+        inherit name locations;
+        ssl.force = true;
       };
-      ${access.tailDomain} = mkIf tailscale.enable {
+      vouch'local = {
+        name = {
+          inherit (name) shortServer;
+          qualifier = mkDefault "local";
+          includeTailscale = false;
+        };
+        local.enable = true;
+        ssl.force = true;
+        locations = mkMerge [
+          locations
+          (localLocations "sso.local.${networking.domain}")
+        ];
+      };
+      vouch'tail = mkIf tailscale.enable {
+        name = {
+          inherit (name) shortServer;
+          qualifier = mkDefault "tail";
+        };
         local.enable = true;
         locations = mkMerge [
           locations
+          (localLocations "sso.tail.${networking.domain}")
         ];
-        useACMEHost = mkDefault access.useACMEHost;
-        addSSL = mkIf (access.useACMEHost != null) (mkDefault true);
       };
     };
   };

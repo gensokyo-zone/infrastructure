@@ -7,25 +7,15 @@
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   cfg = config.services.zigbee2mqtt;
   access = config.services.nginx.access.zigbee2mqtt;
-  location = {
+  locations."/" = {
     proxy.websocket.enable = true;
     proxyPass = mkDefault "http://${access.host}:${toString access.port}";
   };
+  name.shortServer = mkDefault "z2m";
 in {
   options.services.nginx.access.zigbee2mqtt = with lib.types; {
     host = mkOption {
       type = str;
-    };
-    domain = mkOption {
-      type = str;
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "z2m.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "z2m.tail.${config.networking.domain}";
     };
     port = mkOption {
       type = port;
@@ -33,21 +23,19 @@ in {
   };
   config.services.nginx = {
     access.zigbee2mqtt = mkIf cfg.enable {
-      domain = mkOptionDefault cfg.domain;
       host = mkOptionDefault "localhost";
       port = mkIf (cfg.settings ? frontend.port) (
         mkOptionDefault cfg.settings.frontend.port
       );
     };
     virtualHosts = {
-      ${access.domain} = {
+      zigbee2mqtt = {
+        inherit name locations;
         vouch.enable = true;
-        locations."/" = location;
       };
-      ${access.localDomain} = {
-        serverAliases = mkIf config.services.tailscale.enable [access.tailDomain];
+      zigbee2mqtt'local = {
+        inherit name locations;
         local.enable = true;
-        locations."/" = location;
       };
     };
   };

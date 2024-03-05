@@ -11,6 +11,7 @@
   tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
   inherit (keycloak.services) vouch-proxy;
+  inherit (tei.services) home-assistant;
   inherit (config.services) nginx tailscale;
 in {
   imports = let
@@ -31,11 +32,13 @@ in {
     nixos.access.nginx
     nixos.access.global
     nixos.access.gensokyo
+    nixos.access.keycloak
     nixos.access.vouch
     nixos.access.freeipa
     nixos.access.freepbx
     nixos.access.unifi
     nixos.access.kitchencam
+    nixos.access.home-assistant
     nixos.access.proxmox
     nixos.access.plex
     nixos.access.invidious
@@ -61,14 +64,31 @@ in {
   };
 
   security.acme.certs = let
-    inherit (nginx) access;
+    inherit (nginx) access virtualHosts;
   in {
-    ${access.vouch.localDomain} = {
+    keycloak = {
       inherit (nginx) group;
+      domain = virtualHosts.keycloak.serverName;
       extraDomainNames = mkMerge [
-        (mkIf tailscale.enable [
-          access.vouch.tailDomain
-        ])
+        virtualHosts.keycloak.serverAliases
+        virtualHosts.keycloak'local.allServerNames
+      ];
+    };
+    home-assistant = {
+      inherit (nginx) group;
+      domain = virtualHosts.home-assistant.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.home-assistant.serverAliases
+        virtualHosts.home-assistant'local.allServerNames
+      ];
+    };
+    vouch = {
+      inherit (nginx) group;
+      domain = virtualHosts.vouch.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.vouch.serverAliases
+        virtualHosts.vouch'local.allServerNames
+        (mkIf tailscale.enable virtualHosts.vouch'tail.allServerNames)
       ];
     };
     ${access.unifi.domain} = {
@@ -116,19 +136,20 @@ in {
         ])
       ];
     };
-    ${access.plex.domain} = {
+    plex = {
       inherit (nginx) group;
-      extraDomainNames = [access.plex.localDomain];
-    };
-    ${access.kitchencam.domain} = {
-      inherit (nginx) group;
+      domain = virtualHosts.plex.serverName;
       extraDomainNames = mkMerge [
-        [
-          access.kitchencam.localDomain
-        ]
-        (mkIf tailscale.enable [
-          access.kitchencam.tailDomain
-        ])
+        virtualHosts.plex.serverAliases
+        virtualHosts.plex'local.allServerNames
+      ];
+    };
+    kitchencam = {
+      inherit (nginx) group;
+      domain = virtualHosts.kitchencam.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.kitchencam.serverAliases
+        virtualHosts.kitchencam'local.allServerNames
       ];
     };
     ${access.invidious.domain} = {
@@ -153,7 +174,6 @@ in {
     };
     access.vouch = assert vouch-proxy.enable; {
       url = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
-      useACMEHost = access.vouch.localDomain;
     };
     access.unifi = {
       host = tei.lib.access.hostnameForNetwork.local;
@@ -169,24 +189,40 @@ in {
     };
     access.kitchencam = {
       streamPort = 41081;
-      useACMEHost = access.kitchencam.domain;
     };
     access.invidious = {
       url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
+      gensokyoZone.proxied.enable = "cloudflared";
+      keycloak = {
+        # we're not the real sso record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.name = "keycloak";
+      };
+      keycloak'local.ssl.cert.name = "keycloak";
+      vouch.ssl.cert.name = "vouch";
+      vouch'local.ssl.cert.name = "vouch";
+      vouch'tail = mkIf tailscale.enable {
+        ssl.cert.name = "vouch";
+      };
+      home-assistant = {
+        # not the real hass record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.name = "home-assistant";
+        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
+      };
+      home-assistant'local.ssl.cert.name = "home-assistant";
       ${access.freepbx.domain} = {
         local.enable = true;
       };
       ${access.proxmox.domain} = {
         useACMEHost = access.proxmox.domain;
       };
-      ${access.plex.domain} = {
-        addSSL = true;
-        useACMEHost = access.plex.domain;
-      };
-      ${access.kitchencam.domain} = {
-      };
+      plex.ssl.cert.name = "plex";
+      plex'local.ssl.cert.name = "plex";
+      kitchencam.ssl.cert.name = "kitchencam";
+      kitchencam'local.ssl.cert.name = "kitchencam";
       ${access.invidious.domain} = {
         useACMEHost = access.invidious.domain;
         forceSSL = true;

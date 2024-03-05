@@ -17,7 +17,6 @@ in {
     nixos.postgres
     nixos.nginx
     nixos.access.zigbee2mqtt
-    nixos.access.home-assistant
     nixos.access.unifi
     nixos.unifi
     nixos.mosquitto
@@ -27,13 +26,9 @@ in {
     ./cloudflared.nix
   ];
 
-  services.nginx = let
-    inherit (config.services.nginx) access;
-  in {
+  services.nginx = {
     virtualHosts = {
-      ${access.zigbee2mqtt.domain} = {
-        local.denyGlobal = true;
-      };
+      zigbee2mqtt.proxied.enable = "cloudflared";
     };
   };
 
