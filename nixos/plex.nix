@@ -1,5 +1,6 @@
-{config, lib, ...}: let
-  inherit (lib.modules) mkIf mkDefault;
+{config, lib, pkgs, ...}: let
+  inherit (lib.modules) mkIf mkForce mkDefault;
+  inherit (lib.strings) escapeShellArg;
   cfg = config.services.plex;
 in {
   services.plex.enable = mkDefault true;
@@ -8,7 +9,20 @@ in {
     environment.MESA_SHADER_CACHE_DIR = mkDefault cfg.dataDir;
     serviceConfig = {
       BindPaths = [
-        "/mnt/caches/plex/Cache:${cfg.dataDir}/Plex Media Server/Cache"
+        ''/mnt/caches/plex/Cache:${cfg.dataDir}/Cache''
+      ];
+      ExecStartPre = let
+        # systemd doesn't seem to like spaces so use a symlink instead...
+        preStartScript = pkgs.writeShellScript "plex-run-prestart" ''
+          set -eu
+
+          if [[ ! -d $PLEX_DATADIR ]]; then
+            ${pkgs.coreutils}/bin/install -d -m 0755 -o ${escapeShellArg cfg.user} -g ${escapeShellArg cfg.group} "$PLEX_DATADIR/Plex Media Server"
+          fi
+          ${pkgs.coreutils}/bin/ln -sfT ../Cache "$PLEX_DATADIR/Plex Media Server/Cache"
+        '';
+      in mkForce [
+        ''!${preStartScript}''
       ];
       # KillMode = "mixed" doesn't behave as expected...
       TimeoutStopSec = 5;

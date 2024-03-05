@@ -95,24 +95,24 @@ EOF
 if [[ ! -d /rpool/shared ]]; then
 	zfs create rpool/shared
 fi
+
 if [[ ! -d /rpool/shared/nix ]]; then
 	zfs create rpool/shared/nix
 fi
-
 if [[ ! -d /rpool/shared/nix/store ]]; then
 	zfs create -o compression=zstd rpool/shared/nix/store
 fi
-chown 100000:30000 /rpool/shared/nix/store
-chmod 1775 /rpool/shared/nix/store
-
 if [[ ! -d /rpool/shared/nix/var ]]; then
 	mkdir /rpool/shared/nix/var
 fi
+chown 100000:30000 /rpool/shared/nix/store
+chmod 1775 /rpool/shared/nix/store
 chown 100000:100000 /rpool/shared/nix/var
 
 if [[ ! -d /rpool/caches ]]; then
 	zfs create rpool/caches
 fi
+
 if [[ ! -d /rpool/caches/plex ]]; then
 	zfs create rpool/caches/plex
 fi
