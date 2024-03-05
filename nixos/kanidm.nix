@@ -3,7 +3,7 @@
   config,
   ...
 }: let
-  inherit (lib) mkDefault;
+  inherit (lib) mkIf mkDefault;
   cfg = config.services.kanidm;
 in {
   services.kanidm = {
@@ -28,5 +28,9 @@ in {
       role = mkDefault "WriteReplica";
       log_level = mkDefault "info";
     };
+  };
+  users = mkIf cfg.enableServer {
+    users.kanidm.uid = 994;
+    groups.kanidm.gid = 993;
   };
 }

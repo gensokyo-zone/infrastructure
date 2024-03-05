@@ -29,4 +29,9 @@ in {
       10001 # UDP port used for device discovery.
     ];
   };
+
+  users = mkIf cfg.enable {
+    users.unifi.uid = 990;
+    groups.unifi.gid = 990;
+  };
 }

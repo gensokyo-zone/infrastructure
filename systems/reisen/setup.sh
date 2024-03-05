@@ -96,9 +96,38 @@ if [[ ! -d /rpool/shared ]]; then
 	zfs create rpool/shared
 fi
 
-if [[ ! -d /rpool/shared/nix ]]; then
-	zfs create rpool/shared/nix
+if [[ ! -d /rpool/caches ]]; then
+	zfs create rpool/caches
 fi
+
+mkrpool() {
+	local SHARED_PATH SHARED_MODE SHARED_OWNER SHARED_GROUP
+	SHARED_PATH=$1
+	SHARED_OWNER=$2
+	SHARED_GROUP=$3
+	SHARED_MODE=$4
+	shift 4
+
+	if [[ ! -d "/rpool/$SHARED_PATH" ]]; then
+		zfs create "rpool/$SHARED_PATH"
+	fi
+	chmod "$SHARED_MODE" "/rpool/$SHARED_PATH"
+	chown "$SHARED_OWNER:$SHARED_GROUP" "/rpool/$SHARED_PATH"
+}
+
+mkshared() {
+	local SHARED_PATH=$1
+	shift
+	mkrpool "shared/$SHARED_PATH" "$@"
+}
+
+mkcache() {
+	local SHARED_PATH=$1
+	shift
+	mkrpool "caches/$SHARED_PATH" "$@"
+}
+
+mkshared nix 0 0 0755
 if [[ ! -d /rpool/shared/nix/store ]]; then
 	zfs create -o compression=zstd rpool/shared/nix/store
 fi
@@ -109,13 +138,7 @@ chown 100000:30000 /rpool/shared/nix/store
 chmod 1775 /rpool/shared/nix/store
 chown 100000:100000 /rpool/shared/nix/var
 
-if [[ ! -d /rpool/caches ]]; then
-	zfs create rpool/caches
-fi
-
-if [[ ! -d /rpool/caches/plex ]]; then
-	zfs create rpool/caches/plex
-fi
+mkcache plex 0 0 0755
 if [[ ! -d /rpool/caches/plex/Cache ]]; then
 	mkdir /rpool/caches/plex/Cache
 fi
@@ -126,3 +149,11 @@ chown 100193:100193 /rpool/caches/plex/Cache
 chmod 0775 /rpool/caches/plex/Cache
 chown 100195:65534 /rpool/caches/plex/tautulli/cache
 chmod 0755 /rpool/caches/plex/tautulli/cache
+
+mkshared hass 100286 100286 0700
+mkshared kanidm 100994 100993 0700
+mkshared mosquitto 100246 100246 0700
+mkshared plex 100193 100193 0755
+mkshared postgresql 100071 100071 0750
+mkshared unifi 100990 100990 0755
+mkshared zigbee2mqtt 100317 100317 0700
