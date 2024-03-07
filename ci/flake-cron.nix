@@ -45,6 +45,7 @@ in {
           cron = "0 0 * * *";
         }
       ];
+      workflow_dispatch = { };
     };
   };
 
@@ -66,7 +67,7 @@ in {
         command = let
           filteredHosts = [ "hakurei" "reimu" "aya" "tei" "litterbox" "mediabox" ];
           gcBetweenHosts = false;
-          nodeBuildString = concatMapStringsSep " && " (node: "nix build -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
+          nodeBuildString = concatMapStringsSep " && " (node: "nix build --show-trace -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
           hostPath = builtins.getEnv "PATH";
         in ''
           # ${toString builtins.currentTime}
