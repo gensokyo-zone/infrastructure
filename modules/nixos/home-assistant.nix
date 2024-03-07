@@ -5,7 +5,7 @@
   ...
 }: let
   cfg = config.services.home-assistant;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) optional optionals elem unique;
   inherit (lib.strings) toLower;
@@ -40,6 +40,10 @@ in {
       openFirewall = mkEnableOption "Chromecast ports" // {
         default = cfg.openFirewall;
       };
+    };
+    finalPackage = mkOption {
+      type = types.path;
+      readOnly = true;
     };
   };
 
@@ -180,6 +184,18 @@ in {
         "test_check_config"
       ]);
     });
+    finalPackage = let
+      inherit (lib.strings) hasSuffix removeSuffix splitString;
+      inherit (lib.lists) head;
+      inherit (lib.attrsets) attrNames filterAttrs;
+      inherit (config.systemd.services.home-assistant.serviceConfig) ExecStart;
+      isHassDrv = drv: context: hasSuffix "-${cfg.package.name}.drv" drv && context.outputs or [ ] == [ "out" ];
+      drvs = filterAttrs isHassDrv (builtins.getContext ExecStart);
+      isImpure = builtins ? currentSystem;
+    in mkIf cfg.enable (mkOptionDefault (
+      if isImpure then import (head (attrNames drvs))
+      else removeSuffix "/bin/hass" (head (splitString " " ExecStart))
+    ));
     extraPackages = python3Packages: with python3Packages; mkMerge [
       [
         psycopg2
