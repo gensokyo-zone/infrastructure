@@ -3,11 +3,11 @@
   lib,
   pkgs,
   ...
-}:
-with lib; {
-  boot.kernelPackages = mkIf (elem "zfs" config.boot.supportedFilesystems) (mkDefault config.boot.zfs.package.latestCompatibleLinuxPackages);
-  hardware.enableRedistributableFirmware = lib.mkDefault true;
-  boot.zfs.enableUnstable = mkIf (elem "zfs" config.boot.supportedFilesystems) true;
+}: let
+  inherit (lib.modules) mkDefault;
+in {
+  hardware.enableRedistributableFirmware = mkDefault true;
+  boot.zfs.package = mkDefault pkgs.zfs_unstable;
   boot.kernel.sysctl = {
     "fs.inotify.max_user_watches" = 524288;
     "net.core.rmem_max" = 16777216;
@@ -21,9 +21,9 @@ with lib; {
     "net.ipv6.conf.default.accept_ra_rt_info_max_plen" = 128;
   };
   services.journald.extraConfig = "SystemMaxUse=512M";
-  users.mutableUsers = false;
+  users.mutableUsers = mkDefault false;
   boot.tmp = {
-    useTmpfs = true;
-    tmpfsSize = "80%";
+    useTmpfs = mkDefault true;
+    tmpfsSize = mkDefault "80%";
   };
 }
