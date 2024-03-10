@@ -74,7 +74,7 @@ resource "cloudflare_record" "kerberos_uri_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kerberos"
   type = "URI"
-  value = '0 100 "krb5srv:m:tcp:idp.gensokyo.zone."'
+  value = "0 100 \"krb5srv:m:tcp:idp.gensokyo.zone.\""
   ttl = 3600
 }
 
@@ -82,7 +82,7 @@ resource "cloudflare_record" "kerberos_uri_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kerberos"
   type = "URI"
-  value = '0 100 "krb5srv:m:udp:idp.gensokyo.zone."'
+  value = "0 100 \"krb5srv:m:udp:idp.gensokyo.zone.\""
   ttl = 3600
 }
 
@@ -122,7 +122,7 @@ resource "cloudflare_record" "kpasswd_uri_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kpasswd"
   type = "URI"
-  value = '0 100 "krb5srv:m:tcp:idp.gensokyo.zone."'
+  value = "0 100 \"krb5srv:m:tcp:idp.gensokyo.zone.\""
   ttl = 3600
 }
 
@@ -130,7 +130,7 @@ resource "cloudflare_record" "kpasswd_uri_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kpasswd"
   type = "URI"
-  value = '0 100 "krb5srv:m:udp:idp.gensokyo.zone."'
+  value = "0 100 \"krb5srv:m:udp:idp.gensokyo.zone.\""
   ttl = 3600
 }
 
