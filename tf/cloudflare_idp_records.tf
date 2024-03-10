@@ -77,7 +77,7 @@ resource "cloudflare_record" "kerberos_uri_tcp" {
   data {
     priority = 0
     weight = 100
-    target = "krb5srv:m:tcp:idp.gensokyo.zone."
+    target = "\"krb5srv:m:tcp:idp.gensokyo.zone.\""
   }
   ttl = 3600
 }
@@ -89,7 +89,7 @@ resource "cloudflare_record" "kerberos_uri_udp" {
   data {
     priority = 0
     weight = 100
-    target = "krb5srv:m:udp:idp.gensokyo.zone."
+    target = "\"krb5srv:m:udp:idp.gensokyo.zone.\""
   }
   ttl = 3600
 }
@@ -133,7 +133,7 @@ resource "cloudflare_record" "kpasswd_uri_tcp" {
   data {
     priority = 0
     weight = 100
-    target = "krb5srv:m:tcp:idp.gensokyo.zone."
+    target = "\"krb5srv:m:tcp:idp.gensokyo.zone.\""
   }
   ttl = 3600
 }
@@ -145,7 +145,7 @@ resource "cloudflare_record" "kpasswd_uri_udp" {
   data {
     priority = 0
     weight = 100
-    target = "krb5srv:m:udp:idp.gensokyo.zone."
+    target = "\"krb5srv:m:udp:idp.gensokyo.zone.\""
   }
   ttl = 3600
 }
