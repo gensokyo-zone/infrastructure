@@ -67,6 +67,7 @@ resource "cloudflare_record" "kerberos_txt" {
   name = "_kerberos"
   type = "TXT"
   ttl = 3600
+  value = "GENSOKYO.ZONE"
 }
 
 resource "cloudflare_record" "kerberos_uri_tcp" {
