@@ -6,7 +6,6 @@ resource "cloudflare_record" "kerberos_master_tcp" {
   data {
     service = "_kerberos-master"
     proto = "_tcp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 88
@@ -22,7 +21,6 @@ resource "cloudflare_record" "kerberos_master_udp" {
   data {
     service = "_kerberos-master"
     proto = "_udp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 88
@@ -38,7 +36,6 @@ resource "cloudflare_record" "kerberos_tcp" {
   data {
     service = "_kerberos"
     proto = "_tcp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 88
@@ -54,7 +51,6 @@ resource "cloudflare_record" "kerberos_udp" {
   data {
     service = "_kerberos"
     proto = "_udp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 88
@@ -102,7 +98,6 @@ resource "cloudflare_record" "kpasswd_tcp" {
   data {
     service = "_kpasswd"
     proto = "_tcp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 464
@@ -118,19 +113,11 @@ resource "cloudflare_record" "kpasswd_udp" {
   data {
     service = "_kpasswd"
     proto = "_udp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 464
     target = "idp.gensokyo.zone."
   }
-}
-
-resource "cloudflare_record" "kpasswd_txt" {
-  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kpasswd"
-  type = "TXT"
-  ttl = 3600
 }
 
 resource "cloudflare_record" "kpasswd_uri_tcp" {
@@ -165,7 +152,6 @@ resource "cloudflare_record" "ldap" {
   data {
     service = "_ldap"
     proto = "_tcp"
-    name = "gensokyo.zone."
     priority = 0
     weight = 100
     port = 389
