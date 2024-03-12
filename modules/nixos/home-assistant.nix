@@ -202,7 +202,6 @@ in {
         securetar
         getmac # for upnp integration
         python-otbr-api
-        protobuf3
         (aiogithubapi.overrideAttrs (_: {doInstallCheck = false;}))
       ]
       (mkIf cfg.homekit.enable [
@@ -210,7 +209,7 @@ in {
       ])
       (mkIf cfg.androidTv.enable [
         adb-shell
-        (callPackage ../../packages/androidtvremote2.nix { })
+        androidtvremote2
       ])
     ];
     extraComponents = mkMerge [
