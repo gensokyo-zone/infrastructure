@@ -100,6 +100,7 @@ in {
       extraDomainNames = mkMerge [
         [
           access.freeipa.localDomain
+          access.freeipa.caDomain
           access.ldap.domain
           access.ldap.localDomain
         ]
@@ -179,6 +180,7 @@ in {
     };
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";
+      kerberos.ports.kpasswd = 464;
     };
     access.freepbx = {
       useACMEHost = access.freepbx.domain;
@@ -195,6 +197,10 @@ in {
         useACMEHost = access.kanidm.domain;
       };
       ${access.freeipa.domain} = {
+        forceSSL = true;
+        useACMEHost = access.freeipa.domain;
+      };
+      ${access.freeipa.caDomain} = {
         forceSSL = true;
         useACMEHost = access.freeipa.domain;
       };
