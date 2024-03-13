@@ -3,7 +3,8 @@
   meta,
   lib,
   ...
-}: let
+}:
+let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.strings) optionalString concatStringsSep;
@@ -28,6 +29,9 @@
         proxy_set_header X-Forwarded-Server $host;
         proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
         proxy_redirect https://${domain}/ $scheme://$host/;
+
+        proxy_ssl_server_name on;
+        proxy_ssl_name ${domain};
 
         set $x_referer $http_referer;
         if ($x_referer ~ "^https://([^/]*)/(.*)$") {
@@ -55,22 +59,22 @@ in {
       type = str;
     };
     preread = {
-      enable =
-        mkEnableOption "ssl preread"
-        // {
-          default = true;
-        };
+      enable = mkEnableOption "ssl preread" // {
+        default = true;
+      };
       port = mkOption {
         type = port;
         default = 444;
       };
+      ldapPort = mkOption {
+        type = port;
+        default = 637;
+      };
     };
     kerberos = {
-      enable =
-        mkEnableOption "proxy kerberos"
-        // {
-          default = true;
-        };
+      enable = mkEnableOption "proxy kerberos" // {
+        default = true;
+      };
       ports = {
         ticket = mkOption {
           type = port;
@@ -89,10 +93,7 @@ in {
     proxyPass = mkOption {
       type = str;
       default = let
-        scheme =
-          if access.port == 443
-          then "https"
-          else "http";
+        scheme = if access.port == 443 then "https" else "http";
       in "${scheme}://${access.host}:${toString access.port}";
     };
     domain = mkOption {
@@ -133,30 +134,77 @@ in {
       access.ldap = {
         enable = mkDefault true;
         host = mkDefault access.host;
-        port = mkDefault access.ldapPort;
+        port = mkDefault 389;
+        sslPort = mkDefault access.ldapPort;
         useACMEHost = mkDefault access.useACMEHost;
+        bind.sslPort = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
       };
-      resolver.addresses = mkIf access.preread.enable ["[::1]" "127.0.0.1:5353"];
+      resolver.addresses = mkIf access.preread.enable (mkMerge [
+        (mkDefault [ "[::1]:5353" "127.0.0.1:5353" ])
+        (mkIf config.systemd.network.enable [ "127.0.0.53" ])
+      ]);
       defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
       streamConfig = let
+        upstreams' = {
+          freeipa = "${access.host}:${toString access.port}";
+          ldap_freeipa = "${nginx.access.ldap.host}:${toString nginx.access.ldap.sslPort}";
+          ldap = "localhost:${toString nginx.access.ldap.bind.sslPort}";
+          nginx = "localhost:${toString nginx.defaultSSLListenPort}";
+          samba = if config.services.samba.enable
+            then "localhost:445"
+            else "smb.local.${config.networking.domain}:445";
+        };
+        upstreams = builtins.mapAttrs (name: _: name) upstreams';
         preread = ''
           upstream freeipa {
-            server ${access.host}:${toString access.port};
+            server ${upstreams'.freeipa};
+          }
+          upstream ldap_freeipa {
+            server ${upstreams'.ldap_freeipa};
+          }
+          upstream ldap {
+            server ${upstreams'.ldap};
+          }
+          upstream samba {
+            server ${upstreams'.samba};
           }
           upstream nginx {
-            server localhost:${toString nginx.defaultSSLListenPort};
+            server ${upstreams'.nginx};
           }
-          map $ssl_preread_server_name $ssl_name {
+          map $ssl_preread_server_name $ssl_server_name {
             hostnames;
-            ${access.domain} freeipa;
-            ${access.caDomain} freeipa;
-            default nginx;
+            ${access.domain} ${upstreams.freeipa};
+            ${access.caDomain} ${upstreams.freeipa};
+            ${nginx.access.ldap.domain} ${upstreams.ldap};
+            ${nginx.access.ldap.localDomain} ${upstreams.ldap};
+            ${nginx.access.ldap.tailDomain} ${upstreams.ldap};
+            default ${upstreams.nginx};
           }
+          map $ssl_preread_alpn_protocols $https_upstream {
+            ~\bsmb\b ${upstreams.samba};
+            # XXX: if only there were an ldap protocol id...
+            default $ssl_server_name;
+          }
+
           server {
             listen 0.0.0.0:443;
             listen [::]:443;
             ssl_preread on;
-            proxy_pass $ssl_name;
+            proxy_pass $https_upstream;
+          }
+
+          map $ssl_preread_server_name $ldap_upstream {
+            hostnames;
+            # TODO: ${access.domain} ${upstreams.ldap_freeipa};
+            ${access.globalDomain} ${upstreams.ldap_freeipa};
+            default ${upstreams.ldap};
+          }
+
+          server {
+            listen 0.0.0.0:636;
+            listen [::]:636;
+            ssl_preread on;
+            proxy_pass $ldap_upstream;
           }
         '';
         kerberos = ''
@@ -180,11 +228,10 @@ in {
             proxy_pass ${access.host}:${toString access.kerberos.ports.kpasswd};
           }
         '';
-      in
-        mkMerge [
-          (mkIf access.preread.enable preread)
-          (mkIf access.kerberos.enable kerberos)
-        ];
+      in mkMerge [
+        (mkIf access.preread.enable preread)
+        (mkIf access.kerberos.enable kerberos)
+      ];
       virtualHosts = {
         ${access.domain} = {
           inherit locations extraConfig;
@@ -214,7 +261,7 @@ in {
           local.enable = true;
           inherit locations;
         };
-        ${ldap.domain} = {config, ...}: {
+        ${ldap.domain} = { config, ... }: {
           useACMEHost = mkDefault virtualHosts.${access.domain}.useACMEHost;
           addSSL = mkDefault (config.useACMEHost != null);
           globalRedirect = access.domain;
@@ -233,9 +280,14 @@ in {
     };
 
     networking.firewall = {
-      allowedTCPPorts = mkIf access.kerberos.enable [
-        access.kerberos.ports.ticket
-        access.kerberos.ports.kpasswd
+      allowedTCPPorts = mkMerge [
+        (mkIf access.kerberos.enable [
+          access.kerberos.ports.ticket
+          access.kerberos.ports.kpasswd
+        ])
+        (mkIf access.preread.enable [
+          636
+        ])
       ];
       allowedUDPPorts = mkIf access.kerberos.enable [
         access.kerberos.ports.ticket

@@ -2,7 +2,8 @@
   config,
   lib,
   ...
-}: let
+}:
+let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.strings) concatMapStringsSep optionalString;
@@ -11,17 +12,17 @@
   inherit (config.services.nginx) virtualHosts;
   inherit (config.networking.access) cidrForNetwork localaddrs;
   access = config.services.nginx.access.ldap;
+  portPlaintext = 389;
+  portSsl = 636;
   allows = let
     mkAllow = cidr: "allow ${cidr};";
     allowAddresses =
       cidrForNetwork.loopback.all
       ++ cidrForNetwork.local.all
       ++ optionals tailscale.enable cidrForNetwork.tail.all;
-    allows =
-      concatMapStringsSep "\n" mkAllow allowAddresses
-      + optionalString localaddrs.enable ''
-        include ${localaddrs.stateDir}/*.nginx.conf;
-      '';
+    allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
+      include ${localaddrs.stateDir}/*.nginx.conf;
+    '';
   in ''
     ${allows}
     deny all;
@@ -46,7 +47,21 @@ in {
     };
     port = mkOption {
       type = port;
-      default = 636;
+      default = portSsl;
+    };
+    sslPort = mkOption {
+      type = port;
+      default = portSsl;
+    };
+    bind = {
+      sslPort = mkOption {
+        type = port;
+        default = portSsl;
+      };
+      port = mkOption {
+        type = port;
+        default = portPlaintext;
+      };
     };
     useACMEHost = mkOption {
       type = nullOr str;
@@ -57,42 +72,40 @@ in {
     services.nginx = {
       streamConfig = let
         cert = config.security.acme.certs.${access.useACMEHost};
-        proxyPass = "${access.host}:${toString access.port}";
-        proxySsl = optionalString (access.port == 636) ''
+        proxySsl = port: optionalString (port == portSsl) ''
           proxy_ssl on;
           proxy_ssl_verify off;
         '';
-      in
-        mkIf access.enable (mkMerge [
-          ''
-            server {
-              listen 0.0.0.0:389;
-              listen [::]:389;
-              ${allows}
-              proxy_pass ${proxyPass};
-              ${proxySsl}
-            }
-          ''
-          (mkIf (access.useACMEHost != null) ''
-            server {
-              listen 0.0.0.0:636 ssl;
-              listen [::]:636 ssl;
-              ssl_certificate ${cert.directory}/fullchain.pem;
-              ssl_certificate_key ${cert.directory}/key.pem;
-              ssl_trusted_certificate ${cert.directory}/chain.pem;
-              proxy_pass ${proxyPass};
-              ${proxySsl}
-            }
-          '')
-        ]);
+      in mkIf access.enable (mkMerge [
+        ''
+          server {
+            listen 0.0.0.0:${toString access.bind.port};
+            listen [::]:${toString access.bind.port};
+            ${allows}
+            proxy_pass ${access.host}:${toString access.port};
+            ${proxySsl access.port}
+          }
+        ''
+        (mkIf (access.useACMEHost != null) ''
+          server {
+            listen 0.0.0.0:${toString access.bind.sslPort} ssl;
+            listen [::]:${toString access.bind.sslPort} ssl;
+            ssl_certificate ${cert.directory}/fullchain.pem;
+            ssl_certificate_key ${cert.directory}/key.pem;
+            ssl_trusted_certificate ${cert.directory}/chain.pem;
+            proxy_pass ${access.host}:${toString access.sslPort};
+            ${proxySsl access.sslPort}
+          }
+        '')
+      ]);
     };
 
     networking.firewall = {
       interfaces.local.allowedTCPPorts = [
-        389
+        access.bind.port
       ];
       allowedTCPPorts = [
-        636
+        access.bind.sslPort
       ];
     };
   };

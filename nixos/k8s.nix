@@ -4,10 +4,11 @@
   lib,
   ...
 }: let
+  inherit (inputs.self.lib.lib) domain;
   inherit (lib.modules) mkForce;
   inherit (lib.strings) escapeShellArgs;
   kubeMasterIP = "10.1.1.173";
-  kubeMasterHostname = "k8s.gensokyo.zone";
+  kubeMasterHostname = "k8s.${domain}";
   kubeMasterAPIServerPort = 6443;
 in {
   # packages for administration tasks
@@ -42,7 +43,7 @@ in {
       extraOpts = escapeShellArgs [
         "--service-node-port-range=1-65535"
         /*
-          "--oidc-issuer-url=https://dex.gensokyo.zone:32000"
+          "--oidc-issuer-url=https://dex.${domain}:32000"
         "--oidc-client-id=kuwubernetes"
         "--oidc-ca-file=/etc/dex-ssl/ca.pem"
         "--oidc-username-claim=email"

@@ -5,6 +5,7 @@
   inputs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) domain;
   inherit (lib.modules) mkIf mkOptionDefault;
 in {
   options = let
@@ -28,7 +29,7 @@ in {
       autoRollback = mkOptionDefault true;
       magicRollback = mkOptionDefault true;
       fastConnection = mkOptionDefault false;
-      hostname = mkOptionDefault "${name}.local.gensokyo.zone";
+      hostname = mkOptionDefault "${name}.local.${domain}";
       profiles.system = {
         user = "root";
         path = let
