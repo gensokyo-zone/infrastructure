@@ -3,7 +3,13 @@
   system,
 }: let
   inherit (inputs.self.legacyPackages.${system}) pkgs;
-  inherit (inputs.self.lib.nixlib) optionalString;
+  inherit (inputs.self.lib.lib) mkBaseDn;
+  inherit (inputs.self.lib.nixlib) optionalString concatStringsSep;
+  ldapHostArg = concatStringsSep "," [
+    "ldaps://ldap.local.${inputs.self.lib.lib.domain}"
+    "ldaps://idp.${inputs.self.lib.lib.domain}"
+  ];
+  ldapBaseDn = mkBaseDn inputs.self.lib.lib.domain;
   mkWrapper = {
     name,
     attr ? name,
@@ -20,8 +26,8 @@
       else "-c ${exe}";
   in
     pkgs.writeShellScriptBin name ''
-      ${optionalString (subdir != null) ''cd "$NF_CONFIG_ROOT${subdir}"''}
-      exec nix ${subcommand} ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#${attr}" ${exeArg} "$@"
+      ${optionalString (subdir != null) ''cd "''${NF_CONFIG_ROOT-${toString ./.}}${subdir}"''}
+      exec nix ${subcommand} ''${FLAKE_OPTS-} "''${NF_CONFIG_ROOT-${toString ./.}}#${attr}" ${exeArg} "$@"
     '';
   nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
@@ -89,6 +95,51 @@
         attr = "pkgs.freeradius";
         exe = name;
       })
+      (mkWrapper rec {
+        name = "smbclient";
+        attr = "pkgs.samba";
+        exe = name;
+      })
+      (mkWrapper rec {
+        name = "smbpasswd";
+        attr = "pkgs.samba";
+        exe = name;
+      })
+      (mkWrapper rec {
+        name = "net";
+        attr = "pkgs.samba";
+        exe = name;
+      })
+      (mkWrapper rec {
+        name = "ldapwhoami";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg}";
+      })
+      (mkWrapper rec {
+        name = "ldappasswd";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg}";
+      })
+      (mkWrapper rec {
+        name = "ldapsearch";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg} -b ${ldapBaseDn} -o ldif_wrap=no";
+      })
+      (mkWrapper rec {
+        name = "ldapadd";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg}";
+      })
+      (mkWrapper rec {
+        name = "ldapmodify";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg}";
+      })
+      (mkWrapper rec {
+        name = "ldapdelete";
+        attr = "pkgs.openldap";
+        exe = "${name} -H ${ldapHostArg}";
+      })
     ];
     shellHook = ''
       export NIX_BIN_DIR=$(dirname $(readlink -f $(type -P nix)))
@@ -98,6 +149,20 @@
       export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ./.}}
     '';
   };
+  arc = let
+    ldapdm = cmd: pkgs.writeShellScriptBin "dm-${cmd}" ''
+      ${cmd} -D 'cn=Directory Manager' -y <(bitw get -f password ldap-directory-manager) "$@"
+    '';
+  in default.overrideAttrs (default: {
+    nativeBuildInputs = default.nativeBuildInputs ++ [
+      (ldapdm "ldapwhoami")
+      (ldapdm "ldappasswd")
+      (ldapdm "ldapsearch")
+      (ldapdm "ldapadd")
+      (ldapdm "ldapmodify")
+      (ldapdm "ldapdelete")
+    ];
+  });
 in {
-  inherit default;
+  inherit default arc;
 }

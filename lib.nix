@@ -7,7 +7,7 @@
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt;
   inherit (nixlib.attrsets) listToAttrs nameValuePair;
-  inherit (nixlib.strings) substring fixedWidthString replaceStrings;
+  inherit (nixlib.strings) substring fixedWidthString replaceStrings concatMapStringsSep;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
   toHexStringLower = v: toLower (toHexString v);
@@ -33,6 +33,8 @@
   userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
 
   mkWinPath = replaceStrings ["/"] ["\\"];
+  mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
+
 in {
   inherit tree nixlib inputs systems;
   meta = tree.impure;
@@ -40,7 +42,7 @@ in {
   Std = inputs.std-fl.lib;
   lib = {
     domain = "gensokyo.zone";
-    inherit mkWinPath userIs eui64 toHexStringLower hexCharToInt;
+    inherit mkWinPath mkBaseDn userIs eui64 toHexStringLower hexCharToInt;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   generate = import ./generate.nix {inherit inputs tree;};
