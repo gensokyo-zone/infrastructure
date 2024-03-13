@@ -4,6 +4,7 @@ variable "proxmox_container_template" {
 }
 
 locals {
+  proxmox_keycloak_vm_id = 107
   proxmox_litterbox_vm_id        = 106
   proxmox_litterbox_config       = jsondecode(file("${path.root}/../systems/litterbox/lxc.json"))
   proxmox_aya_vm_id        = 105
@@ -509,5 +510,66 @@ EOT
 
   lifecycle {
     ignore_changes = [started, description, operating_system[0], cdrom[0].enabled, cdrom[0].file_id]
+  }
+}
+
+resource "proxmox_virtual_environment_container" "keycloak" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_keycloak_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+keycloak
+EOT
+
+  memory {
+    dedicated = 512
+    swap      = 512
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 64
+  }
+
+  initialization {
+    hostname = "keycloak"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+  }
+
+  startup {
+    order      = 4
+    up_delay   = 0
+    down_delay = 0
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:C4:66:AC"
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, unprivileged, initialization[0].dns, operating_system[0].template_file_id]
   }
 }
