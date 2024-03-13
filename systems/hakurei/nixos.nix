@@ -180,6 +180,7 @@ in {
       useACMEHost = access.unifi.domain;
     };
     access.freeipa = {
+      useACMEHost = access.freeipa.domain;
       host = "idp.local.${config.networking.domain}";
       kerberos.ports.kpasswd = 464;
     };
@@ -196,14 +197,6 @@ in {
     virtualHosts = {
       ${access.kanidm.domain} = {
         useACMEHost = access.kanidm.domain;
-      };
-      ${access.freeipa.domain} = {
-        forceSSL = true;
-        useACMEHost = access.freeipa.domain;
-      };
-      ${access.freeipa.caDomain} = {
-        forceSSL = true;
-        useACMEHost = access.freeipa.domain;
       };
       ${access.freepbx.domain} = {
         local.enable = true;

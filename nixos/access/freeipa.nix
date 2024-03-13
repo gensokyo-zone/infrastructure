@@ -181,13 +181,19 @@ in {
       virtualHosts = {
         ${access.domain} = {
           inherit locations extraConfig;
+          inherit (access) useACMEHost;
+          forceSSL = mkDefault (access.useACMEHost != null);
         };
         ${access.globalDomain} = {
           inherit locations extraConfig;
+          inherit (access) useACMEHost;
+          forceSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
         };
         ${access.caDomain} = {
           locations = caLocations;
           inherit extraConfig;
+          inherit (access) useACMEHost;
+          forceSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
         };
         ${access.localDomain} = {
           inherit (virtualHosts.${access.domain}) useACMEHost;
