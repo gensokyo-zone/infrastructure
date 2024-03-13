@@ -1,4 +1,8 @@
-{ config, lib, ... }: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf mkDefault mkForce;
   cfg = config.services.invidious;
 in {
@@ -6,12 +10,13 @@ in {
     commonSecret = {
       sopsFile = ./secrets/invidious.yaml;
       owner = "invidious";
-    }; in {
+    };
+  in {
     invidious_db_password = commonSecret;
     invidious_hmac_key = commonSecret;
   };
 
-  networking.firewall.interfaces.local.allowedTCPPorts = [ cfg.port ];
+  networking.firewall.interfaces.local.allowedTCPPorts = [cfg.port];
   users.groups.invidious = {};
   users.users.invidious = {
     isSystemUser = true;

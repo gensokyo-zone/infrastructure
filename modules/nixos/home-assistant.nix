@@ -17,29 +17,43 @@ in {
       default = config.networking.domain;
     };
     homekit = {
-      enable = mkEnableOption "homekit" // {
-        default = cfg.config.homekit or [ ] != [ ];
+      enable =
+        mkEnableOption "homekit"
+        // {
+          default = cfg.config.homekit or [] != [];
+        };
+      openFirewall =
+        mkEnableOption "homekit ports"
+        // {
+          default = cfg.openFirewall;
+        };
+    };
+    googleAssistant.enable =
+      mkEnableOption "Google Assistant"
+      // {
+        default = cfg.config.google_assistant or {} != {};
       };
-      openFirewall = mkEnableOption "homekit ports" // {
-        default = cfg.openFirewall;
+    androidTv.enable =
+      mkEnableOption "Android TV"
+      // {
+        default = elem "androidtv" cfg.extraComponents;
       };
-    };
-    googleAssistant.enable = mkEnableOption "Google Assistant" // {
-      default = cfg.config.google_assistant or { } != { };
-    };
-    androidTv.enable = mkEnableOption "Android TV" // {
-      default = elem "androidtv" cfg.extraComponents;
-    };
-    brother.enable = mkEnableOption "brother" // {
-      default = elem "brother" cfg.extraComponents;
-    };
+    brother.enable =
+      mkEnableOption "brother"
+      // {
+        default = elem "brother" cfg.extraComponents;
+      };
     cast = {
-      enable = mkEnableOption "Chromecast" // {
-        default = elem "cast" cfg.extraComponents;
-      };
-      openFirewall = mkEnableOption "Chromecast ports" // {
-        default = cfg.openFirewall;
-      };
+      enable =
+        mkEnableOption "Chromecast"
+        // {
+          default = elem "cast" cfg.extraComponents;
+        };
+      openFirewall =
+        mkEnableOption "Chromecast ports"
+        // {
+          default = cfg.openFirewall;
+        };
     };
     finalPackage = mkOption {
       type = types.path;
@@ -50,7 +64,7 @@ in {
   config = {
     networking.firewall = let
       homekitTcp = mkIf cfg.homekit.enable (
-        map ({ port, ... }: port) cfg.config.homekit or [ ]
+        map ({port, ...}: port) cfg.config.homekit or []
       );
 
       castUdpRanges = mkIf cfg.cast.enable [
@@ -59,21 +73,23 @@ in {
           to = 60999;
         }
       ];
-    in mkIf cfg.enable {
-      interfaces.local = {
-        allowedTCPPorts = mkIf (!cfg.homekit.openFirewall) homekitTcp;
-        allowedUDPPortRanges = mkIf (!cfg.cast.openFirewall) castUdpRanges;
+    in
+      mkIf cfg.enable {
+        interfaces.local = {
+          allowedTCPPorts = mkIf (!cfg.homekit.openFirewall) homekitTcp;
+          allowedUDPPortRanges = mkIf (!cfg.cast.openFirewall) castUdpRanges;
+        };
+        allowedTCPPorts = mkIf cfg.homekit.openFirewall homekitTcp;
+        allowedUDPPortRanges = mkIf cfg.cast.openFirewall castUdpRanges;
       };
-      allowedTCPPorts = mkIf cfg.homekit.openFirewall homekitTcp;
-      allowedUDPPortRanges = mkIf cfg.cast.openFirewall castUdpRanges;
-    };
 
     # MDNS
     services.avahi = mkIf (cfg.enable && cfg.homekit.enable) {
       enable = mkDefault true;
       publish.enable = let
-        homekitNames = map (homekit: toLower homekit.name) cfg.config.homekit or [ ];
-      in mkIf (elem config.networking.hostName homekitNames) false;
+        homekitNames = map (homekit: toLower homekit.name) cfg.config.homekit or [];
+      in
+        mkIf (elem config.networking.hostName homekitNames) false;
     };
 
     systemd.services.home-assistant = mkIf (cfg.enable && cfg.mutableUiConfig) {
@@ -101,12 +117,13 @@ in {
           use_x_forwarded_for = "true";
           trusted_proxies = let
             inherit (config.networking.access) cidrForNetwork;
-          in cidrForNetwork.loopback.all
-          ++ cidrForNetwork.local.all
-          ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all
-          ++ [
-            "200::/7"
-          ];
+          in
+            cidrForNetwork.loopback.all
+            ++ cidrForNetwork.local.all
+            ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all
+            ++ [
+              "200::/7"
+            ];
         };
         recorder = {
           db_url = mkIf config.services.postgresql.enable (mkDefault "postgresql://@/hass");
@@ -157,61 +174,75 @@ in {
     package = let
       inherit (cfg.package) python;
       # https://github.com/pysnmp/pysnmp/issues/51
-      needsPyasn1pin = if lib.versionOlder python.pkgs.pysnmplib.version "6.0"
+      needsPyasn1pin =
+        if lib.versionOlder python.pkgs.pysnmplib.version "6.0"
         then true
         else lib.warn "pyasn1 pin likely no longer needed" false;
       pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
       home-assistant = pkgs.home-assistant.override {
         packageOverrides = self: super: {
           brother = super.brother.overridePythonAttrs (old: {
-            dontCheckRuntimeDeps = if old.dontCheckRuntimeDeps or false
+            dontCheckRuntimeDeps =
+              if old.dontCheckRuntimeDeps or false
               then lib.warn "brother override no longer needed" true
               else true;
           });
           mpd2 = super.mpd2.overridePythonAttrs (old: {
-            patches = old.patches or [ ] ++ [
-              ../../packages/mpd2-skip-flaky-test.patch
-            ];
-            disabledTests = unique (old.disabledTests or [ ] ++ [
-              "test_idle_timeout"
-            ]);
+            patches =
+              old.patches
+              or []
+              ++ [
+                ../../packages/mpd2-skip-flaky-test.patch
+              ];
+            disabledTests = unique (old.disabledTests
+              or []
+              ++ [
+                "test_idle_timeout"
+              ]);
           });
         };
       };
-    in home-assistant.overrideAttrs (old: {
-      makeWrapperArgs = old.makeWrapperArgs ++ optional (cfg.brother.enable && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
-      disabledTests = unique (old.disabledTests or [ ] ++ [
-        "test_check_config"
-      ]);
-    });
+    in
+      home-assistant.overrideAttrs (old: {
+        makeWrapperArgs = old.makeWrapperArgs ++ optional (cfg.brother.enable && needsPyasn1pin) "--prefix PYTHONPATH : ${pyasn1prefix}";
+        disabledTests = unique (old.disabledTests
+          or []
+          ++ [
+            "test_check_config"
+          ]);
+      });
     finalPackage = let
       inherit (lib.strings) hasSuffix removeSuffix splitString;
       inherit (lib.lists) head;
       inherit (lib.attrsets) attrNames filterAttrs;
       inherit (config.systemd.services.home-assistant.serviceConfig) ExecStart;
-      isHassDrv = drv: context: hasSuffix "-${cfg.package.name}.drv" drv && context.outputs or [ ] == [ "out" ];
+      isHassDrv = drv: context: hasSuffix "-${cfg.package.name}.drv" drv && context.outputs or [] == ["out"];
       drvs = filterAttrs isHassDrv (builtins.getContext ExecStart);
       isImpure = builtins ? currentSystem;
-    in mkIf cfg.enable (mkOptionDefault (
-      if isImpure then import (head (attrNames drvs))
-      else removeSuffix "/bin/hass" (head (splitString " " ExecStart))
-    ));
-    extraPackages = python3Packages: with python3Packages; mkMerge [
-      [
-        psycopg2
-        securetar
-        getmac # for upnp integration
-        python-otbr-api
-        (aiogithubapi.overrideAttrs (_: {doInstallCheck = false;}))
-      ]
-      (mkIf cfg.homekit.enable [
-        aiohomekit
-      ])
-      (mkIf cfg.androidTv.enable [
-        adb-shell
-        androidtvremote2
-      ])
-    ];
+    in
+      mkIf cfg.enable (mkOptionDefault (
+        if isImpure
+        then import (head (attrNames drvs))
+        else removeSuffix "/bin/hass" (head (splitString " " ExecStart))
+      ));
+    extraPackages = python3Packages:
+      with python3Packages;
+        mkMerge [
+          [
+            psycopg2
+            securetar
+            getmac # for upnp integration
+            python-otbr-api
+            (aiogithubapi.overrideAttrs (_: {doInstallCheck = false;}))
+          ]
+          (mkIf cfg.homekit.enable [
+            aiohomekit
+          ])
+          (mkIf cfg.androidTv.enable [
+            adb-shell
+            androidtvremote2
+          ])
+        ];
     extraComponents = mkMerge [
       [
         "automation"
@@ -232,8 +263,8 @@ in {
         "google_assistant"
         "google_cloud"
       ])
-      (map ({ platform, ... }: platform) cfg.config.media_player or [ ])
-      (map ({ platform, ... }: platform) cfg.config.tts or [ ])
+      (map ({platform, ...}: platform) cfg.config.media_player or [])
+      (map ({platform, ...}: platform) cfg.config.tts or [])
     ];
   };
 }

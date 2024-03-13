@@ -8,7 +8,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.lists) singleton;
   cfg = config.services.mediatomb;
-  mediaDirModule = { config, ... }: {
+  mediaDirModule = {config, ...}: {
     options = with lib.types; {
       mountPoint = mkOption {
         type = nullOr str;
@@ -26,16 +26,23 @@
       paths = let
         paths = map (path: "${config.path}/${path}") config.subdirectories;
         path = singleton config.path;
-      in mkOptionDefault (if config.subdirectories != null then paths else path);
+      in
+        mkOptionDefault (
+          if config.subdirectories != null
+          then paths
+          else path
+        );
       recursive = mkDefault true;
       hidden-files = mkDefault false;
     };
   };
 in {
   options.services.mediatomb = with lib.types; {
-    confine = mkEnableOption "containment" // {
-      default = true;
-    };
+    confine =
+      mkEnableOption "containment"
+      // {
+        default = true;
+      };
     mediaDirectories = mkOption {
       type = listOf (submodule mediaDirModule);
     };
@@ -47,9 +54,13 @@ in {
   };
   config.systemd.services.mediatomb = mkIf cfg.enable {
     confinement.enable = mkIf cfg.confine (mkDefault true);
-    bindsTo = map (dir: mkIf (dir.mountPoint != null)
-      "${utils.escapeSystemdPath dir.mountPoint}.mount"
-    ) cfg.mediaDirectories;
+    bindsTo =
+      map (
+        dir:
+          mkIf (dir.mountPoint != null)
+          "${utils.escapeSystemdPath dir.mountPoint}.mount"
+      )
+      cfg.mediaDirectories;
     unitConfig.RequiresMountsFor = mkMerge (
       map (dir: dir.paths) cfg.mediaDirectories
     );

@@ -34,7 +34,7 @@ in {
     };
     gameLibraries = mkOption {
       type = listOf str;
-      default = [ "PC" ];
+      default = ["PC"];
     };
   };
 
@@ -42,10 +42,19 @@ in {
     kyuuto = {
       gameLibraries = [
         "PC"
-        "Wii" "Gamecube" "N64" "SNES" "NES"
-        "NDS" "GBA" "GBC"
-        "PS3" "PS2" "PS1"
-        "PSVita" "PSP"
+        "Wii"
+        "Gamecube"
+        "N64"
+        "SNES"
+        "NES"
+        "NDS"
+        "GBA"
+        "GBC"
+        "PS3"
+        "PS2"
+        "PS1"
+        "PSVita"
+        "PSP"
         "Genesis"
       ];
     };
@@ -74,7 +83,7 @@ in {
         {
           ${cfg.shareDir} = mkMerge [
             shared
-            { group = "peeps"; }
+            {group = "peeps";}
           ];
           ${cfg.transferDir} = shared;
           ${cfg.libraryDir} = shared;
@@ -108,28 +117,34 @@ in {
     };
 
     users = let
-      mapId = id: if config.proxmoxLXC.privileged or true then 100000 + id else id;
+      mapId = id:
+        if config.proxmoxLXC.privileged or true
+        then 100000 + id
+        else id;
       mkDummyUsers = {
         name,
         group ? name,
-        enable ? !config.services.${serviceName}.enable, serviceName ? name,
+        enable ? !config.services.${serviceName}.enable,
+        serviceName ? name,
         uid ? config.ids.uids.${name},
         gid ? config.ids.gids.${group},
-      }: mkIf enable {
-        users.${name} = {
-          group = mkIf (group != null) group;
-          uid = mapId uid;
-          isSystemUser = true;
+      }:
+        mkIf enable {
+          users.${name} = {
+            group = mkIf (group != null) group;
+            uid = mapId uid;
+            isSystemUser = true;
+          };
+          groups.${group} = {
+            gid = mapId gid;
+          };
         };
-        groups.${group} = {
-          gid = mapId gid;
-        };
-      };
-    in mkMerge [
-      (mkDummyUsers { name = "deluge"; })
-      (mkDummyUsers { name = "radarr"; })
-      (mkDummyUsers { name = "sonarr"; })
-      (mkDummyUsers { name = "lidarr"; })
-    ];
+    in
+      mkMerge [
+        (mkDummyUsers {name = "deluge";})
+        (mkDummyUsers {name = "radarr";})
+        (mkDummyUsers {name = "sonarr";})
+        (mkDummyUsers {name = "lidarr";})
+      ];
   };
 }

@@ -64,39 +64,47 @@ in {
           inherit extraConfig;
         };
       };
-      streamListen = { config, ... }: {
-        listen = concatMap (addr: [
-          (mkIf config.addSSL {
-            inherit addr;
-            port = nginx.defaultSSLListenPort;
-            ssl = true;
-          })
-          {
-            inherit addr;
-            port = nginx.defaultHTTPListenPort;
-          }
-          {
-            inherit addr;
-            port = access.streamPort;
-          }
-        ]) nginx.defaultListenAddresses;
+      streamListen = {config, ...}: {
+        listen =
+          concatMap (addr: [
+            (mkIf config.addSSL {
+              inherit addr;
+              port = nginx.defaultSSLListenPort;
+              ssl = true;
+            })
+            {
+              inherit addr;
+              port = nginx.defaultHTTPListenPort;
+            }
+            {
+              inherit addr;
+              port = access.streamPort;
+            }
+          ])
+          nginx.defaultListenAddresses;
       };
     in {
-      ${access.domain} = mkMerge [ {
-        vouch.enable = true;
-        kTLS = mkDefault true;
-        inherit (access) useACMEHost;
-        addSSL = mkDefault (access.useACMEHost != null);
-        inherit locations;
-      } streamListen ];
-      ${access.localDomain} = mkMerge [ {
-        serverAliases = mkIf config.services.tailscale.enable [ access.tailDomain ];
-        inherit (virtualHosts.${access.domain}) useACMEHost;
-        addSSL = mkDefault addSSL;
-        kTLS = mkDefault true;
-        local.enable = true;
-        inherit locations;
-      } streamListen ];
+      ${access.domain} = mkMerge [
+        {
+          vouch.enable = true;
+          kTLS = mkDefault true;
+          inherit (access) useACMEHost;
+          addSSL = mkDefault (access.useACMEHost != null);
+          inherit locations;
+        }
+        streamListen
+      ];
+      ${access.localDomain} = mkMerge [
+        {
+          serverAliases = mkIf config.services.tailscale.enable [access.tailDomain];
+          inherit (virtualHosts.${access.domain}) useACMEHost;
+          addSSL = mkDefault addSSL;
+          kTLS = mkDefault true;
+          local.enable = true;
+          inherit locations;
+        }
+        streamListen
+      ];
     };
   };
   config.networking.firewall.allowedTCPPorts = [

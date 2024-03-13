@@ -1,6 +1,8 @@
-{ lib, config, ... }:
-
-let
+{
+  lib,
+  config,
+  ...
+}: let
   inherit (lib) types;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf;
@@ -13,11 +15,13 @@ let
   doDocker = config.virtualisation.docker.enable && cfg.generateDockerRules;
 
   mkPorts = cond: ports: ranges: action: let
-    portStrings = (map (range: "${toString range.from}-${toString range.to}") ranges)
-               ++ (map toString ports);
-  in optionalString (portStrings != []) ''
-    ${cond} dport { ${concatStringsSep "," portStrings} } ${action}
-  '';
+    portStrings =
+      (map (range: "${toString range.from}-${toString range.to}") ranges)
+      ++ (map toString ports);
+  in
+    optionalString (portStrings != []) ''
+      ${cond} dport { ${concatStringsSep "," portStrings} } ${action}
+    '';
 
   ruleset = ''
     table inet filter {
@@ -32,18 +36,21 @@ let
         ct state established,related accept
 
         iifname { ${
-          concatStringsSep "," (["lo"] ++ fwcfg.trustedInterfaces)
-        } } accept
+      concatStringsSep "," (["lo"] ++ fwcfg.trustedInterfaces)
+    } } accept
 
         ${mkPorts "tcp" fwcfg.allowedTCPPorts fwcfg.allowedTCPPortRanges "accept"}
         ${mkPorts "udp" fwcfg.allowedUDPPorts fwcfg.allowedUDPPortRanges "accept"}
 
         ${
-          concatStringsSep "\n" (mapAttrsToList (name: ifcfg: concatMapStringsSep "\n" (cond:
-              mkPorts "${cond} tcp" ifcfg.allowedTCPPorts ifcfg.allowedTCPPortRanges "accept"
+      concatStringsSep "\n" (mapAttrsToList (name: ifcfg:
+        concatMapStringsSep "\n" (
+          cond:
+            mkPorts "${cond} tcp" ifcfg.allowedTCPPorts ifcfg.allowedTCPPortRanges "accept"
             + mkPorts "${cond} udp" ifcfg.allowedUDPPorts ifcfg.allowedUDPPortRanges "accept"
-          ) (optionals ifcfg.nftables.enable ifcfg.nftables.conditions)) fwcfg.interfaces)
-        }
+        ) (optionals ifcfg.nftables.enable ifcfg.nftables.conditions))
+      fwcfg.interfaces)
+    }
 
         # DHCPv6
         ip6 daddr fe80::/64 udp dport 546 accept
@@ -65,10 +72,10 @@ let
         policy ${cfg.forwardPolicy}
 
         ${optionalString doDocker ''
-          oifname docker0 ct state invalid drop
-          oifname docker0 ct state established,related accept
-          iifname docker0 accept
-        ''}
+      oifname docker0 ct state invalid drop
+      oifname docker0 ct state established,related accept
+      iifname docker0 accept
+    ''}
 
         ${cfg.extraForward}
 
@@ -85,14 +92,23 @@ let
     ''}
     ${cfg.extraConfig}
   '';
-  interfaceModule = { config, name, ... }: {
+  interfaceModule = {
+    config,
+    name,
+    ...
+  }: {
     options = {
       nftables = {
-        enable = mkEnableOption "nftables firewall" // {
-          default =
-            config.allowedTCPPorts != [ ] || config.allowedTCPPortRanges != [ ]
-            || config.allowedUDPPorts != [ ] || config.allowedUDPPortRanges != [ ];
-        };
+        enable =
+          mkEnableOption "nftables firewall"
+          // {
+            default =
+              config.allowedTCPPorts
+              != []
+              || config.allowedTCPPortRanges != []
+              || config.allowedUDPPorts != []
+              || config.allowedUDPPortRanges != [];
+          };
         conditions = mkOption {
           type = types.listOf types.str;
           default = "iifname ${name}";
@@ -100,7 +116,6 @@ let
       };
     };
   };
-
 in {
   options = {
     networking.nftables = {

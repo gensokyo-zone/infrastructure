@@ -19,7 +19,12 @@
   enabledNamespaces = filter (ns: ns.enable) (attrValues networking.namespaces);
   ip = "${pkgs.iproute2}/bin/ip";
   ip-n = namespace: "${ip} -n ${escapeShellArg namespace.name}";
-  namespaceInterfaceModule = { config, namespace, name, ... }: {
+  namespaceInterfaceModule = {
+    config,
+    namespace,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       name = mkOption {
         type = str;
@@ -41,8 +46,8 @@
     };
     config = {
       serviceSettings = rec {
-        bindsTo = [ "${namespace.unitName}.service" ];
-        partOf = [ "${namespace.unitName}.target" ];
+        bindsTo = ["${namespace.unitName}.service"];
+        partOf = ["${namespace.unitName}.target"];
         after = bindsTo;
         stopIfChanged = false;
         restartIfChanged = false;
@@ -63,7 +68,11 @@
       };
     };
   };
-  groupModule = { config, namespace, ... }: {
+  groupModule = {
+    config,
+    namespace,
+    ...
+  }: {
     options = with lib.types; {
       id = mkOption {
         type = int;
@@ -78,8 +87,8 @@
     };
     config = {
       serviceSettings = rec {
-        bindsTo = [ "${namespace.unitName}.service" ];
-        partOf = [ "${namespace.unitName}.target" ];
+        bindsTo = ["${namespace.unitName}.service"];
+        partOf = ["${namespace.unitName}.target"];
         after = bindsTo;
         stopIfChanged = false;
         restartIfChanged = false;
@@ -100,17 +109,23 @@
       };
     };
   };
-  namespaceModule = { config, name, ... }: let
+  namespaceModule = {
+    config,
+    name,
+    ...
+  }: let
     linkGroupServices = optional (config.linkGroup != null) "${config.linkGroup.serviceName}.service";
     interfaceServices = mapAttrsToList (_: interface: "${interface.serviceName}.service") config.interfaces;
-    submoduleArgs = { ... }: {
+    submoduleArgs = {...}: {
       config._module.args.namespace = config;
     };
   in {
     options = with lib.types; {
-      enable = mkEnableOption "network namespace" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "network namespace"
+        // {
+          default = true;
+        };
       resolvConf = mkOption {
         type = lines;
         default = ''
@@ -186,8 +201,9 @@
             groupModule
             submoduleArgs
           ];
-          idOrModule = coercedTo int (id: { inherit id; }) module;
-        in nullOr idOrModule;
+          idOrModule = coercedTo int (id: {inherit id;}) module;
+        in
+          nullOr idOrModule;
         default = null;
       };
       interfaces = mkOption {
@@ -195,7 +211,7 @@
           namespaceInterfaceModule
           submoduleArgs
         ]);
-        default = { };
+        default = {};
       };
       path = mkOption {
         type = path;
@@ -226,8 +242,8 @@
     };
     config = {
       serviceSettings = {
-        wants = [ "network.target" ];
-        after = [ "network.target" ];
+        wants = ["network.target"];
+        after = ["network.target"];
         stopIfChanged = false;
         restartIfChanged = false;
         serviceConfig = {
@@ -245,12 +261,12 @@
         };
       };
       targetSettings = {
-        wantedBy = [ "multi-user.target" ];
-        bindsTo = [ "${config.unitName}.service" ];
+        wantedBy = ["multi-user.target"];
+        bindsTo = ["${config.unitName}.service"];
         requires = linkGroupServices ++ interfaceServices;
         wants = mkMerge [
-          (mkIf config.dhcpcd.enable [ "${config.dhcpcd.serviceName}.service" ])
-          (mkIf config.nftables.enable [ "${config.nftables.serviceName}.service" ])
+          (mkIf config.dhcpcd.enable ["${config.dhcpcd.serviceName}.service"])
+          (mkIf config.nftables.enable ["${config.nftables.serviceName}.service"])
         ];
       };
       configFiles = {
@@ -312,21 +328,22 @@
           addrs6 = access.cidrForNetwork.local.v6 ++ optionals tailscale.enable access.cidrForNetwork.tail.v6;
           daddr4 = ''{ ${concatStringsSep ", " addrs4} }'';
           daddr6 = ''{ ${concatStringsSep ", " addrs6} }'';
-        in mkIf config.nftables.rejectLocaladdrs (mkMerge [
-          ''ct state { established, related } accept''
-          ''
-            ip daddr ${daddr4} ip protocol tcp reject with tcp reset
-            ip daddr ${daddr4} drop
-          ''
-          (mkIf networking.enableIPv6 ''
-            ip6 daddr ${daddr6} ip6 nexthdr tcp reject with tcp reset
-            ip6 daddr ${daddr6} drop
-          '')
-        ]);
+        in
+          mkIf config.nftables.rejectLocaladdrs (mkMerge [
+            ''ct state { established, related } accept''
+            ''
+              ip daddr ${daddr4} ip protocol tcp reject with tcp reset
+              ip daddr ${daddr4} drop
+            ''
+            (mkIf networking.enableIPv6 ''
+              ip6 daddr ${daddr6} ip6 nexthdr tcp reject with tcp reset
+              ip6 daddr ${daddr6} drop
+            '')
+          ]);
         serviceSettings = rec {
-          bindsTo = [ "${config.unitName}.service" ];
-          partOf = [ "${config.unitName}.target" ];
-          wants = mkIf config.nftables.rejectLocaladdrs [ "localaddrs.service" ];
+          bindsTo = ["${config.unitName}.service"];
+          partOf = ["${config.unitName}.target"];
+          wants = mkIf config.nftables.rejectLocaladdrs ["localaddrs.service"];
           after = mkMerge [
             bindsTo
             wants
@@ -346,7 +363,7 @@
               "${pkgs.nftables}/bin/nft -f ${config.configPath}/rules.nft"
             ];
             ExecReload = mkMerge [
-              (mkIf config.nftables.rejectLocaladdrs [ "+${access.localaddrs.reloadScript}" ])
+              (mkIf config.nftables.rejectLocaladdrs ["+${access.localaddrs.reloadScript}"])
               [
                 "${pkgs.nftables}/bin/nft flush ruleset"
                 "${pkgs.nftables}/bin/nft -f ${config.configPath}/rules.nft"
@@ -360,12 +377,15 @@
       };
       dhcpcd = {
         serviceSettings = rec {
-          bindsTo = [ "${config.unitName}.service" ];
-          partOf = [ "${config.unitName}.target" ];
+          bindsTo = ["${config.unitName}.service"];
+          partOf = ["${config.unitName}.target"];
           wants = linkGroupServices ++ interfaceServices;
-          after = bindsTo ++ wants ++ [
-            (mkIf config.nftables.enable "${config.nftables.serviceName}.service")
-          ];
+          after =
+            bindsTo
+            ++ wants
+            ++ [
+              (mkIf config.nftables.enable "${config.nftables.serviceName}.service")
+            ];
           stopIfChanged = false;
           unitConfig.ConditionCapability = "CAP_NET_ADMIN";
           serviceConfig = {
@@ -407,15 +427,21 @@
       };
     };
   };
-  serviceModule = { config, name, ... }: let
+  serviceModule = {
+    config,
+    name,
+    ...
+  }: let
     cfg = config.networkNamespace;
     hasNs = cfg.name != null;
     ns = networking.namespaces.${cfg.name};
   in {
     options.networkNamespace = with lib.types; {
-      enable = mkEnableOption "netns" // {
-        default = cfg.name != null;
-      };
+      enable =
+        mkEnableOption "netns"
+        // {
+          default = cfg.name != null;
+        };
       bindResolvConf = mkOption {
         type = nullOr path;
       };
@@ -446,15 +472,13 @@
             path = mkDefault (
               ns.path
             );
-            bindResolvConf = mkDefault (
-              "${ns.configPath}/resolv.conf"
-            );
+            bindResolvConf = mkDefault "${ns.configPath}/resolv.conf";
           })
         ];
       }
       (mkIf cfg.enable rec {
-        wants = mkIf hasNs [ "${ns.unitName}.target" ];
-        bindsTo = mkIf hasNs [ "${ns.unitName}.service" ];
+        wants = mkIf hasNs ["${ns.unitName}.target"];
+        bindsTo = mkIf hasNs ["${ns.unitName}.service"];
         after = mkMerge [
           bindsTo
           (mkIf (hasNs && cfg.afterOnline) [
@@ -475,7 +499,7 @@ in {
   options = with lib.types; {
     networking.namespaces = mkOption {
       type = attrsOf (submodule namespaceModule);
-      default = { };
+      default = {};
     };
     systemd.services = mkOption {
       type = attrsOf (submodule serviceModule);
@@ -483,19 +507,25 @@ in {
   };
   config = {
     systemd = {
-      services = listToAttrs (concatMap (ns:
-        singleton (nameValuePair ns.unitName (unmerged.merge ns.serviceSettings))
-        ++ optional (ns.linkGroup != null) (nameValuePair ns.linkGroup.serviceName (unmerged.merge ns.linkGroup.serviceSettings))
-        ++ mapAttrsToList (_: interface: nameValuePair interface.serviceName (unmerged.merge interface.serviceSettings)) ns.interfaces
-        ++ optional ns.dhcpcd.enable (nameValuePair ns.dhcpcd.serviceName (unmerged.merge ns.dhcpcd.serviceSettings))
-        ++ optional ns.nftables.enable (nameValuePair ns.nftables.serviceName (unmerged.merge ns.nftables.serviceSettings))
-      ) enabledNamespaces);
-      targets = listToAttrs (map (ns: nameValuePair ns.unitName (
-        unmerged.merge ns.targetSettings
-      )) enabledNamespaces);
+      services = listToAttrs (concatMap (
+          ns:
+            singleton (nameValuePair ns.unitName (unmerged.merge ns.serviceSettings))
+            ++ optional (ns.linkGroup != null) (nameValuePair ns.linkGroup.serviceName (unmerged.merge ns.linkGroup.serviceSettings))
+            ++ mapAttrsToList (_: interface: nameValuePair interface.serviceName (unmerged.merge interface.serviceSettings)) ns.interfaces
+            ++ optional ns.dhcpcd.enable (nameValuePair ns.dhcpcd.serviceName (unmerged.merge ns.dhcpcd.serviceSettings))
+            ++ optional ns.nftables.enable (nameValuePair ns.nftables.serviceName (unmerged.merge ns.nftables.serviceSettings))
+        )
+        enabledNamespaces);
+      targets = listToAttrs (map (ns:
+        nameValuePair ns.unitName (
+          unmerged.merge ns.targetSettings
+        ))
+      enabledNamespaces);
     };
-    environment.etc = mkMerge (map (ns:
-      mapAttrs' (name: file: nameValuePair "${ns.configDir}/${name}" (unmerged.merge file)) ns.configFiles
-    ) enabledNamespaces);
+    environment.etc = mkMerge (map (
+        ns:
+          mapAttrs' (name: file: nameValuePair "${ns.configDir}/${name}" (unmerged.merge file)) ns.configFiles
+      )
+      enabledNamespaces);
   };
 }

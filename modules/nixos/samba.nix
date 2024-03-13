@@ -11,14 +11,17 @@
   inherit (config.services) samba-wsdd;
   cfg = config.services.samba;
   settingValue = value:
-    if builtins.isList value then concatMapStringsSep ", " settingValue value
-    else if value == true then "yes"
-    else if value == false then "no"
+    if builtins.isList value
+    then concatMapStringsSep ", " settingValue value
+    else if value == true
+    then "yes"
+    else if value == false
+    then "no"
     else toString value;
 in {
   options.services.samba = with lib.types; let
-    settingPrimitive = oneOf [ str int bool ];
-    settingType = oneOf [ settingPrimitive (listOf settingPrimitive) ];
+    settingPrimitive = oneOf [str int bool];
+    settingType = oneOf [settingPrimitive (listOf settingPrimitive)];
   in {
     ldap = {
       enable = mkEnableOption "LDAP";
@@ -64,7 +67,11 @@ in {
       };
     };
     idmap = let
-      idmapModule = { config, name, ... }: {
+      idmapModule = {
+        config,
+        name,
+        ...
+      }: {
         options = {
           backend = mkOption {
             type = str;
@@ -89,7 +96,7 @@ in {
           };
           settings = mkOption {
             type = attrsOf settingType;
-            default = { };
+            default = {};
           };
         };
         config = {
@@ -117,7 +124,7 @@ in {
     };
     settings = mkOption {
       type = attrsOf settingType;
-      default = { };
+      default = {};
     };
   };
 
@@ -139,35 +146,36 @@ in {
         })
       ];
       settings = mkMerge ([
-        {
-          "use sendfile" = mkOptionDefault true;
-        }
-        (mkIf (cfg.passdb.smbpasswd.path != null) {
-          "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
-        })
-        (mkIf cfg.ldap.enable {
-          "passdb backend" = mkOptionDefault ''ldapsam:"${cfg.ldap.url}"'';
-          "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
-          "ldap admin dn" = mkOptionDefault "name=anonymous,${cfg.ldap.baseDn}";
-          "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
-        })
-        (mkIf (cfg.ldap.enable && true) {
-          "ntlm auth" = mkOptionDefault "disabled";
-          "encrypt passwords" = mkOptionDefault false;
-        })
-        (mkIf cfg.usershare.enable {
-          "usershare allow guests" = mkOptionDefault true;
-          "usershare max shares" = mkOptionDefault 16;
-          "usershare owner only" = mkOptionDefault true;
-          "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
-          "usershare path" = mkOptionDefault cfg.usershare.path;
-          "usershare prefix allow list" = mkOptionDefault [ cfg.usershare.path ];
-        })
-        (mkIf cfg.guest.enable {
-          "map to guest" = mkOptionDefault "Bad User";
-          "guest account" = mkOptionDefault cfg.guest.user;
-        })
-      ] ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
+          {
+            "use sendfile" = mkOptionDefault true;
+          }
+          (mkIf (cfg.passdb.smbpasswd.path != null) {
+            "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
+          })
+          (mkIf cfg.ldap.enable {
+            "passdb backend" = mkOptionDefault ''ldapsam:"${cfg.ldap.url}"'';
+            "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
+            "ldap admin dn" = mkOptionDefault "name=anonymous,${cfg.ldap.baseDn}";
+            "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
+          })
+          (mkIf (cfg.ldap.enable && true) {
+            "ntlm auth" = mkOptionDefault "disabled";
+            "encrypt passwords" = mkOptionDefault false;
+          })
+          (mkIf cfg.usershare.enable {
+            "usershare allow guests" = mkOptionDefault true;
+            "usershare max shares" = mkOptionDefault 16;
+            "usershare owner only" = mkOptionDefault true;
+            "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
+            "usershare path" = mkOptionDefault cfg.usershare.path;
+            "usershare prefix allow list" = mkOptionDefault [cfg.usershare.path];
+          })
+          (mkIf cfg.guest.enable {
+            "map to guest" = mkOptionDefault "Bad User";
+            "guest account" = mkOptionDefault cfg.guest.user;
+          })
+        ]
+        ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
       extraConfig = mkMerge (mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings);
       shares.${cfg.usershare.templateShare} = mkIf cfg.usershare.enable {
         "-valid" = false;
@@ -194,12 +202,12 @@ in {
 
     networking.firewall.interfaces.local = {
       allowedTCPPorts = mkMerge [
-        (mkIf (cfg.enable && !cfg.openFirewall) [ 139 445 ])
-        (mkIf (samba-wsdd.enable && !samba-wsdd.openFirewall) [ 5357 ])
+        (mkIf (cfg.enable && !cfg.openFirewall) [139 445])
+        (mkIf (samba-wsdd.enable && !samba-wsdd.openFirewall) [5357])
       ];
       allowedUDPPorts = mkMerge [
-        (mkIf (cfg.enable && !cfg.openFirewall) [ 137 138 ])
-        (mkIf (samba-wsdd.enable && !samba-wsdd.openFirewall) [ 3702 ])
+        (mkIf (cfg.enable && !cfg.openFirewall) [137 138])
+        (mkIf (samba-wsdd.enable && !samba-wsdd.openFirewall) [3702])
       ];
     };
   };

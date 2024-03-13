@@ -3,5 +3,5 @@ _: {
     enable = true;
   };
 
-  users.users.radarr.extraGroups = [ "kyuuto" ];
+  users.users.radarr.extraGroups = ["kyuuto"];
 }

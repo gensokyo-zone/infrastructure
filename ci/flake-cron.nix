@@ -45,7 +45,7 @@ in {
           cron = "0 0 * * *";
         }
       ];
-      workflow_dispatch = { };
+      workflow_dispatch = {};
     };
   };
 
@@ -65,7 +65,7 @@ in {
         displayName = "flake update build";
         environment = ["CACHIX_SIGNING_KEY" "GITHUB_REF"];
         command = let
-          filteredHosts = [ "hakurei" "reimu" "aya" "tei" "litterbox" "mediabox" ];
+          filteredHosts = ["hakurei" "reimu" "aya" "tei" "litterbox" "mediabox"];
           gcBetweenHosts = false;
           nodeBuildString = concatMapStringsSep " && " (node: "nix build --show-trace -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
           hostPath = builtins.getEnv "PATH";

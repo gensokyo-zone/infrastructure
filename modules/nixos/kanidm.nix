@@ -60,13 +60,14 @@ in {
 
     services.kanidm = {
       server.unencrypted = {
-        domain = mkBefore [ cfg.server.frontend.domain ];
+        domain = mkBefore [cfg.server.frontend.domain];
         package = let
           cert = mkSnakeOil {
             name = "kanidm-cert";
             inherit (cfg.server.unencrypted) domain;
           };
-        in mkOptionDefault cert;
+        in
+          mkOptionDefault cert;
       };
       clientSettings = mkIf cfg.enableServer {
         uri = mkDefault cfg.serverSettings.origin;

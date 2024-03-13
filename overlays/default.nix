@@ -1,17 +1,19 @@
-{inputs, system}: {
+{
+  inputs,
+  system,
+}: {
   pkgs = import inputs.nixpkgs {
     inherit system;
-    overlays =
-      [
-        inputs.deploy-rs.overlay
-        inputs.arcexprs.overlays.default
-        (final: prev: {
-          jemalloc =
-            if final.hostPlatform != "aarch64-darwin"
-            then prev.jemalloc
-            else null;
-        })
-      ];
+    overlays = [
+      inputs.deploy-rs.overlay
+      inputs.arcexprs.overlays.default
+      (final: prev: {
+        jemalloc =
+          if final.hostPlatform != "aarch64-darwin"
+          then prev.jemalloc
+          else null;
+      })
+    ];
     config = {
       allowUnfree = true;
       allowBroken = true;

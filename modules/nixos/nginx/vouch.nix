@@ -2,13 +2,12 @@
   config,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (config) networking;
   inherit (config.services) vouch-proxy tailscale;
-  vouchModule = { config, ... }: {
+  vouchModule = {config, ...}: {
     options = with lib.types; {
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
@@ -49,15 +48,20 @@ let
         vouch = mkIf vouch-proxy.enable {
           proxyOrigin = let
             inherit (vouch-proxy.settings.vouch) listen port;
-            host = if listen == "0.0.0.0" || listen == "[::]" then "localhost" else listen;
-          in mkDefault "http://${host}:${toString port}";
+            host =
+              if listen == "0.0.0.0" || listen == "[::]"
+              then "localhost"
+              else listen;
+          in
+            mkDefault "http://${host}:${toString port}";
           authUrl = mkDefault vouch-proxy.authUrl;
           url = mkDefault vouch-proxy.url;
           doubleProxy = mkDefault false;
         };
       }
       {
-        vouch.proxyOrigin = mkIf (tailscale.enable && !vouch-proxy.enable) (mkDefault
+        vouch.proxyOrigin = mkIf (tailscale.enable && !vouch-proxy.enable) (
+          mkDefault
           "http://login.tail.${networking.domain}"
         );
       }
@@ -96,22 +100,23 @@ let
                   set $vouch_url $vouch_scheme://${config.vouch.tailDomain};
                 }
               '';
-            in mkMerge [
-              (mkBefore ''
-                set $vouch_url ${config.vouch.url};
-                set $vouch_scheme $scheme;
-              '')
-              (mkIf config.local.trusted (mkBefore ''
-                if ($http_x_forwarded_proto) {
-                  set $vouch_scheme $http_x_forwarded_proto;
-                }
-              ''))
-              (mkIf (config.local.enable or false) localVouchUrl)
-              (mkIf (config.local.enable or false && tailscale.enable) tailVouchUrl)
-              ''
-                return 302 $vouch_url/login?url=$vouch_scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
-              ''
-            ];
+            in
+              mkMerge [
+                (mkBefore ''
+                  set $vouch_url ${config.vouch.url};
+                  set $vouch_scheme $scheme;
+                '')
+                (mkIf config.local.trusted (mkBefore ''
+                  if ($http_x_forwarded_proto) {
+                    set $vouch_scheme $http_x_forwarded_proto;
+                  }
+                ''))
+                (mkIf (config.local.enable or false) localVouchUrl)
+                (mkIf (config.local.enable or false && tailscale.enable) tailVouchUrl)
+                ''
+                  return 302 $vouch_url/login?url=$vouch_scheme://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
+                ''
+              ];
           };
           "/validate" = {
             recommendedProxySettings = false;

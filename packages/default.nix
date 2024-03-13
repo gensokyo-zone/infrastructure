@@ -12,7 +12,7 @@
     export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ../.}}
   '';
   exportsSsh = ''
-    export PATH="${makeBinPath [ packages.nf-hostname packages.nf-sshopts ]}:$PATH"
+    export PATH="${makeBinPath [packages.nf-hostname packages.nf-sshopts]}:$PATH"
   '';
   exportsFmtNix = ''
     NF_NIX_BLACKLIST_DIRS=(${string.concatMapSep " " string.escapeShellArg fmt.nix.blacklistDirs})
@@ -20,11 +20,16 @@
     NF_NIX_WHITELIST_FILES=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelist})
   '';
   output = {
-    inherit (pkgs.buildPackages)
-      terraform tflint
-      alejandra deadnix statix
-      ssh-to-age jq
-    ;
+    inherit
+      (pkgs.buildPackages)
+      terraform
+      tflint
+      alejandra
+      deadnix
+      statix
+      ssh-to-age
+      jq
+      ;
     inherit (inputs.deploy-rs.packages.${system}) deploy-rs;
     nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
       ${exports}
@@ -52,26 +57,27 @@
         INPUT_INFRA_CT_CONFIG = reisen + "/bin/ct-config.sh";
       };
       inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputAttrs;
-    in pkgs.writeShellScriptBin "nf-setup-node" ''
-      ${exports}
-      NF_SETUP_INPUTS=(
-        ${string.intercalate "\n" inputVars}
-      )
-      source ${../ci/setup.sh}
-    '';
+    in
+      pkgs.writeShellScriptBin "nf-setup-node" ''
+        ${exports}
+        NF_SETUP_INPUTS=(
+          ${string.intercalate "\n" inputVars}
+        )
+        source ${../ci/setup.sh}
+      '';
     nf-hostname = pkgs.writeShellScriptBin "nf-hostname" ''
       ${exports}
       source ${../ci/hostname.sh}
     '';
     nf-sshopts = pkgs.writeShellScriptBin "nf-sshopts" ''
       ${exports}
-      export PATH="$PATH:${makeBinPath [ pkgs.jq ]}"
+      export PATH="$PATH:${makeBinPath [pkgs.jq]}"
       source ${../ci/sshopts.sh}
     '';
     nf-sops-keyscan = pkgs.writeShellScriptBin "nf-sops-keyscan" ''
       ${exports}
       ${exportsSsh}
-      export PATH="$PATH:${makeBinPath [ pkgs.ssh-to-age ]}"
+      export PATH="$PATH:${makeBinPath [pkgs.ssh-to-age]}"
       source ${../ci/sops-keyscan.sh}
     '';
     nf-ssh = pkgs.writeShellScriptBin "nf-ssh" ''
@@ -94,39 +100,39 @@
     '';
     nf-generate = pkgs.writeShellScriptBin "nf-generate" ''
       ${exports}
-      export PATH="$PATH:${makeBinPath [ pkgs.jq ]}"
+      export PATH="$PATH:${makeBinPath [pkgs.jq]}"
       source ${../ci/generate.sh}
     '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''
       ${exports}
-      export PATH="${makeBinPath [ packages.statix ]}:$PATH"
+      export PATH="${makeBinPath [packages.statix]}:$PATH"
       source ${../ci/statix.sh}
     '';
     nf-deadnix = pkgs.writeShellScriptBin "nf-deadnix" ''
       ${exports}
       ${exportsFmtNix}
-      export PATH="${makeBinPath [ packages.deadnix pkgs.findutils ]}:$PATH"
+      export PATH="${makeBinPath [packages.deadnix pkgs.findutils]}:$PATH"
       source ${../ci/deadnix.sh}
     '';
     nf-alejandra = pkgs.writeShellScriptBin "nf-alejandra" ''
       ${exports}
       ${exportsFmtNix}
-      export PATH="${makeBinPath [ packages.alejandra ]}:$PATH"
+      export PATH="${makeBinPath [packages.alejandra]}:$PATH"
       source ${../ci/alejandra.sh}
     '';
     nf-lint-tf = pkgs.writeShellScriptBin "nf-lint-tf" ''
       ${exports}
-      export PATH="$PATH:${makeBinPath [ packages.tflint ]}"
+      export PATH="$PATH:${makeBinPath [packages.tflint]}"
       source ${../ci/lint-tf.sh}
     '';
     nf-lint-nix = pkgs.writeShellScriptBin "nf-lint-nix" ''
       ${exports}
-      export PATH="${makeBinPath [ packages.nf-statix packages.nf-deadnix ]}:$PATH"
+      export PATH="${makeBinPath [packages.nf-statix packages.nf-deadnix]}:$PATH"
       source ${../ci/lint-nix.sh}
     '';
     nf-fmt-tf = pkgs.writeShellScriptBin "nf-fmt-tf" ''
       ${exports}
-      export PATH="${makeBinPath [ packages.terraform ]}:$PATH"
+      export PATH="${makeBinPath [packages.terraform]}:$PATH"
       source ${../ci/fmt-tf.sh}
     '';
     nf-fmt-nix = pkgs.writeShellScriptBin "nf-fmt-nix" ''
@@ -144,4 +150,5 @@
       inherit (inputs) self;
     };
   };
-in output
+in
+  output

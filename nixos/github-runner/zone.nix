@@ -14,9 +14,11 @@
   genZoneAttrs = prefix: f: listToAttrs (genZone (i: nameValuePair "${prefix}${toString i}" (f i)));
 in {
   options.services.github-runner-zone = with lib.types; {
-    enable = mkEnableOption "github-runners.zone" // {
-      default = true;
-    };
+    enable =
+      mkEnableOption "github-runners.zone"
+      // {
+        default = true;
+      };
     targetName = mkOption {
       type = str;
       default = "github-runner-zone";
@@ -64,7 +66,7 @@ in {
         enable = mkDefault true;
         ephemeral = mkDefault cfg.ephemeral;
         replace = mkDefault true;
-        extraLabels = [ "ubuntu-latest" ];
+        extraLabels = ["ubuntu-latest"];
         tokenFile = mkDefault config.sops.secrets.github-runner-gensokyo-zone-token.path;
         url = mkDefault "https://github.com/gensokyo-zone";
         group = mkDefault cfg.group;
@@ -73,9 +75,9 @@ in {
         };
         networkNamespace.name = mkIf (cfg.networkNamespace.name != null) (mkDefault cfg.networkNamespace.name);
         serviceSettings = {
-          wantedBy = [ "${cfg.targetName}.target" ];
+          wantedBy = ["${cfg.targetName}.target"];
           unitConfig = {
-            StopPropagatedFrom = [ "${cfg.targetName}.target" ];
+            StopPropagatedFrom = ["${cfg.targetName}.target"];
           };
         };
         serviceOverrides = mkIf (!cfg.dynamicUser) {
@@ -88,15 +90,16 @@ in {
       };
     };
 
-    services.github-runners = genZoneAttrs cfg.keyPrefix (i: mkMerge [
-      (unmerged.merge cfg.runnerSettings)
-      {
-        name = mkDefault "${cfg.namePrefix}${toString i}";
-        user = mkIf (cfg.userPrefix != null) (
-          mkDefault "${cfg.userPrefix}${toString i}"
-        );
-      }
-    ]);
+    services.github-runners = genZoneAttrs cfg.keyPrefix (i:
+      mkMerge [
+        (unmerged.merge cfg.runnerSettings)
+        {
+          name = mkDefault "${cfg.namePrefix}${toString i}";
+          user = mkIf (cfg.userPrefix != null) (
+            mkDefault "${cfg.userPrefix}${toString i}"
+          );
+        }
+      ]);
 
     systemd = mkIf cfg.enable {
       services.nix-daemon = mkIf cfg.enable {
@@ -106,13 +109,13 @@ in {
         };
       };
       targets.${cfg.targetName} = {
-        wantedBy = [ "multi-user.target" ];
+        wantedBy = ["multi-user.target"];
       };
     };
 
     users = mkIf cfg.enable {
       groups = mkIf (cfg.group != null) {
-        ${toString cfg.group} = { };
+        ${toString cfg.group} = {};
       };
       users = mkMerge [
         (mkIf (!cfg.dynamicUser) (genZoneAttrs cfg.userPrefix (i: {

@@ -70,10 +70,12 @@ in {
       plex-external = mkIf (access.externalPort != null) {
         serverName = mkDefault access.domain;
         default = mkDefault true;
-        listen = map (addr: {
-          inherit addr;
-          port = access.externalPort;
-        }) nginx.defaultListenAddresses;
+        listen =
+          map (addr: {
+            inherit addr;
+            port = access.externalPort;
+          })
+          nginx.defaultListenAddresses;
         locations."/" = location;
         inherit extraConfig;
       };

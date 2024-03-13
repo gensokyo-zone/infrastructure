@@ -11,7 +11,7 @@
   cfg = config.services.github-runners;
   nixosConfig = config;
   enabledRunners = filterAttrs (_: runner: runner.enable) cfg;
-  runnerModule = { config, ... }: {
+  runnerModule = {config, ...}: {
     options = with lib.types; {
       networkNamespace.name = mkOption {
         type = nullOr str;
@@ -19,7 +19,7 @@
       };
       serviceSettings = mkOption {
         type = unmerged.type;
-        default = { };
+        default = {};
       };
     };
     config = {
@@ -58,8 +58,10 @@ in {
     };
   };
   config = {
-    systemd.services = mapAttrs' (name: runner: nameValuePair "github-runner-${name}" (
-      unmerged.merge runner.serviceSettings
-    )) enabledRunners;
+    systemd.services = mapAttrs' (name: runner:
+      nameValuePair "github-runner-${name}" (
+        unmerged.merge runner.serviceSettings
+      ))
+    enabledRunners;
   };
 }

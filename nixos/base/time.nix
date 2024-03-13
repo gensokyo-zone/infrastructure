@@ -1,3 +1,3 @@
-{ config, ... }: {
+{config, ...}: {
   services.tzupdate.enable = true;
 }

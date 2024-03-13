@@ -1,4 +1,3 @@
-
 {
   config,
   lib,
@@ -9,17 +8,21 @@
   inherit (config.networking.access) cidrForNetwork;
   inherit (config) kyuuto;
   cfg = config.services.samba;
-  localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all
+  localAddrs =
+    cidrForNetwork.loopback.all
+    ++ cidrForNetwork.local.all
     ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all;
-  guestUsers = mkIf cfg.guest.enable [ cfg.guest.user ];
+  guestUsers = mkIf cfg.guest.enable [cfg.guest.user];
   kyuuto-media = {
     "create mask" = "0664";
     "force directory mode" = "3000";
     "directory mask" = "7775";
   };
-  kyuuto-library = kyuuto-media // {
-    "acl group control" = true;
-  };
+  kyuuto-library =
+    kyuuto-media
+    // {
+      "acl group control" = true;
+    };
 in {
   services.samba = {
     usershare = {
@@ -35,7 +38,7 @@ in {
         public = true;
         "valid users" = mkMerge [
           guestUsers
-          [ "@peeps" ]
+          ["@peeps"]
         ];
         #"guest only" = true;
         "hosts allow" = localAddrs;
@@ -54,10 +57,10 @@ in {
           public = true;
           "valid users" = mkMerge [
             guestUsers
-            [ "@kyuuto-peeps" ]
+            ["@kyuuto-peeps"]
           ];
           "read list" = guestUsers;
-          "write list" = [ "@kyuuto-peeps" ];
+          "write list" = ["@kyuuto-peeps"];
           "hosts allow" = localAddrs;
         }
       ];
@@ -69,7 +72,7 @@ in {
           writeable = true;
           public = false;
           browseable = false;
-          "valid users" = [ "@kyuuto-peeps" ];
+          "valid users" = ["@kyuuto-peeps"];
         }
       ];
       kyuuto-media = mkMerge [
@@ -80,7 +83,7 @@ in {
           writeable = true;
           public = false;
           browseable = false;
-          "valid users" = [ "@kyuuto-peeps" ];
+          "valid users" = ["@kyuuto-peeps"];
         }
       ];
       shared = {
@@ -89,7 +92,7 @@ in {
         writeable = true;
         public = false;
         browseable = false;
-        "valid users" = [ "@peeps" ];
+        "valid users" = ["@peeps"];
         "create mask" = "0775";
         "force create mode" = "0010";
         "force directory mode" = "2000";
@@ -99,7 +102,7 @@ in {
         writeable = true;
         browseable = true;
         public = false;
-        "valid users" = [ "@peeps" ];
+        "valid users" = ["@peeps"];
         "create mask" = "0664";
         "force directory mode" = "5000";
         "directory mask" = "7775";
@@ -108,5 +111,5 @@ in {
   };
 
   # give guest users proper access to the transfer share
-  users.users.guest.extraGroups = [ "kyuuto" ];
+  users.users.guest.extraGroups = ["kyuuto"];
 }

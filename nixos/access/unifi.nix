@@ -10,9 +10,11 @@
 in {
   options.services.nginx.access.unifi = with lib.types; {
     global = {
-      enable = mkEnableOption "global access" // {
-        default = access.useACMEHost != null;
-      };
+      enable =
+        mkEnableOption "global access"
+        // {
+          default = access.useACMEHost != null;
+        };
       management = mkEnableOption "global management port access";
     };
     host = mkOption {
@@ -59,11 +61,13 @@ in {
       };
     in {
       "${access.domain}@management" = mkIf access.global.management {
-        listen = map (addr: {
-          inherit addr;
-          port = access.managementPort;
-          ssl = true;
-        }) nginx.defaultListenAddresses;
+        listen =
+          map (addr: {
+            inherit addr;
+            port = access.managementPort;
+            ssl = true;
+          })
+          nginx.defaultListenAddresses;
         serverName = access.domain;
         default = mkDefault true;
         forceSSL = mkDefault true;
@@ -81,7 +85,7 @@ in {
         inherit locations extraConfig;
       };
       ${access.localDomain} = {
-        serverAliases = mkIf tailscale.enable [ access.tailDomain ];
+        serverAliases = mkIf tailscale.enable [access.tailDomain];
         useACMEHost = mkDefault access.useACMEHost;
         addSSL = mkDefault (access.useACMEHost != null);
         kTLS = mkDefault true;
@@ -91,7 +95,7 @@ in {
     };
   };
   config.networking.firewall = {
-    interfaces.local.allowedTCPPorts = [ access.managementPort ];
-    allowedTCPPorts = mkIf access.global.management [ access.managementPort ];
+    interfaces.local.allowedTCPPorts = [access.managementPort];
+    allowedTCPPorts = mkIf access.global.management [access.managementPort];
   };
 }

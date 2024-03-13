@@ -29,7 +29,7 @@ in {
   };
   networking.firewall = {
     allowedTCPPorts = [publicPort];
-    interfaces.local.allowedTCPPorts = [ 22 ];
+    interfaces.local.allowedTCPPorts = [22];
   };
 
   programs.mosh.enable = true;

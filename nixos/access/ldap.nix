@@ -2,8 +2,7 @@
   config,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.strings) concatMapStringsSep optionalString;
@@ -18,9 +17,11 @@ let
       cidrForNetwork.loopback.all
       ++ cidrForNetwork.local.all
       ++ optionals tailscale.enable cidrForNetwork.tail.all;
-    allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
-      include ${localaddrs.stateDir}/*.nginx.conf;
-    '';
+    allows =
+      concatMapStringsSep "\n" mkAllow allowAddresses
+      + optionalString localaddrs.enable ''
+        include ${localaddrs.stateDir}/*.nginx.conf;
+      '';
   in ''
     ${allows}
     deny all;
@@ -61,28 +62,29 @@ in {
           proxy_ssl on;
           proxy_ssl_verify off;
         '';
-      in mkIf access.enable (mkMerge [
-        ''
-          server {
-            listen 0.0.0.0:389;
-            listen [::]:389;
-            ${allows}
-            proxy_pass ${proxyPass};
-            ${proxySsl}
-          }
-        ''
-        (mkIf (access.useACMEHost != null) ''
-          server {
-            listen 0.0.0.0:636 ssl;
-            listen [::]:636 ssl;
-            ssl_certificate ${cert.directory}/fullchain.pem;
-            ssl_certificate_key ${cert.directory}/key.pem;
-            ssl_trusted_certificate ${cert.directory}/chain.pem;
-            proxy_pass ${proxyPass};
-            ${proxySsl}
-          }
-        '')
-      ]);
+      in
+        mkIf access.enable (mkMerge [
+          ''
+            server {
+              listen 0.0.0.0:389;
+              listen [::]:389;
+              ${allows}
+              proxy_pass ${proxyPass};
+              ${proxySsl}
+            }
+          ''
+          (mkIf (access.useACMEHost != null) ''
+            server {
+              listen 0.0.0.0:636 ssl;
+              listen [::]:636 ssl;
+              ssl_certificate ${cert.directory}/fullchain.pem;
+              ssl_certificate_key ${cert.directory}/key.pem;
+              ssl_trusted_certificate ${cert.directory}/chain.pem;
+              proxy_pass ${proxyPass};
+              ${proxySsl}
+            }
+          '')
+        ]);
     };
 
     networking.firewall = {

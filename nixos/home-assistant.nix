@@ -85,17 +85,19 @@ in {
         ];
         entity_config = {};
       };
-      homekit = [ {
-        name = "Tewi";
-        port = 21063;
-        filter = let
-          inherit (cfg.config) google_assistant;
-        in {
-          include_domains = google_assistant.exposed_domains;
-          include_entities = "!include homekit_include_entities.yaml";
-        };
-        entity_config = "!include homekit_entity_config.yaml";
-      } ];
+      homekit = [
+        {
+          name = "Tewi";
+          port = 21063;
+          filter = let
+            inherit (cfg.config) google_assistant;
+          in {
+            include_domains = google_assistant.exposed_domains;
+            include_entities = "!include homekit_include_entities.yaml";
+          };
+          entity_config = "!include homekit_entity_config.yaml";
+        }
+      ];
       tts = [
         {
           platform = "google_translate";

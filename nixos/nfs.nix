@@ -29,9 +29,9 @@ in {
     idmapd.settings = {
       General.Domain = mkDefault config.networking.domain;
       Translation.GSS-Methods = concatStringsSep "," (
-        [ "static" ]
+        ["static"]
         ++ optional enableLdap "umich_ldap"
-        ++ [ "nsswitch" ]
+        ++ ["nsswitch"]
       );
       Static = {
       };

@@ -6,3 +6,4 @@
 .terraform
 .DS_Store
 .envrc.conf
+.idea

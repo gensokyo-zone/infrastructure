@@ -18,11 +18,17 @@
   systemdFiles = filter (file: file.systemd.enable) files;
   setupFiles = filter (file: !file.systemd.enable) files;
   bindFiles = filter (file: file.type == "bind") files;
-  fileModule = { config, name, ... }: {
+  fileModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
-      enable = mkEnableOption "file" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "file"
+        // {
+          default = true;
+        };
       mkdirParent = mkEnableOption "mkdir";
       bindReadOnly = mkEnableOption "mount -oro";
       relativeSymlink = mkEnableOption "ln -sr";
@@ -32,8 +38,11 @@
         default = name;
       };
       type = mkOption {
-        type = enum [ "directory" "symlink" "link" "copy" "bind" ];
-        default = if config.src != null then "symlink" else "directory";
+        type = enum ["directory" "symlink" "link" "copy" "bind"];
+        default =
+          if config.src != null
+          then "symlink"
+          else "directory";
       };
       mode = mkOption {
         type = str;
@@ -71,7 +80,7 @@
     };
     config = let
       acls = concatStringsSep "," config.acls;
-      enableAcls = config.type == "directory" && config.acls != [ ];
+      enableAcls = config.type == "directory" && config.acls != [];
       systemdAclRule = "a+ ${config.path} - - - - ${acls}";
       systemdRule = {
         directory = [
@@ -168,7 +177,7 @@
       systemd = {
         rules = mkMerge [
           systemdRule.${config.type}
-          (mkIf enableAcls [ systemdAclRule ])
+          (mkIf enableAcls [systemdAclRule])
         ];
         mountSettings = mkIf (config.type == "bind") {
           enable = mkDefault config.enable;
@@ -191,16 +200,21 @@
   };
 in {
   options.services.tmpfiles = with lib.types; {
-    enable = mkEnableOption "extended tmpfiles" // {
-      default = cfg.files != { };
-    };
+    enable =
+      mkEnableOption "extended tmpfiles"
+      // {
+        default = cfg.files != {};
+      };
     user = mkOption {
       type = str;
-      default = if config.proxmoxLXC.privileged or true then "root" else "admin";
+      default =
+        if config.proxmoxLXC.privileged or true
+        then "root"
+        else "admin";
     };
     files = mkOption {
       type = attrsOf (submodule fileModule);
-      default = { };
+      default = {};
     };
   };
   config = {
@@ -209,15 +223,19 @@ in {
         map (file: file.systemd.rules) systemdFiles
       );
       services.tmpfiles = {
-        path = [ pkgs.coreutils pkgs.acl ];
+        path = [pkgs.coreutils pkgs.acl];
         script = mkMerge (
-          [ ''
-            EXITCODE=0
-          '' ]
+          [
+            ''
+              EXITCODE=0
+            ''
+          ]
           ++ map (file: file.setup.script) setupFiles
-          ++ [ ''
-            exit $EXITCODE
-          '' ]
+          ++ [
+            ''
+              exit $EXITCODE
+            ''
+          ]
         );
         wantedBy = [
           "sysinit.target"

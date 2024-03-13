@@ -11,7 +11,7 @@
   inherit (config.services) tailscale;
   inherit (config) networking;
   cfg = config.networking.access;
-  cidrModule = { config, ... }: {
+  cidrModule = {config, ...}: {
     options = with lib.types; {
       all = mkOption {
         type = listOf str;
@@ -19,11 +19,11 @@
       };
       v4 = mkOption {
         type = listOf str;
-        default = [ ];
+        default = [];
       };
       v6 = mkOption {
         type = listOf str;
-        default = [ ];
+        default = [];
       };
     };
     config.all = mkOptionDefault (
@@ -35,12 +35,14 @@ in {
   options.networking.access = with lib.types; {
     cidrForNetwork = mkOption {
       type = attrsOf (submodule cidrModule);
-      default = { };
+      default = {};
     };
     localaddrs = {
-      enable = mkEnableOption "localaddrs" // {
-        default = networking.firewall.interfaces.local.nftables.enable;
-      };
+      enable =
+        mkEnableOption "localaddrs"
+        // {
+          default = networking.firewall.interfaces.local.nftables.enable;
+        };
       stateDir = mkOption {
         type = path;
         default = "/var/lib/localaddrs";
@@ -87,10 +89,11 @@ in {
     };
     localaddrs = {
       nftablesInclude = mkBefore (''
-        define localrange6 = 2001:568::/29
-      '' + optionalString cfg.localaddrs.enable ''
-        include "${cfg.localaddrs.stateDir}/*.nft"
-      '');
+          define localrange6 = 2001:568::/29
+        ''
+        + optionalString cfg.localaddrs.enable ''
+          include "${cfg.localaddrs.stateDir}/*.nft"
+        '');
       reloadScript = let
         localaddrs-reload = pkgs.writeShellScript "localaddrs-reload" ''
           ${config.systemd.package}/bin/systemctl reload localaddrs 2>/dev/null ||
@@ -101,7 +104,7 @@ in {
     };
     moduleArgAttrs = {
       inherit (cfg) cidrForNetwork localaddrs;
-      mkSnakeOil = pkgs.callPackage ../../packages/snakeoil.nix { };
+      mkSnakeOil = pkgs.callPackage ../../packages/snakeoil.nix {};
     };
   };
 
@@ -111,7 +114,8 @@ in {
       interfaces.local = {
         nftables.conditions = [
           "ip saddr { ${concatStringsSep ", " cfg.cidrForNetwork.local.v4} }"
-          (mkIf networking.enableIPv6
+          (
+            mkIf networking.enableIPv6
             "ip6 saddr { $localrange6, ${concatStringsSep ", " cfg.cidrForNetwork.local.v6} }"
           )
         ];
@@ -169,12 +173,12 @@ in {
   in {
     localaddrs = mkIf cfg.localaddrs.enable {
       unitConfig = {
-        After = [ "network-online.target" ];
+        After = ["network-online.target"];
       };
       serviceConfig = rec {
         StateDirectory = "localaddrs";
         ExecStart = mkMerge [
-          [ "${localaddrs}" ]
+          ["${localaddrs}"]
           (mkIf networking.nftables.enable (mkAfter [
             "${localaddrs-nftables}"
           ]))
@@ -188,7 +192,7 @@ in {
       };
     };
     nftables = mkIf (networking.nftables.enable && cfg.localaddrs.enable) rec {
-      wants = [ "localaddrs.service" ];
+      wants = ["localaddrs.service"];
       serviceConfig = {
         ExecReload = mkBefore [
           "+${cfg.localaddrs.reloadScript}"
@@ -196,7 +200,7 @@ in {
       };
     };
     nginx = mkIf (config.services.nginx.enable && cfg.localaddrs.enable) rec {
-      wants = [ "localaddrs.service" ];
+      wants = ["localaddrs.service"];
       after = wants;
       serviceConfig = {
         ExecReload = mkBefore [

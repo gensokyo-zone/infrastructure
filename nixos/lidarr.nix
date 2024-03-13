@@ -2,5 +2,5 @@ _: {
   services.lidarr = {
     enable = true;
   };
-  users.users.lidarr.extraGroups = [ "kyuuto" ];
+  users.users.lidarr.extraGroups = ["kyuuto"];
 }

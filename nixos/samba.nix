@@ -6,8 +6,8 @@
   inherit (lib.modules) mkIf mkDefault;
   inherit (lib.lists) any;
   inherit (lib.strings) hasInfix concatMapStringsSep splitString;
-  cfg =  config.services.samba;
-  hasIpv4 = any (hasInfix ".") config.systemd.network.networks.eth0.address or [ ];
+  cfg = config.services.samba;
+  hasIpv4 = any (hasInfix ".") config.systemd.network.networks.eth0.address or [];
 in {
   services.samba = {
     enable = mkDefault true;

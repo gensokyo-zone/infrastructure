@@ -14,10 +14,11 @@
   proxyPass = "https://reisen.local.${config.networking.domain}:8006/";
   unencrypted = mkSnakeOil {
     name = "prox-local-cert";
-    domain = singleton "prox.local.${config.networking.domain}"
+    domain =
+      singleton "prox.local.${config.networking.domain}"
       ++ optional tailscale.enable "prox.tail.${config.networking.domain}";
   };
-  sslHost = { config, ... }: {
+  sslHost = {config, ...}: {
     sslCertificate = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.fullchain;
     sslCertificateKey = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.key;
   };
@@ -91,24 +92,30 @@ in {
     ${access.domain} = {
       inherit locations extraConfig;
     };
-    ${access.localDomain} = mkMerge [ {
-      inherit (virtualHosts.${access.domain}) useACMEHost;
-      local.enable = mkDefault true;
-      forceSSL = mkDefault true;
-      locations."/" = {
-        proxy.websocket.enable = true;
-        inherit proxyPass extraConfig;
-      };
-    } sslHost ];
-    ${access.tailDomain} = mkIf tailscale.enable (mkMerge [ {
-      inherit (virtualHosts.${access.domain}) useACMEHost;
-      addSSL = mkDefault true;
-      local.enable = mkDefault true;
-      locations."/" = {
-        proxy.websocket.enable = true;
-        inherit proxyPass extraConfig;
-      };
-    } sslHost ]);
+    ${access.localDomain} = mkMerge [
+      {
+        inherit (virtualHosts.${access.domain}) useACMEHost;
+        local.enable = mkDefault true;
+        forceSSL = mkDefault true;
+        locations."/" = {
+          proxy.websocket.enable = true;
+          inherit proxyPass extraConfig;
+        };
+      }
+      sslHost
+    ];
+    ${access.tailDomain} = mkIf tailscale.enable (mkMerge [
+      {
+        inherit (virtualHosts.${access.domain}) useACMEHost;
+        addSSL = mkDefault true;
+        local.enable = mkDefault true;
+        locations."/" = {
+          proxy.websocket.enable = true;
+          inherit proxyPass extraConfig;
+        };
+      }
+      sslHost
+    ]);
   };
 
   config.sops.secrets.access-proxmox = {

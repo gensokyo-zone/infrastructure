@@ -8,7 +8,7 @@
 in {
   services.postgresql = {
     enable = mkDefault true;
-    ensureDatabases = ["hass" "invidious" "dex"];
+    ensureDatabases = ["hass" "invidious" "dex" "keycloak"];
     ensureUsers = [
       {
         name = "hass";
@@ -22,6 +22,11 @@ in {
       }
       {
         name = "dex";
+        ensureDBOwnership = true;
+        authentication.local.allow = true;
+      }
+      {
+        name = "keycloak";
         ensureDBOwnership = true;
         authentication.local.allow = true;
       }

@@ -10,19 +10,24 @@
   inherit (config) networking;
   cfg = config.services.postgresql;
   formatHost = host:
-    if hasInfix "/" host then host
-    else if hasInfix ":" host then "${host}/128"
-    else if hasInfix "." host then "${host}/32"
+    if hasInfix "/" host
+    then host
+    else if hasInfix ":" host
+    then "${host}/128"
+    else if hasInfix "." host
+    then "${host}/32"
     else throw "unsupported IP address ${host}";
-  ensureUserModule = { config, ... }: {
+  ensureUserModule = {config, ...}: {
     options = with lib.types; {
       authentication = {
-        enable = mkEnableOption "TCP connections" // {
-          default = config.authentication.hosts != [ ];
-        };
+        enable =
+          mkEnableOption "TCP connections"
+          // {
+            default = config.authentication.hosts != [];
+          };
         hosts = mkOption {
           type = listOf str;
-          default = [ ];
+          default = [];
         };
         method = mkOption {
           type = str;
@@ -47,13 +52,15 @@
       authentication = {
         hosts = let
           inherit (networking.access) cidrForNetwork;
-        in mkMerge [
-          (mkIf config.authentication.tailscale.allow cidrForNetwork.tail.all)
-          (mkIf config.authentication.local.allow (cidrForNetwork.loopback.all ++ cidrForNetwork.local.all))
-        ];
+        in
+          mkMerge [
+            (mkIf config.authentication.tailscale.allow cidrForNetwork.tail.all)
+            (mkIf config.authentication.local.allow (cidrForNetwork.loopback.all ++ cidrForNetwork.local.all))
+          ];
         authentication = mkMerge (map (host: ''
-          host ${config.authentication.database} ${config.name} ${formatHost host} ${config.authentication.method}
-        '') config.authentication.hosts);
+            host ${config.authentication.database} ${config.name} ${formatHost host} ${config.authentication.method}
+          '')
+          config.authentication.hosts);
       };
       authentication.database = mkIf config.ensureDBOwnership (
         mkOptionDefault config.name
@@ -70,11 +77,13 @@ in {
     enableTCPIP = mkIf (any (user: user.authentication.enable) cfg.ensureUsers) (
       mkDefault true
     );
-    authentication = mkMerge (map (user:
-      mkIf user.authentication.enable user.authentication.authentication
-    ) cfg.ensureUsers);
+    authentication = mkMerge (map (
+        user:
+          mkIf user.authentication.enable user.authentication.authentication
+      )
+      cfg.ensureUsers);
   };
   config.networking.firewall.interfaces.local = mkIf cfg.enable {
-    allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [ cfg.port ];
+    allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.port];
   };
 }

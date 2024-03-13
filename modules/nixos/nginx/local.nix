@@ -9,7 +9,7 @@
   inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
   inherit (config.networking.access) cidrForNetwork localaddrs;
-  localModule = { config, ... }: {
+  localModule = {config, ...}: {
     options.local = with lib.types; {
       enable = mkOption {
         type = bool;
@@ -37,16 +37,23 @@
           cidrForNetwork.loopback.all
           ++ cidrForNetwork.local.all
           ++ optionals tailscale.enable cidrForNetwork.tail.all;
-        allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
-          include ${localaddrs.stateDir}/*.nginx.conf;
+        allows =
+          concatMapStringsSep "\n" mkAllow allowAddresses
+          + optionalString localaddrs.enable ''
+            include ${localaddrs.stateDir}/*.nginx.conf;
+          '';
+      in
+        mkBefore ''
+          ${allows}
+          deny all;
         '';
-      in mkBefore ''
-        ${allows}
-        deny all;
-      '';
     };
   };
-  locationModule = { config, virtualHost, ... }: {
+  locationModule = {
+    config,
+    virtualHost,
+    ...
+  }: {
     imports = [
       localModule
     ];
@@ -58,13 +65,13 @@
       emitDenyGlobal = virtualHost.local.emitDenyGlobal;
     };
   };
-  hostModule = { config, ... }: {
-    imports = [ localModule ];
+  hostModule = {config, ...}: {
+    imports = [localModule];
 
     options = with lib.types; {
       locations = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ locationModule ];
+          modules = [locationModule];
           shorthandOnlyDefinesConfig = true;
           specialArgs = {
             virtualHost = config;
@@ -83,7 +90,7 @@ in {
   options = with lib.types; {
     services.nginx.virtualHosts = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ hostModule ];
+        modules = [hostModule];
         shorthandOnlyDefinesConfig = true;
         specialArgs = {
           nixosConfig = config;

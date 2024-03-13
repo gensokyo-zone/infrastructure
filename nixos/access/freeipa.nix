@@ -3,8 +3,7 @@
   meta,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.strings) optionalString concatStringsSep;
@@ -56,18 +55,22 @@ in {
       type = str;
     };
     preread = {
-      enable = mkEnableOption "ssl preread" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "ssl preread"
+        // {
+          default = true;
+        };
       port = mkOption {
         type = port;
         default = 444;
       };
     };
     kerberos = {
-      enable = mkEnableOption "proxy kerberos" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "proxy kerberos"
+        // {
+          default = true;
+        };
       ports = {
         ticket = mkOption {
           type = port;
@@ -86,7 +89,10 @@ in {
     proxyPass = mkOption {
       type = str;
       default = let
-        scheme = if access.port == 443 then "https" else "http";
+        scheme =
+          if access.port == 443
+          then "https"
+          else "http";
       in "${scheme}://${access.host}:${toString access.port}";
     };
     domain = mkOption {
@@ -130,7 +136,7 @@ in {
         port = mkDefault access.ldapPort;
         useACMEHost = mkDefault access.useACMEHost;
       };
-      resolver.addresses = mkIf access.preread.enable [ "[::1]" "127.0.0.1:5353" ];
+      resolver.addresses = mkIf access.preread.enable ["[::1]" "127.0.0.1:5353"];
       defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
       streamConfig = let
         preread = ''
@@ -174,10 +180,11 @@ in {
             proxy_pass ${access.host}:${toString access.kerberos.ports.kpasswd};
           }
         '';
-      in mkMerge [
-        (mkIf access.preread.enable preread)
-        (mkIf access.kerberos.enable kerberos)
-      ];
+      in
+        mkMerge [
+          (mkIf access.preread.enable preread)
+          (mkIf access.kerberos.enable kerberos)
+        ];
       virtualHosts = {
         ${access.domain} = {
           inherit locations extraConfig;
@@ -207,7 +214,7 @@ in {
           local.enable = true;
           inherit locations;
         };
-        ${ldap.domain} = { config, ... }: {
+        ${ldap.domain} = {config, ...}: {
           useACMEHost = mkDefault virtualHosts.${access.domain}.useACMEHost;
           addSSL = mkDefault (config.useACMEHost != null);
           globalRedirect = access.domain;

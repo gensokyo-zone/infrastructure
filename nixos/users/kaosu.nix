@@ -1,18 +1,18 @@
-{ config, ... }:
-
-{
-  users.users.kaosubaloo = { name, ... }: {
+{config, ...}: {
+  users.users.kaosubaloo = {name, ...}: {
     uid = 8002;
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = name;
     extraGroups = [
-      "users" "peeps"
+      "users"
+      "peeps"
       "kyuuto"
-      "steamaccount" "beatsaber"
+      "steamaccount"
+      "beatsaber"
     ];
   };
-  users.groups.kaosubaloo = { name, ... }: {
+  users.groups.kaosubaloo = {name, ...}: {
     gid = config.users.users.${name}.uid;
   };
 }

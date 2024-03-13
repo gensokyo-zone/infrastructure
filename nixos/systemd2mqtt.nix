@@ -10,7 +10,8 @@ in {
     enable = mkDefault true;
     user = mkDefault "root";
     mqtt = {
-      url = mkDefault (if config.services.mosquitto.enable
+      url = mkDefault (
+        if config.services.mosquitto.enable
         then "tcp://localhost:1883"
         else "tcp://mqtt.local.${config.networking.domain}:1883"
       );

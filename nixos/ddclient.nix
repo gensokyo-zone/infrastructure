@@ -14,26 +14,30 @@ in {
     protocol = mkDefault "cloudflare";
     zone = mkDefault config.networking.domain;
     use = "no";
-    domains = [ ];
-    extraConfig = mkMerge [ (mkIf config.networking.enableIPv6 ''
-      usev6=webv6, webv6=https://ipv6.nsupdate.info/myip
-    '') ''
-      usev4=webv4, webv4=https://ipv4.nsupdate.info/myip
-      max-interval=1d
-    '' ];
+    domains = [];
+    extraConfig = mkMerge [
+      (mkIf config.networking.enableIPv6 ''
+        usev6=webv6, webv6=https://ipv6.nsupdate.info/myip
+      '')
+      ''
+        usev4=webv4, webv4=https://ipv4.nsupdate.info/myip
+        max-interval=1d
+      ''
+    ];
     passwordFile = config.sops.secrets.dyndns_cloudflare_token.path;
   };
   systemd.services.ddclient = mkIf cfg.enable rec {
-    wants = [ "network-online.target" ];
+    wants = ["network-online.target"];
     after = wants;
-    wantedBy = mkForce [ ];
+    wantedBy = mkForce [];
     serviceConfig = {
       ExecStartPre = let
         inherit (config.systemd.services.ddclient.serviceConfig) RuntimeDirectory;
         prestart-domains = pkgs.writeShellScript "ddclient-prestart-domains" ''
           cat ${config.sops.secrets.dyndns_ddclient_domains.path} >> /run/${RuntimeDirectory}/ddclient.conf
         '';
-      in mkAfter [ "!${prestart-domains}" ];
+      in
+        mkAfter ["!${prestart-domains}"];
       TimeoutStartSec = 90;
       LogFilterPatterns = [
         "~WARNING"

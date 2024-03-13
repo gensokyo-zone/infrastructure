@@ -35,8 +35,12 @@ in {
     access.vouch = mkIf cfg.enable {
       url = let
         inherit (cfg.settings.vouch) listen;
-        host = if listen == "0.0.0.0" || listen == "[::]" then "localhost" else listen;
-      in mkOptionDefault "http://${host}:${toString cfg.port}";
+        host =
+          if listen == "0.0.0.0" || listen == "[::]"
+          then "localhost"
+          else listen;
+      in
+        mkOptionDefault "http://${host}:${toString cfg.port}";
     };
     virtualHosts = let
       locations = {
@@ -46,17 +50,20 @@ in {
             proxy_redirect default;
           '';
         };
-        "/validate" = { config, ... }: {
+        "/validate" = {config, ...}: {
           proxyPass = mkDefault (access.url + "/validate");
           recommendedProxySettings = mkDefault false;
-          extraConfig = if config.local.trusted then ''
-            if ($http_x_host = ''') {
-              set $http_x_host $host;
-            }
-            proxy_set_header Host $http_x_host;
-          '' else ''
-            proxy_set_header Host $host;
-          '';
+          extraConfig =
+            if config.local.trusted
+            then ''
+              if ($http_x_host = ''') {
+                set $http_x_host $host;
+              }
+              proxy_set_header Host $http_x_host;
+            ''
+            else ''
+              proxy_set_header Host $host;
+            '';
         };
       };
       localLocations = kanidmDomain: {

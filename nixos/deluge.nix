@@ -42,28 +42,32 @@ in {
     parent = builtins.dirOf downloadDir;
     hasCompletedSubdir = completedDir != null && hasPrefix parent completedDir;
     completedSubdir = removePrefix parent completedDir;
-    download = if hasCompletedSubdir then {
-      path = parent;
-      subdirectories = [
-        (builtins.baseNameOf downloadDir)
-        completedSubdir
-      ];
-    } else {
-      path = downloadDir;
-    };
+    download =
+      if hasCompletedSubdir
+      then {
+        path = parent;
+        subdirectories = [
+          (builtins.baseNameOf downloadDir)
+          completedSubdir
+        ];
+      }
+      else {
+        path = downloadDir;
+      };
     completed = {
       path = cfg.config.move_completed_path;
     };
-  in mkIf cfg.enable (mkAfter [
-    download
-    (mkIf (completedDir != null && !hasCompletedSubdir) completed)
-  ]);
+  in
+    mkIf cfg.enable (mkAfter [
+      download
+      (mkIf (completedDir != null && !hasCompletedSubdir) completed)
+    ]);
   users.users = mkIf cfg.enable (mkMerge [
     {
-      deluge.extraGroups = [ "kyuuto" ];
+      deluge.extraGroups = ["kyuuto"];
     }
     (mkIf mediatomb.enable {
-      ${mediatomb.user}.extraGroups = [ cfg.group ];
+      ${mediatomb.user}.extraGroups = [cfg.group];
     })
   ]);
 }

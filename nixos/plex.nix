@@ -1,4 +1,9 @@
-{config, lib, pkgs, ...}: let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   inherit (lib.modules) mkIf mkForce mkDefault;
   inherit (lib.strings) escapeShellArg;
   cfg = config.services.plex;
@@ -21,9 +26,10 @@ in {
           fi
           ${pkgs.coreutils}/bin/ln -sfT ../Cache "$PLEX_DATADIR/Plex Media Server/Cache"
         '';
-      in mkForce [
-        ''!${preStartScript}''
-      ];
+      in
+        mkForce [
+          ''!${preStartScript}''
+        ];
       # KillMode = "mixed" doesn't behave as expected...
       TimeoutStopSec = 5;
     };

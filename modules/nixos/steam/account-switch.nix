@@ -76,30 +76,35 @@ in {
         inherit owner;
         inherit (shared) group mode;
       };
-      setupFiles = singleton {
-        ${cfg.rootDir} = toplevel;
-        ${cfg.binDir} = toplevel;
-        ${cfg.binDir + "/users"} = shared;
-        ${cfg.dataDir} = toplevel;
-        ${cfg.sharedDataDir} = shared;
-        ${cfg.workingDir} = toplevel;
-        ${cfg.sharedWorkingDir} = shared;
-      } ++ map (owner: {
-        ${cfg.dataDir + "/${owner}"} = personal owner;
-        ${cfg.workingDir + "/${owner}"} = personal owner;
-      }) cfg.users;
-      userBinFiles = listToAttrs (map (user: nameValuePair "${cfg.binDir}/users/${user}.bat" {
-        inherit (toplevel) owner group;
-        mode = "0755";
-        type = "copy";
-        src = pkgs.writeTextFile {
-          name = "steam-${user}.bat";
-          executable = true;
-          text = ''
-            setx GENSO_STEAM_USER ${user}
-          '';
-        };
-      }) cfg.users);
+      setupFiles =
+        singleton {
+          ${cfg.rootDir} = toplevel;
+          ${cfg.binDir} = toplevel;
+          ${cfg.binDir + "/users"} = shared;
+          ${cfg.dataDir} = toplevel;
+          ${cfg.sharedDataDir} = shared;
+          ${cfg.workingDir} = toplevel;
+          ${cfg.sharedWorkingDir} = shared;
+        }
+        ++ map (owner: {
+          ${cfg.dataDir + "/${owner}"} = personal owner;
+          ${cfg.workingDir + "/${owner}"} = personal owner;
+        })
+        cfg.users;
+      userBinFiles = listToAttrs (map (user:
+        nameValuePair "${cfg.binDir}/users/${user}.bat" {
+          inherit (toplevel) owner group;
+          mode = "0755";
+          type = "copy";
+          src = pkgs.writeTextFile {
+            name = "steam-${user}.bat";
+            executable = true;
+            text = ''
+              setx GENSO_STEAM_USER ${user}
+            '';
+          };
+        })
+      cfg.users);
     in {
       enable = mkIf (cfg.enable || cfg.setup) true;
       files = mkMerge [

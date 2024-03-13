@@ -34,12 +34,14 @@ in {
       url = mkOptionDefault "http://localhost:${toString cfg.port}";
     };
     virtualHosts = let
-      invidiousDomains = [
-        access.domain
-        access.localDomain
-      ] ++ optional tailscale.enable access.tailDomain;
+      invidiousDomains =
+        [
+          access.domain
+          access.localDomain
+        ]
+        ++ optional tailscale.enable access.tailDomain;
       contentSecurityPolicy' = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; media-src 'self' blob: https://*.googlevideo.com:443 https://*.youtube.com:443; child-src 'self' blob:; frame-src 'self'; frame-ancestors 'none'";
-      contentSecurityPolicy = replaceStrings [ "'self'" ] [ "'self' ${concatStringsSep " " invidiousDomains}" ] contentSecurityPolicy';
+      contentSecurityPolicy = replaceStrings ["'self'"] ["'self' ${concatStringsSep " " invidiousDomains}"] contentSecurityPolicy';
       extraConfig = ''
         # Some players don't reopen a socket and playback stops totally instead of resuming after an extended pause
         send_timeout 100m;
@@ -56,14 +58,14 @@ in {
         '';
       };
     in {
-      ${access.domain} = { config, ... }: {
+      ${access.domain} = {config, ...}: {
         vouch.enable = true;
         locations."/" = location;
         kTLS = mkDefault true;
         inherit extraConfig;
       };
-      ${access.localDomain} = { config, ... }: {
-        serverAliases = mkIf tailscale.enable [ access.tailDomain ];
+      ${access.localDomain} = {config, ...}: {
+        serverAliases = mkIf tailscale.enable [access.tailDomain];
         local.enable = true;
         locations."/" = mkMerge [
           location

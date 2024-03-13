@@ -1,17 +1,16 @@
-{ config, ... }:
-
-{
-  users.users.connieallure = { name, ... }: {
+{config, ...}: {
+  users.users.connieallure = {name, ...}: {
     uid = 8003;
     isNormalUser = true;
     autoSubUidGidRange = false;
     group = name;
     extraGroups = [
-      "users" "peeps"
+      "users"
+      "peeps"
       "kyuuto"
     ];
   };
-  users.groups.connieallure = { name, ... }: {
+  users.groups.connieallure = {name, ...}: {
     gid = config.users.users.${name}.uid;
   };
 }

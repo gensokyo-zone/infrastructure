@@ -14,7 +14,11 @@
   inherit (lib.meta) getExe;
   inherit (config.services.steam) accountSwitch;
   cfg = config.services.steam.beatsaber;
-  versionModule = { config, name, ... }: {
+  versionModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       version = mkOption {
         type = str;
@@ -23,11 +27,12 @@
     };
   };
 
-  mkSharePath = path: mkWinPath (
-    "%GENSO_SMB_SHARED_MOUNT%"
-    + "/${accountSwitch.sharePath}"
-    + "/${removePrefix (accountSwitch.rootDir + "/") path}"
-  );
+  mkSharePath = path:
+    mkWinPath (
+      "%GENSO_SMB_SHARED_MOUNT%"
+      + "/${accountSwitch.sharePath}"
+      + "/${removePrefix (accountSwitch.rootDir + "/") path}"
+    );
   vars = ''
     if "%GENSO_STEAM_INSTALL%" == "" set "GENSO_STEAM_INSTALL=C:\Program Files (x86)\Steam"
     if "%GENSO_STEAM_LIBRARY_BS%" == "" set "GENSO_STEAM_LIBRARY_BS=%GENSO_STEAM_INSTALL%"
@@ -102,9 +107,11 @@
 in {
   options.services.steam.beatsaber = with lib.types; {
     enable = mkEnableOption "beatsaber scripts";
-    setup = mkEnableOption "beatsaber data" // {
-      default = accountSwitch.setup;
-    };
+    setup =
+      mkEnableOption "beatsaber data"
+      // {
+        default = accountSwitch.setup;
+      };
     group = mkOption {
       type = str;
       default = "beatsaber";
@@ -114,7 +121,7 @@ in {
     };
     versions = mkOption {
       type = attrsOf (submodule versionModule);
-      default = { };
+      default = {};
     };
     users = mkOption {
       type = listOf str;
@@ -127,7 +134,7 @@ in {
       bsUsers = filterAttrs (_: userIs cfg.group) config.users.users;
       allVersions = mapAttrsToList (_: version: version.version) cfg.versions;
     in {
-      defaultVersion = mkIf (allVersions != [ ]) (mkOptionDefault (
+      defaultVersion = mkIf (allVersions != []) (mkOptionDefault (
         head allVersions
       ));
       users = mkOptionDefault (
@@ -140,24 +147,27 @@ in {
         mkbeatsabersh
       ];
     };
-    systemd.services = mkIf cfg.setup (listToAttrs (map (user: nameValuePair "steam-setup-beatsaber-${user}" {
-      script = mkMerge (mapAttrsToList (_: version: ''
-        ${getExe mkbeatsaber} ${version.version} ${user}
-      '') cfg.versions);
-      path = [
-        pkgs.coreutils
-      ];
-      wantedBy = [
-        "multi-user.target"
-      ];
-      after = [
-        "tmpfiles.service"
-      ];
-      serviceConfig = {
-        RemainAfterExit = mkOptionDefault true;
-        User = mkOptionDefault user;
-      };
-    }) cfg.users));
+    systemd.services = mkIf cfg.setup (listToAttrs (map (user:
+      nameValuePair "steam-setup-beatsaber-${user}" {
+        script = mkMerge (mapAttrsToList (_: version: ''
+            ${getExe mkbeatsaber} ${version.version} ${user}
+          '')
+          cfg.versions);
+        path = [
+          pkgs.coreutils
+        ];
+        wantedBy = [
+          "multi-user.target"
+        ];
+        after = [
+          "tmpfiles.service"
+        ];
+        serviceConfig = {
+          RemainAfterExit = mkOptionDefault true;
+          User = mkOptionDefault user;
+        };
+      })
+    cfg.users));
     services.tmpfiles = let
       toplevel = {
         owner = mkDefault "admin";
@@ -187,77 +197,92 @@ in {
         "AppData"
         "UserData"
       ];
-      setupFiles = [
+      setupFiles =
+        [
+          {
+            "${accountSwitch.sharedDataDir}/BeatSaber" = toplevel;
+            "${accountSwitch.binDir}/beatsaber" = shared;
+          }
+          (listToAttrs (
+            map (
+              folder:
+                nameValuePair "${accountSwitch.sharedDataDir}/BeatSaber/${folder}" shared
+            )
+            sharedFolders
+          ))
+        ]
+        ++ concatMap (
+          owner:
+            singleton {
+              "${accountSwitch.dataDir}/${owner}/BeatSaber" = personal owner;
+              "${accountSwitch.dataDir}/${owner}/BeatSaber/AppData" = personal owner;
+              "${accountSwitch.dataDir}/${owner}/BeatSaber/UserData" = personal owner;
+            }
+            ++ mapAttrsToList (_: version: {
+              "${accountSwitch.dataDir}/${owner}/BeatSaber/${version.version}" = personal owner;
+            })
+            cfg.versions
+        )
+        accountSwitch.users
+        ++ mapAttrsToList (_: version: {
+          "${accountSwitch.sharedDataDir}/BeatSaber/${version.version}" = shared;
+        })
+        cfg.versions;
+      versionBinFiles =
+        mapAttrs' (
+          _: version:
+            nameValuePair
+            "${accountSwitch.binDir}/beatsaber/${replaceStrings ["."] ["_"] version.version}.bat"
+            {
+              inherit (bin) owner group mode type;
+              src = pkgs.writeTextFile {
+                name = "beatsaber-${version.version}.bat";
+                executable = true;
+                text = ''
+                  setx GENSO_STEAM_BS_VERSION ${version.version}
+                '';
+              };
+            }
+        )
+        cfg.versions;
+      binFiles =
         {
-          "${accountSwitch.sharedDataDir}/BeatSaber" = toplevel;
-          "${accountSwitch.binDir}/beatsaber" = shared;
-        }
-        (listToAttrs (
-          map (folder:
-            nameValuePair "${accountSwitch.sharedDataDir}/BeatSaber/${folder}" shared
-          ) sharedFolders
-        ))
-      ] ++ concatMap (owner:
-        singleton {
-          "${accountSwitch.dataDir}/${owner}/BeatSaber" = personal owner;
-          "${accountSwitch.dataDir}/${owner}/BeatSaber/AppData" = personal owner;
-          "${accountSwitch.dataDir}/${owner}/BeatSaber/UserData" = personal owner;
-        } ++ mapAttrsToList (_: version: {
-          "${accountSwitch.dataDir}/${owner}/BeatSaber/${version.version}" = personal owner;
-        }) cfg.versions
-      ) accountSwitch.users
-      ++ mapAttrsToList (_: version: {
-        "${accountSwitch.sharedDataDir}/BeatSaber/${version.version}" = shared;
-      }) cfg.versions;
-      versionBinFiles = mapAttrs' (_: version: nameValuePair
-        "${accountSwitch.binDir}/beatsaber/${replaceStrings [ "." ] [ "_" ] version.version}.bat"
-        {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-${version.version}.bat";
-            executable = true;
-            text = ''
-              setx GENSO_STEAM_BS_VERSION ${version.version}
-            '';
+          "${accountSwitch.binDir}/beatsaber/mount.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-mount.bat";
+              executable = true;
+              text = mountbeatsaber;
+            };
+          };
+          "${accountSwitch.binDir}/beatsaber/launch.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-launch.bat";
+              executable = true;
+              text = launchbeatsaber;
+            };
+          };
+          "${accountSwitch.binDir}/beatsaber/fpfc.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-fpfc.bat";
+              executable = true;
+              text = fpfcbeatsaber;
+            };
+          };
+          "${accountSwitch.binDir}/beatsaber/ModAssistant.exe" = {
+            inherit (toplevel) owner group;
+            mode = "0755";
+            type = "copy";
+            src = pkgs.fetchurl {
+              url = "https://github.com/Assistant/ModAssistant/releases/download/v1.1.32/ModAssistant.exe";
+              hash = "sha256-ozu2gYFiz+2BjptqL80DmUopbahbyGKFO1IPd7BhVPM=";
+              executable = true;
+            };
           };
         }
-      ) cfg.versions;
-      binFiles = {
-        "${accountSwitch.binDir}/beatsaber/mount.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-mount.bat";
-            executable = true;
-            text = mountbeatsaber;
-          };
-        };
-        "${accountSwitch.binDir}/beatsaber/launch.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-launch.bat";
-            executable = true;
-            text = launchbeatsaber;
-          };
-        };
-        "${accountSwitch.binDir}/beatsaber/fpfc.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-fpfc.bat";
-            executable = true;
-            text = fpfcbeatsaber;
-          };
-        };
-        "${accountSwitch.binDir}/beatsaber/ModAssistant.exe" = {
-          inherit (toplevel) owner group;
-          mode = "0755";
-          type = "copy";
-          src = pkgs.fetchurl {
-            url = "https://github.com/Assistant/ModAssistant/releases/download/v1.1.32/ModAssistant.exe";
-            hash = "sha256-ozu2gYFiz+2BjptqL80DmUopbahbyGKFO1IPd7BhVPM=";
-            executable = true;
-          };
-        };
-      } // versionBinFiles;
+        // versionBinFiles;
     in {
       enable = mkIf (cfg.enable || cfg.setup) true;
       files = mkMerge [

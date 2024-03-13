@@ -1,7 +1,4 @@
-{
-  inputs,
-  ...
-}: {
+{inputs, ...}: {
   nixpkgs = {
     overlays = [
       inputs.arcexprs.overlays.default

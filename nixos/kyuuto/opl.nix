@@ -10,9 +10,11 @@
   cfg = kyuuto.opl;
 in {
   options.kyuuto.opl = with lib.types; {
-    enable = mkEnableOption "hosting" // {
-      default = config.services.samba.enable;
-    };
+    enable =
+      mkEnableOption "hosting"
+      // {
+        default = config.services.samba.enable;
+      };
     user = mkOption {
       type = str;
       default = "opl";
@@ -39,22 +41,25 @@ in {
       };
       shares.opl = let
         inherit (config.networking.access) cidrForNetwork;
-        localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all
+        localAddrs =
+          cidrForNetwork.loopback.all
+          ++ cidrForNetwork.local.all
           ++ lib.optionals config.services.tailscale.enable cidrForNetwork.tail.all;
-      in mkIf cfg.enable {
-        comment = "Kyuuto Media OPL";
-        path = cfg.rootDir;
-        writeable = true;
-        browseable = true;
-        public = false;
-        "valid users" = [
-          cfg.user
-          "@kyuuto-peeps"
-        ];
-        "strict sync" = false;
-        "keepalive" = 0;
-        "hosts allow" = localAddrs;
-      };
+      in
+        mkIf cfg.enable {
+          comment = "Kyuuto Media OPL";
+          path = cfg.rootDir;
+          writeable = true;
+          browseable = true;
+          public = false;
+          "valid users" = [
+            cfg.user
+            "@kyuuto-peeps"
+          ];
+          "strict sync" = false;
+          "keepalive" = 0;
+          "hosts allow" = localAddrs;
+        };
     };
     services.tmpfiles = let
       setupFiles = {

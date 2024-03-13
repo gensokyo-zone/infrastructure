@@ -8,18 +8,19 @@
 in {
   options.services.mosquitto = with lib.types; {
     listeners = let
-      listenerModule = { ... }: {
+      listenerModule = {...}: {
         options = {
           openFirewall = mkEnableOption "firewall";
         };
       };
-    in mkOption {
-      type = listOf (submodule listenerModule);
-    };
+    in
+      mkOption {
+        type = listOf (submodule listenerModule);
+      };
   };
   config = {
     networking.firewall.allowedTCPPorts = mkIf cfg.enable (mkMerge (
-      map (listener: mkIf listener.openFirewall [ listener.port ]) cfg.listeners
+      map (listener: mkIf listener.openFirewall [listener.port]) cfg.listeners
     ));
   };
 }

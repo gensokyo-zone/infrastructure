@@ -8,17 +8,21 @@
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (inputs.self.lib.lib) eui64;
   inherit (config) networking services;
-  networkModule = { config, ... }: {
+  networkModule = {config, ...}: {
     options = with lib.types; {
       mdns = {
-        enable = mkEnableOption "SLAAC" // {
-          default = config.matchConfig.Type or null == "ether" && services.resolved.enable;
-        };
+        enable =
+          mkEnableOption "SLAAC"
+          // {
+            default = config.matchConfig.Type or null == "ether" && services.resolved.enable;
+          };
       };
       slaac = {
-        enable = mkEnableOption "SLAAC" // {
-          default = config.matchConfig.Type or null == "ether" && networking.enableIPv6;
-        };
+        enable =
+          mkEnableOption "SLAAC"
+          // {
+            default = config.matchConfig.Type or null == "ether" && networking.enableIPv6;
+          };
         postfix = mkOption {
           type = str;
         };

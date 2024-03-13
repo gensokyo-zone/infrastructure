@@ -3,8 +3,7 @@
   meta,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (config) networking;

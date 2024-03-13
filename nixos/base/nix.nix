@@ -1,4 +1,10 @@
-{ config, options, lib, inputs, ... }: let
+{
+  config,
+  options,
+  lib,
+  inputs,
+  ...
+}: let
   inherit (lib.modules) mkIf mkDefault;
   hasSops = options ? sops;
 in {
@@ -25,7 +31,8 @@ in {
         experimental-features = lib.optional (lib.versionAtLeast config.nix.package.version "2.4") "nix-command flakes";
         substituters = [
           "https://gensokyo-infrastructure.cachix.org"
-          "https://arc.cachix.org" "https://kittywitch.cachix.org"
+          "https://arc.cachix.org"
+          "https://kittywitch.cachix.org"
           "https://nix-community.cachix.org"
         ];
         trusted-public-keys = [
@@ -36,7 +43,7 @@ in {
           "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
         ];
         auto-optimise-store = true;
-        trusted-users = [ "root" "@wheel" ];
+        trusted-users = ["root" "@wheel"];
       };
       extraOptions = mkIf hasSops ''
         !include ${config.sops.secrets.github-access-token-public.path}
@@ -47,7 +54,11 @@ in {
         options = mkDefault "--delete-older-than 7d";
       };
     };
-    ${if hasSops then "sops" else null}.secrets.github-access-token-public = {
+    ${
+      if hasSops
+      then "sops"
+      else null
+    }.secrets.github-access-token-public = {
       sopsFile = mkDefault ../secrets/nix.yaml;
       group = mkDefault "users";
       mode = mkDefault "0644";

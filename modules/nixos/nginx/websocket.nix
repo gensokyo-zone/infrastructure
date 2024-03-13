@@ -1,10 +1,7 @@
-{
-  lib,
-  ...
-}: let
+{lib, ...}: let
   inherit (lib.modules) mkIf;
   inherit (lib.options) mkOption mkEnableOption;
-  wsModule = { config, ... }: {
+  wsModule = {config, ...}: {
     options = with lib.types; {
       proxy.websocket.enable = mkEnableOption "websocket proxy";
     };
@@ -16,8 +13,8 @@
       '';
     };
   };
-  hostModule = { config, ... }: {
-    imports = [ wsModule ];
+  hostModule = {config, ...}: {
+    imports = [wsModule];
 
     options = with lib.types; {
       locations = mkOption {

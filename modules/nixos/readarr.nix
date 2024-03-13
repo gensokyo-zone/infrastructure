@@ -1,7 +1,4 @@
-{
-  lib,
-  ...
-}: let
+{lib, ...}: let
   inherit (lib.options) mkOption;
 in {
   options.services.readarr = with lib.types; {

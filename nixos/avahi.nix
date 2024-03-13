@@ -26,7 +26,7 @@ in {
     daemon = "avahi-daemon.service";
     avahi-daemon-watchdog = pkgs.writeShellScript "avahi-daemon-watchdog" ''
       set -eu
-      export PATH="$PATH:${makeBinPath [ config.systemd.package pkgs.coreutils pkgs.gnugrep ]}"
+      export PATH="$PATH:${makeBinPath [config.systemd.package pkgs.coreutils pkgs.gnugrep]}"
       while read -r line; do
         if [[ $line = *"Host name conflict"* ]]; then
           if systemctl is-active ${daemon} > /dev/null; then
@@ -38,22 +38,23 @@ in {
         fi
       done < <(journalctl -o cat -feu ${daemon} | grep -F 'Host name conflict, retrying with ')
     '';
-  in mkIf (cfg.enable && cfg.publish.enable) {
-    avahi-daemon = {
-      serviceConfig = {
-        inherit RestartSec;
+  in
+    mkIf (cfg.enable && cfg.publish.enable) {
+      avahi-daemon = {
+        serviceConfig = {
+          inherit RestartSec;
+        };
+      };
+      avahi-daemon-watchdog = {
+        wantedBy = [daemon];
+        serviceConfig = {
+          Type = mkOptionDefault "exec";
+          ExecStart = [
+            "${avahi-daemon-watchdog}"
+          ];
+          Restart = mkOptionDefault "on-failure";
+          RestartSec = mkOptionDefault RestartSec;
+        };
       };
     };
-    avahi-daemon-watchdog = {
-      wantedBy = [ daemon ];
-      serviceConfig = {
-        Type = mkOptionDefault "exec";
-        ExecStart = [
-          "${avahi-daemon-watchdog}"
-        ];
-        Restart = mkOptionDefault "on-failure";
-        RestartSec = mkOptionDefault RestartSec;
-      };
-    };
-  };
 }

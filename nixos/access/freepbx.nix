@@ -12,9 +12,11 @@
   freepbx = config.lib.access.systemFor "freepbx";
 in {
   options.services.nginx.access.freepbx = with lib.types; {
-    global.enable = mkEnableOption "global access" // {
-      default = access.useACMEHost != null;
-    };
+    global.enable =
+      mkEnableOption "global access"
+      // {
+        default = access.useACMEHost != null;
+      };
     host = mkOption {
       type = str;
       default = freepbx.access.hostnameForNetwork.local;
@@ -94,17 +96,19 @@ in {
       };
       "${access.domain}@ucp" = {
         serverName = access.domain;
-        listen = concatMap (addr: [
-          {
-            inherit addr;
-            port = access.ucpPort;
-          }
-          (mkIf (access.useACMEHost != null) {
-            inherit addr;
-            port = access.ucpSslPort;
-            ssl = true;
-          })
-        ]) nginx.defaultListenAddresses;
+        listen =
+          concatMap (addr: [
+            {
+              inherit addr;
+              port = access.ucpPort;
+            }
+            (mkIf (access.useACMEHost != null) {
+              inherit addr;
+              port = access.ucpSslPort;
+              ssl = true;
+            })
+          ])
+          nginx.defaultListenAddresses;
         proxy.websocket.enable = true;
         local.enable = mkDefault (!access.global.enable);
         addSSL = mkDefault (access.useACMEHost != null);
@@ -116,27 +120,29 @@ in {
         inherit extraConfig;
       };
       ${access.localDomain} = {
-        listen = concatMap (addr: [
-          {
-            inherit addr;
-            port = nginx.defaultHTTPListenPort;
-          }
-          {
-            inherit addr;
-            port = access.ucpPort;
-          }
-          (mkIf (access.useACMEHost != null) {
-            inherit addr;
-            port = nginx.defaultSSLListenPort;
-            ssl = true;
-          })
-          (mkIf (access.useACMEHost != null) {
-            inherit addr;
-            port = access.ucpSslPort;
-            ssl = true;
-          })
-        ]) nginx.defaultListenAddresses;
-        serverAliases = mkIf tailscale.enable [ access.tailDomain ];
+        listen =
+          concatMap (addr: [
+            {
+              inherit addr;
+              port = nginx.defaultHTTPListenPort;
+            }
+            {
+              inherit addr;
+              port = access.ucpPort;
+            }
+            (mkIf (access.useACMEHost != null) {
+              inherit addr;
+              port = nginx.defaultSSLListenPort;
+              ssl = true;
+            })
+            (mkIf (access.useACMEHost != null) {
+              inherit addr;
+              port = access.ucpSslPort;
+              ssl = true;
+            })
+          ])
+          nginx.defaultListenAddresses;
+        serverAliases = mkIf tailscale.enable [access.tailDomain];
         useACMEHost = mkDefault access.useACMEHost;
         addSSL = mkDefault (access.useACMEHost != null);
         kTLS = mkDefault true;
@@ -146,7 +152,7 @@ in {
     };
   };
   config.networking.firewall = let
-    websocketPorts = [ access.ucpPort ] ++ optional (access.useACMEHost != null) access.ucpSslPort;
+    websocketPorts = [access.ucpPort] ++ optional (access.useACMEHost != null) access.ucpSslPort;
   in {
     interfaces.local.allowedTCPPorts = websocketPorts;
     allowedTCPPorts = mkIf access.global.enable websocketPorts;

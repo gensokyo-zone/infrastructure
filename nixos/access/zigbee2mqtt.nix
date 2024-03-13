@@ -2,8 +2,7 @@
   config,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   cfg = config.services.zigbee2mqtt;
@@ -46,7 +45,7 @@ in {
         locations."/" = location;
       };
       ${access.localDomain} = {
-        serverAliases = mkIf config.services.tailscale.enable [ access.tailDomain ];
+        serverAliases = mkIf config.services.tailscale.enable [access.tailDomain];
         local.enable = true;
         locations."/" = location;
       };

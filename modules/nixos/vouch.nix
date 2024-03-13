@@ -5,11 +5,20 @@
   lib,
   ...
 }: let
-  inherit (lib) mkIf mkMerge mkDefault mkOptionDefault mkOption mkEnableOption types
-    getExe;
+  inherit
+    (lib)
+    mkIf
+    mkMerge
+    mkDefault
+    mkOptionDefault
+    mkOption
+    mkEnableOption
+    types
+    getExe
+    ;
   nixosConfig = config;
   cfg = config.services.vouch-proxy;
-  settingsFormat = pkgs.formats.json { };
+  settingsFormat = pkgs.formats.json {};
 in {
   options.services.vouch-proxy = with types; {
     enable = mkEnableOption "vouch";
@@ -35,7 +44,7 @@ in {
     };
     enableSettingsSecrets = mkEnableOption "genJqSecretsReplacementSnippet";
     settings = let
-      settingsModule = { ... }: {
+      settingsModule = {...}: {
         freeformType = settingsFormat.type;
         options = {
           vouch = {
@@ -98,13 +107,14 @@ in {
           };
         };
       };
-    in mkOption {
-      type = submodule settingsModule;
-      default = { };
-    };
+    in
+      mkOption {
+        type = submodule settingsModule;
+        default = {};
+      };
     extraSettings = mkOption {
       inherit (settingsFormat) type;
-      default = { };
+      default = {};
     };
     settingsPath = mkOption {
       type = path;
@@ -116,48 +126,51 @@ in {
       cfg.settings
       cfg.extraSettings
     ];
-    settingsPath = if cfg.enableSettingsSecrets
+    settingsPath =
+      if cfg.enableSettingsSecrets
       then "/run/vouch-proxy/vouch-config.json"
       else settingsFormat.generate "vouch-config.json" settings;
-  in mkMerge [
-    {
-      services.vouch-proxy = {
-        settingsPath = mkOptionDefault settingsPath;
-      };
-    }
-    (mkIf cfg.enable {
-      systemd.services.vouch-proxy = {
-        description = "Vouch-proxy";
-        after = [ "network.target" ];
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig = {
-          ExecStartPre = let
-            preprocess = pkgs.writeShellScript "vouch-proxy-prestart" (
-              utils.genJqSecretsReplacementSnippet settings cfg.settingsPath
-            );
-          in mkIf cfg.enableSettingsSecrets [
-            "${preprocess}"
-          ];
-          ExecStart = [
-            "${getExe pkgs.vouch-proxy} -config ${cfg.settingsPath}"
-          ];
-          Restart = "on-failure";
-          RestartSec = mkDefault 5;
-          WorkingDirectory = "/var/lib/vouch-proxy";
-          StateDirectory = "vouch-proxy";
-          RuntimeDirectory = "vouch-proxy";
-          User = cfg.user;
-          Group = cfg.group;
-          StartLimitBurst = mkDefault 3;
+  in
+    mkMerge [
+      {
+        services.vouch-proxy = {
+          settingsPath = mkOptionDefault settingsPath;
         };
-      };
+      }
+      (mkIf cfg.enable {
+        systemd.services.vouch-proxy = {
+          description = "Vouch-proxy";
+          after = ["network.target"];
+          wantedBy = ["multi-user.target"];
+          serviceConfig = {
+            ExecStartPre = let
+              preprocess = pkgs.writeShellScript "vouch-proxy-prestart" (
+                utils.genJqSecretsReplacementSnippet settings cfg.settingsPath
+              );
+            in
+              mkIf cfg.enableSettingsSecrets [
+                "${preprocess}"
+              ];
+            ExecStart = [
+              "${getExe pkgs.vouch-proxy} -config ${cfg.settingsPath}"
+            ];
+            Restart = "on-failure";
+            RestartSec = mkDefault 5;
+            WorkingDirectory = "/var/lib/vouch-proxy";
+            StateDirectory = "vouch-proxy";
+            RuntimeDirectory = "vouch-proxy";
+            User = cfg.user;
+            Group = cfg.group;
+            StartLimitBurst = mkDefault 3;
+          };
+        };
 
-      users.users.${cfg.user} = {
-        inherit (cfg) group;
-        isSystemUser = true;
-      };
+        users.users.${cfg.user} = {
+          inherit (cfg) group;
+          isSystemUser = true;
+        };
 
-      users.groups.${cfg.group} = {};
-    })
-  ];
+        users.groups.${cfg.group} = {};
+      })
+    ];
 }

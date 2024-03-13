@@ -2,5 +2,5 @@ _: {
   services.readarr = {
     enable = true;
   };
-  users.users.readarr.extraGroups = [ "kyuuto" ];
+  users.users.readarr.extraGroups = ["kyuuto"];
 }
