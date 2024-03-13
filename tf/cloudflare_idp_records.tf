@@ -1,64 +1,68 @@
+locals {
+  idp_fqdn = "idp.${cloudflare_zone.gensokyo-zone_zone.zone}"
+}
+
 resource "cloudflare_record" "kerberos_master_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kerberos-master._tcp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kerberos-master"
     proto = "_tcp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 88
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
 resource "cloudflare_record" "kerberos_master_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kerberos-master._udp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kerberos-master"
     proto = "_udp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 88
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
 resource "cloudflare_record" "kerberos_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kerberos._tcp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kerberos"
     proto = "_tcp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 88
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
 resource "cloudflare_record" "kerberos_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kerberos._udp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kerberos"
     proto = "_udp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 88
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
@@ -74,7 +78,11 @@ resource "cloudflare_record" "kerberos_uri_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kerberos"
   type = "URI"
-  value = "0 100 \"krb5srv:m:tcp:idp.gensokyo.zone.\""
+  priority = 0
+  data {
+    weight = 100
+    content = "krb5srv:m:tcp:${local.idp_fqdn}."
+  }
   ttl = 3600
 }
 
@@ -82,39 +90,43 @@ resource "cloudflare_record" "kerberos_uri_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kerberos"
   type = "URI"
-  value = "0 100 \"krb5srv:m:udp:idp.gensokyo.zone.\""
+  priority = 0
+  data {
+    weight = 100
+    content = "krb5srv:m:udp:${local.idp_fqdn}."
+  }
   ttl = 3600
 }
 
 resource "cloudflare_record" "kpasswd_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kpasswd._tcp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kpasswd"
     proto = "_tcp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 464
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
 resource "cloudflare_record" "kpasswd_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_kpasswd._udp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_kpasswd"
     proto = "_udp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 464
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
@@ -122,7 +134,11 @@ resource "cloudflare_record" "kpasswd_uri_tcp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kpasswd"
   type = "URI"
-  value = "0 100 \"krb5srv:m:tcp:idp.gensokyo.zone.\""
+  priority = 0
+  data {
+    weight = 100
+    content = "krb5srv:m:tcp:${local.idp_fqdn}."
+  }
   ttl = 3600
 }
 
@@ -130,23 +146,27 @@ resource "cloudflare_record" "kpasswd_uri_udp" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   name = "_kpasswd"
   type = "URI"
-  value = "0 100 \"krb5srv:m:udp:idp.gensokyo.zone.\""
+  priority = 0
+  data {
+    weight = 100
+    content = "krb5srv:m:udp:${local.idp_fqdn}."
+  }
   ttl = 3600
 }
 
 resource "cloudflare_record" "ldap" {
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
-  name = "_ldap._tcp"
+  name = "@"
   type = "SRV"
   ttl = 3600
   data {
     service = "_ldap"
     proto = "_tcp"
-    name = "gensokyo.zone"
+    name = cloudflare_zone.gensokyo-zone_zone.zone
     priority = 0
     weight = 100
     port = 389
-    target = "idp.gensokyo.zone."
+    target = local.idp_fqdn
   }
 }
 
@@ -155,5 +175,5 @@ resource "cloudflare_record" "idp-ca" {
   name = "idp-ca"
   type = "CNAME"
   ttl = 60
-  value = "idp.gensokyo.zone."
+  value = local.idp_fqdn
 }
