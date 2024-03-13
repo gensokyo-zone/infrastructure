@@ -30,6 +30,7 @@ module "hakurei_system_records" {
   global_subdomains = [
     "plex",
     "idp",
+    "freeipa",
     "ldap",
     "pbx",
     "smb",

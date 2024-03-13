@@ -6,12 +6,13 @@
 }:
 let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkBefore mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.strings) optionalString concatStringsSep;
   inherit (config.services) tailscale;
-  inherit (config.services.nginx) virtualHosts;
-  access = config.services.nginx.access.freeipa;
-  inherit (config.services.nginx.access) ldap;
+  inherit (config.services) nginx;
+  inherit (nginx) virtualHosts;
+  access = nginx.access.freeipa;
+  inherit (nginx.access) ldap;
   extraConfig = ''
     ssl_verify_client optional_no_ca;
   '';
@@ -28,6 +29,16 @@ let
         proxy_set_header X-Forwarded-Server $host;
         proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
         proxy_redirect https://${domain}/ $scheme://$host/;
+
+        set $x_referer $http_referer;
+        if ($x_referer ~ "^https://([^/]*)/(.*)$") {
+          set $x_referer_host $1;
+          set $x_referer_path $2;
+        }
+        if ($x_referer_host = $host) {
+          set $x_referer "https://${domain}/$x_referer_path";
+        }
+        proxy_set_header Referer $x_referer;
       '';
     };
   };
@@ -43,6 +54,15 @@ in {
   options.services.nginx.access.freeipa = with lib.types; {
     host = mkOption {
       type = str;
+    };
+    preread = {
+      enable = mkEnableOption "ssl preread" // {
+        default = true;
+      };
+      port = mkOption {
+        type = port;
+        default = 444;
+      };
     };
     kerberos = {
       enable = mkEnableOption "proxy kerberos" // {
@@ -77,6 +97,10 @@ in {
       type = str;
       default = "idp-ca.${config.networking.domain}";
     };
+    globalDomain = mkOption {
+      type = str;
+      default = "freeipa.${config.networking.domain}";
+    };
     localDomain = mkOption {
       type = str;
       default = "freeipa.local.${config.networking.domain}";
@@ -106,29 +130,59 @@ in {
         port = mkDefault access.ldapPort;
         useACMEHost = mkDefault access.useACMEHost;
       };
-      streamConfig = mkIf access.kerberos.enable ''
-        server {
-          listen 0.0.0.0:${toString access.kerberos.ports.ticket};
-          listen [::]:${toString access.kerberos.ports.ticket};
-          listen 0.0.0.0:${toString access.kerberos.ports.ticket} udp;
-          listen [::]:${toString access.kerberos.ports.ticket} udp;
-          proxy_pass ${access.host}:${toString access.kerberos.ports.ticket};
-        }
-        server {
-          listen 0.0.0.0:${toString access.kerberos.ports.ticket4} udp;
-          listen [::]:${toString access.kerberos.ports.ticket4} udp;
-          proxy_pass ${access.host}:${toString access.kerberos.ports.ticket4};
-        }
-        server {
-          listen 0.0.0.0:${toString access.kerberos.ports.kpasswd};
-          listen [::]:${toString access.kerberos.ports.kpasswd};
-          listen 0.0.0.0:${toString access.kerberos.ports.kpasswd} udp;
-          listen [::]:${toString access.kerberos.ports.kpasswd} udp;
-          proxy_pass ${access.host}:${toString access.kerberos.ports.kpasswd};
-        }
-      '';
+      resolver.addresses = mkIf access.preread.enable [ "[::1]" "127.0.0.1:5353" ];
+      defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
+      streamConfig = let
+        preread = ''
+          upstream freeipa {
+            server ${access.host}:${toString access.port};
+          }
+          upstream nginx {
+            server localhost:${toString nginx.defaultSSLListenPort};
+          }
+          map $ssl_preread_server_name $ssl_name {
+            hostnames;
+            ${access.domain} freeipa;
+            ${access.caDomain} freeipa;
+            default nginx;
+          }
+          server {
+            listen 0.0.0.0:443;
+            listen [::]:443;
+            ssl_preread on;
+            proxy_pass $ssl_name;
+          }
+        '';
+        kerberos = ''
+          server {
+            listen 0.0.0.0:${toString access.kerberos.ports.ticket};
+            listen [::]:${toString access.kerberos.ports.ticket};
+            listen 0.0.0.0:${toString access.kerberos.ports.ticket} udp;
+            listen [::]:${toString access.kerberos.ports.ticket} udp;
+            proxy_pass ${access.host}:${toString access.kerberos.ports.ticket};
+          }
+          server {
+            listen 0.0.0.0:${toString access.kerberos.ports.ticket4} udp;
+            listen [::]:${toString access.kerberos.ports.ticket4} udp;
+            proxy_pass ${access.host}:${toString access.kerberos.ports.ticket4};
+          }
+          server {
+            listen 0.0.0.0:${toString access.kerberos.ports.kpasswd};
+            listen [::]:${toString access.kerberos.ports.kpasswd};
+            listen 0.0.0.0:${toString access.kerberos.ports.kpasswd} udp;
+            listen [::]:${toString access.kerberos.ports.kpasswd} udp;
+            proxy_pass ${access.host}:${toString access.kerberos.ports.kpasswd};
+          }
+        '';
+      in mkMerge [
+        (mkIf access.preread.enable preread)
+        (mkIf access.kerberos.enable kerberos)
+      ];
       virtualHosts = {
         ${access.domain} = {
+          inherit locations extraConfig;
+        };
+        ${access.globalDomain} = {
           inherit locations extraConfig;
         };
         ${access.caDomain} = {

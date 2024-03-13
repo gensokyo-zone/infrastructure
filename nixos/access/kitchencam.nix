@@ -68,12 +68,12 @@ in {
         listen = concatMap (addr: [
           (mkIf config.addSSL {
             inherit addr;
-            port = 443;
+            port = nginx.defaultSSLListenPort;
             ssl = true;
           })
           {
             inherit addr;
-            port = 80;
+            port = nginx.defaultHTTPListenPort;
           }
           {
             inherit addr;

@@ -101,6 +101,7 @@ in {
         [
           access.freeipa.localDomain
           access.freeipa.caDomain
+          access.freeipa.globalDomain
           access.ldap.domain
           access.ldap.localDomain
         ]

@@ -4,7 +4,7 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (lib.lists) head optional concatMap;
   inherit (lib.strings) splitString;
   inherit (config.services) nginx tailscale;
@@ -119,7 +119,7 @@ in {
         listen = concatMap (addr: [
           {
             inherit addr;
-            port = 80;
+            port = nginx.defaultHTTPListenPort;
           }
           {
             inherit addr;
@@ -127,7 +127,7 @@ in {
           }
           (mkIf (access.useACMEHost != null) {
             inherit addr;
-            port = 443;
+            port = nginx.defaultSSLListenPort;
             ssl = true;
           })
           (mkIf (access.useACMEHost != null) {
