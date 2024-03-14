@@ -14,6 +14,7 @@ users.users.keycloak = {
     group = "keycloak";
 };
 
+networking.firewall.allowedTCPPorts = [ 80 ];
 users.groups.keycloak = {};
 systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
 

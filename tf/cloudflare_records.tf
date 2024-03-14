@@ -33,6 +33,7 @@ module "hakurei_system_records" {
     "freeipa",
     "ldap",
     "pbx",
+    "sso",
     "smb",
     "kitchen",
     "yt",
