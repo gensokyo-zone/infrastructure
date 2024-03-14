@@ -2,13 +2,13 @@
   imports = let
     inherit (meta) nixos;
   in [
-    #nixos.sops
+    nixos.sops
     nixos.base
     nixos.reisen-ct
     nixos.keycloak
   ];
 
-  #sops.defaultSopsFile = ./secrets.yaml;
+  sops.defaultSopsFile = ./secrets.yaml;
 
   systemd.network.networks.eth0 = {
     name = "eth0";
