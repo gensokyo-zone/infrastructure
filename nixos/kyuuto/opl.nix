@@ -38,6 +38,7 @@ in {
       settings = mkIf cfg.enable {
         "ntlm auth" = mkDefault "ntlmv1-permitted";
         "server min protocol" = mkDefault "NT1";
+        "keepalive" = mkDefault 0;
       };
       shares.opl = let
         inherit (config.networking.access) cidrForNetwork;
@@ -57,7 +58,6 @@ in {
             "@kyuuto-peeps"
           ];
           "strict sync" = false;
-          "keepalive" = 0;
           "hosts allow" = localAddrs;
         };
     };

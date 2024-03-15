@@ -32,6 +32,9 @@
       jq
       ;
     inherit (inputs.deploy-rs.packages.${system}) deploy-rs;
+
+    inherit (pkgs) freeipa-ipasam samba-ldap samba-ipa;
+
     nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
       ${exports}
       ${exportsSsh}
@@ -56,6 +59,7 @@
         INPUT_INFRA_PVE = reisen + "/bin/pve.sh";
         INPUT_INFRA_MKPAM = reisen + "/bin/mkpam.sh";
         INPUT_INFRA_CT_CONFIG = reisen + "/bin/ct-config.sh";
+        INPUT_AUTHRPCGSS_OVERRIDES = reisen + "/net.auth-rpcgss-module.service.overrides";
       };
       inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputAttrs;
     in

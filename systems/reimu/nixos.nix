@@ -9,6 +9,7 @@
     nixos.steam.account-switch
     nixos.steam.beatsaber
     nixos.tailscale
+    nixos.ipa
     nixos.nfs
   ];
 

@@ -22,6 +22,7 @@ in {
     nixos.steam.account-switch
     nixos.steam.beatsaber
     nixos.tailscale
+    nixos.ipa
     nixos.cloudflared
     nixos.ddclient
     nixos.acme

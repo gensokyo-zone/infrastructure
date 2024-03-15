@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkForce mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrs' mapAttrsToList nameValuePair;
   inherit (lib.strings) hasPrefix concatMapStringsSep;
   inherit (config.services) samba-wsdd;
@@ -25,9 +25,23 @@ in {
   in {
     ldap = {
       enable = mkEnableOption "LDAP";
-      idmapDomain = mkOption {
-        type = str;
-        default = "*";
+      passdb = {
+        enable = mkEnableOption "LDAP authentication" // {
+          default = true;
+        };
+        backend = mkOption {
+          type = enum [ "ldapsam" "ipasam" ];
+          default = "ldapsam";
+        };
+      };
+      idmap = {
+        enable = mkEnableOption "LDAP users" // {
+          default = true;
+        };
+        domain = mkOption {
+          type = str;
+          default = "*";
+        };
       };
       url = mkOption {
         type = str;
@@ -36,10 +50,20 @@ in {
         type = str;
       };
       adminDn = mkOption {
-        type = str;
+        type = nullOr str;
         default = "name=anonymous,${cfg.ldap.baseDn}";
       };
       adminPasswordPath = mkOption {
+        type = nullOr path;
+        default = null;
+      };
+    };
+    kerberos = {
+      enable = mkEnableOption "krb5";
+      realm = mkOption {
+        type = str;
+      };
+      keytabPath = mkOption {
         type = nullOr path;
         default = null;
       };
@@ -87,7 +111,7 @@ in {
             };
             max = mkOption {
               type = int;
-              default = 10000;
+              default = 65534;
             };
           };
           readOnly = mkOption {
@@ -130,53 +154,69 @@ in {
 
   config = {
     services.samba = {
-      package = mkIf cfg.ldap.enable (mkDefault (pkgs.samba.override {
-        enableLDAP = true;
-      }));
+      package = mkIf cfg.ldap.enable (mkDefault (
+        if cfg.ldap.passdb.enable && cfg.ldap.passdb.backend == "ipasam" then pkgs.samba-ipa else pkgs.samba-ldap
+      ));
       ldap = {
-        adminPasswordPath = mkIf (hasPrefix "name=anonymous," cfg.ldap.adminDn) (mkDefault (
+        adminPasswordPath = mkIf (cfg.ldap.adminDn != null && hasPrefix "name=anonymous," cfg.ldap.adminDn) (mkDefault (
           pkgs.writeText "smb-ldap-anonymous" "anonymous"
         ));
       };
       idmap.domains = mkMerge [
-        (mkIf cfg.ldap.enable {
+        (mkIf (cfg.ldap.enable && cfg.ldap.idmap.enable) {
           ldap = {
-            domain = mkDefault cfg.ldap.idmapDomain;
+            backend = mkOptionDefault "ldap";
+            domain = mkDefault cfg.ldap.idmap.domain;
+            settings = {
+              ldap_url = mkOptionDefault cfg.ldap.url;
+            };
           };
         })
       ];
       settings = mkMerge ([
-          {
-            "use sendfile" = mkOptionDefault true;
-          }
-          (mkIf (cfg.passdb.smbpasswd.path != null) {
-            "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
-          })
-          (mkIf cfg.ldap.enable {
-            "passdb backend" = mkOptionDefault ''ldapsam:"${cfg.ldap.url}"'';
-            "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
-            "ldap admin dn" = mkOptionDefault "name=anonymous,${cfg.ldap.baseDn}";
-            "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
-          })
-          (mkIf (cfg.ldap.enable && true) {
-            "ntlm auth" = mkOptionDefault "disabled";
-            "encrypt passwords" = mkOptionDefault false;
-          })
-          (mkIf cfg.usershare.enable {
-            "usershare allow guests" = mkOptionDefault true;
-            "usershare max shares" = mkOptionDefault 16;
-            "usershare owner only" = mkOptionDefault true;
-            "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
-            "usershare path" = mkOptionDefault cfg.usershare.path;
-            "usershare prefix allow list" = mkOptionDefault [cfg.usershare.path];
-          })
-          (mkIf cfg.guest.enable {
-            "map to guest" = mkOptionDefault "Bad User";
-            "guest account" = mkOptionDefault cfg.guest.user;
-          })
+        {
+          "use sendfile" = mkOptionDefault true;
+        }
+        (mkIf (cfg.passdb.smbpasswd.path != null) {
+          "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
+        })
+        (mkIf cfg.ldap.enable {
+          "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
+          "ldap admin dn" = mkIf (cfg.ldap.adminDn != null) (mkOptionDefault cfg.ldap.adminDn);
+          "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
+        })
+        (mkIf cfg.kerberos.enable {
+          "realm" = mkOptionDefault cfg.kerberos.realm;
+          "kerberos method" = mkOptionDefault (
+            if cfg.kerberos.keytabPath != null then "dedicated keytab"
+            else "system keytab"
+          );
+          "dedicated keytab file" = mkIf (cfg.kerberos.keytabPath != null) (mkOptionDefault
+            "FILE:${cfg.kerberos.keytabPath}"
+          );
+          "create krb5 conf" = mkOptionDefault false;
+        })
+        (mkIf cfg.usershare.enable {
+          "usershare allow guests" = mkOptionDefault true;
+          "usershare max shares" = mkOptionDefault 16;
+          "usershare owner only" = mkOptionDefault true;
+          "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
+          "usershare path" = mkOptionDefault cfg.usershare.path;
+          "usershare prefix allow list" = mkOptionDefault [ cfg.usershare.path ];
+        })
+        (mkIf cfg.guest.enable {
+          "map to guest" = mkOptionDefault "Bad User";
+          "guest account" = mkOptionDefault cfg.guest.user;
+        })
+      ] ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
+      extraConfig = mkMerge (
+        mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings
+        ++ [
+          (mkIf (cfg.ldap.enable && cfg.ldap.passdb.enable) (mkBefore ''
+            passdb backend = ${cfg.ldap.passdb.backend}:"${cfg.ldap.url}"
+          ''))
         ]
-        ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
-      extraConfig = mkMerge (mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings);
+      );
       shares.${cfg.usershare.templateShare} = mkIf cfg.usershare.enable {
         "-valid" = false;
       };

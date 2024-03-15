@@ -157,3 +157,10 @@ mkshared plex 100193 100193 0755
 mkshared postgresql 100071 100071 0750
 mkshared unifi 100990 100990 0755
 mkshared zigbee2mqtt 100317 100317 0700
+
+ln -sf /lib/systemd/system/auth-rpcgss-module.service /etc/systemd/system/
+mkdir -p /etc/systemd/system/auth-rpcgss-module.service.d
+ln -sf /etc/systemd/system/auth-rpcgss-module.service /etc/systemd/system/multi-user.target.wants/
+base64 -d > /etc/systemd/system/auth-rpcgss-module.service.d/overrides.conf <<EOF
+$INPUT_AUTHRPCGSS_OVERRIDES
+EOF

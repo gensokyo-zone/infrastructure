@@ -1,8 +1,10 @@
 {
+  inputs,
   lib,
   config,
   ...
 }: let
+  inherit (inputs.self.lib.lib) mkBaseDn;
   inherit (lib) mkIf mkMerge mkBefore mkDefault mkOptionDefault mkEnableOption mkOption;
   inherit (lib.strings) splitString concatMapStringsSep;
   inherit (config.lib.access) mkSnakeOil;
@@ -46,7 +48,7 @@ in {
         };
         baseDn = mkOption {
           type = str;
-          default = concatMapStringsSep "," (part: "dc=${part}") (splitString "." cfg.serverSettings.domain);
+          default = mkBaseDn cfg.serverSettings.domain;
         };
       };
     };
