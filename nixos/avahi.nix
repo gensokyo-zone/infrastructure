@@ -28,7 +28,7 @@ in {
       set -eu
       export PATH="$PATH:${makeBinPath [config.systemd.package pkgs.coreutils pkgs.gnugrep]}"
       while read -r line; do
-        if [[ $line = *"Host name conflict"* ]]; then
+        if [[ $line = *"Host name conflict, retrying with "* ]]; then
           if systemctl is-active ${daemon} > /dev/null; then
             echo restarting avahi-daemon due to host name conflict... >&2
             systemctl stop ${daemon}
@@ -36,7 +36,7 @@ in {
             systemctl start ${daemon}
           fi
         fi
-      done < <(journalctl -o cat -feu ${daemon} | grep -F 'Host name conflict, retrying with ')
+      done < <(journalctl -n 0 -o cat -feu ${daemon})
     '';
   in
     mkIf (cfg.enable && cfg.publish.enable) {
