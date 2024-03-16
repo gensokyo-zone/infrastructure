@@ -10,6 +10,7 @@ in {
   name = "flake-update";
 
   nixpkgs.args.localSystem = "x86_64-linux";
+  nixpkgs.args.config.checkMetaRecursively = false;
 
   ci = {
     version = "v0.7";
@@ -21,7 +22,6 @@ in {
   gh-actions.env.CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}";
 
   nix.config = {
-    accept-flake-config = true;
     extra-platforms = ["aarch64-linux" "armv6l-linux" "armv7l-linux"];
     #extra-sandbox-paths = with channels.cipkgs; map (package: builtins.unsafeDiscardStringContext "${package}?") [bash qemu "/run/binfmt"];
   };
@@ -47,6 +47,20 @@ in {
       ];
       workflow_dispatch = {};
     };
+    jobs.flake-update = {
+      # TODO: split this up into two phases, then push at the end so other CI tests can run first
+      step.flake-update = {
+        name = "flake update build";
+        order = 500;
+        run = "nix run .#nf-update";
+        env = {
+          CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}";
+          NF_UPDATE_GIT_COMMIT = "1";
+          NF_UPDATE_CACHIX_PUSH = "1";
+          NF_CONFIG_ROOT = "\${{ github.workspace }}";
+        };
+      };
+    };
   };
 
   channels = {
@@ -55,50 +69,6 @@ in {
   };
 
   jobs.flake-update = {
-    tasks.flake-build.inputs = with channels.cipkgs;
-      ci.command {
-        name = "flake-update-build";
-        allowSubstitutes = false;
-        cache = {
-          enable = false;
-        };
-        displayName = "flake update build";
-        environment = ["CACHIX_SIGNING_KEY" "GITHUB_REF"];
-        command = let
-          filteredHosts = ["hakurei" "reimu" "aya" "tei" "litterbox" "mediabox"];
-          gcBetweenHosts = false;
-          nodeBuildString = concatMapStringsSep " && " (node: "nix build --show-trace -Lf . nixosConfigurations.${node}.config.system.build.toplevel -o result-${node}" + optionalString gcBetweenHosts " && nix-collect-garbage -d") filteredHosts;
-          hostPath = builtins.getEnv "PATH";
-        in ''
-          # ${toString builtins.currentTime}
-          export PATH="${hostPath}:$PATH"
-          export NIX_CONFIG="$(printf '%s\naccept-flake-config = true\n' "''${NIX_CONFIG-}")"
-          nix flake update
-
-          if git status --porcelain | grep -qF flake.lock; then
-            git -P diff flake.lock
-            echo "checking that nodes still build..." >&2
-            if ${nodeBuildString}; then
-              if [[ -n $CACHIX_SIGNING_KEY ]]; then
-                cachix push gensokyo-infrastructure result*/ &
-                CACHIX_PUSH=$!
-              fi
-              git add flake.lock
-              export GIT_{COMMITTER,AUTHOR}_EMAIL=github@kittywit.ch
-              export GIT_{COMMITTER,AUTHOR}_NAME="flake cron job"
-              git commit --message="ci: flake update"
-              if [[ $GITHUB_REF = refs/heads/${gitBranch} ]]; then
-                git push origin HEAD:${gitBranch}
-              fi
-
-              wait ''${CACHIX_PUSH-}
-            fi
-          else
-            echo "no source changes" >&2
-          fi
-        '';
-        impure = true;
-      };
   };
 
   ci.gh-actions.checkoutOptions = {

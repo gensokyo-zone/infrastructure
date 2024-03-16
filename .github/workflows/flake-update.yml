@@ -43,6 +43,14 @@ jobs:
     - id: nix-install
       name: nix install
       uses: arcnmx/ci/actions/nix/install@v0.7
+    - env:
+        CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
+        NF_CONFIG_ROOT: ${{ github.workspace }}
+        NF_UPDATE_CACHIX_PUSH: '1'
+        NF_UPDATE_GIT_COMMIT: '1'
+      id: flake-update
+      name: flake update build
+      run: nix run .#nf-update
     - id: ci-dirty
       name: nix test dirty
       uses: arcnmx/ci/actions/nix/run@v0.7

@@ -8,6 +8,7 @@
   packages = inputs.self.packages.${system};
   inherit (inputs.self.legacyPackages.${system}) pkgs;
   fmt = import ../ci/fmt.nix;
+  inherit (import ../ci/nix.nix) ci;
   exports = ''
     export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ../.}}
   '';
@@ -65,6 +66,16 @@
         )
         source ${../ci/setup.sh}
       '';
+    nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
+      ${exports}
+      NF_NIX_SYSTEMS=(${string.concatMapSep " " string.escapeShellArg ci.nixosSystems})
+      source ${../ci/actions-test.sh}
+    '';
+    nf-update = pkgs.writeShellScriptBin "nf-update" ''
+      ${exports}
+      export PATH="${makeBinPath [packages.nf-actions-test pkgs.cachix]}:$PATH"
+      source ${../ci/update.sh}
+    '';
     nf-hostname = pkgs.writeShellScriptBin "nf-hostname" ''
       ${exports}
       source ${../ci/hostname.sh}
@@ -101,6 +112,8 @@
     nf-generate = pkgs.writeShellScriptBin "nf-generate" ''
       ${exports}
       export PATH="$PATH:${makeBinPath [pkgs.jq]}"
+      NF_INPUT_CI=${string.escapeShellArg inputs.ci}
+      NF_CONFIG_FILES=(${string.concatMapSep " " string.escapeShellArg ci.workflowConfigs})
       source ${../ci/generate.sh}
     '';
     nf-statix = pkgs.writeShellScriptBin "nf-statix" ''

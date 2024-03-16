@@ -23,23 +23,6 @@
       ${optionalString (subdir != null) ''cd "$NF_CONFIG_ROOT${subdir}"''}
       exec nix ${subcommand} ''${FLAKE_OPTS-} "$NF_CONFIG_ROOT#${attr}" ${exeArg} "$@"
     '';
-  nf-actions = pkgs.writeShellScriptBin "nf-actions" ''
-    NF_CONFIG_FILES=($NF_CONFIG_ROOT/ci/{nodes,flake-cron}.nix)
-    for f in "''${NF_CONFIG_FILES[@]}"; do
-      echo $f
-      nix run --argstr config "$f" -f '${inputs.ci}' run.gh-actions-generate
-    done
-  '';
-  nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
-    set -eu
-    for host in hakurei reimu aya tei litterbox mediabox ct; do
-      echo testing $host...
-      nix run --argstr config "$NF_CONFIG_ROOT/ci/nodes.nix" -f '${inputs.ci}' job.$host.test
-    done
-  '';
-  nf-update = pkgs.writeShellScriptBin "nf-update" ''
-    exec nix flake update "$@"
-  '';
   nf-tf = pkgs.writeShellScriptBin "nf-tf" ''
     cd "$NF_CONFIG_ROOT/tf"
     if [[ $# -eq 0 ]]; then
@@ -52,10 +35,9 @@
     nativeBuildInputs = with pkgs; [
       inetutils
       sops
-      nf-actions
-      nf-actions-test
-      nf-update
       nf-tf
+      (mkWrapper {name = "nf-update";})
+      (mkWrapper {name = "nf-actions-test";})
       (mkWrapper {name = "nf-docs";})
       (mkWrapper {name = "nf-generate";})
       (mkWrapper {name = "nf-setup-node";})

@@ -9,6 +9,7 @@ with lib; {
   name = "nodes";
 
   nixpkgs.args.localSystem = "x86_64-linux";
+  nixpkgs.args.config.checkMetaRecursively = false;
 
   ci = {
     version = "v0.7";
@@ -19,13 +20,12 @@ with lib; {
   channels.nixfiles.path = ../.;
 
   nix.config = {
-    accept-flake-config = true;
     extra-platforms = ["aarch64-linux" "armv6l-linux" "armv7l-linux"];
     #extra-sandbox-paths = with channels.cipkgs; map (package: builtins.unsafeDiscardStringContext "${package}?") [bash qemu "/run/binfmt"];
   };
 
   jobs = let
-    enabledHosts = ["hakurei" "reimu" "aya" "tei" "litterbox" "mediabox" "ct"];
+    enabledHosts = ["hakurei" "reimu" "aya" "tei" "litterbox" "keycloak" "mediabox" "ct"];
   in
     mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
       tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;
