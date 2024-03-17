@@ -55,9 +55,11 @@
         ];
       };
     };
+    "modules/nixos/ldap".functor.enable = true;
     "modules/nixos/network".functor.enable = true;
     "modules/nixos/nginx".functor.enable = true;
     "modules/nixos/steam".functor.enable = true;
+    "modules/nixos/users".functor.enable = true;
     "modules/meta".functor.enable = true;
     "modules/system".functor.enable = true;
     "modules/system/proxmox".functor.enable = true;

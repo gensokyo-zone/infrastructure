@@ -19,7 +19,7 @@ in {
     securityType = mkDefault "user";
     ldap = {
       enable = mkDefault true;
-      url = mkDefault "ldaps://ldap.local.${domain}";
+      url = mkDefault "ldaps://ldap.int.${domain}";
       baseDn = mkDefault (mkBaseDn domain);
       adminDn = mkDefault "uid=samba,cn=sysaccounts,cn=etc,${cfg.ldap.baseDn}";
       adminPasswordPath = mkIf cfg.ldap.enable (
@@ -56,6 +56,7 @@ in {
       "winbind scan trusted domains" = false;
       "winbind use default domain" = true;
       "domain master" = false;
+      "domain logons" = true;
       "remote announce" = mkIf hasIpv4 [
         "10.1.1.255/${cfg.settings.workgroup}"
       ];

@@ -35,6 +35,10 @@ in {
       type = str;
       default = "ldap.local.${config.networking.domain}";
     };
+    intDomain = mkOption {
+      type = str;
+      default = "ldap.int.${config.networking.domain}";
+    };
     tailDomain = mkOption {
       type = str;
       default = "ldap.tail.${config.networking.domain}";

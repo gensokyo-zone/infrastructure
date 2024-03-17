@@ -154,6 +154,7 @@ in {
             ${virtualHosts.freeipa'ca.serverName} ${upstreams.freeipa};
             ${nginx.access.ldap.domain} ${upstreams.ldap};
             ${nginx.access.ldap.localDomain} ${upstreams.ldap};
+            ${nginx.access.ldap.intDomain} ${upstreams.ldap};
             ${nginx.access.ldap.tailDomain} ${upstreams.ldap};
             default ${upstreams.nginx};
           }
@@ -244,6 +245,7 @@ in {
         };
         freeipa'ldap'local = {
           serverName = mkDefault ldap.localDomain;
+          serverAliases = [ ldap.intDomain ];
           ssl.cert.copyFromVhost = "freeipa'ldap";
           globalRedirect = virtualHosts.freeipa'web'local.serverName;
           local.enable = true;

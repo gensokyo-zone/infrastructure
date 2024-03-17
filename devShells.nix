@@ -123,7 +123,7 @@
       (mkWrapper rec {
         name = "ldapsearch";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg} -b ${ldapBaseDn} -o ldif_wrap=no";
+        exe = ''${name} -H ${ldapHostArg} -b "''${LDAPSEARCH_BASE_DN-${ldapBaseDn}}" -o ldif_wrap=no'';
       })
       (mkWrapper rec {
         name = "ldapadd";
