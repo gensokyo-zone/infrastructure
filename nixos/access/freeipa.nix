@@ -195,8 +195,7 @@ in {
 
           map $ssl_preread_server_name $ldap_upstream {
             hostnames;
-            # TODO: ${access.domain} ${upstreams.ldap_freeipa};
-            ${access.globalDomain} ${upstreams.ldap_freeipa};
+            ${access.domain} ${upstreams.ldap_freeipa};
             default ${upstreams.ldap};
           }
 

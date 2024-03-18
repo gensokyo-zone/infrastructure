@@ -1,7 +1,7 @@
 { inputs, pkgs, config, lib, ... }: let
   inherit (inputs.self.lib.lib) mkBaseDn;
-  inherit (lib.modules) mkIf mkForce mkDefault;
-  inherit (lib.strings) toUpper splitString concatMapStringsSep;
+  inherit (lib.modules) mkIf mkBefore mkForce mkDefault;
+  inherit (lib.strings) toUpper;
   inherit (config.networking) domain;
   cfg = config.security.ipa;
   baseDn = mkBaseDn domain;
@@ -32,14 +32,8 @@ in {
       ] ++ config.users.groups.wheel.members;
       dyndns.enable = mkDefault false;
     };
-    networking.extraHosts = mkIf cfg.enable ''
-      10.1.1.46 idp.${domain}
-    '';
-    systemd.services.auth-rpcgss-module = mkIf (cfg.enable && !config.boot.modprobeConfig.enable) {
-      serviceConfig.ExecStart = mkForce [
-        ""
-        "${pkgs.coreutils}/bin/true"
-      ];
+    networking.hosts = mkIf cfg.enable {
+      "10.1.1.46" = mkBefore [ "idp.${domain}" ];
     };
     sops.secrets = {
       krb5-keytab = mkIf cfg.enable {

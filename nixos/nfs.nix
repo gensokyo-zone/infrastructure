@@ -6,26 +6,69 @@
 }: let
   inherit (inputs.self.lib.lib) mkBaseDn;
   inherit (lib.modules) mkIf mkForce mkDefault;
-  inherit (lib.lists) optional;
-  inherit (lib.strings) toUpper concatStringsSep concatMapStringsSep splitString;
+  inherit (lib.lists) optional optionals;
+  inherit (lib.strings) toUpper concatStringsSep;
+  inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.nfs;
+  inherit (cfg.export) flagSets;
   inherit (config.networking) domain;
-  openPorts = [
-    (mkIf cfg.server.enable 2049)
-    (mkIf config.services.rpcbind.enable 111)
-    (mkIf (cfg.server.statdPort != null) cfg.server.statdPort)
-    (mkIf (cfg.server.lockdPort != null) cfg.server.lockdPort)
-    (mkIf (cfg.server.mountdPort != null) cfg.server.mountdPort)
-  ];
   enableLdap = false;
   baseDn = mkBaseDn domain;
 in {
-  services.nfs = {
+  config.services.nfs = {
     server = {
       enable = mkDefault true;
       statdPort = mkDefault 4000;
       lockdPort = mkDefault 4001;
       mountdPort = mkDefault 4002;
+    };
+    export = {
+      flagSets = let
+        localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all;
+      in {
+        common = [
+          "no_subtree_check"
+          "anonuid=${toString config.users.users.guest.uid}"
+          "anongid=${toString config.users.groups.${config.users.users.guest.group}.gid}"
+        ];
+        sec = [
+          "sec=${concatStringsSep ":" [ "krb5i" "krb5" "krb5p" ]}"
+        ];
+        seclocal = [
+          "sec=${concatStringsSep ":" [ "krb5" ]}"
+        ];
+        secip = [
+          "sec=${concatStringsSep ":" [ "krb5i" "krb5p" ]}"
+        ];
+        secanon = [
+          "sec=${concatStringsSep ":" [ "krb5i" "krb5" "krb5p" "sys" ]}"
+        ];
+        anon_ro = [
+          "sec=sys"
+          "all_squash"
+          "ro"
+        ];
+        # client machines
+        clientGroups = [
+          "@peeps"
+          "@infra"
+        ];
+        trustedClients = [
+          "@trusted"
+        ];
+        tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
+        localClients = localAddrs ++ flagSets.tailClients;
+        allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;
+      };
+      root = {
+        path = "/srv/fs";
+        clients = {
+          trusted = {
+            machine = flagSets.trustedClients;
+            flags = flagSets.secip ++ [ "rw" ];
+          };
+        };
+      };
     };
     idmapd.settings = {
       General = {
@@ -60,9 +103,5 @@ in {
         LDAP_canonicalize_name = false;
       };
     };
-  };
-  networking.firewall.interfaces.local = {
-    allowedTCPPorts = openPorts;
-    allowedUDPPorts = openPorts;
   };
 }
