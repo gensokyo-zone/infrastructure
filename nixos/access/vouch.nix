@@ -40,7 +40,7 @@ in {
           then "localhost"
           else listen;
       in
-        mkOptionDefault "http://${host}:${toString cfg.port}";
+        mkOptionDefault "http://${host}:${toString cfg.settings.vouch.port}";
     };
     virtualHosts = let
       locations = {
@@ -68,7 +68,7 @@ in {
       };
       localLocations = kanidmDomain: {
         "/".extraConfig = ''
-          proxy_redirect $scheme://${nginx.access.kanidm.domain or "id.${networking.domain}"}/ $scheme://${kanidmDomain}/;
+          proxy_redirect $scheme://sso.${networking.domain}/ $scheme://${kanidmDomain}/;
         '';
       };
     in {
@@ -76,7 +76,6 @@ in {
         local.enable = true;
         locations = mkMerge [
           locations
-          (localLocations nginx.access.kanidm.localDomain or "id.local.${networking.domain}")
         ];
         useACMEHost = mkDefault access.useACMEHost;
         forceSSL = true;
@@ -85,7 +84,6 @@ in {
         local.enable = true;
         locations = mkMerge [
           locations
-          (localLocations nginx.access.kanidm.tailDomain or "id.tail.${networking.domain}")
         ];
         useACMEHost = mkDefault access.useACMEHost;
         addSSL = mkIf (access.useACMEHost != null) (mkDefault true);

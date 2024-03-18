@@ -1,5 +1,5 @@
 {config, lib, ...}: let
-    inherit (lib.modules) mkForce;
+  inherit (lib.modules) mkForce;
 in {
   sops.secrets = let
     commonSecret = {
@@ -9,14 +9,14 @@ in {
   in {
     keycloak_db_password = commonSecret;
   };
-users.users.keycloak = {
+  users.users.keycloak = {
     isSystemUser = true;
     group = "keycloak";
-};
+  };
 
-networking.firewall.allowedTCPPorts = [ 80 ];
-users.groups.keycloak = {};
-systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
+  networking.firewall.interfaces.local.allowedTCPPorts = [ 80 ];
+  users.groups.keycloak = {};
+  systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
 
   services.keycloak = {
     enable = true;
@@ -29,8 +29,8 @@ systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
     };
 
     settings = {
-        hostname = "sso.gensokyo.zone";
-        proxy = "edge";
+      hostname = "sso.${config.networking.domain}";
+      proxy = "edge";
     };
   };
 }

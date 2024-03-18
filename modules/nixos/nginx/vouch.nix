@@ -21,7 +21,7 @@
         };
         authUrl = mkOption {
           type = str;
-          default = "https://id.${networking.domain}";
+          default = "https://sso.${networking.domain}/realms/${networking.domain}";
         };
         url = mkOption {
           type = str;

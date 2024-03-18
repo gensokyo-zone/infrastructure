@@ -6,6 +6,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
+  keycloak = access.nixosFor "keycloak";
   mediabox = access.nixosFor "mediabox";
   tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
@@ -158,6 +159,9 @@ in {
         ])
       ];
     };
+    "sso.${config.networking.domain}" = {
+      inherit (nginx) group;
+    };
   };
 
   services.nginx = let
@@ -196,6 +200,11 @@ in {
       url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
+      "sso.${config.networking.domain}" = {
+        useACMEHost = "sso.${config.networking.domain}";
+        locations."/".proxyPass = "http://${keycloak.lib.access.hostnameForNetwork.local}:80";
+        forceSSL = true;
+      };
       ${access.kanidm.domain} = {
         useACMEHost = access.kanidm.domain;
       };
