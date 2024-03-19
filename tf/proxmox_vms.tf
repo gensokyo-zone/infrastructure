@@ -4,9 +4,10 @@ variable "proxmox_container_template" {
 }
 
 locals {
-  proxmox_keycloak_vm_id = 107
-  proxmox_litterbox_vm_id        = 106
-  proxmox_litterbox_config       = jsondecode(file("${path.root}/../systems/litterbox/lxc.json"))
+  proxmox_keycloak_vm_id   = 107
+  proxmox_keycloak_config  = jsondecode(file("${path.root}/../systems/keycloak/lxc.json"))
+  proxmox_litterbox_vm_id  = 106
+  proxmox_litterbox_config = jsondecode(file("${path.root}/../systems/litterbox/lxc.json"))
   proxmox_aya_vm_id        = 105
   proxmox_aya_config       = jsondecode(file("${path.root}/../systems/aya/lxc.json"))
   proxmox_reimu_vm_id      = 104
@@ -367,7 +368,7 @@ EOT
   }
 
   network_device {
-    bridge = "vmbr0"
+    bridge      = "vmbr0"
     mac_address = "BC:24:11:3D:39:91"
   }
 
@@ -493,7 +494,7 @@ EOT
   }
 
   network_device {
-    bridge = "vmbr0"
+    bridge      = "vmbr0"
     mac_address = "BC:24:11:33:19:04"
   }
 
@@ -572,4 +573,11 @@ EOT
   lifecycle {
     ignore_changes = [started, unprivileged, initialization[0].dns, operating_system[0].template_file_id]
   }
+}
+
+module "keycloak_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  container  = proxmox_virtual_environment_container.keycloak
+  config     = local.proxmox_keycloak_config.lxc
 }

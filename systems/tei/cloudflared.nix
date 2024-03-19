@@ -40,27 +40,6 @@
     nameValuePair host {
       service = "http://${accessHostFor args}:${toString port}";
     };
-  ingressForVouch = {
-    host ? system.services.vouch-proxy.domain,
-    port ? system.services.vouch-proxy.settings.vouch.port,
-    hostName,
-    system ? nixosFor hostName,
-    ...
-  } @ args:
-    nameValuePair host {
-      service = "http://${accessHostFor args}:${toString port}";
-    };
-  ingressForKanidm = {
-    host ? system.services.kanidm.server.frontend.domain,
-    port ? system.services.kanidm.server.frontend.port,
-    hostName,
-    system ? nixosFor hostName,
-    ...
-  } @ args:
-    nameValuePair host {
-      service = "https://${accessHostFor args}:${toString port}";
-      originRequest.noTLSVerify = true;
-    };
 in {
   sops.secrets.cloudflared-tunnel-apartment.owner = cfg.user;
   services.cloudflared = {
@@ -78,8 +57,6 @@ in {
             inherit hostName;
           })
           (ingressForHass {inherit hostName;})
-          (ingressForVouch {inherit hostName;})
-          (ingressForKanidm {inherit hostName;})
         ];
       };
     };

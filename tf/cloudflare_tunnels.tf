@@ -28,6 +28,36 @@ output "cloudflare_tunnel_cname_hakurei" {
   value = module.hakurei.cname
 }
 
+variable "cloudflare_tunnel_secret_keycloak" {
+  type      = string
+  sensitive = true
+}
+
+module "keycloak" {
+  source     = "./tunnel"
+  name       = "keycloak"
+  secret     = var.cloudflare_tunnel_secret_keycloak
+  account_id = var.cloudflare_account_id
+  zone_id    = cloudflare_zone.gensokyo-zone_zone.id
+  subdomains = [
+    "sso",
+    "login",
+  ]
+}
+
+output "cloudflare_tunnel_id_keycloak" {
+  value = module.keycloak.id
+}
+
+output "cloudflare_tunnel_token_keycloak" {
+  value     = module.keycloak.token
+  sensitive = true
+}
+
+output "cloudflare_tunnel_cname_keycloak" {
+  value = module.keycloak.cname
+}
+
 variable "cloudflare_tunnel_secret_tewi" {
   type      = string
   sensitive = true
@@ -42,7 +72,6 @@ module "tewi" {
   subdomains = [
     "home",
     "id",
-    "login",
     "z2m",
     "unifi",
   ]

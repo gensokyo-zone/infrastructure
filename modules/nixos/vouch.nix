@@ -138,6 +138,11 @@ in {
         };
       }
       (mkIf cfg.enable {
+        networking.firewall.interfaces.local = {
+          allowedTCPPorts = mkIf (cfg.settings.vouch.listen != "127.0.0.1") [
+            cfg.settings.vouch.port
+          ];
+        };
         systemd.services.vouch-proxy = {
           description = "Vouch-proxy";
           after = ["network.target"];

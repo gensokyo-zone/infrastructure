@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
-  inherit (config.services) kanidm mosquitto home-assistant;
+  inherit (config.services) mosquitto home-assistant;
 in {
   imports = let
     inherit (meta) nixos;
@@ -19,8 +19,6 @@ in {
     nixos.access.zigbee2mqtt
     nixos.access.home-assistant
     nixos.access.unifi
-    nixos.vouch
-    nixos.kanidm
     nixos.unifi
     nixos.mosquitto
     nixos.home-assistant
@@ -43,10 +41,6 @@ in {
 
   networking.firewall = {
     interfaces.local.allowedTCPPorts = mkMerge [
-      (mkIf kanidm.enableServer [
-        kanidm.server.frontend.port
-        (mkIf kanidm.server.ldap.enable kanidm.server.ldap.port)
-      ])
       (mkIf home-assistant.enable [
         home-assistant.config.http.server_port
       ])

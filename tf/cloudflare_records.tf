@@ -33,7 +33,6 @@ module "hakurei_system_records" {
     "freeipa",
     "ldap",
     "pbx",
-    "sso",
     "smb",
     "kitchen",
     "yt",
@@ -54,11 +53,12 @@ module "reimu_system_records" {
 }
 
 module "keycloak_system_records" {
-  source       = "./system/records"
-  name         = "keycloak"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  local_v4     = "10.1.1.48"
+  source    = "./system/records"
+  name      = "keycloak"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v4  = "10.1.1.48"
+  local_v6  = "fd0a::be24:11ff:fec4:66ac"
 }
 
 module "aya_system_records" {

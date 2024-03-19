@@ -10,7 +10,7 @@
   mediabox = access.nixosFor "mediabox";
   tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
-  inherit (tei.services) kanidm vouch-proxy;
+  inherit (keycloak.services) vouch-proxy;
   inherit (config.services) nginx tailscale;
 in {
   imports = let
@@ -32,7 +32,6 @@ in {
     nixos.access.global
     nixos.access.gensokyo
     nixos.access.vouch
-    nixos.access.kanidm
     nixos.access.freeipa
     nixos.access.freepbx
     nixos.access.unifi
@@ -69,22 +68,6 @@ in {
       extraDomainNames = mkMerge [
         (mkIf tailscale.enable [
           access.vouch.tailDomain
-        ])
-      ];
-    };
-    ${access.kanidm.domain} = {
-      inherit (nginx) group;
-      extraDomainNames = mkMerge [
-        [access.kanidm.localDomain]
-        (mkIf access.kanidm.ldapEnable [
-          access.kanidm.ldapDomain
-          access.kanidm.ldapLocalDomain
-        ])
-        (mkIf tailscale.enable [
-          access.kanidm.tailDomain
-        ])
-        (mkIf (access.kanidm.ldapEnable && tailscale.enable) [
-          access.kanidm.ldapTailDomain
         ])
       ];
     };
@@ -159,9 +142,6 @@ in {
         ])
       ];
     };
-    "sso.${config.networking.domain}" = {
-      inherit (nginx) group;
-    };
   };
 
   services.nginx = let
@@ -172,13 +152,8 @@ in {
       externalPort = 41324;
     };
     access.vouch = assert vouch-proxy.enable; {
-      url = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString vouch-proxy.settings.vouch.port}";
+      url = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
       useACMEHost = access.vouch.localDomain;
-    };
-    access.kanidm = assert kanidm.enableServer; {
-      inherit (kanidm.server.frontend) domain port;
-      host = tei.lib.access.hostnameForNetwork.local;
-      ldapEnable = false;
     };
     access.unifi = {
       host = tei.lib.access.hostnameForNetwork.local;
@@ -200,14 +175,6 @@ in {
       url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
-      "sso.${config.networking.domain}" = {
-        useACMEHost = "sso.${config.networking.domain}";
-        locations."/".proxyPass = "http://${keycloak.lib.access.hostnameForNetwork.local}:80";
-        forceSSL = true;
-      };
-      ${access.kanidm.domain} = {
-        useACMEHost = access.kanidm.domain;
-      };
       ${access.freepbx.domain} = {
         local.enable = true;
       };

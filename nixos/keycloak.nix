@@ -1,5 +1,12 @@
 {config, lib, ...}: let
-  inherit (lib.modules) mkForce;
+  inherit (lib.modules) mkIf mkForce mkDefault;
+  inherit (config.lib.access) mkSnakeOil;
+  cfg = config.services.keycloak;
+  cert = mkSnakeOil {
+    name = "keycloak-selfsigned";
+    domain = hostname;
+  };
+  hostname = "sso.${config.networking.domain}";
 in {
   sops.secrets = let
     commonSecret = {
@@ -9,13 +16,18 @@ in {
   in {
     keycloak_db_password = commonSecret;
   };
-  users.users.keycloak = {
-    isSystemUser = true;
-    group = "keycloak";
+  users = mkIf cfg.enable {
+    users.keycloak = {
+      isSystemUser = true;
+      group = "keycloak";
+    };
+    groups.keycloak = {
+    };
   };
 
-  networking.firewall.interfaces.local.allowedTCPPorts = [ 80 ];
-  users.groups.keycloak = {};
+  networking.firewall.interfaces.local.allowedTCPPorts = mkIf cfg.enable [
+    (if cfg.sslCertificate != null then 443 else 80)
+  ];
   systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
 
   services.keycloak = {
@@ -29,8 +41,11 @@ in {
     };
 
     settings = {
-      hostname = "sso.${config.networking.domain}";
-      proxy = "edge";
+      hostname = mkDefault hostname;
+      proxy = mkDefault (if cfg.sslCertificate != null then "reencrypt" else "edge");
     };
+
+    sslCertificate = mkDefault "${cert}/fullchain.pem";
+    sslCertificateKey = mkDefault "${cert}/key.pem";
   };
 }
