@@ -74,6 +74,7 @@ module "tewi" {
     "id",
     "z2m",
     "unifi",
+    "grocy",
   ]
 }
 

@@ -23,12 +23,14 @@ in {
     nixos.home-assistant
     nixos.zigbee2mqtt
     nixos.syncplay
+    nixos.grocy
     ./cloudflared.nix
   ];
 
   services.nginx = {
     virtualHosts = {
       zigbee2mqtt.proxied.enable = "cloudflared";
+      grocy.proxied.enable = "cloudflared";
     };
   };
 

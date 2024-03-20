@@ -8,6 +8,7 @@
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (access) nixosFor;
   inherit (config.networking) hostName;
+  inherit (config.services) nginx;
   cfg = config.services.cloudflared;
   apartment = "5e85d878-c6b2-4b15-b803-9aeb63d63543";
   accessHostFor = {
@@ -49,11 +50,15 @@ in {
         default = "http_status:404";
         ingress = listToAttrs [
           (ingressForNginx {
-            host = config.services.zigbee2mqtt.domain;
+            host = nginx.virtualHosts.zigbee2mqtt.serverName;
             inherit hostName;
           })
           (ingressForNginx {
-            host = config.services.nginx.access.unifi.domain;
+            host = nginx.access.unifi.domain;
+            inherit hostName;
+          })
+          (ingressForNginx {
+            host = nginx.virtualHosts.grocy.serverName;
             inherit hostName;
           })
           (ingressForHass {inherit hostName;})

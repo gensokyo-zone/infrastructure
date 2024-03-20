@@ -27,6 +27,7 @@ module "hakurei_system_records" {
     "smb",
     "kitchen",
     "home",
+    "grocy",
     "yt",
   ]
   global_subdomains = [
