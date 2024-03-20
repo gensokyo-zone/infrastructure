@@ -39,6 +39,7 @@ in {
     nixos.access.unifi
     nixos.access.kitchencam
     nixos.access.home-assistant
+    nixos.access.grocy
     nixos.access.proxmox
     nixos.access.plex
     nixos.access.invidious
@@ -80,6 +81,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.home-assistant.serverAliases
         virtualHosts.home-assistant'local.allServerNames
+      ];
+    };
+    grocy = {
+      inherit (nginx) group;
+      domain = virtualHosts.grocy.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.grocy.serverAliases
+        virtualHosts.grocy'local.allServerNames
       ];
     };
     vouch = {
@@ -213,6 +222,15 @@ in {
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
       };
       home-assistant'local.ssl.cert.name = "home-assistant";
+      grocy = {
+        # not the real grocy record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.name = "grocy";
+        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
+      };
+      grocy'local = {
+        ssl.cert.name = "grocy";
+      };
       ${access.freepbx.domain} = {
         local.enable = true;
       };

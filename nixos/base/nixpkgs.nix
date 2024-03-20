@@ -3,6 +3,7 @@
     overlays = [
       inputs.arcexprs.overlays.default
       (import ../../overlays/samba.nix)
+      (import ../../overlays/nginx.nix)
     ];
     config = {
       allowUnfree = true;
