@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) home-assistant nginx;
   name.shortServer = mkDefault "home";
   listenPorts = {
@@ -15,16 +15,28 @@ in {
   config.services.nginx.virtualHosts = {
     home-assistant = {
       inherit name listenPorts;
-      locations."/".proxyPass = mkIf home-assistant.enable (mkDefault
-        "http://localhost:${toString home-assistant.config.http.server_port}"
-      );
+      locations."/" = {
+        proxy = {
+          websocket.enable = true;
+          headers.enableRecommended = true;
+        };
+        proxyPass = mkIf home-assistant.enable (mkDefault
+          "http://localhost:${toString home-assistant.config.http.server_port}"
+        );
+      };
     };
     home-assistant'local = {
       inherit name listenPorts;
       local.enable = mkDefault true;
-      locations."/".proxyPass = mkIf home-assistant.enable (mkDefault
-        nginx.virtualHosts.home-assistant.locations."/".proxyPass
-      );
+      locations."/" = {
+        proxy = {
+          websocket.enable = true;
+          headers.enableRecommended = true;
+        };
+        proxyPass = mkIf (!home-assistant.enable) (mkDefault
+          nginx.virtualHosts.home-assistant.locations."/".proxyPass
+        );
+      };
     };
   };
   config.networking.firewall.allowedTCPPorts = [ home-assistant.config.http.server_port ];
