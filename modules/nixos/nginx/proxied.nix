@@ -90,7 +90,6 @@
           type = enum [ true false "nixpkgs" ];
         };
       };
-      force = mkEnableOption "redirect to SSL";
     };
     config = let
       emitVars = cfg.enabled && !virtualHost.proxied.enabled;
