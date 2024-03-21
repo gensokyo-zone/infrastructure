@@ -69,6 +69,14 @@ in {
   security.acme.certs = let
     inherit (nginx) access virtualHosts;
   in {
+    hakurei = {
+      inherit (nginx) group;
+      domain = config.networking.fqdn;
+      extraDomainNames = [
+        config.lib.access.hostnameForNetwork.local
+        (mkIf config.services.tailscale.enable config.lib.access.hostnameForNetwork.tail)
+      ];
+    };
     sso = {
       inherit (nginx) group;
       domain = virtualHosts.keycloak.serverName;
@@ -205,6 +213,7 @@ in {
       streamPort = 41081;
     };
     virtualHosts = {
+      fallback.ssl.cert.name = "hakurei";
       gensokyoZone.proxied.enable = "cloudflared";
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
