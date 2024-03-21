@@ -106,7 +106,7 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.vouch.serverAliases
         virtualHosts.vouch'local.allServerNames
-        (mkIf tailscale.enable virtualHosts.vouch'tail.allServerNames)
+        (mkIf virtualHosts.vouch'tail.enable virtualHosts.vouch'tail.allServerNames)
       ];
     };
     unifi = {
@@ -219,9 +219,7 @@ in {
       keycloak'local.ssl.cert.name = "keycloak";
       vouch.ssl.cert.name = "vouch";
       vouch'local.ssl.cert.name = "vouch";
-      vouch'tail = mkIf tailscale.enable {
-        ssl.cert.name = "vouch";
-      };
+      vouch'tail.ssl.cert.name = "vouch";
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
         local.denyGlobal = true;

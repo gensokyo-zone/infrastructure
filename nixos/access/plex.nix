@@ -52,16 +52,19 @@ in {
     in {
       plex = {
         inherit name locations extraConfig kTLS;
+        listenPorts = {
+          http = { };
+          https.ssl = true;
+          external = {
+            enable = mkDefault (access.externalPort != null);
+            port = mkDefault access.externalPort;
+            extraParameters = [ "default_server" ];
+          };
+        };
       };
       plex'local = {
         inherit name locations extraConfig kTLS;
         local.enable = true;
-      };
-      plex-external = mkIf (access.externalPort != null) {
-        serverName = mkDefault "plex.${config.networking.domain}";
-        default = mkDefault true;
-        listenPorts.external.port = access.externalPort;
-        inherit extraConfig locations;
       };
     };
   };

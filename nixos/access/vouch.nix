@@ -71,7 +71,8 @@ in {
           (localLocations "sso.local.${networking.domain}")
         ];
       };
-      vouch'tail = mkIf tailscale.enable {
+      vouch'tail = {
+        enable = mkDefault tailscale.enable;
         name = {
           inherit (name) shortServer;
           qualifier = mkDefault "tail";

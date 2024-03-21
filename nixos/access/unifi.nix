@@ -43,9 +43,9 @@ in {
         listenPorts.management = {
           port = access.managementPort;
           ssl = true;
+          extraParameters = [ "default_server" ];
         };
         ssl.force = true;
-        default = mkDefault true;
         inherit name locations extraConfig kTLS;
       };
       unifi = {

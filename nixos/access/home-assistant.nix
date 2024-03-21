@@ -9,12 +9,16 @@
   listenPorts = {
     http = { };
     https.ssl = true;
-    hass = mkIf (!home-assistant.enable) { port = mkDefault home-assistant.config.http.server_port; };
+    hass = {
+      enable = !home-assistant.enable;
+      port = mkDefault home-assistant.config.http.server_port;
+      extraParameters = [ "default_server" ];
+    };
   };
 in {
   config.services.nginx.virtualHosts = {
     home-assistant = {
-      inherit name listenPorts;
+      inherit name;
       locations."/" = {
         proxy = {
           websocket.enable = true;
@@ -33,7 +37,7 @@ in {
           websocket.enable = true;
           headers.enableRecommended = true;
         };
-        proxyPass = mkIf (!home-assistant.enable) (mkDefault
+        proxyPass = (mkDefault
           nginx.virtualHosts.home-assistant.locations."/".proxyPass
         );
       };
