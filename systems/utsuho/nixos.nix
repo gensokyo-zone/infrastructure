@@ -11,16 +11,18 @@ in {
     nixos.cloudflared
     nixos.nginx
     nixos.access.unifi
+    nixos.unifi
   ];
 
   services.cloudflared = let
     tunnelId = "28bcd3fc-3467-4997-806b-546ba9995028";
+    inherit (config.services) unifi;
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
       ingress = {
-        ${virtualHosts.unifi.serverName} = {
+        ${virtualHosts.unifi.serverName} = assert unifi.enable; {
           service = "http://localhost";
         };
       };
@@ -28,9 +30,6 @@ in {
   };
 
   services.nginx = {
-    access.unifi = {
-      host = tei.lib.access.hostnameForNetwork.local;
-    };
     virtualHosts = {
       unifi.proxied.enable = "cloudflared";
     };

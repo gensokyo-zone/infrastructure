@@ -10,6 +10,8 @@ in {
   services.unifi = {
     enable = mkDefault true;
     unifiPackage = mkDefault pkgs.unifi8;
+    #seems to be *much* harder to compile so not going with this for now...
+    #mongodbPackage = mkDefault pkgs.mongodb-5_0;
   };
 
   networking.firewall.interfaces.local = mkIf cfg.enable {
@@ -33,5 +35,10 @@ in {
   users = mkIf cfg.enable {
     users.unifi.uid = 990;
     groups.unifi.gid = 990;
+  };
+  systemd.services.unifi = mkIf cfg.enable {
+    serviceConfig.BindPaths = [
+      "/mnt/shared/unifi:/var/lib/unifi"
+    ];
   };
 }

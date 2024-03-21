@@ -9,10 +9,12 @@
   keycloak = access.nixosFor "keycloak";
   mediabox = access.nixosFor "mediabox";
   tei = access.nixosFor "tei";
+  utsuho = access.nixosFor "utsuho";
   inherit (mediabox.services) plex;
   inherit (keycloak.services) vouch-proxy;
   inherit (tei.services) home-assistant zigbee2mqtt;
-  inherit (config.services) nginx tailscale;
+  inherit (utsuho.services) unifi;
+  inherit (config.services) nginx;
 in {
   imports = let
     inherit (meta) nixos;
@@ -53,15 +55,16 @@ in {
   };
 
   services.cloudflared = let
-    inherit (nginx) virtualHosts;
+    inherit (nginx) virtualHosts defaultHTTPListenPort;
     tunnelId = "964121e3-b3a9-4cc1-8480-954c4728b604";
+    localNginx = "http://localhost:${toString defaultHTTPListenPort}";
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
       ingress = {
-        ${virtualHosts.prox.serverName}.service = "http://localhost";
-        ${virtualHosts.gensokyoZone.serverName}.service = "http://localhost";
+        ${virtualHosts.prox.serverName}.service = localNginx;
+        ${virtualHosts.gensokyoZone.serverName}.service = localNginx;
       };
     };
   };
@@ -191,8 +194,8 @@ in {
     access.vouch = assert vouch-proxy.enable; {
       url = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
     };
-    access.unifi = {
-      host = tei.lib.access.hostnameForNetwork.local;
+    access.unifi = assert unifi.enable; {
+      host = utsuho.lib.access.hostnameForNetwork.local;
     };
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";
