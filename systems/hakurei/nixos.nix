@@ -11,7 +11,7 @@
   tei = access.nixosFor "tei";
   inherit (mediabox.services) plex;
   inherit (keycloak.services) vouch-proxy;
-  inherit (tei.services) home-assistant;
+  inherit (tei.services) home-assistant zigbee2mqtt;
   inherit (config.services) nginx tailscale;
 in {
   imports = let
@@ -39,6 +39,7 @@ in {
     nixos.access.unifi
     nixos.access.kitchencam
     nixos.access.home-assistant
+    nixos.access.zigbee2mqtt
     nixos.access.grocy
     nixos.access.proxmox
     nixos.access.plex
@@ -81,6 +82,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.home-assistant.serverAliases
         virtualHosts.home-assistant'local.allServerNames
+      ];
+    };
+    zigbee2mqtt = {
+      inherit (nginx) group;
+      domain = virtualHosts.zigbee2mqtt.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.zigbee2mqtt.serverAliases
+        virtualHosts.zigbee2mqtt'local.allServerNames
       ];
     };
     grocy = {
@@ -215,13 +224,20 @@ in {
       vouch'tail = mkIf tailscale.enable {
         ssl.cert.name = "vouch";
       };
-      home-assistant = {
+      home-assistant = assert  home-assistant.enable; {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.name = "home-assistant";
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
       };
       home-assistant'local.ssl.cert.name = "home-assistant";
+      zigbee2mqtt = assert zigbee2mqtt.enable; {
+        # not the real z2m record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.name = "zigbee2mqtt";
+        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString zigbee2mqtt.settings.frontend.port}";
+      };
+      zigbee2mqtt'local.ssl.cert.name = "zigbee2mqtt";
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;

@@ -27,6 +27,7 @@ module "hakurei_system_records" {
     "smb",
     "kitchen",
     "home",
+    "z2m",
     "grocy",
     "yt",
   ]
@@ -89,7 +90,6 @@ module "tewi_system_records" {
   local_v6     = "fd0a::be24:11ff:fecc:6657"
   local_subdomains = [
     "mqtt",
-    "z2m",
     "postgresql",
   ]
 }
