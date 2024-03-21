@@ -6,7 +6,7 @@
       setopt autocd
       setopt HIST_IGNORE_DUPS
       setopt HIST_IGNORE_SPACE
-      HISTORY_IGNORE="(*^C*|:*|/*|~*|.*)"
+      HISTORY_IGNORE="(*^C*|:*|/*|~*|.(/*|./*|.)|(sudo |)(ls|cd)( *|))"
     '';
   };
   programs.bash = {
