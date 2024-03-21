@@ -5,6 +5,7 @@
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault mkOverride;
+  inherit (lib.trivial) warnIf;
   mkAlmostOptionDefault = mkOverride 1250;
   forceRedirectConfig = virtualHost: ''
     if ($x_scheme = http) {
@@ -42,6 +43,7 @@
           readOnly = true;
         };
         cert = {
+          enable = mkEnableOption "ssl cert via name.shortServer";
           name = mkOption {
             type = nullOr str;
             default = null;
@@ -67,6 +69,9 @@
       ssl = {
         enable = mkOptionDefault (cfg.cert.name != null || cfg.cert.keyPath != null);
         forced = mkOptionDefault (cfg.force != false && cfg.force != "reject");
+        cert.name = mkIf cfg.cert.enable (warnIf (config.name.shortServer == null) "ssl.cert.enable set but name.shortServer is null" (
+          mkAlmostOptionDefault config.name.shortServer
+        ));
       };
       addSSL = mkIf (cfg.enable && (cfg.force == false || emitForce)) (mkDefault true);
       forceSSL = mkIf (cfg.enable && cfg.force == true && !emitForce) (mkDefault true);

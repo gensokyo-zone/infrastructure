@@ -68,7 +68,7 @@ in {
   security.acme.certs = let
     inherit (nginx) access virtualHosts;
   in {
-    keycloak = {
+    sso = {
       inherit (nginx) group;
       domain = virtualHosts.keycloak.serverName;
       extraDomainNames = mkMerge [
@@ -76,7 +76,7 @@ in {
         virtualHosts.keycloak'local.allServerNames
       ];
     };
-    home-assistant = {
+    home = {
       inherit (nginx) group;
       domain = virtualHosts.home-assistant.serverName;
       extraDomainNames = mkMerge [
@@ -84,7 +84,7 @@ in {
         virtualHosts.home-assistant'local.allServerNames
       ];
     };
-    zigbee2mqtt = {
+    z2m = {
       inherit (nginx) group;
       domain = virtualHosts.zigbee2mqtt.serverName;
       extraDomainNames = mkMerge [
@@ -100,7 +100,7 @@ in {
         virtualHosts.grocy'local.allServerNames
       ];
     };
-    vouch = {
+    login = {
       inherit (nginx) group;
       domain = virtualHosts.vouch.serverName;
       extraDomainNames = mkMerge [
@@ -161,7 +161,7 @@ in {
         virtualHosts.plex'local.allServerNames
       ];
     };
-    kitchencam = {
+    kitchen = {
       inherit (nginx) group;
       domain = virtualHosts.kitchencam.serverName;
       extraDomainNames = mkMerge [
@@ -214,40 +214,40 @@ in {
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;
-        ssl.cert.name = "keycloak";
+        ssl.cert.enable = true;
       };
-      keycloak'local.ssl.cert.name = "keycloak";
-      vouch.ssl.cert.name = "vouch";
-      vouch'local.ssl.cert.name = "vouch";
-      vouch'tail.ssl.cert.name = "vouch";
+      keycloak'local.ssl.cert.enable = true;
+      vouch.ssl.cert.enable = true;
+      vouch'local.ssl.cert.enable = true;
+      vouch'tail.ssl.cert.enable = true;
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
         local.denyGlobal = true;
-        ssl.cert.name = "unifi";
+        ssl.cert.enable = true;
       };
-      unifi'local.ssl.cert.name = "unifi";
+      unifi'local.ssl.cert.enable = true;
       home-assistant = assert  home-assistant.enable; {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
-        ssl.cert.name = "home-assistant";
+        ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
       };
-      home-assistant'local.ssl.cert.name = "home-assistant";
+      home-assistant'local.ssl.cert.enable = true;
       zigbee2mqtt = assert zigbee2mqtt.enable; {
         # not the real z2m record-holder, so don't respond globally..
         local.denyGlobal = true;
-        ssl.cert.name = "zigbee2mqtt";
+        ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString zigbee2mqtt.settings.frontend.port}";
       };
-      zigbee2mqtt'local.ssl.cert.name = "zigbee2mqtt";
+      zigbee2mqtt'local.ssl.cert.enable = true;
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
-        ssl.cert.name = "grocy";
+        ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
       };
       grocy'local = {
-        ssl.cert.name = "grocy";
+        ssl.cert.enable = true;
       };
       ${access.freepbx.domain} = {
         local.enable = true;
@@ -255,10 +255,10 @@ in {
       ${access.proxmox.domain} = {
         useACMEHost = access.proxmox.domain;
       };
-      plex.ssl.cert.name = "plex";
-      plex'local.ssl.cert.name = "plex";
-      kitchencam.ssl.cert.name = "kitchencam";
-      kitchencam'local.ssl.cert.name = "kitchencam";
+      plex.ssl.cert.enable = true;
+      plex'local.ssl.cert.enable = true;
+      kitchencam.ssl.cert.enable = true;
+      kitchencam'local.ssl.cert.enable = true;
       ${access.invidious.domain} = {
         useACMEHost = access.invidious.domain;
         forceSSL = true;
