@@ -8,6 +8,7 @@
       "hakurei"
       "reimu"
       "aya"
+      "utsuho"
       "tei"
       "litterbox"
       "keycloak"

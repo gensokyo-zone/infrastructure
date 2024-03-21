@@ -58,6 +58,34 @@ output "cloudflare_tunnel_cname_keycloak" {
   value = module.keycloak.cname
 }
 
+variable "cloudflare_tunnel_secret_utsuho" {
+  type      = string
+  sensitive = true
+}
+
+module "utsuho" {
+  source     = "./tunnel"
+  name       = "utsuho"
+  secret     = var.cloudflare_tunnel_secret_utsuho
+  account_id = var.cloudflare_account_id
+  zone_id    = cloudflare_zone.gensokyo-zone_zone.id
+  subdomains = [
+  ]
+}
+
+output "cloudflare_tunnel_id_utsuho" {
+  value = module.utsuho.id
+}
+
+output "cloudflare_tunnel_token_utsuho" {
+  value     = module.utsuho.token
+  sensitive = true
+}
+
+output "cloudflare_tunnel_cname_utsuho" {
+  value = module.utsuho.cname
+}
+
 variable "cloudflare_tunnel_secret_tewi" {
   type      = string
   sensitive = true

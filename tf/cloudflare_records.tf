@@ -65,6 +65,15 @@ module "keycloak_system_records" {
   local_v6  = "fd0a::be24:11ff:fec4:66ac"
 }
 
+module "utsuho_system_records" {
+  source    = "./system/records"
+  name      = "utsuho"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  local_v4  = "10.1.1.38"
+  local_v6  = "fd0a::be24:11ff:fec4:66a6"
+}
+
 module "aya_system_records" {
   source       = "./system/records"
   name         = "aya"

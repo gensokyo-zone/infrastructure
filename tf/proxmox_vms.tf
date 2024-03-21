@@ -1,9 +1,11 @@
 variable "proxmox_container_template" {
   type    = string
-  default = "local:vztmpl/ct-20240211-nixos-system-x86_64-linux.tar.xz"
+  default = "local:vztmpl/ct-20240319-nixos-system-x86_64-linux.tar.xz"
 }
 
 locals {
+  proxmox_utsuho_vm_id     = 108
+  proxmox_utsuho_config    = jsondecode(file("${path.root}/../systems/utsuho/lxc.json"))
   proxmox_keycloak_vm_id   = 107
   proxmox_keycloak_config  = jsondecode(file("${path.root}/../systems/keycloak/lxc.json"))
   proxmox_litterbox_vm_id  = 106
@@ -328,6 +330,79 @@ module "aya_config" {
   connection = local.proxmox_reisen_connection
   container  = proxmox_virtual_environment_container.aya
   config     = local.proxmox_aya_config.lxc
+}
+
+resource "proxmox_virtual_environment_container" "utsuho" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_utsuho_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+zoomzoom
+EOT
+
+  memory {
+    dedicated = 2048
+    swap      = 4096
+  }
+
+  cpu {
+    cores = 2
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 32
+  }
+
+  initialization {
+    hostname = "utsuho"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "10.1.1.38/24"
+        gateway = "10.1.1.1"
+      }
+    }
+  }
+
+  startup {
+    order      = 4
+    up_delay   = 0
+    down_delay = 2
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:C4:66:A6"
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, initialization[0].dns, operating_system[0].template_file_id]
+  }
+}
+
+module "utsuho_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  container  = proxmox_virtual_environment_container.utsuho
+  config     = local.proxmox_utsuho_config.lxc
 }
 
 resource "proxmox_virtual_environment_vm" "freeipa" {
