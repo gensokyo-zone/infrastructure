@@ -5,18 +5,14 @@
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkDefault;
-  inherit (lib.lists) head optional concatMap;
+  inherit (lib.lists) head optional;
   inherit (lib.strings) splitString;
-  inherit (config.services) nginx tailscale;
+  inherit (config.services) nginx;
   access = nginx.access.freepbx;
   freepbx = config.lib.access.systemFor "freepbx";
+  hasSsl = nginx.virtualHosts.freepbx'ucp.listenPorts.ucpSsl.enable;
 in {
   options.services.nginx.access.freepbx = with lib.types; {
-    global.enable =
-      mkEnableOption "global access"
-      // {
-        default = access.useACMEHost != null;
-      };
     host = mkOption {
       type = str;
       default = freepbx.access.hostnameForNetwork.local;
@@ -29,6 +25,10 @@ in {
       type = port;
       default = 8088;
     };
+    asteriskSslPort = mkOption {
+      type = port;
+      default = 8089;
+    };
     ucpPort = mkOption {
       type = port;
       default = 8001;
@@ -40,22 +40,6 @@ in {
     ucpUrl = mkOption {
       type = str;
       default = "https://${access.host}:${toString access.ucpSslPort}";
-    };
-    domain = mkOption {
-      type = str;
-      default = "pbx.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "pbx.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "pbx.tail.${config.networking.domain}";
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = null;
     };
   };
   config.services.nginx = {
@@ -85,76 +69,58 @@ in {
           '';
         };
       };
+      name.shortServer = mkDefault "pbx";
+      kTLS = mkDefault true;
     in {
-      ${access.domain} = {
+      freepbx = {
         vouch.enable = mkDefault true;
-        local.enable = mkDefault (!access.global.enable);
-        addSSL = mkDefault (access.useACMEHost != null);
-        kTLS = mkDefault true;
-        useACMEHost = mkDefault access.useACMEHost;
-        inherit locations extraConfig;
+        ssl.force = true;
+        inherit name locations extraConfig kTLS;
       };
-      "${access.domain}@ucp" = {
-        serverName = access.domain;
-        listen =
-          concatMap (addr: [
-            {
-              inherit addr;
-              port = access.ucpPort;
-            }
-            (mkIf (access.useACMEHost != null) {
-              inherit addr;
-              port = access.ucpSslPort;
-              ssl = true;
-            })
-          ])
-          nginx.defaultListenAddresses;
+      freepbx'ucp = {
+        serverName = mkDefault nginx.virtualHosts.freepbx.serverName;
+        ssl.cert.copyFromVhost = "freepbx";
+        listenPorts = {
+          ucp = {
+            port = access.ucpPort;
+            extraParameters = [ "default_server" ];
+          };
+          ucpSsl = {
+            port = access.ucpSslPort;
+            ssl = true;
+            extraParameters = [ "default_server" ];
+          };
+        };
         proxy.websocket.enable = true;
-        local.enable = mkDefault (!access.global.enable);
-        addSSL = mkDefault (access.useACMEHost != null);
-        kTLS = mkDefault true;
-        useACMEHost = mkDefault access.useACMEHost;
+        vouch.enable = mkDefault true;
+        local.denyGlobal = mkDefault nginx.virtualHosts.freepbx.local.denyGlobal;
         locations = {
           inherit (locations) "/socket.io";
         };
-        inherit extraConfig;
+        inherit extraConfig kTLS;
       };
-      ${access.localDomain} = {
-        listen =
-          concatMap (addr: [
-            {
-              inherit addr;
-              port = nginx.defaultHTTPListenPort;
-            }
-            {
-              inherit addr;
-              port = access.ucpPort;
-            }
-            (mkIf (access.useACMEHost != null) {
-              inherit addr;
-              port = nginx.defaultSSLListenPort;
-              ssl = true;
-            })
-            (mkIf (access.useACMEHost != null) {
-              inherit addr;
-              port = access.ucpSslPort;
-              ssl = true;
-            })
-          ])
-          nginx.defaultListenAddresses;
-        serverAliases = mkIf tailscale.enable [access.tailDomain];
-        useACMEHost = mkDefault access.useACMEHost;
-        addSSL = mkDefault (access.useACMEHost != null);
-        kTLS = mkDefault true;
+      freepbx'local = {
+        listenPorts = {
+          http = { };
+          https.ssl = true;
+          ucp = {
+            port = access.ucpPort;
+          };
+          ucpSsl = {
+            port = access.ucpSslPort;
+            ssl = true;
+          };
+        };
+        ssl.cert.copyFromVhost = "freepbx";
         local.enable = true;
-        inherit locations extraConfig;
+        inherit name locations extraConfig kTLS;
       };
     };
   };
   config.networking.firewall = let
-    websocketPorts = [access.ucpPort] ++ optional (access.useACMEHost != null) access.ucpSslPort;
+    websocketPorts = [access.ucpPort] ++ optional hasSsl access.ucpSslPort;
   in {
     interfaces.local.allowedTCPPorts = websocketPorts;
-    allowedTCPPorts = mkIf access.global.enable websocketPorts;
+    allowedTCPPorts = mkIf (!nginx.virtualHosts.freepbx'ucp.local.denyGlobal) websocketPorts;
   };
 }

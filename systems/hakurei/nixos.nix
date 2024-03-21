@@ -142,15 +142,12 @@ in {
         ])
       ];
     };
-    ${access.freepbx.domain} = {
+    pbx = {
       inherit (nginx) group;
+      domain = virtualHosts.freepbx.serverName;
       extraDomainNames = mkMerge [
-        [
-          access.freepbx.localDomain
-        ]
-        (mkIf tailscale.enable [
-          access.freepbx.tailDomain
-        ])
+        virtualHosts.freepbx.serverAliases
+        virtualHosts.freepbx'local.allServerNames
       ];
     };
     prox = {
@@ -206,9 +203,6 @@ in {
       host = "idp.local.${config.networking.domain}";
       kerberos.ports.kpasswd = 464;
     };
-    access.freepbx = {
-      useACMEHost = access.freepbx.domain;
-    };
     access.kitchencam = {
       streamPort = 41081;
     };
@@ -244,8 +238,8 @@ in {
         ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
       };
-      ${access.freepbx.domain} = {
-        local.enable = true;
+      freepbx = {
+        ssl.cert.enable = true;
       };
       prox = {
         proxied.enable = "cloudflared";
