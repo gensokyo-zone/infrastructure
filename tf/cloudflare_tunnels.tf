@@ -70,6 +70,7 @@ module "utsuho" {
   account_id = var.cloudflare_account_id
   zone_id    = cloudflare_zone.gensokyo-zone_zone.id
   subdomains = [
+    "unifi",
   ]
 }
 
@@ -101,7 +102,6 @@ module "tewi" {
     "home",
     "id",
     "z2m",
-    "unifi",
     "grocy",
   ]
 }

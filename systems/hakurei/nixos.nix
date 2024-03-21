@@ -109,13 +109,12 @@ in {
         (mkIf tailscale.enable virtualHosts.vouch'tail.allServerNames)
       ];
     };
-    ${access.unifi.domain} = {
+    unifi = {
       inherit (nginx) group;
+      domain = virtualHosts.unifi.serverName;
       extraDomainNames = mkMerge [
-        [access.unifi.localDomain]
-        (mkIf tailscale.enable [
-          access.unifi.tailDomain
-        ])
+        virtualHosts.unifi.serverAliases
+        virtualHosts.unifi'local.allServerNames
       ];
     };
     ${access.freeipa.domain} = {
@@ -195,7 +194,6 @@ in {
     };
     access.unifi = {
       host = tei.lib.access.hostnameForNetwork.local;
-      useACMEHost = access.unifi.domain;
     };
     access.freeipa = {
       useACMEHost = access.freeipa.domain;
@@ -224,6 +222,12 @@ in {
       vouch'tail = mkIf tailscale.enable {
         ssl.cert.name = "vouch";
       };
+      unifi = {
+        # we're not the real unifi record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.name = "unifi";
+      };
+      unifi'local.ssl.cert.name = "unifi";
       home-assistant = assert  home-assistant.enable; {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;

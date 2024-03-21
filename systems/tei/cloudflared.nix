@@ -54,10 +54,6 @@ in {
             inherit hostName;
           })
           (ingressForNginx {
-            host = nginx.access.unifi.domain;
-            inherit hostName;
-          })
-          (ingressForNginx {
             host = nginx.virtualHosts.grocy.serverName;
             inherit hostName;
           })

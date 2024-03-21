@@ -3,6 +3,7 @@ keys:
 - &mew 65BD3044771CB6FB
 - &hakurei_osh age12ze362pu5mza6ef9akrptr7hfe4auaqul4rkta7kyy2tnrstqensgmujeq
 - &reimu_osh age176uyyyk7veqnzmm8xzwfhf0u23m6hm02cldlfkldunqe6std0gcq6lg057
+- &utsuho_osh age15hmlkd9p5rladsjzpmvrh6u34xvggu9mzdsdxdj3ms43tltxeuhq4g7g9k
 - &aya_osh age10t6kc5069cyky929vvxk8aznqyxpkx3k5h5rmlyz83xtjmr22ahqe8mzes
 - &tewi_gen age17haatqc7gpk9t690affyqcvwmhmz0us95en2r7qpqzw29tpq3ffspld0cf
 - &tewi_osh age172nhlv3py990k2rgw64hy27hffmnpv6ssxyu9fepww7zxfgg347qna4gzt
@@ -22,6 +23,7 @@ creation_rules:
     age: &reisen_common
     - *hakurei_osh
     - *reimu_osh
+    - *utsuho_osh
     - *aya_osh
     - *tei_osh
     - *mediabox_osh
@@ -39,6 +41,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *reimu_osh
+- path_regex: 'systems/utsuho/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *utsuho_osh
 - path_regex: 'systems/aya/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
@@ -79,9 +87,9 @@ creation_rules:
 - path_regex: 'systems/keycloak/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
-    - pgp: *pgp_common
-      age:
-        - *keycloak_osh
+  - pgp: *pgp_common
+    age:
+    - *keycloak_osh
 - path_regex: 'systems/[^/]+/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:

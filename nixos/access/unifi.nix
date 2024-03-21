@@ -10,11 +10,6 @@
 in {
   options.services.nginx.access.unifi = with lib.types; {
     global = {
-      enable =
-        mkEnableOption "global access"
-        // {
-          default = access.useACMEHost != null;
-        };
       management = mkEnableOption "global management port access";
     };
     host = mkOption {
@@ -28,22 +23,6 @@ in {
       type = port;
       default = 8443;
     };
-    domain = mkOption {
-      type = str;
-      default = "unifi.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "unifi.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "unifi.tail.${config.networking.domain}";
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = null;
-    };
   };
   config.services.nginx = {
     access.unifi = mkIf unifi.enable {
@@ -54,43 +33,29 @@ in {
         proxy_redirect off;
         proxy_buffering off;
       '';
-      locations = {
-        "/" = {
-          proxyPass = access.url;
-        };
+      locations."/" = {
+        proxyPass = mkDefault access.url;
       };
+      name.shortServer = "unifi";
+      kTLS = mkDefault true;
     in {
-      "${access.domain}@management" = mkIf access.global.management {
-        listen =
-          map (addr: {
-            inherit addr;
-            port = access.managementPort;
-            ssl = true;
-          })
-          nginx.defaultListenAddresses;
-        serverName = access.domain;
+      unifi'management = mkIf access.global.management {
+        listenPorts.management = {
+          port = access.managementPort;
+          ssl = true;
+        };
+        ssl.force = true;
         default = mkDefault true;
-        forceSSL = mkDefault true;
-        kTLS = mkDefault true;
-        useACMEHost = mkDefault access.useACMEHost;
-        inherit locations extraConfig;
+        inherit name locations extraConfig kTLS;
       };
-      ${access.domain} = {
+      unifi = {
+        inherit name locations extraConfig kTLS;
         vouch.enable = mkDefault true;
-        local.enable = mkDefault (!access.global.enable);
-        forceSSL = mkDefault access.global.enable;
-        addSSL = mkDefault (!access.global.enable && access.useACMEHost != null);
-        kTLS = mkDefault true;
-        useACMEHost = mkDefault access.useACMEHost;
-        inherit locations extraConfig;
+        ssl.force = mkDefault true;
       };
-      ${access.localDomain} = {
-        serverAliases = mkIf tailscale.enable [access.tailDomain];
-        useACMEHost = mkDefault access.useACMEHost;
-        addSSL = mkDefault (access.useACMEHost != null);
-        kTLS = mkDefault true;
+      unifi'local = {
+        inherit name locations extraConfig kTLS;
         local.enable = true;
-        inherit locations extraConfig;
       };
     };
   };

@@ -1,10 +1,46 @@
-{meta, config, ...}: {
+{meta, config, access, ...}: let
+  inherit (config.services.nginx) virtualHosts;
+  tei = access.nixosFor "tei";
+in {
   imports = let
     inherit (meta) nixos;
   in [
+    nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.cloudflared
+    nixos.nginx
+    nixos.access.unifi
   ];
+
+  services.cloudflared = let
+    tunnelId = "28bcd3fc-3467-4997-806b-546ba9995028";
+  in {
+    tunnels.${tunnelId} = {
+      default = "http_status:404";
+      credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
+      ingress = {
+        ${virtualHosts.unifi.serverName} = {
+          service = "http://localhost";
+        };
+      };
+    };
+  };
+
+  services.nginx = {
+    access.unifi = {
+      host = tei.lib.access.hostnameForNetwork.local;
+    };
+    virtualHosts = {
+      unifi.proxied.enable = "cloudflared";
+    };
+  };
+
+  sops.secrets.cloudflared-tunnel-utsuho = {
+    owner = config.services.cloudflared.user;
+  };
+
+  sops.defaultSopsFile = ./secrets.yaml;
 
   systemd.network.networks.eth0 = {
     name = "eth0";
