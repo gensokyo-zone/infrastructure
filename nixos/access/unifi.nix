@@ -36,7 +36,7 @@ in {
       locations."/" = {
         proxyPass = mkDefault access.url;
       };
-      name.shortServer = "unifi";
+      name.shortServer = mkDefault "unifi";
       kTLS = mkDefault true;
     in {
       unifi'management = mkIf access.global.management {

@@ -10,7 +10,7 @@
   mkAlmostOptionDefault = mkOverride 1250;
   forceRedirectConfig = virtualHost: ''
     if ($x_scheme = http) {
-      return ${toString virtualHost.redirectCode} https://$host$request_uri;
+      return ${toString virtualHost.redirectCode} https://$x_forwarded_host$request_uri;
     }
   '';
   locationModule = { config, virtualHost, ... }: let

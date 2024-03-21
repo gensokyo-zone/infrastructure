@@ -170,15 +170,12 @@ in {
         virtualHosts.kitchencam'local.allServerNames
       ];
     };
-    ${access.invidious.domain} = {
+    yt = {
       inherit (nginx) group;
+      domain = virtualHosts.invidious.serverName;
       extraDomainNames = mkMerge [
-        [
-          access.invidious.localDomain
-        ]
-        (mkIf tailscale.enable [
-          access.invidious.tailDomain
-        ])
+        virtualHosts.invidious.serverAliases
+        virtualHosts.invidious'local.allServerNames
       ];
     };
   };
@@ -206,9 +203,6 @@ in {
     };
     access.kitchencam = {
       streamPort = 41081;
-    };
-    access.invidious = {
-      url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
     };
     virtualHosts = {
       gensokyoZone.proxied.enable = "cloudflared";
@@ -250,9 +244,11 @@ in {
       };
       plex.ssl.cert.enable = true;
       kitchencam.ssl.cert.enable = true;
-      ${access.invidious.domain} = {
-        useACMEHost = access.invidious.domain;
-        forceSSL = true;
+      invidious = {
+        ssl.cert.enable = true;
+      };
+      invidious'int = {
+        locations."/".proxyPass = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
       };
     };
   };

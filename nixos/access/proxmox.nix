@@ -55,7 +55,7 @@ in {
     extraConfig = ''
       client_max_body_size 16384M;
     '';
-    name.shortServer = "prox";
+    name.shortServer = mkDefault "prox";
   in {
     prox = {
       inherit name locations extraConfig;
