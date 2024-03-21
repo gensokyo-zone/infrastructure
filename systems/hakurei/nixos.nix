@@ -216,38 +216,29 @@ in {
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
-      keycloak'local.ssl.cert.enable = true;
       vouch.ssl.cert.enable = true;
-      vouch'local.ssl.cert.enable = true;
-      vouch'tail.ssl.cert.enable = true;
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
-      unifi'local.ssl.cert.enable = true;
       home-assistant = assert  home-assistant.enable; {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
       };
-      home-assistant'local.ssl.cert.enable = true;
       zigbee2mqtt = assert zigbee2mqtt.enable; {
         # not the real z2m record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString zigbee2mqtt.settings.frontend.port}";
       };
-      zigbee2mqtt'local.ssl.cert.enable = true;
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
-      };
-      grocy'local = {
-        ssl.cert.enable = true;
       };
       ${access.freepbx.domain} = {
         local.enable = true;
@@ -256,9 +247,7 @@ in {
         useACMEHost = access.proxmox.domain;
       };
       plex.ssl.cert.enable = true;
-      plex'local.ssl.cert.enable = true;
       kitchencam.ssl.cert.enable = true;
-      kitchencam'local.ssl.cert.enable = true;
       ${access.invidious.domain} = {
         useACMEHost = access.invidious.domain;
         forceSSL = true;

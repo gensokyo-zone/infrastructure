@@ -21,6 +21,7 @@ in {
       };
       zigbee2mqtt'local = {
         inherit name;
+        ssl.cert.copyFromVhost = "zigbee2mqtt";
         locations."/" = {
           proxy.websocket.enable = true;
           proxyPass = mkDefault (

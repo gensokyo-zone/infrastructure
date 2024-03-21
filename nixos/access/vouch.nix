@@ -65,7 +65,10 @@ in {
           includeTailscale = false;
         };
         local.enable = true;
-        ssl.force = true;
+        ssl = {
+          force = true;
+          cert.copyFromVhost = "vouch";
+        };
         locations = mkMerge [
           locations
           (localLocations "sso.local.${networking.domain}")
@@ -73,6 +76,7 @@ in {
       };
       vouch'tail = {
         enable = mkDefault tailscale.enable;
+        ssl.cert.copyFromVhost = "vouch'local";
         name = {
           inherit (name) shortServer;
           qualifier = mkDefault "tail";

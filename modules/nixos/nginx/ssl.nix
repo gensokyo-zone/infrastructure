@@ -4,8 +4,9 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault mkOverride;
   inherit (lib.trivial) warnIf;
+  inherit (config.services.nginx) virtualHosts;
   mkAlmostOptionDefault = mkOverride 1250;
   forceRedirectConfig = virtualHost: ''
     if ($x_scheme = http) {
@@ -56,6 +57,10 @@
             type = nullOr path;
             default = null;
           };
+          copyFromVhost = mkOption {
+            type = nullOr str;
+            default = null;
+          };
         };
       };
       locations = mkOption {
@@ -69,9 +74,20 @@
       ssl = {
         enable = mkOptionDefault (cfg.cert.name != null || cfg.cert.keyPath != null);
         forced = mkOptionDefault (cfg.force != false && cfg.force != "reject");
-        cert.name = mkIf cfg.cert.enable (warnIf (config.name.shortServer == null) "ssl.cert.enable set but name.shortServer is null" (
-          mkAlmostOptionDefault config.name.shortServer
-        ));
+        cert = let
+          certConfig.name = mkIf cfg.cert.enable (warnIf (config.name.shortServer == null) "ssl.cert.enable set but name.shortServer is null" (
+            mkAlmostOptionDefault config.name.shortServer
+          ));
+          copyCert = virtualHosts.${cfg.cert.copyFromVhost}.ssl.cert;
+          otherCertConfig = mkIf (cfg.cert.copyFromVhost != null) {
+            name = mkDefault copyCert.name;
+            keyPath = mkAlmostOptionDefault copyCert.keyPath;
+            path = mkAlmostOptionDefault copyCert.path;
+          };
+        in mkMerge [
+          certConfig
+          otherCertConfig
+        ];
       };
       addSSL = mkIf (cfg.enable && (cfg.force == false || emitForce)) (mkDefault true);
       forceSSL = mkIf (cfg.enable && cfg.force == true && !emitForce) (mkDefault true);

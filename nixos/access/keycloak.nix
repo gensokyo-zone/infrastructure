@@ -38,7 +38,10 @@ in {
       };
       keycloak'local = {
         name.shortServer = mkDefault "sso";
-        ssl.force = mkDefault true;
+        ssl = {
+          force = mkDefault true;
+          cert.copyFromVhost = "keycloak";
+        };
         local.enable = true;
         inherit locations;
         extraConfig = mkIf nginx.vouch.localSso.enable ''

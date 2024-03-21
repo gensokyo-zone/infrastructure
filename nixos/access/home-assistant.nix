@@ -31,6 +31,7 @@ in {
     };
     home-assistant'local = {
       inherit name listenPorts;
+      ssl.cert.copyFromVhost = "home-assistant";
       local.enable = mkDefault true;
       locations."/" = {
         proxy = {

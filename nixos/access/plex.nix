@@ -64,6 +64,7 @@ in {
       };
       plex'local = {
         inherit name locations extraConfig kTLS;
+        ssl.cert.copyFromVhost = "plex";
         local.enable = true;
       };
     };

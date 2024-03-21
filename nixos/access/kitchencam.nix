@@ -65,6 +65,7 @@ in {
       };
       kitchencam'local = {
         inherit name locations listenPorts kTLS;
+        ssl.cert.copyFromVhost = "kitchencam";
         local.enable = true;
       };
     };

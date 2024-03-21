@@ -45,7 +45,10 @@ in {
           ssl = true;
           extraParameters = [ "default_server" ];
         };
-        ssl.force = true;
+        ssl = {
+          force = true;
+          cert.copyFromVhost = "unifi";
+        };
         inherit name locations extraConfig kTLS;
       };
       unifi = {
@@ -55,6 +58,7 @@ in {
       };
       unifi'local = {
         inherit name locations extraConfig kTLS;
+        ssl.cert.copyFromVhost = "unifi";
         local.enable = true;
       };
     };
