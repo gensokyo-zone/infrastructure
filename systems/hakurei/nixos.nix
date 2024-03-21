@@ -53,14 +53,15 @@ in {
   };
 
   services.cloudflared = let
+    inherit (nginx) virtualHosts;
     tunnelId = "964121e3-b3a9-4cc1-8480-954c4728b604";
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
       ingress = {
-        "prox.${config.networking.domain}".service = "http://localhost";
-        ${config.networking.domain}.service = "http://localhost";
+        ${virtualHosts.prox.serverName}.service = "http://localhost";
+        ${virtualHosts.gensokyoZone.serverName}.service = "http://localhost";
       };
     };
   };
@@ -144,13 +145,13 @@ in {
         ])
       ];
     };
-    ${access.proxmox.domain} = {
+    prox = {
       inherit (nginx) group;
+      domain = virtualHosts.prox.serverName;
       extraDomainNames = mkMerge [
-        [access.proxmox.localDomain]
-        (mkIf config.services.tailscale.enable [
-          access.proxmox.tailDomain
-        ])
+        virtualHosts.prox.serverAliases
+        virtualHosts.prox'local.allServerNames
+        (mkIf virtualHosts.prox'tail.enable virtualHosts.prox'tail.allServerNames)
       ];
     };
     plex = {
@@ -243,8 +244,9 @@ in {
       ${access.freepbx.domain} = {
         local.enable = true;
       };
-      ${access.proxmox.domain} = {
-        useACMEHost = access.proxmox.domain;
+      prox = {
+        proxied.enable = "cloudflared";
+        ssl.cert.enable = true;
       };
       plex.ssl.cert.enable = true;
       kitchencam.ssl.cert.enable = true;

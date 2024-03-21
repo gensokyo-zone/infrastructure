@@ -61,7 +61,6 @@ in {
       vouch'local = {
         name = {
           inherit (name) shortServer;
-          qualifier = mkDefault "local";
           includeTailscale = false;
         };
         local.enable = true;

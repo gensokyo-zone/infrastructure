@@ -3,47 +3,14 @@
   lib,
   ...
 }: let
-  inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkMerge mkDefault;
   inherit (lib.strings) escapeRegex;
-  inherit (lib.lists) singleton optional;
-  inherit (config.lib.access) mkSnakeOil;
   inherit (config.services) nginx tailscale;
-  inherit (nginx) virtualHosts;
-  access = config.services.nginx.access.proxmox;
   proxyPass = "https://reisen.local.${config.networking.domain}:8006/";
-  unencrypted = mkSnakeOil {
-    name = "prox-local-cert";
-    domain =
-      singleton "prox.local.${config.networking.domain}"
-      ++ optional tailscale.enable "prox.tail.${config.networking.domain}";
-  };
-  sslHost = {config, ...}: {
-    sslCertificate = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.fullchain;
-    sslCertificateKey = mkIf (!config.enableACME && config.useACMEHost == null) unencrypted.key;
-  };
 in {
-  options.services.nginx.access.proxmox = with lib.types; {
-    domain = mkOption {
-      type = str;
-      default = "prox.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "prox.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "prox.tail.${config.networking.domain}";
-    };
-  };
   config.services.nginx.virtualHosts = let
     locations."/" = {
       extraConfig = ''
-        if ($http_x_forwarded_proto = http) {
-          return 302 https://$host$request_uri;
-        }
-
         set $prox_prefix ''';
         include ${config.sops.secrets.access-proxmox.path};
         if ($request_uri ~ "^/([^/]+).*") {
@@ -52,7 +19,7 @@ in {
         if ($request_uri ~ "^/(pve2/.*|pwt/.*|api2/.*|xtermjs/.*|[^/]+\.js.*)") {
           rewrite /(.*) /prox/$1 last;
         }
-        if ($http_referer ~ "^https://prox\.${escapeRegex config.networking.domain}/([^/]+)/$") {
+        if ($http_referer ~ "^https://${escapeRegex nginx.virtualHosts.prox.serverName}/([^/]+)/$") {
           set $prox_prefix $1;
         }
         if ($prox_prefix != $prox_expected) {
@@ -88,39 +55,45 @@ in {
     extraConfig = ''
       client_max_body_size 16384M;
     '';
+    name.shortServer = "prox";
   in {
-    ${access.domain} = {
-      inherit locations extraConfig;
+    prox = {
+      inherit name locations extraConfig;
+      ssl.force = true;
     };
-    ${access.localDomain} = mkMerge [
-      {
-        inherit (virtualHosts.${access.domain}) useACMEHost;
-        local.enable = mkDefault true;
-        forceSSL = mkDefault true;
-        locations."/" = {
-          proxy.websocket.enable = true;
-          inherit proxyPass extraConfig;
-        };
-      }
-      sslHost
-    ];
-    ${access.tailDomain} = mkIf tailscale.enable (mkMerge [
-      {
-        inherit (virtualHosts.${access.domain}) useACMEHost;
-        addSSL = mkDefault true;
-        local.enable = mkDefault true;
-        locations."/" = {
-          proxy.websocket.enable = true;
-          inherit proxyPass extraConfig;
-        };
-      }
-      sslHost
-    ]);
+    prox'local = {
+      name = {
+        inherit (name) shortServer;
+        includeTailscale = false;
+      };
+      ssl = {
+        force = true;
+        cert.copyFromVhost = "prox";
+      };
+      local.enable = mkDefault true;
+      locations."/" = {
+        proxy.websocket.enable = true;
+        inherit proxyPass extraConfig;
+      };
+    };
+    prox'tail = {
+      enable = mkDefault tailscale.enable;
+      name = {
+        inherit (name) shortServer;
+        qualifier = mkDefault "tail";
+      };
+      ssl.cert.copyFromVhost = "prox'local";
+      local.enable = mkDefault true;
+      locations."/" = {
+        proxy.websocket.enable = true;
+        inherit proxyPass extraConfig;
+      };
+    };
   };
 
   config.sops.secrets.access-proxmox = {
     sopsFile = mkDefault ../secrets/access-proxmox.yaml;
-    owner = config.services.nginx.user;
+    owner = nginx.user;
     inherit (nginx) group;
   };
 }
