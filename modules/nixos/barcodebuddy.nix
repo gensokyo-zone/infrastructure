@@ -42,6 +42,13 @@ in {
         default = [ "127.0.0.1" "::1" ];
       };
     };
+    screen = {
+      enable = mkEnableOption "websocket server";
+      websocketPort = mkOption {
+        type = port;
+        default = 47631;
+      };
+    };
     redis = {
       enable = mkEnableOption "redis cache";
       server = mkOption {
@@ -77,7 +84,7 @@ in {
     bbuddyConfig.services.barcodebuddy = {
       settings = let
         defaults = mapOptionDefaults {
-          PORT_WEBSOCKET_SERVER = 47631;
+          ${if cfg.screen.enable then "PORT_WEBSOCKET_SERVER" else null} = cfg.screen.websocketPort;
           SEARCH_ENGINE = "https://google.com/search?q=";
           ${if cfg.reverseProxy.enable then "TRUSTED_PROXIES" else null} = cfg.reverseProxy.trustedAddresses;
           DISABLE_AUTHENTICATION = false;
@@ -133,7 +140,9 @@ in {
         all.pdo_sqlite
         all.sockets
         all.gettext
-      ] ++ optional cfg.redis.enable all.redis);
+        all.session
+        all.redis
+      ]);
 
       settings = mapOptionDefaults {
         "pm.max_children" = 10;
@@ -157,11 +166,27 @@ in {
       virtualHosts."${cfg.hostName}" = {
         root = "${cfg.package}";
         locations = {
+          "/api/".extraConfig = ''
+            try_files $uri /api/index.php$is_args$query_string;
+          '';
           "~ \\.php$".extraConfig = cfg.nginxPhpConfig;
         };
         extraConfig = ''
           index index.php index.html index.htm;
         '';
+      };
+    };
+    conf.systemd.services.bbuddy-websocket = mkIf cfg.screen.enable {
+      wantedBy = [ "multi-user.target" ];
+      environment = mapAttrs' toEnvPair cfg.settings;
+      unitConfig = {
+        Description = "Run websocket server for barcodebuddy screen feature";
+      };
+      serviceConfig = {
+        ExecStart = "${config.services.phpfpm.pools.barcodebuddy.phpPackage}/bin/php ${cfg.package}/wsserver.php";
+        Restart = "on-failure";
+        StandardOutput = "null";
+        User = "barcodebuddy";
       };
     };
   in mkMerge [ bbuddyConfig (mkIf cfg.enable conf) ];
