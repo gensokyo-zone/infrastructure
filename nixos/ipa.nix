@@ -1,6 +1,6 @@
 { inputs, pkgs, config, lib, ... }: let
   inherit (inputs.self.lib.lib) mkBaseDn;
-  inherit (lib.modules) mkIf mkBefore mkForce mkDefault;
+  inherit (lib.modules) mkIf mkBefore mkDefault;
   inherit (lib.strings) toUpper;
   inherit (config.networking) domain;
   cfg = config.security.ipa;

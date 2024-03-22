@@ -5,6 +5,7 @@
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.ipa
     nixos.keycloak
     nixos.cloudflared
     nixos.vouch
