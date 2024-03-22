@@ -7,7 +7,9 @@
     overlays = [
       inputs.deploy-rs.overlay
       inputs.arcexprs.overlays.default
+      (import ./barcodebuddy.nix)
       (import ./samba.nix)
+      (import ./nginx.nix)
       (final: prev: {
         jemalloc =
           if final.hostPlatform != "aarch64-darwin"

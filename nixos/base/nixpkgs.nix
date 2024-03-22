@@ -2,6 +2,7 @@
   nixpkgs = {
     overlays = [
       inputs.arcexprs.overlays.default
+      (import ../../overlays/barcodebuddy.nix)
       (import ../../overlays/samba.nix)
       (import ../../overlays/nginx.nix)
     ];

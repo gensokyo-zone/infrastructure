@@ -19,7 +19,7 @@ in {
     };
     grocy'local = {
       inherit name;
-      ssl.cert.copyFromVhost = "zigbee2mqtt";
+      ssl.cert.copyFromVhost = "grocy";
       local.enable = mkDefault true;
       locations."/" = mkIf (!grocy.enable) {
         proxyPass = mkDefault (if grocy.enable

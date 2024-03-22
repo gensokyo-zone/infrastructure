@@ -103,6 +103,7 @@ module "tewi" {
     "id",
     "z2m",
     "grocy",
+    "bbuddy",
   ]
 }
 

@@ -22,6 +22,7 @@ in {
     nixos.zigbee2mqtt
     nixos.syncplay
     nixos.grocy
+    nixos.barcodebuddy
     ./cloudflared.nix
   ];
 
@@ -29,6 +30,7 @@ in {
     virtualHosts = {
       zigbee2mqtt.proxied.enable = "cloudflared";
       grocy.proxied.enable = "cloudflared";
+      barcodebuddy.proxied.enable = "cloudflared";
     };
   };
 

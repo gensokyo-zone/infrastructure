@@ -57,6 +57,10 @@ in {
             host = nginx.virtualHosts.grocy.serverName;
             inherit hostName;
           })
+          (ingressForNginx {
+            host = nginx.virtualHosts.barcodebuddy.serverName;
+            inherit hostName;
+          })
           (ingressForHass {inherit hostName;})
         ];
       };
