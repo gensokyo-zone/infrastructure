@@ -6,7 +6,7 @@
   inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) barcodebuddy nginx;
   name.shortServer = mkDefault "bbuddy";
-  serverName = "bbuddy_internal";
+  serverName = "@bbuddy_internal";
   extraConfig = ''
     set $x_proxy_host ${serverName};
   '';

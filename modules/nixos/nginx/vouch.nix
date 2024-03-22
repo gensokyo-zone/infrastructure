@@ -22,7 +22,7 @@
       };
     };
     config = let
-      enableVouchLocal = vouch.localSso.enable && config.local.enable;
+      enableVouchLocal = virtualHost.vouch.localSso.enable;
       enableVouchTail = enableVouchLocal && tailscale.enable;
       allowOrigin = url: "add_header Access-Control-Allow-Origin ${url};";
     in mkIf config.vouch.requireAuth {
@@ -57,6 +57,9 @@
       };
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
+        localSso.enable = mkEnableOption "lan-local vouch" // {
+          default = vouch.localSso.enable && config.local.enable;
+        };
         requireAuth = mkEnableOption "require auth to access this host" // {
           default = true;
         };
@@ -155,8 +158,8 @@
           (mkBefore ''
             set $vouch_url ${vouch.url};
           '')
-          (mkIf (vouch.localSso.enable && config.local.enable or false) localVouchUrl)
-          (mkIf (vouch.localSso.enable && config.local.enable or false && tailscale.enable) tailVouchUrl)
+          (mkIf cfg.localSso.enable localVouchUrl)
+          (mkIf (cfg.localSso.enable && tailscale.enable) tailVouchUrl)
         ];
       in mkIf cfg.enable (mkMerge (
         [
@@ -184,8 +187,8 @@
           proxied.rewriteReferer = false;
           extraConfig = let
             # nginx-proxied vouch must use X-Forwarded-Host, but vanilla vouch requires Host
-            vouchProxyHost = if vouch.doubleProxy
-              then "${config.proxy.host}"
+            vouchProxyHost = if vouch.doubleProxy.enable
+              then (if cfg.localSso.enable then vouch.doubleProxy.localServerName else vouch.doubleProxy.serverName)
               else "$x_forwarded_host";
           in ''
             proxy_set_header Host ${vouchProxyHost};
@@ -204,17 +207,31 @@ in {
     services.nginx = {
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
+        enableLocal = mkEnableOption "use local vouch instance" // {
+          default = true;
+        };
         localSso = {
-          # NOTE: this won't work without multiple vouch-proxy instances with different auth urls...
-          enable = mkEnableOption "lan-local auth";
+          enable = mkEnableOption "lan-local auth" // {
+            default = true;
+          };
         };
         proxyOrigin = mkOption {
           type = str;
           default = "https://login.local.${networking.domain}";
         };
-        doubleProxy = mkOption {
-          type = bool;
-          default = true;
+        doubleProxy = {
+          enable = mkOption {
+            type = bool;
+            default = true;
+          };
+          serverName = mkOption {
+            type = str;
+            default = "@vouch_internal";
+          };
+          localServerName = mkOption {
+            type = str;
+            default = "@vouch_internal_local";
+          };
         };
         authUrl = mkOption {
           type = str;
@@ -245,7 +262,7 @@ in {
           mkAlmostOptionDefault "http://login.tail.${networking.domain}"
         );
       }
-      (mkIf vouch-proxy.enable {
+      (mkIf (vouch.enableLocal && vouch-proxy.enable) {
         proxyOrigin = let
           inherit (vouch-proxy.settings.vouch) listen port;
           host =
@@ -256,7 +273,7 @@ in {
           mkAlmostOptionDefault "http://${host}:${toString port}";
         authUrl = mkAlmostOptionDefault vouch-proxy.authUrl;
         url = mkAlmostOptionDefault vouch-proxy.url;
-        doubleProxy = mkAlmostOptionDefault false;
+        doubleProxy.enable = mkAlmostOptionDefault false;
       })
     ];
   };

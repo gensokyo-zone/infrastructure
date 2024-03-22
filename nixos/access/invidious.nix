@@ -53,7 +53,7 @@ in {
         };
       };
       invidious'int = { config, ... }: {
-        serverName = "invidious_internal";
+        serverName = "@invidious_internal";
         proxied.enable = true;
         local.denyGlobal = true;
         # TODO: consider disabling registration then redirecting to login if `SID` cookie is unset instead of using vouch

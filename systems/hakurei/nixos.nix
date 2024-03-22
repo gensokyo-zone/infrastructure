@@ -11,10 +11,10 @@
   tei = access.nixosFor "tei";
   utsuho = access.nixosFor "utsuho";
   inherit (mediabox.services) plex;
-  inherit (keycloak.services) vouch-proxy;
   inherit (tei.services) home-assistant zigbee2mqtt;
   inherit (utsuho.services) unifi;
   inherit (config.services) nginx;
+  inherit (nginx) virtualHosts;
 in {
   imports = let
     inherit (meta) nixos;
@@ -31,6 +31,7 @@ in {
     nixos.ddclient
     nixos.acme
     nixos.nginx
+    nixos.vouch
     nixos.access.nginx
     nixos.access.global
     nixos.access.gensokyo
@@ -56,7 +57,7 @@ in {
   };
 
   services.cloudflared = let
-    inherit (nginx) virtualHosts defaultHTTPListenPort;
+    inherit (nginx) defaultHTTPListenPort;
     tunnelId = "964121e3-b3a9-4cc1-8480-954c4728b604";
     localNginx = "http://localhost:${toString defaultHTTPListenPort}";
   in {
@@ -70,9 +71,14 @@ in {
     };
   };
 
-  security.acme.certs = let
-    inherit (nginx) virtualHosts;
-  in {
+  # configure a secondary vouch instance for local clients, but don't use it by default
+  services.vouch-proxy = {
+    authUrl = "https://${virtualHosts.keycloak'local.serverName}/realms/${config.networking.domain}";
+    domain = "login.local.${config.networking.domain}";
+    #cookie.domain = "local.${config.networking.domain}";
+  };
+
+  security.acme.certs = {
     hakurei = {
       inherit (nginx) group;
       domain = config.networking.fqdn;
@@ -85,7 +91,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.keycloak.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.keycloak.serverAliases
+        virtualHosts.keycloak.otherServerNames
         virtualHosts.keycloak'local.allServerNames
       ];
     };
@@ -93,7 +99,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.home-assistant.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.home-assistant.serverAliases
+        virtualHosts.home-assistant.otherServerNames
         virtualHosts.home-assistant'local.allServerNames
       ];
     };
@@ -101,7 +107,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.zigbee2mqtt.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.zigbee2mqtt.serverAliases
+        virtualHosts.zigbee2mqtt.otherServerNames
         virtualHosts.zigbee2mqtt'local.allServerNames
       ];
     };
@@ -109,7 +115,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.grocy.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.grocy.serverAliases
+        virtualHosts.grocy.otherServerNames
         virtualHosts.grocy'local.allServerNames
       ];
     };
@@ -117,7 +123,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.barcodebuddy.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.barcodebuddy.serverAliases
+        virtualHosts.barcodebuddy.otherServerNames
         virtualHosts.barcodebuddy'local.allServerNames
       ];
     };
@@ -125,7 +131,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.vouch.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.vouch.serverAliases
+        virtualHosts.vouch.otherServerNames
         virtualHosts.vouch'local.allServerNames
         (mkIf virtualHosts.vouch'tail.enable virtualHosts.vouch'tail.allServerNames)
       ];
@@ -134,7 +140,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.unifi.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.unifi.serverAliases
+        virtualHosts.unifi.otherServerNames
         virtualHosts.unifi'local.allServerNames
       ];
     };
@@ -142,7 +148,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.freeipa.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.freeipa.serverAliases
+        virtualHosts.freeipa.otherServerNames
         virtualHosts.freeipa'web.allServerNames
         virtualHosts.freeipa'web'local.allServerNames
         virtualHosts.freeipa'ldap.allServerNames
@@ -154,7 +160,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.freepbx.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.freepbx.serverAliases
+        virtualHosts.freepbx.otherServerNames
         virtualHosts.freepbx'local.allServerNames
       ];
     };
@@ -162,7 +168,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.prox.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.prox.serverAliases
+        virtualHosts.prox.otherServerNames
         virtualHosts.prox'local.allServerNames
         (mkIf virtualHosts.prox'tail.enable virtualHosts.prox'tail.allServerNames)
       ];
@@ -171,7 +177,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.plex.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.plex.serverAliases
+        virtualHosts.plex.otherServerNames
         virtualHosts.plex'local.allServerNames
       ];
     };
@@ -179,7 +185,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.kitchencam.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.kitchencam.serverAliases
+        virtualHosts.kitchencam.otherServerNames
         virtualHosts.kitchencam'local.allServerNames
       ];
     };
@@ -187,7 +193,7 @@ in {
       inherit (nginx) group;
       domain = virtualHosts.invidious.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.invidious.serverAliases
+        virtualHosts.invidious.otherServerNames
         virtualHosts.invidious'local.allServerNames
       ];
     };
@@ -196,12 +202,10 @@ in {
   services.nginx = let
     inherit (nginx) access;
   in {
+    vouch.enableLocal = false;
     access.plex = assert plex.enable; {
       url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString plex.port}";
       externalPort = 41324;
-    };
-    access.vouch = assert vouch-proxy.enable; {
-      url = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
     };
     access.unifi = assert unifi.enable; {
       host = utsuho.lib.access.hostnameForNetwork.local;
@@ -224,7 +228,19 @@ in {
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
-      vouch.ssl.cert.enable = true;
+      vouch = let
+        inherit (keycloak.services) vouch-proxy;
+      in assert vouch-proxy.enable; {
+        ssl.cert.enable = true;
+        locations."/".proxyPass = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
+      };
+      vouch'local = let
+        vouch-proxy = config.services.vouch-proxy;
+      in assert vouch-proxy.enable; {
+        locations."/".proxyPass = "http://localhost:${toString vouch-proxy.settings.vouch.port}";
+        # we're not running another for tailscale sorry...
+        name.includeTailscale = true;
+      };
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
         local.denyGlobal = true;

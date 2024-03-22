@@ -44,11 +44,11 @@ in {
         };
         local.enable = true;
         inherit locations;
-        extraConfig = mkIf nginx.vouch.localSso.enable ''
+        extraConfig = mkIf false ''
           set $vouch_local_url ${nginx.vouch.localUrl};
-          if ($x_forwarded_host ~ "\.tail\.${networking.domain}$") {
-            set $vouch_local_url $x_scheme://${nginx.vouch.tailDomain};
-          }
+          #if ($x_forwarded_host ~ "\.tail\.${networking.domain}$") {
+          #  set $vouch_local_url $x_scheme://${nginx.vouch.tailDomain};
+          #}
           proxy_redirect ${nginx.vouch.url}/ $vouch_local_url/;
         '';
       };

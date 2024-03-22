@@ -5,7 +5,8 @@
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault;
-  inherit (lib.strings) optionalString;
+  inherit (lib.lists) filter;
+  inherit (lib.strings) optionalString hasPrefix;
   inherit (config.services) tailscale;
   inherit (config) networking;
   hostModule = {config, ...}: let
@@ -37,6 +38,9 @@
       allServerNames = mkOption {
         type = listOf str;
       };
+      otherServerNames = mkOption {
+        type = listOf str;
+      };
     };
 
     config = {
@@ -66,9 +70,12 @@
         (mkIf (cfg.localName != null) cfg.localName)
         (mkIf (cfg.tailscaleName != null) cfg.tailscaleName)
       ]);
-      allServerNames = mkOptionDefault (
+      allServerNames = mkOptionDefault (filter (name: ! hasPrefix "@" name) (
         [ config.serverName ] ++ config.serverAliases
-      );
+      ));
+      otherServerNames = mkOptionDefault (filter (name: ! hasPrefix "@" name) (
+        config.serverAliases
+      ));
     };
   };
 in {
