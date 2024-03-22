@@ -151,6 +151,8 @@ chown 100195:65534 /rpool/caches/plex/tautulli/cache
 chmod 0755 /rpool/caches/plex/tautulli/cache
 
 mkshared hass 100286 100286 0700
+mkshared grocy 100911 100060 0700
+mkshared barcodebuddy 100912 100060 0700
 mkshared kanidm 100994 100993 0700
 mkshared mosquitto 100246 100246 0700
 mkshared plex 100193 100193 0750

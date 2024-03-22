@@ -3,6 +3,7 @@
   inherit (lib.strings) escapeRegex;
   inherit (config.services) nginx;
   inherit (config) networking;
+  cfg = config.services.grocy;
 in {
   config = {
     services.grocy = {
@@ -31,7 +32,7 @@ in {
 
         fastcgi_param GROCY_AUTH_CLASS $grocy_middleware;
       '';
-    in {
+    in mkIf cfg.enable {
       lua.http.enable = true;
       virtualHosts = {
         grocy = {config, ...}: {
@@ -64,6 +65,9 @@ in {
           };
         };
       };
+    };
+    users.users.grocy = mkIf cfg.enable {
+      uid = 911;
     };
   };
 }

@@ -5,6 +5,8 @@
 			"/rpool/shared/zigbee2mqtt mnt/shared/zigbee2mqtt none bind,optional,create=dir",
 			"/rpool/shared/mosquitto mnt/shared/mosquitto none bind,optional,create=dir",
 			"/rpool/shared/hass mnt/shared/hass none bind,optional,create=dir",
+			"/rpool/shared/grocy mnt/shared/grocy none bind,optional,create=dir",
+			"/rpool/shared/barcodebuddy mnt/shared/barcodebuddy none bind,optional,create=dir",
 			"/rpool/shared/postgresql mnt/shared/postgresql none bind,optional,create=dir",
 			"/dev/ttyZigbee dev/ttyZigbee none bind,optional,create=file",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
