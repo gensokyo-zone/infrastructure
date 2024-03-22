@@ -1,0 +1,14 @@
+diff --git a/nixos/modules/services/web-apps/keycloak.nix b/nixos/modules/services/web-apps/keycloak.nix
+--- a/nixos/modules/services/web-apps/keycloak.nix
++++ b/nixos/modules/services/web-apps/keycloak.nix
+@@ -480,10 +480,6 @@ in
+             assertion = createLocalPostgreSQL -> config.services.postgresql.settings.standard_conforming_strings or true;
+             message = "Setting up a local PostgreSQL db for Keycloak requires `standard_conforming_strings` turned on to work reliably";
+           }
+-          {
+-            assertion = cfg.settings.hostname != null || cfg.settings.hostname-url or null != null;
+-            message = "Setting the Keycloak hostname is required, see `services.keycloak.settings.hostname`";
+-          }
+           {
+             assertion = !(cfg.settings.hostname != null && cfg.settings.hostname-url or null != null);
+             message = "`services.keycloak.settings.hostname` and `services.keycloak.settings.hostname-url` are mutually exclusive";

@@ -1,5 +1,6 @@
-{config, lib, ...}: let
+{inputs, system, config, lib, ...}: let
   inherit (lib.modules) mkIf mkForce mkDefault;
+  inherit (lib.lists) optional;
   inherit (config.lib.access) mkSnakeOil;
   cfg = config.services.keycloak;
   cert = mkSnakeOil {
@@ -7,7 +8,14 @@
     domain = hostname;
   };
   hostname = "sso.${config.networking.domain}";
+  hostname-strict = false;
+  inherit (inputs.self.legacyPackages.${system.system}) patchedNixpkgs;
+  keycloakModulePath = "services/web-apps/keycloak.nix";
 in {
+  # upstream keycloak makes an incorrect assumption in its assertions, so we patch it
+  disabledModules = optional (!hostname-strict) keycloakModulePath;
+  imports = optional (!hostname-strict) (patchedNixpkgs + "/nixos/modules/${keycloakModulePath}");
+
   sops.secrets = let
     commonSecret = {
       sopsFile = ./secrets/keycloak.yaml;
@@ -41,8 +49,10 @@ in {
     };
 
     settings = {
-      hostname = mkDefault hostname;
+      hostname = mkDefault (if hostname-strict then hostname else null);
       proxy = mkDefault (if cfg.sslCertificate != null then "reencrypt" else "edge");
+      hostname-strict = mkDefault hostname-strict;
+      hostname-strict-https = mkDefault hostname-strict;
       proxy-headers = mkDefault "xforwarded";
     };
 

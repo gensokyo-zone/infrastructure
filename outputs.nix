@@ -19,6 +19,7 @@
           name = "nixpkgs";
           src = inputs.nixpkgs;
           patches = [
+            ./packages/nixpkgs-keycloak-nullhostname.patch
           ];
         };
         deploy-rs = let
