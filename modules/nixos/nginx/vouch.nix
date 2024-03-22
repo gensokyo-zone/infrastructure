@@ -178,16 +178,20 @@
             return 302 $vouch_url/login?url=$x_scheme://$x_forwarded_host$request_uri&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
           '';
         };
-        ${cfg.auth.requestLocation} = {
+        ${cfg.auth.requestLocation} = { config, ... }: {
           proxyPass = "${vouch.proxyOrigin}/validate";
-          proxy.headers.enableRecommended = true;
+          proxy.headers.enableRecommended = false;
+          proxied.rewriteReferer = false;
           extraConfig = let
             # nginx-proxied vouch must use X-Forwarded-Host, but vanilla vouch requires Host
             vouchProxyHost = if vouch.doubleProxy
-              then "''"
+              then "${config.proxy.host}"
               else "$x_forwarded_host";
           in ''
-            set $x_proxy_host ${vouchProxyHost};
+            proxy_set_header Host ${vouchProxyHost};
+            proxy_set_header X-Forwarded-Host $x_forwarded_host;
+            proxy_set_header Referer $x_referer;
+            proxy_set_header X-Forwarded-Proto $x_scheme;
             proxy_pass_request_body off;
             proxy_set_header Content-Length "";
           '';

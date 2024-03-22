@@ -5,17 +5,17 @@
 in {
   config.services.barcodebuddy = {
     enable = mkDefault true;
-    hostName = mkDefault "barcodebuddy";
+    hostName = mkDefault "barcodebuddy'php";
     reverseProxy.enable = mkDefault true;
     settings = {
       EXTERNAL_GROCY_URL = "https://grocy.${config.networking.domain}";
       DISABLE_AUTHENTICATION = true;
     };
-    nginxPhpConfig = mkMerge [
+    nginxConfig = mkMerge [
       ''
         include ${config.sops.secrets.barcodebuddy-fastcgi-params.path};
       ''
-      (mkIf nginx.virtualHosts.barcodebuddy.proxied.enabled (mkAfter ''
+      (mkIf cfg.reverseProxy.enable (mkAfter ''
         set $bbuddy_https "";
         if ($x_scheme = https) {
           set $bbuddy_https 1;
@@ -26,22 +26,12 @@ in {
       ''))
     ];
   };
-  config.services.nginx.virtualHosts.barcodebuddy = mkIf cfg.enable {
-    proxied.xvars.enable = true;
-    vouch = {
-      enable = true;
-      requireAuth = false;
+  config.services.nginx.virtualHosts.barcodebuddy'php = mkIf cfg.enable {
+    proxied = {
+      enable = cfg.reverseProxy.enable;
+      xvars.enable = true;
     };
     name.shortServer = mkDefault "bbuddy";
-    locations = {
-      "= /api/index.php" = {
-        vouch.requireAuth = false;
-        extraConfig = cfg.nginxPhpConfig;
-      };
-      "~ \\.php$" = {
-        vouch.requireAuth = true;
-      };
-    };
   };
   config.users.users.barcodebuddy = mkIf cfg.enable {
     uid = 912;

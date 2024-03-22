@@ -29,6 +29,7 @@ module "hakurei_system_records" {
     "home",
     "z2m",
     "grocy",
+    "bbuddy",
     "yt",
   ]
   global_subdomains = [

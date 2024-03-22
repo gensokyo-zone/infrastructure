@@ -1,8 +1,8 @@
 { config, lib, pkgs, ... }: let
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault mkOverride;
   inherit (lib.attrsets) mapAttrs mapAttrs' nameValuePair;
-  inherit (lib.lists) isList optional imap0;
+  inherit (lib.lists) isList imap0;
   inherit (lib.strings) concatStringsSep;
   mkAlmostOptionDefault = mkOverride 1250;
   mapOptionDefaults = mapAttrs (_: mkOptionDefault);
@@ -75,6 +75,9 @@ in {
       type = attrsOf (oneOf [ str bool int (listOf str) ]);
       description = "https://github.com/Forceu/barcodebuddy/blob/master/config-dist.php";
     };
+    nginxConfig = mkOption {
+      type = lines;
+    };
     nginxPhpConfig = mkOption {
       type = lines;
     };
@@ -99,16 +102,19 @@ in {
           REDIS_PW = toString cfg.redis.password;
         };
       in mkMerge [ defaults (mkIf cfg.redis.enable redis) ];
-      nginxPhpConfig = mkMerge [
+      nginxConfig = mkMerge [
         ''
+          index index.php index.html index.htm;
           include ${config.services.nginx.package}/conf/fastcgi.conf;
-          fastcgi_pass unix:${config.services.phpfpm.pools.barcodebuddy.socket};
           fastcgi_read_timeout 80s;
         ''
         (mkIf cfg.reverseProxy.enable ''
           fastcgi_pass_header "X-Accel-Buffering";
         '')
       ];
+      nginxPhpConfig = mkAfter ''
+        fastcgi_pass unix:${config.services.phpfpm.pools.barcodebuddy.socket};
+      '';
       redis = let
         redis = config.services.redis.servers.${cfg.redis.server};
       in mkIf (cfg.redis.server != null) {
@@ -171,9 +177,7 @@ in {
           '';
           "~ \\.php$".extraConfig = cfg.nginxPhpConfig;
         };
-        extraConfig = ''
-          index index.php index.html index.htm;
-        '';
+        extraConfig = cfg.nginxConfig;
       };
     };
     conf.systemd.services.bbuddy-websocket = mkIf cfg.screen.enable {

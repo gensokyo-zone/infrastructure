@@ -43,6 +43,7 @@ in {
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
+    nixos.access.barcodebuddy
     nixos.access.proxmox
     nixos.access.plex
     nixos.access.invidious
@@ -110,6 +111,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.grocy.serverAliases
         virtualHosts.grocy'local.allServerNames
+      ];
+    };
+    bbuddy = {
+      inherit (nginx) group;
+      domain = virtualHosts.barcodebuddy.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.barcodebuddy.serverAliases
+        virtualHosts.barcodebuddy'local.allServerNames
       ];
     };
     login = {
@@ -235,6 +244,12 @@ in {
       };
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
+      };
+      barcodebuddy = {
+        # not the real bbuddy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
         locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";

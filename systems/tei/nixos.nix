@@ -17,6 +17,7 @@ in {
     nixos.postgres
     nixos.nginx
     nixos.access.zigbee2mqtt
+    nixos.access.barcodebuddy
     nixos.mosquitto
     nixos.home-assistant
     nixos.zigbee2mqtt

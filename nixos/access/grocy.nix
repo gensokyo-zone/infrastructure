@@ -23,7 +23,7 @@ in {
       local.enable = mkDefault true;
       locations."/" = mkIf (!grocy.enable) {
         proxyPass = mkDefault (if grocy.enable
-          then "http://localhost:${nginx.defaultHTTPListenPort}"
+          then "http://localhost:${toString nginx.defaultHTTPListenPort}"
           else nginx.virtualHosts.grocy.locations."/".proxyPass
         );
         proxy.headers.enableRecommended = true;
