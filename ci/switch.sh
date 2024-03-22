@@ -5,7 +5,7 @@ shift
 ARG_HOSTNAME=$(nf-hostname "$ARG_NODE")
 NIX_SSHOPTS=$(nf-sshopts "$ARG_NODE")
 
-if [[ $# -gt 0 ]]; then
+if [[ $# -gt 0 ]] && [[ ${1-} != -* ]]; then
 	ARG_METHOD=$1
 	shift
 else
