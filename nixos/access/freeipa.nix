@@ -45,8 +45,9 @@ let
       '';
     };
   };
-  locations = locations' access.domain;
-  caLocations = locations' access.caDomain;
+  locations = locations' virtualHosts.freeipa.serverName;
+  caLocations = locations' virtualHosts.freeipa'ca.serverName;
+  kTLS = mkDefault true;
 in {
   imports = let
     inherit (meta) nixos;
@@ -96,26 +97,6 @@ in {
         scheme = if access.port == 443 then "https" else "http";
       in "${scheme}://${access.host}:${toString access.port}";
     };
-    domain = mkOption {
-      type = str;
-      default = "idp.${config.networking.domain}";
-    };
-    caDomain = mkOption {
-      type = str;
-      default = "idp-ca.${config.networking.domain}";
-    };
-    globalDomain = mkOption {
-      type = str;
-      default = "freeipa.${config.networking.domain}";
-    };
-    localDomain = mkOption {
-      type = str;
-      default = "freeipa.local.${config.networking.domain}";
-    };
-    tailDomain = mkOption {
-      type = str;
-      default = "freeipa.tail.${config.networking.domain}";
-    };
     port = mkOption {
       type = port;
       default = 443;
@@ -123,10 +104,6 @@ in {
     ldapPort = mkOption {
       type = port;
       default = 636;
-    };
-    useACMEHost = mkOption {
-      type = nullOr str;
-      default = virtualHosts.${access.domain}.useACMEHost;
     };
   };
   config = {
@@ -136,7 +113,7 @@ in {
         host = mkDefault access.host;
         port = mkDefault 389;
         sslPort = mkDefault access.ldapPort;
-        useACMEHost = mkDefault access.useACMEHost;
+        useACMEHost = mkDefault virtualHosts.freeipa.ssl.cert.name;
         bind.sslPort = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
       };
       resolver.addresses = mkIf access.preread.enable (mkMerge [
@@ -173,8 +150,8 @@ in {
           }
           map $ssl_preread_server_name $ssl_server_name {
             hostnames;
-            ${access.domain} ${upstreams.freeipa};
-            ${access.caDomain} ${upstreams.freeipa};
+            ${virtualHosts.freeipa.serverName} ${upstreams.freeipa};
+            ${virtualHosts.freeipa'ca.serverName} ${upstreams.freeipa};
             ${nginx.access.ldap.domain} ${upstreams.ldap};
             ${nginx.access.ldap.localDomain} ${upstreams.ldap};
             ${nginx.access.ldap.tailDomain} ${upstreams.ldap};
@@ -195,7 +172,7 @@ in {
 
           map $ssl_preread_server_name $ldap_upstream {
             hostnames;
-            ${access.domain} ${upstreams.ldap_freeipa};
+            ${virtualHosts.freeipa.serverName} ${upstreams.ldap_freeipa};
             default ${upstreams.ldap};
           }
 
@@ -231,48 +208,51 @@ in {
         (mkIf access.preread.enable preread)
         (mkIf access.kerberos.enable kerberos)
       ];
-      virtualHosts = {
-        ${access.domain} = {
-          inherit locations extraConfig;
-          inherit (access) useACMEHost;
-          forceSSL = mkDefault (access.useACMEHost != null);
+      virtualHosts = let
+        name.shortServer = mkDefault "freeipa";
+      in {
+        freeipa = {
+          name.shortServer = mkDefault "idp";
+          inherit locations extraConfig kTLS;
+          ssl.force = mkDefault true;
         };
-        ${access.globalDomain} = {
-          inherit locations extraConfig;
-          inherit (access) useACMEHost;
-          forceSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
+        freeipa'web = {
+          ssl = {
+            force = mkDefault virtualHosts.freeipa.ssl.force;
+            cert.copyFromVhost = "freeipa";
+          };
+          inherit name locations extraConfig kTLS;
         };
-        ${access.caDomain} = {
+        freeipa'ca = {
+          name.shortServer = mkDefault "idp-ca";
           locations = caLocations;
-          inherit extraConfig;
-          inherit (access) useACMEHost;
-          forceSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
+          ssl = {
+            force = mkDefault virtualHosts.freeipa.ssl.force;
+            cert.copyFromVhost = "freeipa";
+          };
+          inherit extraConfig kTLS;
         };
-        ${access.localDomain} = {
-          inherit (virtualHosts.${access.domain}) useACMEHost;
-          addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
+        freeipa'web'local = {
+          ssl.cert.copyFromVhost = "freeipa'web";
           local.enable = true;
-          inherit locations;
+          inherit name locations kTLS;
         };
-        ${access.tailDomain} = mkIf tailscale.enable {
-          inherit (virtualHosts.${access.domain}) useACMEHost;
-          addSSL = mkDefault (access.useACMEHost != null || virtualHosts.${access.domain}.forceSSL);
-          local.enable = true;
-          inherit locations;
+        freeipa'ldap = {
+          serverName = mkDefault ldap.domain;
+          ssl.cert.copyFromVhost = "freeipa";
+          globalRedirect = virtualHosts.freeipa'web.serverName;
         };
-        ${ldap.domain} = { config, ... }: {
-          useACMEHost = mkDefault virtualHosts.${access.domain}.useACMEHost;
-          addSSL = mkDefault (config.useACMEHost != null);
-          globalRedirect = access.domain;
-        };
-        ${ldap.localDomain} = {
-          inherit (virtualHosts.${ldap.domain}) useACMEHost addSSL;
-          globalRedirect = access.localDomain;
+        freeipa'ldap'local = {
+          serverName = mkDefault ldap.localDomain;
+          ssl.cert.copyFromVhost = "freeipa'ldap";
+          globalRedirect = virtualHosts.freeipa'web'local.serverName;
           local.enable = true;
         };
-        ${ldap.tailDomain} = mkIf tailscale.enable {
-          inherit (virtualHosts.${ldap.domain}) useACMEHost addSSL;
-          globalRedirect = access.tailDomain;
+        freeipa'ldap'tail = {
+          enable = mkDefault tailscale.enable;
+          serverName = mkDefault ldap.tailDomain;
+          ssl.cert.copyFromVhost = "freeipa'ldap'local";
+          globalRedirect = virtualHosts.freeipa'web'local.name.tailscaleName;
           local.enable = true;
         };
       };

@@ -67,14 +67,14 @@ in {
   };
 
   security.acme.certs = let
-    inherit (nginx) access virtualHosts;
+    inherit (nginx) virtualHosts;
   in {
     hakurei = {
       inherit (nginx) group;
       domain = config.networking.fqdn;
       extraDomainNames = [
-        config.lib.access.hostnameForNetwork.local
-        (mkIf config.services.tailscale.enable config.lib.access.hostnameForNetwork.tail)
+        access.hostnameForNetwork.local
+        (mkIf config.services.tailscale.enable access.hostnameForNetwork.tail)
       ];
     };
     sso = {
@@ -126,20 +126,16 @@ in {
         virtualHosts.unifi'local.allServerNames
       ];
     };
-    ${access.freeipa.domain} = {
+    idp = {
       inherit (nginx) group;
+      domain = virtualHosts.freeipa.serverName;
       extraDomainNames = mkMerge [
-        [
-          access.freeipa.localDomain
-          access.freeipa.caDomain
-          access.freeipa.globalDomain
-          access.ldap.domain
-          access.ldap.localDomain
-        ]
-        (mkIf tailscale.enable [
-          access.freeipa.tailDomain
-          access.ldap.tailDomain
-        ])
+        virtualHosts.freeipa.serverAliases
+        virtualHosts.freeipa'web.allServerNames
+        virtualHosts.freeipa'web'local.allServerNames
+        virtualHosts.freeipa'ldap.allServerNames
+        virtualHosts.freeipa'ldap'local.allServerNames
+        (mkIf virtualHosts.freeipa'ldap'tail.enable virtualHosts.freeipa'ldap'tail.allServerNames)
       ];
     };
     pbx = {
@@ -199,7 +195,6 @@ in {
       host = tei.lib.access.hostnameForNetwork.local;
     };
     access.freeipa = {
-      useACMEHost = access.freeipa.domain;
       host = "idp.local.${config.networking.domain}";
       kerberos.ports.kpasswd = 464;
     };
@@ -209,6 +204,9 @@ in {
     virtualHosts = {
       fallback.ssl.cert.name = "hakurei";
       gensokyoZone.proxied.enable = "cloudflared";
+      freeipa = {
+        ssl.cert.enable = true;
+      };
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;
