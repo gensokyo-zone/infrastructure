@@ -8,62 +8,63 @@ in {
   config = {
     services.grocy = {
       enable = mkDefault true;
-      hostName = "grocy";
+      hostName = "grocy'php";
       nginx.enableSSL = false;
       settings = {
         currency = mkDefault "CAD";
       };
     };
     services.nginx = let
-      name.shortServer = mkDefault "grocy";
-      lua.access.block = ''
-        local grocy_user_pat = "^([^@]+)@.*$"
-        if ngx.re.match(ngx.var.auth_resp_x_vouch_user, grocy_user_pat) then
-          ngx.var["grocy_user"] = ngx.re.sub(ngx.var.auth_resp_x_vouch_user, grocy_user_pat, "$1", "o") or "guest"
-        end
-      '';
       extraConfig = mkAfter ''
         set $grocy_user guest;
         set $grocy_middleware Grocy\Middleware\ReverseProxyAuthMiddleware;
+        set $grocy_auth_header GENSO_GROCY_USER;
+        set $grocy_auth_env true;
 
-        fastcgi_param GENSO_GROCY_USER $grocy_user;
-        fastcgi_param GROCY_REVERSE_PROXY_AUTH_HEADER GENSO_GROCY_USER;
-        fastcgi_param GROCY_REVERSE_PROXY_AUTH_USE_ENV true;
+        if ($http_grocy_api_key) {
+          set $grocy_user "";
+        }
+        if ($request_uri ~ "^/api(/.*|)$") {
+          set $grocy_user "";
+        }
+        if ($http_x_vouch_user ~ "^([^@]+)@.*$") {
+          set $grocy_user $1;
+        }
+        if ($http_x_grocy_user) {
+          #set $grocy_auth_header X-Grocy-User;
+          #set $grocy_auth_env false;
+          set $grocy_user $http_x_grocy_user;
+        }
+        if ($grocy_user = "") {
+          set $grocy_middleware Grocy\Middleware\DefaultAuthMiddleware;
+        }
 
         fastcgi_param GROCY_AUTH_CLASS $grocy_middleware;
+        fastcgi_param GROCY_REVERSE_PROXY_AUTH_USE_ENV $grocy_auth_env;
+        fastcgi_param GROCY_REVERSE_PROXY_AUTH_HEADER $grocy_auth_header;
+        fastcgi_param GENSO_GROCY_USER $grocy_user;
+
+        set $grocy_https "";
+        if ($x_scheme = https) {
+          set $grocy_https 1;
+        }
+        fastcgi_param HTTP_HOST $x_forwarded_host;
+        fastcgi_param REQUEST_SCHEME $x_scheme;
+        fastcgi_param HTTPS $grocy_https if_not_empty;
       '';
-    in mkIf cfg.enable {
-      lua.http.enable = true;
+    in {
       virtualHosts = {
-        grocy = {config, ...}: {
-          inherit name;
-          vouch = {
+        grocy'php = mkIf cfg.enable ({config, ...}: {
+          name.shortServer = mkDefault "grocy";
+          proxied = {
             enable = true;
-            requireAuth = false;
-            auth.lua = {
-              enable = true;
-              accessRequest = ''
-                local grocy_apikey = ngx.var["http_grocy_api_key"]
-                if grocy_apikey ~= nil and ngx.re.match(ngx.var.request_uri, "^/api(/|$)") then
-                  -- bypass authentication and let grocy decide...
-                  -- if the API key is valid, the middleware will use its user instead
-                  -- if the API key is invalid, the middleware will fall back to the (invalid/empty) user string
-                  ngx.ctx.auth_res = {
-                    status = ngx.HTTP_OK,
-                    header = { },
-                  }
-                  ngx.var["grocy_user"] = ""
-                else
-                  ngx.ctx.auth_res = ngx.location.capture("${config.vouch.auth.requestLocation}")
-                end
-              '';
-            };
+            xvars.enable = true;
           };
-          locations."~ \\.php$" = mkIf nginx.virtualHosts.grocy.vouch.enable {
-            vouch.requireAuth = true;
-            inherit extraConfig lua;
+          local.denyGlobal = true;
+          locations."~ \\.php$" = {
+            inherit extraConfig;
           };
-        };
+        });
       };
     };
     users.users.grocy = mkIf cfg.enable {

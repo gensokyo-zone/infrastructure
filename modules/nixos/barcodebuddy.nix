@@ -147,6 +147,7 @@ in {
         all.sockets
         all.gettext
         all.session
+        all.filter
         all.redis
       ]);
 
