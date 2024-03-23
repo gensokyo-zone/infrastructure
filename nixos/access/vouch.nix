@@ -20,6 +20,7 @@ in {
         "http://${host}:${toString cfg.settings.vouch.port}";
       locations = {
         "/" = {
+          ssl.force = true;
           extraConfig = ''
             proxy_redirect default;
             set $x_proxy_host $x_forwarded_host;
@@ -56,7 +57,6 @@ in {
             "/".proxyPass = mkIf cfg.enable (mkDefault localVouchUrl);
           }
         ];
-        ssl.force = true;
       };
       vouch'local = {
         name = {
