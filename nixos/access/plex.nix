@@ -52,7 +52,7 @@ in {
     in {
       plex = {
         inherit name locations extraConfig kTLS;
-        listenPorts = {
+        listen' = {
           http = { };
           https.ssl = true;
           external = {

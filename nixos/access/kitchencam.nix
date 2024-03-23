@@ -51,7 +51,7 @@ in {
           inherit extraConfig;
         };
       };
-      listenPorts = {
+      listen' = {
         http = { };
         https.ssl = true;
         stream.port = mkDefault access.streamPort;
@@ -60,11 +60,11 @@ in {
       kTLS = mkDefault true;
     in {
       kitchencam = {
-        inherit name locations listenPorts kTLS;
+        inherit name locations listen' kTLS;
         vouch.enable = true;
       };
       kitchencam'local = {
-        inherit name locations listenPorts kTLS;
+        inherit name locations listen' kTLS;
         ssl.cert.copyFromVhost = "kitchencam";
         local.enable = true;
       };

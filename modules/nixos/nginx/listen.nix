@@ -62,9 +62,6 @@
     in mapAttrs (_: mkAlmostOptionDefault) listenAttrs;
     mkListens = listen: map (mkListen listen) listen.addresses;
   in {
-    imports = [
-      (mkRenamedOptionModule [ "listenPorts" ] [ "listen'" ])
-    ];
     options = with lib.types; {
       listen' = mkOption {
         type = attrsOf (submoduleWith {

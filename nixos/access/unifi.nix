@@ -40,7 +40,7 @@ in {
       kTLS = mkDefault true;
     in {
       unifi'management = mkIf access.global.management {
-        listenPorts.management = {
+        listen'.management = {
           port = access.managementPort;
           ssl = true;
           extraParameters = [ "default_server" ];

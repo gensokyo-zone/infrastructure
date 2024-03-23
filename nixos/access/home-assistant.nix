@@ -6,7 +6,7 @@
   inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) home-assistant nginx;
   name.shortServer = mkDefault "home";
-  listenPorts = {
+  listen' = {
     http = { };
     https.ssl = true;
     hass = {
@@ -30,7 +30,7 @@ in {
       };
     };
     home-assistant'local = {
-      inherit name listenPorts;
+      inherit name listen';
       ssl.cert.copyFromVhost = "home-assistant";
       local.enable = mkDefault true;
       locations."/" = {

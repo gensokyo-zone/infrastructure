@@ -10,7 +10,7 @@
   inherit (config.services) nginx;
   access = nginx.access.freepbx;
   freepbx = config.lib.access.systemFor "freepbx";
-  hasSsl = nginx.virtualHosts.freepbx'ucp.listenPorts.ucpSsl.enable;
+  hasSsl = nginx.virtualHosts.freepbx'ucp.listen'.ucpSsl.enable;
 in {
   options.services.nginx.access.freepbx = with lib.types; {
     host = mkOption {
@@ -80,7 +80,7 @@ in {
       freepbx'ucp = {
         serverName = mkDefault nginx.virtualHosts.freepbx.serverName;
         ssl.cert.copyFromVhost = "freepbx";
-        listenPorts = {
+        listen' = {
           ucp = {
             port = access.ucpPort;
             extraParameters = [ "default_server" ];
@@ -100,7 +100,7 @@ in {
         inherit extraConfig kTLS;
       };
       freepbx'local = {
-        listenPorts = {
+        listen' = {
           http = { };
           https.ssl = true;
           ucp = {
