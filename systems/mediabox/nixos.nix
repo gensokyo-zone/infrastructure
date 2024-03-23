@@ -116,6 +116,11 @@ in {
     gateway = ["10.1.1.1"];
     DHCP = "no";
   };
+  access.internal = {
+    enable = true;
+    macAddress = "BC:24:19:34:F4:A8";
+    vmid = 102;
+  };
 
   sops.defaultSopsFile = ./secrets.yaml;
 

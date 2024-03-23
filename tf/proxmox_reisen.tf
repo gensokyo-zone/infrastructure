@@ -1,4 +1,8 @@
 locals {
+  reisen_int_prefix4 = "10.9.1.0/24"
+  reisen_int_prefix6 = "fd0c::/64"
+  reisen_int_offset  = 32
+
   proxmox_reisen_connection = {
     type     = "ssh"
     user     = var.proxmox_reisen_ssh_username
@@ -59,4 +63,12 @@ resource "terraform_data" "proxmox_reisen_users" {
       "mkpam '${user.name}' '${user.uid}'"
     ]
   }
+}
+
+resource "proxmox_virtual_environment_network_linux_bridge" "internal" {
+  node_name = "reisen"
+  name      = "vmbr9"
+  address   = "${cidrhost(local.reisen_int_prefix4, 2)}/24"
+  address6  = "${cidrhost(local.reisen_int_prefix6, 2)}/64"
+  comment = "internal private network"
 }
