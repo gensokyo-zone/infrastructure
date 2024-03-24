@@ -42,10 +42,6 @@ in {
       };
       shares.opl = let
         inherit (config.networking.access) cidrForNetwork;
-        localAddrs =
-          cidrForNetwork.loopback.all
-          ++ cidrForNetwork.local.all
-          ++ lib.optionals config.services.tailscale.enable cidrForNetwork.tail.all;
       in
         mkIf cfg.enable {
           comment = "Kyuuto Media OPL";
@@ -58,7 +54,7 @@ in {
             "@kyuuto-peeps"
           ];
           "strict sync" = false;
-          "hosts allow" = localAddrs;
+          "hosts allow" = cidrForNetwork.allLocal.all;
         };
     };
     services.tmpfiles = let

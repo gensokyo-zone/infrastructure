@@ -7,7 +7,7 @@
   cfg = config.services.home-assistant;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.lists) optional optionals elem unique;
+  inherit (lib.lists) optional elem unique;
   inherit (lib.strings) toLower;
 in {
   options.services.home-assistant = with lib.types; {
@@ -118,9 +118,7 @@ in {
           trusted_proxies = let
             inherit (config.networking.access) cidrForNetwork;
           in
-            cidrForNetwork.loopback.all
-            ++ cidrForNetwork.local.all
-            ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all
+            cidrForNetwork.allLocal.all
             ++ [
               "200::/7"
             ];

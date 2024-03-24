@@ -39,6 +39,9 @@
         tailscale = {
           allow = mkEnableOption "tailscale TCP connections";
         };
+        int = {
+          allow = mkEnableOption "internal TCP connections";
+        };
         local = {
           allow = mkEnableOption "local TCP connections";
         };
@@ -55,7 +58,8 @@
         in
           mkMerge [
             (mkIf config.authentication.tailscale.allow cidrForNetwork.tail.all)
-            (mkIf config.authentication.local.allow (cidrForNetwork.loopback.all ++ cidrForNetwork.local.all))
+            (mkIf config.authentication.int.allow cidrForNetwork.int.all)
+            (mkIf config.authentication.local.allow cidrForNetwork.local.all)
           ];
         authentication = mkMerge (map (host: ''
             host ${config.authentication.database} ${config.name} ${formatHost host} ${config.authentication.method}

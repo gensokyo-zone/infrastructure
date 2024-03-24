@@ -2,12 +2,13 @@ _: {
   type = null;
   proxmox = {
     vm = {
-      id = 203;
+      id = 202;
       enable = true;
     };
     network.interfaces = {
       net0 = {
-        macAddress = "BC:24:11:33:19:04";
+        name = "ens18";
+        macAddress = "BC:24:11:3D:39:91";
       };
     };
   };

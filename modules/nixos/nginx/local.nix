@@ -6,7 +6,6 @@
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault;
   inherit (lib.strings) concatMapStringsSep optionalString;
-  inherit (lib.lists) optionals;
   inherit (config.services) tailscale;
   inherit (config.networking.access) cidrForNetwork localaddrs;
   mkAddrVar = remoteAddr: varPrefix: ''
@@ -29,6 +28,13 @@
     if (${remoteAddr} ~ "^fe80::") {
       set ${varPrefix}lan 1;
     }
+    set ${varPrefix}int 0;
+    if (${remoteAddr} ~ "^10\.9\.1\.[0-9]+") {
+      set ${varPrefix}lan 1;
+    }
+    if (${remoteAddr} ~ "^fd0c::") {
+      set ${varPrefix}int 1;
+    }
     set ${varPrefix}localhost 0;
     if (${remoteAddr} = "::1") {
       set ${varPrefix}localhost 1;
@@ -41,6 +47,9 @@
       set ${varPrefix}client 1;
     }
     if (${varPrefix}lan) {
+      set ${varPrefix}client 1;
+    }
+    if (${varPrefix}int) {
       set ${varPrefix}client 1;
     }
     if (${varPrefix}localhost) {
@@ -79,12 +88,8 @@
     config = {
       extraConfig = let
         mkAllow = cidr: "allow ${cidr};";
-        allowAddresses =
-          cidrForNetwork.loopback.all
-          ++ cidrForNetwork.local.all
-          ++ optionals tailscale.enable cidrForNetwork.tail.all;
         allows =
-          concatMapStringsSep "\n" mkAllow allowAddresses
+          concatMapStringsSep "\n" mkAllow cidrForNetwork.allLocal.all
           + optionalString localaddrs.enable ''
             include ${localaddrs.stateDir}/*.nginx.conf;
           '';

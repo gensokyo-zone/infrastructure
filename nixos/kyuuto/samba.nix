@@ -4,14 +4,9 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge mkDefault;
-  inherit (lib.lists) optionals;
   inherit (config.networking.access) cidrForNetwork;
   inherit (config) kyuuto;
   cfg = config.services.samba;
-  localAddrs =
-    cidrForNetwork.loopback.all
-    ++ cidrForNetwork.local.all
-    ++ optionals config.services.tailscale.enable cidrForNetwork.tail.all;
   guestUsers = mkIf cfg.guest.enable [cfg.guest.user];
   kyuuto-media = {
     "create mask" = "0664";
@@ -41,7 +36,7 @@ in {
           ["@peeps"]
         ];
         #"guest only" = true;
-        "hosts allow" = localAddrs;
+        "hosts allow" = cidrForNetwork.allLocal.all;
         "acl group control" = true;
         "create mask" = "0664";
         "force directory mode" = "3000";
@@ -61,7 +56,7 @@ in {
           ];
           "read list" = guestUsers;
           "write list" = ["@kyuuto-peeps"];
-          "hosts allow" = localAddrs;
+          "hosts allow" = cidrForNetwork.allLocal.all;
         }
       ];
       kyuuto-library-net = mkMerge [

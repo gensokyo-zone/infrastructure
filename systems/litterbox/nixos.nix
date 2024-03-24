@@ -11,14 +11,5 @@
 
   sops.defaultSopsFile = ./secrets.yaml;
 
-  systemd.network.networks.eth0 = {
-    name = "eth0";
-    matchConfig = {
-      MACAddress = "BC:24:11:C4:66:AB";
-      Type = "ether";
-    };
-    DHCP = "yes";
-  };
-
   system.stateVersion = "23.11";
 }

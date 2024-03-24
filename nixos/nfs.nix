@@ -23,9 +23,7 @@ in {
       mountdPort = mkDefault 4002;
     };
     export = {
-      flagSets = let
-        localAddrs = cidrForNetwork.loopback.all ++ cidrForNetwork.local.all;
-      in {
+      flagSets = {
         common = [
           "no_subtree_check"
           "anonuid=${toString config.users.users.guest.uid}"
@@ -57,7 +55,7 @@ in {
           "@trusted"
         ];
         tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
-        localClients = localAddrs ++ flagSets.tailClients;
+        localClients = cidrForNetwork.allLan.all ++ flagSets.tailClients;
         allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;
       };
       root = {

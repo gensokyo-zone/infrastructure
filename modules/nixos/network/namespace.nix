@@ -9,11 +9,10 @@
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrs' mapAttrsToList listToAttrs nameValuePair attrValues;
-  inherit (lib.lists) singleton optional optionals filter concatMap;
+  inherit (lib.lists) singleton optional filter concatMap;
   inherit (lib.strings) concatStringsSep escapeShellArg;
   inherit (utils) escapeSystemdExecArg;
   inherit (inputs.self.lib.lib) unmerged;
-  inherit (config.services) tailscale;
   inherit (config) networking;
   inherit (networking) access;
   enabledNamespaces = filter (ns: ns.enable) (attrValues networking.namespaces);
@@ -324,8 +323,8 @@
           ''
         ];
         extraOutput = let
-          addrs4 = access.cidrForNetwork.local.v4 ++ optionals tailscale.enable access.cidrForNetwork.tail.v4;
-          addrs6 = access.cidrForNetwork.local.v6 ++ optionals tailscale.enable access.cidrForNetwork.tail.v6;
+          addrs4 = access.cidrForNetwork.allLocal.v4;
+          addrs6 = access.cidrForNetwork.allLocal.v6;
           daddr4 = ''{ ${concatStringsSep ", " addrs4} }'';
           daddr6 = ''{ ${concatStringsSep ", " addrs6} }'';
         in

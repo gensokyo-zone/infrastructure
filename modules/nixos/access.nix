@@ -77,6 +77,14 @@ in {
           "fe80::/64"
         ];
       };
+      int = {
+        v4 = [
+          "10.9.1.0/24"
+        ];
+        v6 = [
+          "fd0c::/64"
+        ];
+      };
       tail = mkIf tailscale.enable {
         v4 = [
           "100.64.0.0/10"
@@ -84,6 +92,24 @@ in {
         v6 = [
           "fd7a:115c:a1e0::/96"
           "fd7a:115c:a1e0:ab12::/64"
+        ];
+      };
+      allLan = {
+        v4 = cfg.cidrForNetwork.loopback.v4
+          ++ cfg.cidrForNetwork.local.v4
+          ++ cfg.cidrForNetwork.int.v4;
+        v6 = cfg.cidrForNetwork.loopback.v6
+          ++ cfg.cidrForNetwork.local.v6
+          ++ cfg.cidrForNetwork.int.v6;
+      };
+      allLocal = {
+        v4 = mkMerge [
+          cfg.cidrForNetwork.allLan.v4
+          (mkIf tailscale.enable cfg.cidrForNetwork.tail.v4)
+        ];
+        v6 = mkMerge [
+          cfg.cidrForNetwork.allLan.v6
+          (mkIf tailscale.enable cfg.cidrForNetwork.tail.v6)
         ];
       };
     };

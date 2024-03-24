@@ -7,8 +7,6 @@ let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.strings) concatMapStringsSep optionalString;
-  inherit (lib.lists) optionals;
-  inherit (config.services) tailscale;
   inherit (config.services.nginx) virtualHosts;
   inherit (config.networking.access) cidrForNetwork localaddrs;
   access = config.services.nginx.access.ldap;
@@ -16,11 +14,7 @@ let
   portSsl = 636;
   allows = let
     mkAllow = cidr: "allow ${cidr};";
-    allowAddresses =
-      cidrForNetwork.loopback.all
-      ++ cidrForNetwork.local.all
-      ++ optionals tailscale.enable cidrForNetwork.tail.all;
-    allows = concatMapStringsSep "\n" mkAllow allowAddresses + optionalString localaddrs.enable ''
+    allows = concatMapStringsSep "\n" mkAllow cidrForNetwork.allLocal.all + optionalString localaddrs.enable ''
       include ${localaddrs.stateDir}/*.nginx.conf;
     '';
   in ''

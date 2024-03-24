@@ -106,22 +106,6 @@ in {
     unitConfig.RequiresMountsFor = mapAttrsToList (path: _: path) plexLibrary;
   };
 
-  systemd.network.networks.eth0 = {
-    name = "eth0";
-    matchConfig = {
-      MACAddress = "BC:24:11:34:F4:A8";
-      Type = "ether";
-    };
-    address = ["10.1.1.44/24"];
-    gateway = ["10.1.1.1"];
-    DHCP = "no";
-  };
-  access.internal = {
-    enable = true;
-    macAddress = "BC:24:19:34:F4:A8";
-    vmid = 102;
-  };
-
   sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "21.05";

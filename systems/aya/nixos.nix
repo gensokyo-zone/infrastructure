@@ -31,26 +31,6 @@
     };
     interfaces.eth1 = {};
   };
-  systemd.network.networks.eth0 = {
-    name = "eth0";
-    matchConfig = {
-      MACAddress = "BC:24:11:C4:66:A9";
-      Type = "ether";
-    };
-    address = ["10.1.1.47/24"];
-    gateway = ["10.1.1.1"];
-    DHCP = "no";
-  };
-  systemd.network.networks.eth1 = {
-    name = "eth1";
-    matchConfig = {
-      MACAddress = "BC:24:11:C4:66:AA";
-      Type = "ether";
-    };
-    DHCP = "no";
-    slaac.enable = false;
-    mdns.enable = false;
-  };
 
   sops.defaultSopsFile = ./secrets.yaml;
 

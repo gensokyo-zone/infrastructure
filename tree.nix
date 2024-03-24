@@ -60,6 +60,7 @@
     "modules/nixos/steam".functor.enable = true;
     "modules/meta".functor.enable = true;
     "modules/system".functor.enable = true;
+    "modules/system/proxmox".functor.enable = true;
     "modules/home".functor.enable = true;
     "modules/type".functor.enable = true;
     "nixos/*".functor = {
