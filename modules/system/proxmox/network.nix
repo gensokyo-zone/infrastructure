@@ -1,11 +1,11 @@
 {config, lib, inputs, ...}: let
-  inherit (inputs.self.lib.lib) unmerged eui64;
+  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault mkOverride;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) elem findSingle;
   inherit (lib.strings) hasPrefix removePrefix replaceStrings;
-  inherit (lib.trivial) toHexString mapNullable;
+  inherit (lib.trivial) mapNullable;
   mkAlmostOptionDefault = mkOverride 1250;
   cfg = config.proxmox.network;
   internalOffset = 32;
@@ -119,7 +119,7 @@
         name = mkIf system.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
         address4 = mkAlmostOptionDefault "10.9.1.${toString (system.proxmox.vm.id - internalOffset)}/24";
-        address6 = mkAlmostOptionDefault "fd0c::${toHexString (system.proxmox.vm.id - internalOffset)}/64";
+        address6 = mkAlmostOptionDefault "fd0c::${toHexStringLower (system.proxmox.vm.id - internalOffset)}/64";
         macAddress = mkIf (system.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" system.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
           replaceStrings [ "BC:24:11:" ] [ "BC:24:19:" ] system.proxmox.network.interfaces.net0.macAddress
         ));
