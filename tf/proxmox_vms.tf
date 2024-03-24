@@ -325,8 +325,6 @@ EOT
         gateway = "10.1.1.1"
       }
     }
-    # empty block required if additional interfaces are added, but causes state sync issues
-    ip_config {}
     ip_config {
       ipv6 {
         address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_aya_vm_id - local.reisen_int_offset)}/64"
@@ -335,6 +333,8 @@ EOT
         address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_aya_vm_id - local.reisen_int_offset)}/24"
       }
     }
+    # empty block causes state sync issues
+    #ip_config {}
   }
 
   startup {
@@ -348,13 +348,13 @@ EOT
     mac_address = "BC:24:11:C4:66:A9"
   }
   network_interface {
-    name        = "eth1"
-    mac_address = "BC:24:11:C4:66:AA"
-  }
-  network_interface {
     name        = "eth9"
     mac_address = "BC:24:19:C4:66:A9"
     bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
+  }
+  network_interface {
+    name        = "eth1"
+    mac_address = "BC:24:11:C4:66:AA"
   }
 
   operating_system {

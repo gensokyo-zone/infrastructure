@@ -116,7 +116,7 @@
         };
       };
       confInternal = {
-        name = mkAlmostOptionDefault "eth9";
+        name = mkIf system.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
         address4 = mkAlmostOptionDefault "10.9.1.${toString (system.proxmox.vm.id - internalOffset)}/24";
         address6 = mkAlmostOptionDefault "fd0c::${toHexString (system.proxmox.vm.id - internalOffset)}/64";
