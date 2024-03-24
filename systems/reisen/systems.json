@@ -1,0 +1,159 @@
+{
+  "aya": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.73",
+        "address6": "fd0c::49",
+        "macAddress": "BC:24:19:C4:66:A9"
+      },
+      "local": {
+        "address4": "10.1.1.47",
+        "address6": "fd0a::be24:11ff:fec4:66a9",
+        "macAddress": "BC:24:11:C4:66:A9"
+      },
+      "tail": null
+    }
+  },
+  "freeipa": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.170",
+        "address6": "fd0c::aa",
+        "macAddress": "BC:24:19:3D:39:91"
+      },
+      "local": {
+        "address4": "10.1.1.46",
+        "address6": "fd0a::be24:11ff:fe3d:3991",
+        "macAddress": "BC:24:11:3D:39:91"
+      },
+      "tail": null
+    }
+  },
+  "freepbx": {
+    "network": {
+      "int": null,
+      "local": {
+        "address4": null,
+        "address6": "fd0a::be24:11ff:fe33:1904",
+        "macAddress": "BC:24:11:33:19:04"
+      },
+      "tail": null
+    }
+  },
+  "hakurei": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.71",
+        "address6": "fd0c::47",
+        "macAddress": "BC:24:19:C4:66:A7"
+      },
+      "local": {
+        "address4": "10.1.1.41",
+        "address6": "fd0a::be24:11ff:fec4:66a7",
+        "macAddress": "BC:24:11:C4:66:A7"
+      },
+      "tail": null
+    }
+  },
+  "keycloak": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.75",
+        "address6": "fd0c::4b",
+        "macAddress": "BC:24:19:C4:66:AC"
+      },
+      "local": {
+        "address4": "10.1.1.48",
+        "address6": "fd0a::be24:11ff:fec4:66ac",
+        "macAddress": "BC:24:11:C4:66:AC"
+      },
+      "tail": null
+    }
+  },
+  "kuwubernetes": {
+    "network": {
+      "int": null,
+      "local": {
+        "address4": "10.1.1.42",
+        "address6": "fd0a::be24:11ff:fe49:fedc",
+        "macAddress": "BC:24:11:49:FE:DC"
+      },
+      "tail": null
+    }
+  },
+  "litterbox": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.74",
+        "address6": "fd0c::4a",
+        "macAddress": "BC:24:19:C4:66:AB"
+      },
+      "local": {
+        "address4": null,
+        "address6": "fd0a::be24:11ff:fec4:66ab",
+        "macAddress": "BC:24:11:C4:66:AB"
+      },
+      "tail": null
+    }
+  },
+  "mediabox": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.70",
+        "address6": "fd0c::46",
+        "macAddress": "BC:24:19:34:F4:A8"
+      },
+      "local": {
+        "address4": "10.1.1.44",
+        "address6": "fd0a::be24:11ff:fe34:f4a8",
+        "macAddress": "BC:24:11:34:F4:A8"
+      },
+      "tail": null
+    }
+  },
+  "reimu": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.72",
+        "address6": "fd0c::48",
+        "macAddress": "BC:24:19:C4:66:A8"
+      },
+      "local": {
+        "address4": "10.1.1.45",
+        "address6": "fd0a::be24:11ff:fec4:66a8",
+        "macAddress": "BC:24:11:C4:66:A8"
+      },
+      "tail": null
+    }
+  },
+  "tei": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.69",
+        "address6": "fd0c::45",
+        "macAddress": "BC:24:19:CC:66:57"
+      },
+      "local": {
+        "address4": "10.1.1.39",
+        "address6": "fd0a::be24:11ff:fecc:6657",
+        "macAddress": "BC:24:11:CC:66:57"
+      },
+      "tail": null
+    }
+  },
+  "utsuho": {
+    "network": {
+      "int": {
+        "address4": "10.9.1.76",
+        "address6": "fd0c::4c",
+        "macAddress": "BC:24:19:C4:66:A6"
+      },
+      "local": {
+        "address4": "10.1.1.38",
+        "address6": "fd0a::be24:11ff:fec4:66a6",
+        "macAddress": "BC:24:11:C4:66:A6"
+      },
+      "tail": null
+    }
+  }
+}

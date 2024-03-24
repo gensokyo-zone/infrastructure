@@ -3,6 +3,7 @@ set -eu
 
 for node in reisen; do
 	nix eval --json "${NF_CONFIG_ROOT}#lib.generate.$node.users" | jq -M . > "$NF_CONFIG_ROOT/systems/$node/users.json"
+	nix eval --json "${NF_CONFIG_ROOT}#lib.generate.$node.systems" | jq -M . > "$NF_CONFIG_ROOT/systems/$node/systems.json"
 done
 
 for ciconfig in "${NF_CONFIG_FILES[@]}"; do

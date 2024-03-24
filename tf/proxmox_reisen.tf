@@ -16,7 +16,8 @@ locals {
   proxmox_reisen_udev_dri       = file("${path.root}/../systems/reisen/udev.90-dri.rules")
   proxmox_reisen_udev_z2m       = file("${path.root}/../systems/reisen/udev.90-z2m.rules")
 
-  proxmox_reisen_users = jsondecode(file("${path.root}/../systems/reisen/users.json"))
+  proxmox_reisen_users   = jsondecode(file("${path.root}/../systems/reisen/users.json"))
+  proxmox_reisen_systems = jsondecode(file("${path.root}/../systems/reisen/systems.json"))
 }
 
 resource "terraform_data" "proxmox_reisen_etc" {

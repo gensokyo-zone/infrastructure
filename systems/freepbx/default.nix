@@ -7,7 +7,10 @@ _: {
     };
     network.interfaces = {
       net0 = {
+        name = "ens18";
         macAddress = "BC:24:11:33:19:04";
+        address4 = "dhcp";
+        address6 = "auto";
       };
     };
   };
