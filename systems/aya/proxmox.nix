@@ -15,6 +15,7 @@ _: {
         macAddress = "BC:24:11:C4:66:AA";
         networkd.networkSettings.linkConfig.RequiredForOnline = false;
       };
+      net2.internal.enable = true;
     };
   };
 }

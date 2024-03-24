@@ -70,6 +70,14 @@ EOT
         gateway = "10.1.1.1"
       }
     }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_tewi_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_tewi_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
   }
 
   startup {
@@ -81,6 +89,11 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:CC:66:57"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:CC:66:57"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {
@@ -225,6 +238,14 @@ EOT
         gateway = "10.1.1.1"
       }
     }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_reimu_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_reimu_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
   }
 
   startup {
@@ -236,6 +257,11 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:A8"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:A8"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {
@@ -300,7 +326,15 @@ EOT
       }
     }
     # empty block required if additional interfaces are added, but causes state sync issues
-    # ip_config {}
+    ip_config {}
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_aya_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_aya_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
   }
 
   startup {
@@ -316,6 +350,11 @@ EOT
   network_interface {
     name        = "eth1"
     mac_address = "BC:24:11:C4:66:AA"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:A9"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {
@@ -378,6 +417,14 @@ EOT
         gateway = "10.1.1.1"
       }
     }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_utsuho_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_utsuho_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
   }
 
   startup {
@@ -389,6 +436,11 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:A6"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:A6"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {
@@ -459,6 +511,10 @@ EOT
     bridge      = "vmbr0"
     mac_address = "BC:24:11:3D:39:91"
   }
+  network_device {
+    mac_address = "BC:24:19:3D:39:91"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
+  }
 
   operating_system {
     type = "l26"
@@ -504,6 +560,14 @@ EOT
         address = "dhcp"
       }
     }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_litterbox_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_litterbox_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
   }
 
   startup {
@@ -515,6 +579,11 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:AB"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:AB"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {
@@ -627,7 +696,16 @@ EOT
         address = "auto"
       }
       ipv4 {
-        address = "dhcp"
+        address = "10.1.1.48/24"
+        gateway = "10.1.1.1"
+      }
+    }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_keycloak_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_keycloak_vm_id - local.reisen_int_offset)}/24"
       }
     }
   }
@@ -641,6 +719,11 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:AC"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:AC"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {

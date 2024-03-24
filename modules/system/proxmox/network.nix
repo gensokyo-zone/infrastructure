@@ -30,7 +30,7 @@
         default = null;
       };
       address4 = mkOption {
-        type = nullOr (either (enum [ "auto" ]) str);
+        type = nullOr (either (enum [ "dhcp" ]) str);
         default = null;
       };
       gateway4 = mkOption {
@@ -80,7 +80,7 @@
         ];
         slaac.postfix = mkOptionDefault (mapNullable eui64 config.macAddress);
         gateway4 = mkMerge [
-          (mkIf (system.proxmox.node.name == "reisen" && config.bridge == "vmbr0" && config.address4 != null && config.address4 != "auto") (mkAlmostOptionDefault "10.1.1.1"))
+          (mkIf (system.proxmox.node.name == "reisen" && config.bridge == "vmbr0" && config.address4 != null && config.address4 != "dhcp") (mkAlmostOptionDefault "10.1.1.1"))
         ];
         networkd.networkSettings = {
           name = mkAlmostOptionDefault config.name;
@@ -100,7 +100,7 @@
             })
           ];
           address = mkMerge [
-            (mkIf (! elem config.address4 [ null "auto" ]) [ config.address4 ])
+            (mkIf (! elem config.address4 [ null "dhcp" ]) [ config.address4 ])
             (mkIf (! elem config.address6 [ null "auto" "dhcp" ]) [ config.address6 ])
           ];
           gateway = mkMerge [
@@ -108,7 +108,7 @@
             (mkIf (config.gateway6 != null) [ config.gateway6 ])
           ];
           DHCP = mkAlmostOptionDefault (
-            if config.address4 == "auto" && config.address6 == "dhcp" then "yes"
+            if config.address4 == "dhcp" && config.address6 == "dhcp" then "yes"
             else if config.address6 == "dhcp" then "ipv6"
             else if config.address4 == "dhcp" then "ipv4"
             else "no"

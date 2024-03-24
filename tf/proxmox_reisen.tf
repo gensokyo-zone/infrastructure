@@ -70,5 +70,5 @@ resource "proxmox_virtual_environment_network_linux_bridge" "internal" {
   name      = "vmbr9"
   address   = "${cidrhost(local.reisen_int_prefix4, 2)}/24"
   address6  = "${cidrhost(local.reisen_int_prefix6, 2)}/64"
-  comment = "internal private network"
+  comment   = "internal private network"
 }

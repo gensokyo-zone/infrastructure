@@ -10,6 +10,7 @@ _: {
         name = "ens18";
         macAddress = "BC:24:11:3D:39:91";
       };
+      net1.internal.enable = true;
     };
   };
 }

@@ -9,9 +9,10 @@ _: {
       net0 = {
         mdns.enable = true;
         macAddress = "BC:24:11:C4:66:AB";
-        address4 = "auto";
+        address4 = "dhcp";
         address6 = "auto";
       };
+      net1.internal.enable = true;
     };
   };
 }
