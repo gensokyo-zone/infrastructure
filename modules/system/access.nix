@@ -6,6 +6,7 @@
   inputs,
   ...
 }: let
+  inherit (inputs.self) nixosConfigurations;
   inherit (inputs.self.lib) systems;
   inherit (inputs.self.lib.lib) domain;
   inherit (lib.options) mkOption mkEnableOption;
@@ -94,8 +95,8 @@ in {
       inherit (cfg) hostnameForNetwork;
       systemFor = hostName: systems.${hostName}.config;
       systemForOrNull = hostName: systems.${hostName}.config or null;
-      nixosFor = hostName: (access.systemFor hostName).built.config;
-      nixosForOrNull = hostName: (access.systemForOrNull hostName).built.config or null;
+      nixosFor = hostName: nixosConfigurations.${hostName}.config or (access.systemFor hostName).built.config;
+      nixosForOrNull = hostName: nixosConfigurations.${hostName}.config or (access.systemForOrNull hostName).built.config or null;
     };
   };
 }

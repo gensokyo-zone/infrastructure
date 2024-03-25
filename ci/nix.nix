@@ -5,6 +5,7 @@
       "flake-cron.nix"
     ];
     nixosSystems = [
+      "ct"
       "hakurei"
       "reimu"
       "aya"

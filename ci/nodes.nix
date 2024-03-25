@@ -25,9 +25,9 @@ with lib; {
   };
 
   jobs = let
-    enabledHosts = ["hakurei" "reimu" "aya" "tei" "litterbox" "keycloak" "mediabox" "ct"];
+    inherit ((import ./nix.nix).ci) nixosSystems;
   in
-    mapAttrs' (k: nameValuePair "${k}") (genAttrs enabledHosts (host: {
+    mapAttrs' (k: nameValuePair "${k}") (genAttrs nixosSystems (host: {
       tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;
     }));
 
