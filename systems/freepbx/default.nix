@@ -1,5 +1,5 @@
 _: {
-  type = null;
+  type = "Linux";
   proxmox = {
     vm = {
       id = 203;

@@ -1,3 +1,3 @@
 _: {
-  type = null;
+  type = "Linux";
 }

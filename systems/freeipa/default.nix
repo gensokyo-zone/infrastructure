@@ -1,5 +1,5 @@
 _: {
-  type = null;
+  type = "Linux";
   proxmox = {
     vm = {
       id = 202;
@@ -13,6 +13,16 @@ _: {
         address6 = "auto";
       };
       net1.internal.enable = true;
+    };
+  };
+  extern.files = {
+    "/etc/NetworkManager/system-connections/ens18.nmconnection" = {
+      source = ./ens18.nmconnection;
+      mode = "0600";
+    };
+    "/etc/NetworkManager/system-connections/int.nmconnection" = {
+      source = ./int.nmconnection;
+      mode = "0600";
     };
   };
 }

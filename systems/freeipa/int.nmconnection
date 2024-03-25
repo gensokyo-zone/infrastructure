@@ -1,0 +1,12 @@
+[connection]
+id=int
+type=ethernet
+interface-name=ens19
+[ipv4]
+address1=10.9.1.170/24
+may-fail=true
+method=manual
+[ipv6]
+address1=fd0c::aa/64
+may-fail=true
+method=manual

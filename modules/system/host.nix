@@ -7,11 +7,12 @@
   inputs,
   ...
 }: let
-  inherit (lib.modules) mkOptionDefault;
+  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.trivial) mapNullable;
   inherit (std) string;
 in {
   options = let
-    inherit (lib.types) str listOf attrs unspecified enum nullOr;
+    inherit (lib.types) str listOf attrs unspecified enum;
     inherit (lib.options) mkOption;
   in {
     arch = mkOption {
@@ -21,7 +22,7 @@ in {
     };
     type = mkOption {
       description = "Operating system type of the host";
-      type = nullOr (enum ["NixOS" "MacOS" "Darwin" "Linux"]);
+      type = enum ["NixOS" "MacOS" "Darwin" "Linux"];
       default = "NixOS";
     };
     folder = mkOption {
@@ -34,6 +35,7 @@ in {
     };
     modules = mkOption {
       type = listOf unspecified;
+      default = [ ];
     };
     specialArgs = mkOption {
       type = attrs;
@@ -67,7 +69,7 @@ in {
         linux = "linux";
       }
       .${string.toLower config.type};
-    modules = [
+    modules = mkIf (config.folder != "linux") [
       # per-OS modules
       meta.modules.${config.folder}
       # per-OS configuration
@@ -92,10 +94,10 @@ in {
         darwin = inputs.darwin.lib.darwinSystem;
         macos = inputs.darwin.lib.darwinSystem;
       }
-      .${string.toLower config.type};
-    built = mkOptionDefault (config.builder {
+      .${string.toLower config.type} or null;
+    built = mkOptionDefault (mapNullable (builder: builder {
       inherit (config) system modules specialArgs;
-    });
+    }) config.builder);
     specialArgs = {
       inherit name inputs std meta;
       systemType = config.folder;
