@@ -68,19 +68,13 @@ in {
       uid = 911;
     };
     systemd.services = let
-      BindPaths = [
-        "/mnt/shared/grocy:${cfg.dataDir}"
-      ];
+      gensokyo-zone.sharedMounts.grocy.path = mkDefault cfg.dataDir;
     in mkIf cfg.enable {
       grocy-setup = {
-        serviceConfig = {
-          inherit BindPaths;
-        };
+        inherit gensokyo-zone;
       };
       phpfpm-grocy = {
-        serviceConfig = {
-          inherit BindPaths;
-        };
+        inherit gensokyo-zone;
       };
     };
   };

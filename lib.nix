@@ -41,11 +41,13 @@
   overrideOptionDefault = 1500;
   overrideAlmostOptionDefault = 1400;
   overrideDefault = 1000;
+  overrideAlmostDefault = 900;
   overrideNone = defaultOverridePriority; # 100
   overrideAlmostForce = 75;
   overrideForce = 50;
   overrideVM = 10;
   mkAlmostOptionDefault = mkOverride overrideAlmostOptionDefault;
+  mkAlmostDefault = mkOverride overrideAlmostDefault;
   mkAlmostForce = mkOverride overrideAlmostForce;
   orderBefore = 500;
   orderNone = 1000;
@@ -78,8 +80,8 @@ in {
       eui64 mkWinPath mkBaseDn
       toHexStringLower hexCharToInt
       mapListToAttrs
-      mkAlmostOptionDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
-      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideNone overrideAlmostForce overrideForce overrideVM
+      mkAlmostOptionDefault mkAlmostDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
+      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
       orderBefore orderNone orderAfter orderAlmostAfter
       mkAlmostAfter;
     inherit (inputs.arcexprs.lib) unmerged json;

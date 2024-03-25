@@ -1,10 +1,13 @@
 {
   config,
   lib,
+  gensokyo-zone,
+  access,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mkAlmostDefault;
+  inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.zigbee2mqtt;
-  inherit (lib) mkIf mkDefault;
 in {
   sops.secrets.z2m-secret = {
     sopsFile = mkDefault ./secrets/zigbee2mqtt.yaml;
@@ -23,8 +26,11 @@ in {
       mqtt = {
         user = "z2m";
         password = "!secret z2m_pass";
-        server = mkIf (!config.services.mosquitto.enable) (
-          mkDefault "mqtt://mqtt.local.${config.networking.domain}:1883"
+        server = let
+          utsuho = access.nixosFor "utsuho";
+          mqttHost = access.getHostnameFor "utsuho" "lan";
+        in mkIf (!config.services.mosquitto.enable) (
+          assert utsuho.services.mosquitto.enable; mkAlmostDefault "mqtt://${mqttHost}:1883"
         );
       };
       homeassistant = true;

@@ -37,8 +37,6 @@ in {
     groups.unifi.gid = 990;
   };
   systemd.services.unifi = mkIf cfg.enable {
-    serviceConfig.BindPaths = [
-      "/mnt/shared/unifi:/var/lib/unifi"
-    ];
+    gensokyo-zone.sharedMounts.unifi.path = mkDefault "/var/lib/unifi";
   };
 }

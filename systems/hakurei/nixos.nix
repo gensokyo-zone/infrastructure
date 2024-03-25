@@ -11,8 +11,8 @@
   tei = access.nixosFor "tei";
   utsuho = access.nixosFor "utsuho";
   inherit (mediabox.services) plex;
-  inherit (tei.services) home-assistant zigbee2mqtt mosquitto;
-  inherit (utsuho.services) unifi;
+  inherit (tei.services) home-assistant zigbee2mqtt;
+  inherit (utsuho.services) unifi mosquitto;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
 in {
@@ -225,7 +225,7 @@ in {
   in {
     vouch.enableLocal = false;
     access.mosquitto = assert mosquitto.enable; {
-      host = getHostnameFor "tei" "lan";
+      host = getHostnameFor "utsuho" "lan";
     };
     access.plex = assert plex.enable; {
       url = "http://${getHostnameFor "mediabox" "lan"}:${toString plex.port}";

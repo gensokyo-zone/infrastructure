@@ -64,7 +64,7 @@ in {
     };
 
     networking.firewall = {
-      allowedTCPPorts = [
+      interfaces.local.allowedTCPPorts = [
         access.bind.port
         (mkIf nginx.stream.servers.mosquitto.listen.mqtts.enable access.bind.sslPort)
       ];

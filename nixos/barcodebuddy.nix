@@ -37,19 +37,13 @@ in {
     uid = 912;
   };
   config.systemd.services = let
-    BindPaths = [
-      "/mnt/shared/barcodebuddy:${cfg.dataDir}"
-    ];
+    gensokyo-zone.sharedMounts.barcodebuddy.path = mkDefault cfg.dataDir;
   in mkIf cfg.enable {
     phpfpm-barcodebuddy = {
-      serviceConfig = {
-        inherit BindPaths;
-      };
+      inherit gensokyo-zone;
     };
     bbuddy-websocket = mkIf cfg.screen.enable {
-      serviceConfig = {
-        inherit BindPaths;
-      };
+      inherit gensokyo-zone;
     };
   };
   config.sops.secrets.barcodebuddy-fastcgi-params = mkIf cfg.enable {

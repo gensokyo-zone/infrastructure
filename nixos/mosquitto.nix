@@ -70,8 +70,9 @@ in {
     };
   };
   systemd.services.mosquitto = mkIf cfg.enable {
-    serviceConfig.BindPaths = [
-      "/mnt/shared/mosquitto:${cfg.dataDir}"
-    ];
+    gensokyo-zone.sharedMounts.mosquitto.path = mkDefault cfg.dataDir;
+  };
+  networking.firewall = mkIf cfg.enable {
+    interfaces.local.allowedTCPPorts = map (listener: listener.port) cfg.listeners;
   };
 }

@@ -20,6 +20,7 @@ module "hakurei_system_records" {
     "unifi",
     "pbx",
     "smb",
+    "mqtt",
     "kitchen",
     "home",
     "z2m",
@@ -80,7 +81,6 @@ module "tewi_system_records" {
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
   net_data  = local.systems.tei.network
   local_subdomains = [
-    "mqtt",
     "postgresql",
   ]
 }
