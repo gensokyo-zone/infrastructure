@@ -4,6 +4,7 @@ type=ethernet
 interface-name=ens19
 [ipv4]
 address1=10.9.1.170/24
+dns=10.9.1.76;
 may-fail=true
 method=manual
 [ipv6]

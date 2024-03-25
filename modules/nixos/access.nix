@@ -139,10 +139,10 @@ in {
     firewall = {
       interfaces.local = {
         nftables.conditions = [
-          "ip saddr { ${concatStringsSep ", " cfg.cidrForNetwork.local.v4} }"
+          "ip saddr { ${concatStringsSep ", " (cfg.cidrForNetwork.local.v4 ++ cfg.cidrForNetwork.int.v4)} }"
           (
             mkIf networking.enableIPv6
-            "ip6 saddr { $localrange6, ${concatStringsSep ", " cfg.cidrForNetwork.local.v6} }"
+            "ip6 saddr { $localrange6, ${concatStringsSep ", " (cfg.cidrForNetwork.local.v6 ++ cfg.cidrForNetwork.int.v6)} }"
           )
         ];
       };

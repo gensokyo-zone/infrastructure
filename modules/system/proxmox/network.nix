@@ -3,7 +3,7 @@
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault mkOverride;
   inherit (lib.attrsets) attrValues;
-  inherit (lib.lists) elem findSingle;
+  inherit (lib.lists) elem findSingle findFirst;
   inherit (lib.strings) hasPrefix removePrefix replaceStrings;
   inherit (lib.trivial) mapNullable;
   mkAlmostOptionDefault = mkOverride 1250;
@@ -52,7 +52,7 @@
       };
       mdns = {
         enable = mkEnableOption "mDNS" // {
-          default = system.proxmox.node.name == "reisen" && config.id == "net0";
+          default = config.local.enable && config.id == "net0";
         };
       };
       slaac = {
@@ -62,6 +62,18 @@
       };
       internal = {
         enable = mkEnableOption "internal network interface";
+      };
+      local = {
+        enable = mkOption {
+          type = bool;
+          default = system.proxmox.node.name == "reisen" && config.id == "net0" && config.bridge == "vmbr0";
+        };
+        address4 = mkOption {
+          type = nullOr str;
+        };
+        address6 = mkOption {
+          type = nullOr str;
+        };
       };
       networkd = {
         enable = mkEnableOption "systemd.network" // {
@@ -73,7 +85,17 @@
       };
     };
     config = let
+      hasAddr4 = ! elem config.address4 [ null "dhcp" ];
+      hasAddr6 = ! elem config.address6 [ null "dhcp" "auto" ];
       conf = {
+        local = mkIf config.local.enable {
+          address4 = mkOptionDefault (if hasAddr4 then config.address4 else null);
+          address6 = mkOptionDefault (
+            if config.address6 == "auto" && config.slaac.postfix != null then "fd0a::${config.slaac.postfix}"
+            else if hasAddr6 then config.address6
+            else null
+          );
+        };
         name = mkMerge [
           (mkIf (hasPrefix "net" config.id && system.proxmox.container.enable) (mkOptionDefault ("eth" + removePrefix "net" config.id)))
           # VMs have names like `ens18` for net0...
@@ -146,10 +168,16 @@ in {
         type = nullOr unspecified;
       };
     };
+    local = {
+      interface = mkOption {
+        type = nullOr unspecified;
+      };
+    };
   };
   config.proxmox.network = {
     internal = {
       interface = mkOptionDefault (findSingle (interface: interface.internal.enable) null (throw "expected only one internal network interface") (attrValues cfg.interfaces));
     };
+    local.interface = mkOptionDefault (findFirst (interface: interface.local.enable) null (attrValues cfg.interfaces));
   };
 }

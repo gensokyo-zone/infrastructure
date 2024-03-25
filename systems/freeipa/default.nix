@@ -16,6 +16,10 @@ _: {
     };
   };
   extern.files = {
+    "/etc/systemd/resolved.conf" = {
+      source = ./resolved.conf;
+      mode = "0644";
+    };
     "/etc/NetworkManager/system-connections/ens18.nmconnection" = {
       source = ./ens18.nmconnection;
       mode = "0600";

@@ -1,11 +1,13 @@
 {
   lib,
   config,
+  inputs,
   options,
   meta,
+  access,
   ...
 }: let
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkBefore;
 in {
   imports = let
     inherit (meta) nixos;
@@ -24,6 +26,9 @@ in {
     linkConfig.Multicast = true;
     networkConfig.MulticastDNS = true;
   };
+  networking.nameservers' = mkIf (!config.services.dnsmasq.enable && config.networking.hostName != "utsuho" && config.networking.hostName != "ct") (mkBefore [
+    { address = access.getAddressFor "utsuho" "lan"; }
+  ]);
 
   boot.kernel.sysctl = {
     # not sure how to get it to overlap with subgid/idmap...

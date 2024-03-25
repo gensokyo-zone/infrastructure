@@ -14,10 +14,10 @@
   accessHostFor = {
     hostName,
     system ? nixosFor hostName,
-    access ? "local",
+    network ? "lan",
     ...
   }: let
-    host = system.lib.access.hostnameForNetwork.${access} or (throw "unsupported access ${access}");
+    host = access.getHostnameFor hostName network;
   in
     if hostName == config.networking.hostName
     then "localhost"

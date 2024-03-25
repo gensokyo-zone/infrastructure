@@ -84,6 +84,7 @@ in {
       domain = config.networking.fqdn;
       extraDomainNames = [
         access.hostnameForNetwork.local
+        access.hostnameForNetwork.int
         (mkIf config.services.tailscale.enable access.hostnameForNetwork.tail)
       ];
     };
@@ -201,14 +202,16 @@ in {
 
   services.nginx = let
     inherit (nginx) access;
+    #inherit (config.lib.access) getHostnameFor;
+    getHostnameFor = config.lib.access.getAddress4For;
   in {
     vouch.enableLocal = false;
     access.plex = assert plex.enable; {
-      url = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString plex.port}";
+      url = "http://${getHostnameFor "mediabox" "lan"}:${toString plex.port}";
       externalPort = 41324;
     };
     access.unifi = assert unifi.enable; {
-      host = utsuho.lib.access.hostnameForNetwork.local;
+      host = getHostnameFor "utsuho" "lan";
     };
     access.freeipa = {
       host = "idp.local.${config.networking.domain}";
@@ -232,7 +235,7 @@ in {
         inherit (keycloak.services) vouch-proxy;
       in assert vouch-proxy.enable; {
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${keycloak.lib.access.hostnameForNetwork.local}:${toString vouch-proxy.settings.vouch.port}";
+        locations."/".proxyPass = "http://${getHostnameFor "keycloak" "lan"}:${toString vouch-proxy.settings.vouch.port}";
       };
       vouch'local = let
         vouch-proxy = config.services.vouch-proxy;
@@ -250,25 +253,25 @@ in {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString home-assistant.config.http.server_port}";
+        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}:${toString home-assistant.config.http.server_port}";
       };
       zigbee2mqtt = assert zigbee2mqtt.enable; {
         # not the real z2m record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}:${toString zigbee2mqtt.settings.frontend.port}";
+        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}:${toString zigbee2mqtt.settings.frontend.port}";
       };
       grocy = {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
+        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}";
       };
       barcodebuddy = {
         # not the real bbuddy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${tei.lib.access.hostnameForNetwork.tail}";
+        locations."/".proxyPass = "http://${getHostnameFor "tei" "lan"}";
       };
       freepbx = {
         ssl.cert.enable = true;
@@ -283,7 +286,7 @@ in {
         ssl.cert.enable = true;
       };
       invidious'int = {
-        locations."/".proxyPass = "http://${mediabox.lib.access.hostnameForNetwork.local}:${toString mediabox.services.invidious.port}";
+        locations."/".proxyPass = "http://${getHostnameFor "mediabox" "lan"}:${toString mediabox.services.invidious.port}";
       };
     };
   };

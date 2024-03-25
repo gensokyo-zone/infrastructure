@@ -3,19 +3,18 @@
   lib,
   ...
 }: let
-  inherit (lib.options) mkOption mkEnableOption;
+  inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault;
   inherit (lib.lists) head optional;
   inherit (lib.strings) splitString;
   inherit (config.services) nginx;
   access = nginx.access.freepbx;
-  freepbx = config.lib.access.systemFor "freepbx";
   hasSsl = nginx.virtualHosts.freepbx'ucp.listen'.ucpSsl.enable;
 in {
   options.services.nginx.access.freepbx = with lib.types; {
     host = mkOption {
       type = str;
-      default = freepbx.access.hostnameForNetwork.local;
+      default = config.lib.access.getHostnameFor "freepbx" "lan";
     };
     url = mkOption {
       type = str;

@@ -24,25 +24,17 @@
   mkNodeSystem = system: {
     network = let
       inherit (system.config.proxmox) network;
-      inherit (network) internal;
-      inherit (network.interfaces) net0;
-      mapAddress6 = prefix: interface:
-        if interface.address6 == "dhcp" then null
-        else if interface.address6 == "auto" then "${prefix}${interface.slaac.postfix}"
-        else mapNullable (removeSuffix "/64") interface.address6;
-      mapAddress4 = interface:
-        if elem interface.address4 [ "dhcp" "auto" ] then null
-        else mapNullable (removeSuffix "/24") interface.address4;
+      inherit (network) internal local;
     in {
       int = if internal.interface != null then {
         inherit (internal.interface) macAddress;
-        address6 = mapAddress6 "fd0c::" internal.interface;
-        address4 = mapAddress4 internal.interface;
+        address4 = removeSuffix "/24" internal.interface.address4;
+        address6 = removeSuffix "/64" internal.interface.address6;
       } else null;
-      local = if network.interfaces.net0.bridge or null == "vmbr0" then {
-        inherit (net0) macAddress;
-        address6 = mapAddress6 "fd0a::" net0;
-        address4 = mapAddress4 net0;
+      local = if local.interface != null then {
+        inherit (local.interface) macAddress;
+        address4 = mapNullable (removeSuffix "/24") local.interface.local.address4;
+        address6 = mapNullable (removeSuffix "/64") local.interface.local.address6;
       } else null;
       tail = warn "TODO: generate network.tail" null;
     };

@@ -46,4 +46,8 @@ in {
   services.udev.extraRules = mkIf cfg.enable ''
     SUBSYSTEM=="tty", ATTRS{interface}=="Sonoff Zigbee 3.0 USB Dongle Plus", OWNER="zigbee2mqtt", SYMLINK+="ttyZigbee"
   '';
+
+  networking.firewall.interfaces.local.allowedTCPPorts = mkIf cfg.enable [
+    cfg.settings.frontend.port
+  ];
 }
