@@ -3,6 +3,7 @@
 		"lxc.mount.entry": [
 			"/rpool/shared/unifi mnt/shared/unifi none bind,optional,create=dir",
 			"/rpool/shared/postgresql mnt/shared/postgresql none bind,optional,create=dir",
+			"/rpool/shared/mosquitto mnt/shared/mosquitto none bind,optional,create=dir",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
 		],
 		"lxc.idmap": [

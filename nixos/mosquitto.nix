@@ -3,7 +3,8 @@
   lib,
   ...
 }: let
-  inherit (lib) mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
+  cfg = config.services.mosquitto;
   sopsFile = mkDefault ./secrets/mosquitto.yaml;
 in {
   sops.secrets = {
@@ -63,6 +64,14 @@ in {
           allow_anonymous = mkDefault false;
         };
       }
+    ];
+    settings = {
+      autosave_interval = mkDefault 120;
+    };
+  };
+  systemd.services.mosquitto = mkIf cfg.enable {
+    serviceConfig.BindPaths = [
+      "/mnt/shared/mosquitto:${cfg.dataDir}"
     ];
   };
 }
