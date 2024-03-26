@@ -1,11 +1,10 @@
-{ config, lib, pkgs, ... }: let
+{ config, lib, inputs, pkgs, ... }: let
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault mkOverride;
-  inherit (lib.attrsets) mapAttrs mapAttrs' nameValuePair;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault;
+  inherit (lib.attrsets) mapAttrs' nameValuePair;
   inherit (lib.lists) isList imap0;
   inherit (lib.strings) concatStringsSep;
-  mkAlmostOptionDefault = mkOverride 1250;
-  mapOptionDefaults = mapAttrs (_: mkOptionDefault);
   cfg = config.services.barcodebuddy;
   toEnvName = key: "BBUDDY_" + key;
   toEnvValue = value:

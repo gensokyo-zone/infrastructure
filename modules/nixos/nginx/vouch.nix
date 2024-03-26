@@ -1,17 +1,17 @@
 {
-  pkgs,
   config,
   lib,
+  inputs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault;
   inherit (lib.attrsets) mapAttrsToList;
-  inherit (lib.strings) toLower replaceStrings concatStringsSep;
+  inherit (lib.strings) toLower replaceStrings;
   inherit (config) networking;
   inherit (config.services) vouch-proxy nginx tailscale;
   inherit (nginx) vouch;
-  mkAlmostOptionDefault = mkOverride 1250;
   locationModule = {config, virtualHost, ...}: {
     options.vouch = with lib.types; {
       requireAuth = mkEnableOption "require auth to access this location";

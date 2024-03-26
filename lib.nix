@@ -4,9 +4,10 @@
   systems,
 }: let
   nixlib = inputs.nixpkgs.lib;
+  inherit (nixlib.modules) mkOrder mkOverride;
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt;
-  inherit (nixlib.attrsets) listToAttrs nameValuePair;
+  inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
   inherit (nixlib.strings) substring fixedWidthString replaceStrings concatMapStringsSep;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
@@ -35,6 +36,13 @@
   mkWinPath = replaceStrings ["/"] ["\\"];
   mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
 
+  mapListToAttrs = f: l: listToAttrs (map f l);
+
+  mkAlmostOptionDefault = mkOverride 1400;
+  mkAlmostAfter = mkOrder 1400;
+  mapOverride = priority: mapAttrs (_: mkOverride priority);
+  mapOptionDefaults = mapOverride 1500;
+
   treeToModulesOutput = modules:
     {
       ${
@@ -53,6 +61,7 @@ in {
   lib = {
     domain = "gensokyo.zone";
     inherit treeToModulesOutput mkWinPath mkBaseDn userIs eui64 toHexStringLower hexCharToInt;
+    inherit mkAlmostAfter mkAlmostOptionDefault mapOptionDefaults mapOverride mapListToAttrs;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   generate = import ./generate.nix {inherit inputs tree;};

@@ -1,12 +1,11 @@
 {config, lib, inputs, ...}: let
-  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower;
+  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) elem findSingle findFirst;
   inherit (lib.strings) hasPrefix removePrefix replaceStrings;
   inherit (lib.trivial) mapNullable;
-  mkAlmostOptionDefault = mkOverride 1250;
   cfg = config.proxmox.network;
   internalOffset = 32;
   networkInterfaceModule = { config, name, system, ... }: {

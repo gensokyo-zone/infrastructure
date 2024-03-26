@@ -1,18 +1,18 @@
 {
   config,
   lib,
+  inputs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) mkAlmostAfter mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOrder mkDefault mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.strings) optionalString splitString match;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) length head /*optional*/ any;
   inherit (lib.trivial) mapNullable;
   #inherit (config) networking;
   inherit (config.services) nginx;
-  mkAlmostAfter = mkOrder 1250;
-  mkAlmostOptionDefault = mkOverride 1250;
   schemeForUrl = url: let
     parts = splitString ":" url;
   in if length parts == 1 then null else head parts;

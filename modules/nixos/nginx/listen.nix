@@ -1,13 +1,14 @@
 {
   config,
   lib,
+  inputs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault mkForce mkOverride mkRenamedOptionModule;
-  inherit (lib.attrsets) attrValues mapAttrs mapAttrsToList;
+  inherit (lib.modules) mkIf mkMerge mkOptionDefault mkForce;
+  inherit (lib.attrsets) attrValues mapAttrs;
   inherit (lib.lists) filter concatMap;
-  mkAlmostOptionDefault = mkOverride 1250;
   inherit (config.services) nginx;
   listenModule = { config, virtualHost, ... }: {
     options = with lib.types; {

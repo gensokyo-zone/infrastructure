@@ -1,13 +1,14 @@
 {
   config,
   lib,
+  inputs,
   ...
 }: let
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault mkOverride;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.trivial) warnIf;
   inherit (config.services.nginx) virtualHosts;
-  mkAlmostOptionDefault = mkOverride 1250;
   forceRedirectConfig = virtualHost: ''
     if ($x_scheme = http) {
       return ${toString virtualHost.redirectCode} https://$x_forwarded_host$request_uri;
