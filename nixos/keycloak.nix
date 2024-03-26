@@ -21,7 +21,7 @@ in {
       sopsFile = ./secrets/keycloak.yaml;
       owner = "keycloak";
     };
-  in {
+  in mkIf cfg.enable {
     keycloak_db_password = commonSecret;
   };
   users = mkIf cfg.enable {
@@ -33,10 +33,12 @@ in {
     };
   };
 
-  networking.firewall.interfaces.local.allowedTCPPorts = mkIf cfg.enable [
-    (if cfg.sslCertificate != null then 443 else 80)
+  networking.firewall.interfaces.int.allowedTCPPorts = mkIf cfg.enable [
+    (if cfg.sslCertificate != null then cfg.settings.https-port else cfg.settings.http-port)
   ];
-  systemd.services.keycloak.serviceConfig.DynamicUser = mkForce false;
+  systemd.services.keycloak = mkIf cfg.enable {
+    serviceConfig.DynamicUser = mkForce false;
+  };
 
   services.keycloak = {
     enable = true;
@@ -54,6 +56,8 @@ in {
       hostname-strict = mkDefault hostname-strict;
       hostname-strict-https = mkDefault hostname-strict;
       proxy-headers = mkDefault "xforwarded";
+      http-port = mkDefault 8080;
+      https-port = mkDefault 8443;
     };
 
     sslCertificate = mkDefault "${cert}/fullchain.pem";

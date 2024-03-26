@@ -230,6 +230,7 @@ in {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
+        locations."/".proxyPass = "https://${getHostnameFor "keycloak" "lan"}:8443";
       };
       vouch = let
         inherit (keycloak.services) vouch-proxy;
