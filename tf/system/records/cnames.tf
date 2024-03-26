@@ -14,6 +14,10 @@ locals {
       name  = "${subdomain}.local",
       value = "${local.local_name}.${var.zone_zone}",
     }],
+    local.has_int ? [for subdomain in var.local_subdomains : {
+      name  = "${subdomain}.int",
+      value = "${local.int_name}.${var.zone_zone}",
+    }] : [],
     local.has_tailscale ? [for subdomain in var.local_subdomains : {
       name  = "${subdomain}.tail",
       value = "${local.tailscale_name}.${var.zone_zone}",

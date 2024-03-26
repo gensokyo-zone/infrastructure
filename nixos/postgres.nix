@@ -13,12 +13,12 @@ in {
       {
         name = "hass";
         ensureDBOwnership = true;
-        authentication.tailscale.allow = !config.services.home-assistant.enable;
+        authentication.int.allow = !config.services.home-assistant.enable;
       }
       {
         name = "invidious";
         ensureDBOwnership = true;
-        authentication.local.allow = true;
+        authentication.int.allow = true;
       }
       {
         name = "dex";
@@ -28,7 +28,7 @@ in {
       {
         name = "keycloak";
         ensureDBOwnership = true;
-        authentication.local.allow = true;
+        authentication.int.allow = true;
       }
     ];
   };

@@ -40,7 +40,9 @@
           allow = mkEnableOption "tailscale TCP connections";
         };
         int = {
-          allow = mkEnableOption "internal TCP connections";
+          allow = mkEnableOption "internal TCP connections" // {
+            default = config.authentication.local.allow;
+          };
         };
         local = {
           allow = mkEnableOption "local TCP connections";
@@ -87,7 +89,12 @@ in {
       )
       cfg.ensureUsers);
   };
-  config.networking.firewall.interfaces.local = mkIf cfg.enable {
-    allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.port];
+  config.networking.firewall.interfaces = {
+    local = mkIf cfg.enable {
+      allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.port];
+    };
+    int = mkIf cfg.enable {
+      allowedTCPPorts = mkIf (any (user: user.authentication.int.allow) cfg.ensureUsers) [cfg.port];
+    };
   };
 }

@@ -40,7 +40,7 @@ in {
       };
     };
     database = {
-      host = "postgresql.local.${config.networking.domain}";
+      host = "postgresql.int.${config.networking.domain}";
       passwordFile = config.sops.secrets.invidious_db_password.path;
       createLocally = false;
     };

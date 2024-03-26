@@ -94,7 +94,8 @@ locals {
   tailscale_v6   = coalesce(var.tailscale_v6, local.tailscale_net.address6, local.empty_address)
   global_name    = coalesce(var.global_name, var.name)
 
-  has_tailscale = var.tailscale_v4 != null || var.tailscale_v6 != null
+  has_tailscale = local.tailscale_v4 != local.empty_address || local.tailscale_v6 != local.empty_address
+  has_int       = local.int_v4 != local.empty_address || local.int_v6 != local.empty_address
   empty_address = "EMPTY"
   empty_net = {
     address4 = null

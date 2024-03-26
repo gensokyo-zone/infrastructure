@@ -42,7 +42,7 @@ in {
     enable = true;
 
     database = {
-      host = "postgresql.local.${config.networking.domain}";
+      host = "postgresql.int.${config.networking.domain}";
       passwordFile = config.sops.secrets.keycloak_db_password.path;
       createLocally = false;
       useSSL = false;
