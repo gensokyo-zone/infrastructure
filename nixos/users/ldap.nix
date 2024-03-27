@@ -84,6 +84,7 @@ in {
         smb = {
           name = "Default SMB Group";
           samba = {
+            enable = true;
             #sync.enable = true;
             groupType = 4;
             sid = "S-1-5-32-545";

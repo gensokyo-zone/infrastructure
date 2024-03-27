@@ -26,6 +26,9 @@ in {
     beatsaber = {
       gid = 8132;
     };
+    editors = {
+      gid = 8133;
+    };
 
     admin = {
       gid = 8126;
