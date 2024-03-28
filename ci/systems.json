@@ -1,7 +1,7 @@
 {
   "aya": {
-    "hostName": "aya",
     "network": {
+      "hostName": "aya",
       "networks": {
         "int": {
           "address4": "10.9.1.73",
@@ -21,9 +21,29 @@
       }
     }
   },
-  "freeipa": {
-    "hostName": "idp",
+  "ct": {
     "network": {
+      "hostName": "ct",
+      "networks": {
+        "int": null,
+        "local": null,
+        "tail": null
+      }
+    }
+  },
+  "extern-test": {
+    "network": {
+      "hostName": "extern-test",
+      "networks": {
+        "int": null,
+        "local": null,
+        "tail": null
+      }
+    }
+  },
+  "freeipa": {
+    "network": {
+      "hostName": "idp",
       "networks": {
         "int": {
           "address4": "10.9.1.170",
@@ -40,8 +60,8 @@
     }
   },
   "freepbx": {
-    "hostName": "freepbx",
     "network": {
+      "hostName": "freepbx",
       "networks": {
         "int": null,
         "local": {
@@ -54,8 +74,8 @@
     }
   },
   "hakurei": {
-    "hostName": "hakurei",
     "network": {
+      "hostName": "hakurei",
       "networks": {
         "int": {
           "address4": "10.9.1.71",
@@ -76,8 +96,8 @@
     }
   },
   "keycloak": {
-    "hostName": "keycloak",
     "network": {
+      "hostName": "keycloak",
       "networks": {
         "int": {
           "address4": "10.9.1.75",
@@ -93,9 +113,23 @@
       }
     }
   },
-  "kuwubernetes": {
-    "hostName": "kuwubernetes",
+  "kitchencam": {
     "network": {
+      "hostName": "kitchencam",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": null,
+          "address6": "fd0a::ba27:ebff:fea8:f4ff",
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
+  "kuwubernetes": {
+    "network": {
+      "hostName": "kuwubernetes",
       "networks": {
         "int": null,
         "local": {
@@ -108,8 +142,8 @@
     }
   },
   "litterbox": {
-    "hostName": "litterbox",
     "network": {
+      "hostName": "litterbox",
       "networks": {
         "int": {
           "address4": "10.9.1.74",
@@ -126,8 +160,8 @@
     }
   },
   "mediabox": {
-    "hostName": "mediabox",
     "network": {
+      "hostName": "mediabox",
       "networks": {
         "int": {
           "address4": "10.9.1.70",
@@ -143,9 +177,27 @@
       }
     }
   },
-  "reimu": {
-    "hostName": "reimu",
+  "nue": {
     "network": {
+      "hostName": "nue",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.62",
+          "address6": "fd0a::daf8:83ff:fe36:81b6",
+          "macAddress": null
+        },
+        "tail": {
+          "address4": "100.86.77.54",
+          "address6": "fd7a:115c:a1e0:ab12:4843:cd96:6256:4d36",
+          "macAddress": null
+        }
+      }
+    }
+  },
+  "reimu": {
+    "network": {
+      "hostName": "reimu",
       "networks": {
         "int": {
           "address4": "10.9.1.72",
@@ -165,9 +217,45 @@
       }
     }
   },
-  "tei": {
-    "hostName": "tei",
+  "reisen": {
     "network": {
+      "hostName": "reisen",
+      "networks": {
+        "int": {
+          "address4": "10.9.1.2",
+          "address6": "fd0c::2",
+          "macAddress": null
+        },
+        "local": {
+          "address4": "10.1.1.40",
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
+  "shanghai": {
+    "network": {
+      "hostName": "shanghai",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.32",
+          "address6": "fd0a::1ac0:4dff:fe08:87bc",
+          "macAddress": "18:c0:4d:08:87:bc"
+        },
+        "tail": {
+          "address4": "100.104.155.122",
+          "address6": "fd7a:115c:a1e0:ab12:4843:cd96:6268:9b7a",
+          "macAddress": null
+        }
+      }
+    }
+  },
+  "tei": {
+    "network": {
+      "hostName": "tei",
       "networks": {
         "int": {
           "address4": "10.9.1.69",
@@ -187,9 +275,41 @@
       }
     }
   },
-  "utsuho": {
-    "hostName": "utsuho",
+  "tewi": {
     "network": {
+      "hostName": "tewi",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": null,
+          "address6": "fd0a::eea8:6bff:fefe:3986",
+          "macAddress": null
+        },
+        "tail": {
+          "address4": "100.88.107.41",
+          "address6": "fd7a:115c:a1e0:ab12:4843:cd96:6258:6b29",
+          "macAddress": null
+        }
+      }
+    }
+  },
+  "u7pro": {
+    "network": {
+      "hostName": "u7-pro",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.3",
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
+  "utsuho": {
+    "network": {
+      "hostName": "utsuho",
       "networks": {
         "int": {
           "address4": "10.9.1.76",

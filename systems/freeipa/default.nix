@@ -1,5 +1,6 @@
 _: {
   type = "Linux";
+  access.hostName = "idp";
   proxmox = {
     vm = {
       id = 202;

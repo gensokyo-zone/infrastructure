@@ -1,6 +1,6 @@
 { inputs, pkgs, config, lib, ... }: let
   inherit (inputs.self.lib.lib) mkBaseDn;
-  inherit (lib.modules) mkIf mkBefore mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
   inherit (lib.strings) toUpper;
   inherit (config.networking) domain;
   cfg = config.security.ipa;
@@ -46,9 +46,6 @@ in {
         "root"
       ] ++ config.users.groups.wheel.members;
       dyndns.enable = mkDefault false;
-    };
-    networking.hosts = mkIf cfg.enable {
-      "10.1.1.46" = mkBefore [ "idp.${domain}" ];
     };
     sops.secrets = {
       krb5-keytab = mkIf cfg.enable {

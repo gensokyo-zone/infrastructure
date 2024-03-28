@@ -8,4 +8,11 @@ _: {
       source = ./motion.conf;
     };
   };
+  network.networks = {
+    local = {
+      # TODO: macAddress = ?;
+      address4 = null;
+      address6 = "fd0a::ba27:ebff:fea8:f4ff";
+    };
+  };
 }

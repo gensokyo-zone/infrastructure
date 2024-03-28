@@ -11,6 +11,8 @@ in {
   services.avahi = {
     enable = mkDefault true;
     ipv6 = mkDefault config.networking.enableIPv6;
+    nssmdns4 = mkIf (!config.services.resolved.enable) (mkDefault true);
+    nssmdns6 = mkIf (!config.services.resolved.enable) (mkDefault true);
     publish = {
       enable = mkDefault true;
       domain = mkDefault true;

@@ -102,6 +102,9 @@
   };
 in {
   options.access = with lib.types; {
+    fqdn = mkOption {
+      type = str;
+    };
     hostName = mkOption {
       type = str;
       default = name;
@@ -138,6 +141,7 @@ in {
       hasLocal4 = hasLocal && local'interface.local.address4 or null != null;
       hasLocal6 = hasLocal && local'interface.local.address6 or null != null;
     in {
+      fqdn = mkOptionDefault "${cfg.hostName}.${cfg.domain}";
       hostnameForNetwork = let
         int = "${cfg.hostName}.int.${cfg.domain}";
         local = "${cfg.hostName}.local.${cfg.domain}";

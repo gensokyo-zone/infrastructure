@@ -214,7 +214,7 @@ in {
       host = getHostnameFor "utsuho" "lan";
     };
     access.freeipa = {
-      host = "idp.local.${config.networking.domain}";
+      host = getHostnameFor "freeipa" "lan";
       kerberos.ports.kpasswd = 464;
     };
     access.kitchencam = {

@@ -62,6 +62,7 @@
     "modules/nixos/users".functor.enable = true;
     "modules/meta".functor.enable = true;
     "modules/system".functor.enable = true;
+    "modules/system/network".functor.enable = true;
     "modules/system/proxmox".functor.enable = true;
     "modules/system/extern".functor.enable = true;
     "modules/home".functor.enable = true;

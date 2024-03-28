@@ -1,21 +1,15 @@
 module "reisen_system_records" {
   source    = "./system/records"
-  name      = "reisen"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  local_v4  = "10.1.1.40"
-  int_v4    = "10.9.1.2"
-  int_v6    = "fd0c::2"
+  net_data  = local.systems.reisen.network
 }
 
 module "hakurei_system_records" {
-  source       = "./system/records"
-  name         = "hakurei"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data     = local.proxmox_reisen_systems.hakurei.network
-  tailscale_v4 = "100.71.65.59"
-  tailscale_v6 = "fd7a:115c:a1e0::9187:413b"
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.hakurei.network
   local_subdomains = [
     "prox",
     "id",
@@ -46,13 +40,10 @@ module "hakurei_system_records" {
 }
 
 module "reimu_system_records" {
-  source       = "./system/records"
-  name         = "reimu"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data     = local.proxmox_reisen_systems.reimu.network
-  tailscale_v4 = "100.113.253.48"
-  tailscale_v6 = "fd7a:115c:a1e0::f1b1:fd30"
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.reimu.network
   local_subdomains = [
     "nfs",
   ]
@@ -60,41 +51,33 @@ module "reimu_system_records" {
 
 module "keycloak_system_records" {
   source    = "./system/records"
-  name      = "keycloak"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.keycloak.network
+  net_data  = local.systems.keycloak.network
 }
 
 module "utsuho_system_records" {
   source    = "./system/records"
-  name      = "utsuho"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.utsuho.network
+  net_data  = local.systems.utsuho.network
 }
 
 module "aya_system_records" {
-  source       = "./system/records"
-  name         = "aya"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data     = local.proxmox_reisen_systems.aya.network
-  tailscale_v4 = "100.109.213.94"
-  tailscale_v6 = "fd7a:115c:a1e0::eaed:d55e"
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.aya.network
   local_subdomains = [
     "nixbld",
   ]
 }
 
 module "tewi_system_records" {
-  source       = "./system/records"
-  name         = "tei"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data     = local.proxmox_reisen_systems.tei.network
-  tailscale_v4 = "100.74.104.29"
-  tailscale_v6 = "fd7a:115c:a1e0::fd8a:681d"
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.tei.network
   local_subdomains = [
     "mqtt",
     "postgresql",
@@ -103,10 +86,9 @@ module "tewi_system_records" {
 
 module "mediabox_system_records" {
   source    = "./system/records"
-  name      = "mediabox"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.mediabox.network
+  net_data  = local.systems.mediabox.network
   local_subdomains = [
     "plex",
   ]
@@ -114,18 +96,16 @@ module "mediabox_system_records" {
 
 module "litterbox_system_records" {
   source    = "./system/records"
-  name      = "litterbox"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.litterbox.network
+  net_data  = local.systems.litterbox.network
 }
 
 module "idp_system_records" {
   source    = "./system/records"
-  name      = "idp"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.freeipa.network
+  net_data  = local.systems.freeipa.network
 }
 
 module "kubernetes_system_records" {
@@ -133,23 +113,21 @@ module "kubernetes_system_records" {
   name      = "kubernetes"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.kuwubernetes.network
+  net_data  = local.systems.kuwubernetes.network
 }
 
 module "freepbx_system_records" {
   source    = "./system/records"
-  name      = "freepbx"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.proxmox_reisen_systems.freepbx.network
+  net_data  = local.systems.freepbx.network
 }
 
 module "kitchencam_system_records" {
   source    = "./system/records"
-  name      = "kitchencam"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  local_v6  = "fd0a::ba27:ebff:fea8:f4ff"
+  net_data  = local.systems.kitchencam.network
 }
 
 variable "u7pro_ipv6_postfix" {
@@ -158,20 +136,15 @@ variable "u7pro_ipv6_postfix" {
 
 module "u7pro_system_records" {
   source    = "./system/records"
-  name      = "u7-pro"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  local_v4  = "10.1.1.3"
+  net_data  = local.systems.u7pro.network
   local_v6  = "fd0a::${var.u7pro_ipv6_postfix}"
 }
 
 module "tewi_legacy_system_records" {
-  source       = "./system/records"
-  name         = "tewi"
-  zone_id      = cloudflare_zone.gensokyo-zone_zone.id
-  zone_zone    = cloudflare_zone.gensokyo-zone_zone.zone
-  tailscale_v4 = "100.88.107.41"
-  tailscale_v6 = "fd7a:115c:a1e0:ab12:4843:cd96:6258:6b29"
-  local_v4     = "10.1.1.38"
-  local_v6     = "fd0a::eea8:6bff:fefe:3986"
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.tewi.network
 }

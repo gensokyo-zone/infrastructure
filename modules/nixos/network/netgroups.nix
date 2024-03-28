@@ -76,7 +76,7 @@ in {
         (mkIf config.services.sssd.enable [ "sss" ])
       ];
     };
-    environment.etc."nssswitch.conf".text = mkIf (nssDatabases.netgroup != [ ]) (mkAfter ''
+    environment.etc."nsswitch.conf".text = mkIf (nssDatabases.netgroup != [ ]) (mkAfter ''
       netgroup: ${concatStringsSep " " nssDatabases.netgroup}
     '');
     environment.etc."netgroup" = mkIf (networking.netgroups != { } || networking.extraNetgroups != "") {

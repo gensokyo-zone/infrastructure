@@ -7,15 +7,19 @@ variable "zone_zone" {
 }
 
 variable "name" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "net_data" {
-  type = map(map(any))
+  type = any
   default = {
-    local = null
-    int   = null
-    tail  = null
+    hostName = null
+    networks = {
+      local = null
+      int   = null
+      tail  = null
+    }
   }
 }
 
@@ -80,19 +84,20 @@ variable "global_v6" {
 }
 
 locals {
-  local_name     = coalesce(var.local_name, "${var.name}.local")
-  local_net      = coalesce(var.net_data.local, local.empty_net)
+  name           = coalesce(var.name, var.net_data.hostName)
+  local_name     = coalesce(var.local_name, "${local.name}.local")
+  local_net      = coalesce(var.net_data.networks.local, local.empty_net)
   local_v4       = coalesce(var.local_v4, local.local_net.address4, local.empty_address)
   local_v6       = coalesce(var.local_v6, local.local_net.address6, local.empty_address)
-  int_name       = coalesce(var.int_name, "${var.name}.int")
-  int_net        = coalesce(var.net_data.int, local.empty_net)
+  int_name       = coalesce(var.int_name, "${local.name}.int")
+  int_net        = coalesce(var.net_data.networks.int, local.empty_net)
   int_v4         = coalesce(var.int_v4, local.int_net.address4, local.empty_address)
   int_v6         = coalesce(var.int_v6, local.int_net.address6, local.empty_address)
-  tailscale_name = coalesce(var.tailscale_name, "${var.name}.tail")
-  tailscale_net  = coalesce(var.net_data.tail, local.empty_net)
+  tailscale_name = coalesce(var.tailscale_name, "${local.name}.tail")
+  tailscale_net  = coalesce(var.net_data.networks.tail, local.empty_net)
   tailscale_v4   = coalesce(var.tailscale_v4, local.tailscale_net.address4, local.empty_address)
   tailscale_v6   = coalesce(var.tailscale_v6, local.tailscale_net.address6, local.empty_address)
-  global_name    = coalesce(var.global_name, var.name)
+  global_name    = coalesce(var.global_name, local.name)
 
   has_tailscale = local.tailscale_v4 != local.empty_address || local.tailscale_v6 != local.empty_address
   has_int       = local.int_v4 != local.empty_address || local.int_v6 != local.empty_address
@@ -117,7 +122,7 @@ locals {
     },
     {
       name  = local.tailscale_name,
-      value = var.tailscale_v4,
+      value = local.tailscale_v4,
     }
   ]
 
@@ -136,7 +141,7 @@ locals {
     },
     {
       name  = local.tailscale_name,
-      value = var.tailscale_v6,
+      value = local.tailscale_v6,
     }
   ]
 }

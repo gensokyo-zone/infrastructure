@@ -3,11 +3,10 @@
   tree,
 }: let
   nixlib = inputs.nixpkgs.lib;
-  inherit (nixlib.attrsets) mapAttrs filterAttrs mapAttrsToList;
-  inherit (nixlib.lists) elem sortOn;
-  inherit (nixlib.strings) removeSuffix;
-  inherit (nixlib.trivial) mapNullable warn;
+  inherit (nixlib.attrsets) mapAttrs mapAttrs' nameValuePair filterAttrs mapAttrsToList;
+  inherit (nixlib.lists) sortOn;
   inherit (inputs.self.lib.lib) userIs;
+  inherit (inputs.self.lib) systems;
   templateSystem = inputs.self.nixosConfigurations.reimu;
   templateUsers = filterAttrs (_: userIs "peeps") templateSystem.config.users.users;
   mkNodeUsers = users: let
@@ -20,23 +19,24 @@
   };
   nodeSystems = let
     matchesNode = nodeName: system: system.config.proxmox.enabled && system.config.proxmox.node.name == nodeName;
-  in nodeName: filterAttrs (_: matchesNode nodeName) inputs.self.lib.systems;
+  in nodeName: filterAttrs (_: matchesNode nodeName) systems;
   mkNodeSystem = system: {
+    inherit (system.config.access) hostName;
     network = let
-      inherit (system.config.proxmox) network;
-      inherit (network) internal local;
+      inherit (system.config.network) networks;
     in {
-      int = if internal.interface != null then {
-        inherit (internal.interface) macAddress;
-        address4 = removeSuffix "/24" internal.interface.address4;
-        address6 = removeSuffix "/64" internal.interface.address6;
-      } else null;
-      local = if local.interface != null then {
-        inherit (local.interface) macAddress;
-        address4 = mapNullable (removeSuffix "/24") local.interface.local.address4;
-        address6 = mapNullable (removeSuffix "/64") local.interface.local.address6;
-      } else null;
-      tail = warn "TODO: generate network.tail" null;
+      networks = {
+        int = if networks.int.enable or false then {
+          inherit (networks.int) macAddress address4 address6;
+        } else null;
+        local = if networks.local.enable or false then {
+          inherit (networks.local) macAddress address4 address6;
+        } else null;
+        tail = if networks.tail.enable or false then {
+          inherit (networks.tail) address4 address6;
+          macAddress = null;
+        } else null;
+      };
     };
   };
   mkNodeSystems = systems: mapAttrs (_: mkNodeSystem) systems;
@@ -44,6 +44,20 @@
     users = mkNodeUsers templateUsers;
     systems = mkNodeSystems (nodeSystems name);
   };
+  mkNetwork = system: {
+    inherit (system.config.access) hostName;
+    networks = {
+      int = null;
+      local = null;
+      tail = null;
+    } // mapAttrs' (_: network: nameValuePair network.name {
+      inherit (network) macAddress address4 address6;
+    }) system.config.network.networks;
+  };
+  mkSystem = name: system: {
+    network = mkNetwork system;
+  };
 in {
   reisen = mkNode {name = "reisen";};
+  systems = mapAttrs mkSystem systems;
 }

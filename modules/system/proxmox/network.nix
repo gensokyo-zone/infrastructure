@@ -1,10 +1,10 @@
 {config, lib, inputs, ...}: let
-  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower mkAlmostOptionDefault;
+  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower mkAlmostOptionDefault mapAlmostOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) elem findSingle findFirst;
-  inherit (lib.strings) hasPrefix removePrefix replaceStrings;
+  inherit (lib.strings) hasPrefix removePrefix replaceStrings removeSuffix;
   inherit (lib.trivial) mapNullable;
   cfg = config.proxmox.network;
   internalOffset = 32;
@@ -105,6 +105,10 @@
         ];
         networkd.networkSettings = {
           name = mkAlmostOptionDefault config.name;
+          ipv6AcceptRAConfig = mkIf (config.address6 == "auto" && config.local.enable) {
+            UseDNS = mkOptionDefault false;
+            DHCPv6Client = mkOptionDefault false;
+          };
           matchConfig = {
             MACAddress = mkIf (config.macAddress != null) (mkOptionDefault config.macAddress);
             Type = mkOptionDefault "ether";
@@ -117,7 +121,7 @@
               IPv6AcceptRA = true;
             })
             (mkIf config.mdns.enable {
-              MulticastDNS = true;
+              MulticastDNS = "resolve";
             })
           ];
           address = mkMerge [
@@ -178,5 +182,20 @@ in {
       interface = mkOptionDefault (findSingle (interface: interface.internal.enable) null (throw "expected only one internal network interface") (attrValues cfg.interfaces));
     };
     local.interface = mkOptionDefault (findFirst (interface: interface.local.enable) null (attrValues cfg.interfaces));
+  };
+  config.network.networks = let
+    strip4 = mapNullable (removeSuffix "/24");
+    strip6 = mapNullable (removeSuffix "/64");
+  in {
+    int = mkIf (cfg.internal.interface != null) (mapAlmostOptionDefaults {
+      inherit (cfg.internal.interface) macAddress;
+      address4 = strip4 cfg.internal.interface.address4;
+      address6 = strip6 cfg.internal.interface.address6;
+    });
+    local = mkIf (cfg.local.interface != null) (mapAlmostOptionDefaults {
+      inherit (cfg.local.interface) macAddress;
+      address4 = strip4 cfg.local.interface.local.address4;
+      address6 = strip6 cfg.local.interface.local.address6;
+    });
   };
 }

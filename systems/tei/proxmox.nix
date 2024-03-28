@@ -14,4 +14,10 @@ _: {
       net1.internal.enable = true;
     };
   };
+  network.networks = {
+    tail = {
+      address4 = "100.74.104.29";
+      address6 = "fd7a:115c:a1e0::fd8a:681d";
+    };
+  };
 }

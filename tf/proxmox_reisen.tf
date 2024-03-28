@@ -18,6 +18,8 @@ locals {
 
   proxmox_reisen_users   = jsondecode(file("${path.root}/../systems/reisen/users.json"))
   proxmox_reisen_systems = jsondecode(file("${path.root}/../systems/reisen/systems.json"))
+
+  systems = jsondecode(file("${path.root}/../ci/systems.json"))
 }
 
 resource "terraform_data" "proxmox_reisen_etc" {

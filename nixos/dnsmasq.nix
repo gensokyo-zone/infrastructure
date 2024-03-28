@@ -12,18 +12,22 @@
   inherit (lib.strings) hasPrefix replaceStrings concatStringsSep;
   inherit (lib.trivial) mapNullable;
   cfg = config.services.dnsmasq;
-  mkHostRecordPairs = systemName: system: [
-    (mkHostRecordPair "int" systemName system)
-    (mkHostRecordPair "local" systemName system)
-    #(mkHostRecordPair "tail" systemName system)
+  inherit (inputs.self.lib) systems;
+  reisenSystems = filterAttrs (_: system:
+    system.config.proxmox.enabled && system.config.proxmox.node.name == "reisen"
+  ) systems;
+  mkHostRecordPairs = _: system: [
+    (mkHostRecordPair "int" system)
+    (mkHostRecordPair "local" system)
+    (mkHostRecordPair "tail" system)
   ];
   mapDynamic4 = replaceStrings [ "10.1.1." ] [ "0.0.0." ];
   mapDynamic6 = replaceStrings [ "fd0a::" ] [ "2001::" ];
-  mkDynamicHostRecord = systemName: system: let
-    address4 = system.network.local.address4 or null;
-    address6 = system.network.local.address6 or null;
+  mkDynamicHostRecord = _: system: let
+    address4 = system.config.network.networks.local.address4 or null;
+    address6 = system.config.network.networks.local.address6 or null;
   in concatStringsSep "," ([
-    "${systemName}.${config.networking.domain}"
+    system.config.access.fqdn
   ] ++ lib.optional (address4 != null)
     (toString (mapNullable mapDynamic4 address4))
   ++ lib.optional (address6 != null)
@@ -31,11 +35,11 @@
   ++ lib.singleton
     cfg.dynamic.interface
   );
-  mkHostRecordPair = network: systemName: system: let
-    address4 = system.network.${network}.address4 or null;
-    address6 = system.network.${network}.address6 or null;
+  mkHostRecordPair = network: system: let
+    address4 = system.config.network.networks.${network}.address4 or null;
+    address6 = system.config.network.networks.${network}.address6 or null;
   in nameValuePair
-    "${systemName}.${network}.${config.networking.domain}"
+    system.config.network.networks.${network}.fqdn or "${network}.${system.config.access.fqdn}"
     (concatStringsSep "," (
     lib.optional (address4 != null)
       (toString address4)
@@ -43,7 +47,7 @@
       (toString address6)
     ));
   systemHosts = filterAttrs (_: value: value != "") (
-    listToAttrs (concatLists (mapAttrsToList mkHostRecordPairs generate.reisen.systems))
+    listToAttrs (concatLists (mapAttrsToList mkHostRecordPairs systems))
   );
   mkHostRecord = name: record: "${name},${record}";
   filterns = ns: !hasPrefix "127.0.0" ns || ns == "::1";
@@ -66,7 +70,7 @@ in {
       resolveLocalQueries = mkForce false;
       settings = {
         host-record = mapAttrsToList mkHostRecord systemHosts;
-        dynamic-host = mapAttrsToList mkDynamicHostRecord generate.reisen.systems;
+        dynamic-host = mapAttrsToList mkDynamicHostRecord reisenSystems;
         server =
           if config.networking.nameservers' != [ ] then map (ns: ns.address) (filter filterns' config.networking.nameservers')
           else filter filterns config.networking.nameservers

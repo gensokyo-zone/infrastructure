@@ -4,7 +4,7 @@
   systems,
 }: let
   nixlib = inputs.nixpkgs.lib;
-  inherit (nixlib.modules) mkOrder mkOverride;
+  inherit (nixlib.modules) mkOrder mkOverride defaultOverridePriority;
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt;
   inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
@@ -38,10 +38,23 @@
 
   mapListToAttrs = f: l: listToAttrs (map f l);
 
-  mkAlmostOptionDefault = mkOverride 1400;
+
+  overrideOptionDefault = 1500;
+  overrideAlmostOptionDefault = 1400;
+  overrideDefault = 1000;
+  overrideNone = defaultOverridePriority; # 100
+  overrideForce = 50;
+  overrideVM = 10;
+  mkAlmostOptionDefault = mkOverride overrideAlmostOptionDefault;
+  orderBefore = 500;
+  orderNone = 1000;
+  orderAfter = 1500;
+  orderAlmostAfter = 1400;
   mkAlmostAfter = mkOrder 1400;
   mapOverride = priority: mapAttrs (_: mkOverride priority);
-  mapOptionDefaults = mapOverride 1500;
+  mapOptionDefaults = mapOverride overrideOptionDefault;
+  mapAlmostOptionDefaults = mapOverride overrideAlmostOptionDefault;
+  mapDefaults = mapOverride overrideDefault;
 
   treeToModulesOutput = modules:
     {
@@ -60,8 +73,14 @@ in {
   Std = inputs.std-fl.lib;
   lib = {
     domain = "gensokyo.zone";
-    inherit treeToModulesOutput mkWinPath mkBaseDn userIs eui64 toHexStringLower hexCharToInt;
-    inherit mkAlmostAfter mkAlmostOptionDefault mapOptionDefaults mapOverride mapListToAttrs;
+    inherit treeToModulesOutput userIs
+      eui64 mkWinPath mkBaseDn
+      toHexStringLower hexCharToInt
+      mapListToAttrs
+      mkAlmostOptionDefault mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
+      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideNone overrideForce overrideVM
+      orderBefore orderNone orderAfter orderAlmostAfter
+      mkAlmostAfter;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   generate = import ./generate.nix {inherit inputs tree;};
