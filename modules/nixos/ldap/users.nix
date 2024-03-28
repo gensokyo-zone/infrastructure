@@ -6,7 +6,7 @@
 }: let
   inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapListToAttrs;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.attrsets) mapAttrs mapAttrsToList;
   inherit (lib.lists) filter;
   inherit (lib.strings) concatStrings;
@@ -80,7 +80,7 @@
       };
       object = {
         enable = mkAlmostOptionDefault config.samba.enable;
-        dn = mkOptionDefault "uid=${config.uid},${ldap.userDnSuffix}${ldap.base}";
+        dn = mkOptionDefault (ldap.lib.withBaseDn "uid=${config.uid},${ldap.userDnSuffix}");
         settings = {
           objectClasses = mkIf config.samba.enable [ "sambaSamAccount" ];
           settings = mkIf config.samba.enable {
@@ -139,7 +139,7 @@
       };
       object = {
         enable = mkAlmostOptionDefault config.samba.enable;
-        dn = mkOptionDefault "cn=${config.name},${ldap.groupDnSuffix}${ldap.base}";
+        dn = mkOptionDefault (ldap.lib.withBaseDn "cn=${config.name},${ldap.groupDnSuffix}");
         settings = {
           objectClasses = mkIf config.samba.enable [ "sambaGroupMapping" ];
           settings = mkIf config.samba.enable {

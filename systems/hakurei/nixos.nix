@@ -52,8 +52,6 @@ in {
     ./reisen-ssh.nix
   ];
 
-  users.ldap.management.enable = true;
-
   sops.secrets.cloudflared-tunnel-hakurei = {
     owner = config.services.cloudflared.user;
   };

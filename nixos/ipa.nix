@@ -26,6 +26,13 @@ in {
       #samba.domainSID = mkDefault "S-1-5-21-208293719-3143191303-229982100"; # HAKUREI
       userDnSuffix = mkDefault "cn=users,cn=accounts,";
       groupDnSuffix = mkDefault "cn=groups,cn=accounts,";
+      permissionDnSuffix = mkDefault "cn=permissions,cn=pbac,";
+      privilegeDnSuffix = mkDefault "cn=privileges,cn=pbac,";
+      roleDnSuffix = mkDefault "cn=roles,cn=accounts,";
+      serviceDnSuffix = mkDefault "cn=services,cn=accounts,";
+      hostDnSuffix = mkDefault "cn=computers,cn=accounts,";
+      sysAccountDnSuffix = mkDefault "cn=sysaccounts,cn=etc,";
+      domainDnSuffix = mkDefault "cn=ad,cn=etc,";
     };
     security.ipa = {
       enable = mkDefault true;

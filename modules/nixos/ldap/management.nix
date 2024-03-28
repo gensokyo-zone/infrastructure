@@ -118,7 +118,7 @@
 
     ldapwhoami
 
-    ldapmodify -cf "$MAN_LDAP_ADD"
+    ldapmodify -cf "$MAN_LDAP_ADD" || true
 
     ldapmodify -c -f "$MAN_LDAP_MODIFY" || true
 
@@ -147,7 +147,7 @@ in {
         LDAPBASE = ldap.base;
         LDAPURI = "ldaps://ldap.int.${config.networking.domain}";
         LDAPSASL_MECH = "GSSAPI";
-        LDAPSASL_AUTHCID = "dn:krbprincipalname=host/${config.networking.fqdn}@${config.security.ipa.realm},cn=services,cn=accounts,${ldap.base}";
+        LDAPSASL_AUTHCID = "dn:fqdn=${config.networking.fqdn},${ldap.hostDnSuffix}${ldap.base}";
         # LDAPBINDDN?
         SMB_SYNC_GROUPS = concatStringsSep "," (map (group: group.name) smbSyncGroups);
         SMB_SYNC_USERS = concatStringsSep "," (map (user: user.uid) smbSyncUsers);

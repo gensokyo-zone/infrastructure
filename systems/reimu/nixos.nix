@@ -10,6 +10,7 @@
     nixos.steam.beatsaber
     nixos.tailscale
     nixos.ipa
+    nixos.ldap
     nixos.nfs
   ];
 

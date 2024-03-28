@@ -91,6 +91,9 @@ in {
           };
         };
       };
+      objects = {
+        # TODO: ipa hostname krb5 aliases should be populated here!!!
+      };
     } ];
   };
 }

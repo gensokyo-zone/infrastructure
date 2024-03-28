@@ -9,7 +9,7 @@
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.attrsets) filterAttrs mapAttrsToList nameValuePair;
   inherit (lib.lists) optional toList;
-  inherit (lib.strings) toLower removeSuffix concatMapStrings concatStringsSep optionalString;
+  inherit (lib.strings) hasSuffix removeSuffix concatMapStrings concatStringsSep concatStrings optionalString;
   ldap'lib = {
     specialArgs = {
       nixosConfig = config;
@@ -37,7 +37,7 @@
       inherit (ldap'lib) specialArgs;
     };
     mapObjectSettingsToPair = settings: nameValuePair
-      (removeSuffix ",${config.users.ldap.base}" settings.dn)
+      (ldap'lib.withoutBaseDn settings.dn)
       (unmerged.mergeAttrs settings.settings);
     mapObjectSettingsToAttr = settings: let
       pair = ldap'lib.mapObjectSettingsToPair settings;
@@ -46,12 +46,12 @@
     };
     mkLdapModifyObjectSettingValues = let
       mkLdapModifyValues = setting: concatMapStrings (value: ''
-        ${setting.key}: ${toString value}
+        ${setting.name}: ${toString value}
       '') (toList setting.value);
     in mkLdapModifyValues;
     mkLdapModifyObjectSettings = let
       mkLdapModifySetting = setting: ''
-        ${setting.modifyType}: ${setting.key}
+        ${setting.modifyType}: ${setting.name}
       '' + ldap'lib.mkLdapModifyObjectSettingValues setting;
     in settings: mapAttrsToList (_: mkLdapModifySetting) settings;
     mkLdapAddObjectSettings = settings: mapAttrsToList (_: ldap'lib.mkLdapModifyObjectSettingValues) settings;
@@ -76,7 +76,8 @@
       add = object: let
         enabledSettings = filterAttrs (_: setting: setting.enable) object.settings;
         addSettings = ldap'lib.mkLdapAddObjectSettings enabledSettings;
-      in mkHeader "add" object + concatStringsSep "-\n" addSettings;
+        modifyAfter = "\n" + ldap'lib.mkLdapModifyObject.modify object;
+      in mkHeader "add" object + concatStrings addSettings + modifyAfter;
       delete = object: mkHeader "delete" object;
       modrdn = object: { newrdn, deleteoldrdn, newsuperior }: let
         modifySettings = ''
@@ -93,6 +94,11 @@
         '';
       in mkHeader "moddn" + modifySettings;
     };
+    withBaseDn = dn:
+      if hasSuffix ",${config.users.ldap.base}" dn then dn
+      else if hasSuffix "," dn || dn == "" then "${dn}${config.users.ldap.base}"
+      else "${dn},${config.users.ldap.base}";
+    withoutBaseDn = removeSuffix ",${config.users.ldap.base}";
   };
   ldapPrimitiveType = with lib.types; oneOf [ str int ];
   ldapValueType = with lib.types; oneOf [ ldapPrimitiveType (listOf ldapPrimitiveType) ];
@@ -101,7 +107,7 @@
       enable = mkEnableOption "setting" // {
         default = true;
       };
-      key = mkOption {
+      name = mkOption {
         type = str;
         default = name;
       };
@@ -110,7 +116,7 @@
       };
       modifyType = mkOption {
         type = enum [ "replace" "add" "delete" ];
-        default = if toLower config.key == "objectclass" then "add" else "replace";
+        default = "replace";
       };
     };
   };
@@ -139,7 +145,7 @@
       };
       dn = mkOption {
         type = str;
-        default = "${name},${ldap.base}";
+        default = ldap.lib.withBaseDn "${name}";
       };
       changeType = mkOption {
         type = enum [ "modify" "add" "delete" "modrdn" "moddn" ];
@@ -151,6 +157,7 @@
       objectClasses = mkOption {
         type = listOf str;
         default = [ ];
+        description = "additional object classes";
       };
       settings = mkOption {
         type = attrsOf ldap.lib.objectSettingType;
@@ -159,7 +166,11 @@
     };
     config = {
       settings = {
-        objectClass = mkIf (config.objectClasses != [ ]) (mkOptionDefault config.objectClasses);
+        objectClasses' = mkIf (config.objectClasses != [ ]) (mkOptionDefault {
+          name = "objectClass";
+          modifyType = "add";
+          value = config.objectClasses;
+        });
       };
       changeText = mkOptionDefault (ldap'lib.mkLdapModifyObject.${config.changeType} config);
     };
