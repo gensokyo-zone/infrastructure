@@ -1,7 +1,7 @@
 {config, lib, inputs, ...}: let
   inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower mkAlmostOptionDefault mapAlmostOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) elem findSingle findFirst;
   inherit (lib.strings) hasPrefix removePrefix replaceStrings removeSuffix;
@@ -78,6 +78,11 @@
         enable = mkEnableOption "systemd.network" // {
           default = true;
         };
+        name = mkOption {
+          type = str;
+          default = config.name;
+          description = "network unit name";
+        };
         networkSettings = mkOption {
           type = unmerged.types.attrs;
         };
@@ -105,7 +110,7 @@
         ];
         networkd.networkSettings = {
           name = mkAlmostOptionDefault config.name;
-          ipv6AcceptRAConfig = mkIf (config.address6 == "auto" && config.local.enable) {
+          ipv6AcceptRAConfig = mkIf config.local.enable {
             UseDNS = mkOptionDefault false;
             DHCPv6Client = mkOptionDefault false;
           };
@@ -140,15 +145,27 @@
           );
         };
       };
-      confInternal = {
+      confInternal = let
+        index = system.proxmox.vm.id - internalOffset;
+      in {
         name = mkIf system.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
-        address4 = mkAlmostOptionDefault "10.9.1.${toString (system.proxmox.vm.id - internalOffset)}/24";
-        address6 = mkAlmostOptionDefault "fd0c::${toHexStringLower (system.proxmox.vm.id - internalOffset)}/64";
+        address4 = mkAlmostOptionDefault "10.9.1.${toString index}/24";
+        address6 = mkAlmostOptionDefault "fd0c::${toHexStringLower index}/64";
         macAddress = mkIf (system.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" system.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
           replaceStrings [ "BC:24:11:" ] [ "BC:24:19:" ] system.proxmox.network.interfaces.net0.macAddress
         ));
-        networkd.networkSettings.linkConfig.RequiredForOnline = false;
+        networkd.networkSettings = {
+          domains = mkDefault [ ]; # int.${domain}?
+          linkConfig.RequiredForOnline = false;
+          ipv6AcceptRAConfig = {
+            Token = mkOptionDefault "static:::${toHexStringLower index}";
+            DHCPv6Client = mkOptionDefault false;
+          };
+          networkConfig = {
+            IPv6PrivacyExtensions = mkOptionDefault "no";
+          };
+        };
       };
     in mkMerge [
       conf

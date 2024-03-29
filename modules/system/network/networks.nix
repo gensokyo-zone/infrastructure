@@ -4,9 +4,12 @@
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.trivial) mapNullable;
   networkModule = { config, name, system, ... }: let
-    slaacPrefix = {
-      local = "fd0a:";
-      #int = "fd0c:";
+    knownNetworks = {
+      local.slaac = {
+        enable = true;
+        prefix = "fd0a:";
+      };
+      int.slaac.prefix = "fd0c:";
     };
   in {
     options = with lib.types; {
@@ -47,8 +50,10 @@
     };
     config = {
       slaac = {
-        enable = mkOptionDefault (slaacPrefix ? ${config.name});
-        prefix = mkIf (slaacPrefix ? ${config.name}) (mkOptionDefault slaacPrefix.${config.name});
+        enable = mkOptionDefault (knownNetworks.${config.name}.slaac.enable or false);
+        prefix = mkIf (knownNetworks.${config.name}.slaac.prefix or null != null) (
+          mkOptionDefault knownNetworks.${config.name}.slaac.prefix
+        );
         postfix = mkIf (config.macAddress != null) (mkOptionDefault (eui64 config.macAddress));
       };
       domain = mkOptionDefault "${config.name}.${system.access.domain}";

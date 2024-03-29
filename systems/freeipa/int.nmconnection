@@ -11,3 +11,5 @@ method=manual
 address1=fd0c::aa/64
 may-fail=true
 method=manual
+addr-gen-mode=eui64
+token=::aa

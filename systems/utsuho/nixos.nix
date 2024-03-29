@@ -7,6 +7,7 @@ in {
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.int
     nixos.ipa
     nixos.cloudflared
     nixos.nginx

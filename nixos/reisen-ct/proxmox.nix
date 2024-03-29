@@ -25,7 +25,7 @@ in {
   proxmoxLXC.privileged = mkIf (proxmox.container.enable && proxmox.container.privileged) true;
 
   systemd.network = mkIf proxmox.enabled (mkMerge (mapAttrsToList (_: interface: mkIf (interface.enable && interface.networkd.enable) {
-    networks.${interface.name} = unmerged.mergeAttrs interface.networkd.networkSettings;
+    networks.${interface.networkd.name} = unmerged.mergeAttrs interface.networkd.networkSettings;
   }) proxmox.network.interfaces));
 
   networking.firewall.interfaces.int = let
