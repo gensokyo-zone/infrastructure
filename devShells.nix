@@ -5,11 +5,6 @@
   inherit (inputs.self.legacyPackages.${system}) pkgs;
   inherit (inputs.self.lib.lib) mkBaseDn;
   inherit (inputs.self.lib.nixlib) optionalString concatStringsSep;
-  ldapHostArg = concatStringsSep "," [
-    "ldaps://ldap.local.${inputs.self.lib.lib.domain}"
-    "ldaps://idp.${inputs.self.lib.lib.domain}"
-  ];
-  ldapBaseDn = mkBaseDn inputs.self.lib.lib.domain;
   mkWrapper = {
     name,
     attr ? name,
@@ -113,32 +108,32 @@
       (mkWrapper rec {
         name = "ldapwhoami";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg}";
+        exe = name;
       })
       (mkWrapper rec {
         name = "ldappasswd";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg}";
+        exe = name;
       })
       (mkWrapper rec {
         name = "ldapsearch";
         attr = "pkgs.openldap";
-        exe = ''${name} -H ${ldapHostArg} -b "''${LDAPSEARCH_BASE_DN-${ldapBaseDn}}" -o ldif_wrap=no'';
+        exe = ''${name} -o ldif_wrap=no'';
       })
       (mkWrapper rec {
         name = "ldapadd";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg}";
+        exe = name;
       })
       (mkWrapper rec {
         name = "ldapmodify";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg}";
+        exe = name;
       })
       (mkWrapper rec {
         name = "ldapdelete";
         attr = "pkgs.openldap";
-        exe = "${name} -H ${ldapHostArg}";
+        exe = name;
       })
     ];
     shellHook = ''
@@ -148,6 +143,11 @@
       export CI_PLATFORM="impure"
       export NF_CONFIG_ROOT=''${NF_CONFIG_ROOT-${toString ./.}}
     '';
+    LDAPURI = concatStringsSep "," [
+      "ldaps://ldap.local.${inputs.self.lib.lib.domain}"
+      "ldaps://idp.${inputs.self.lib.lib.domain}"
+    ];
+    LDAPBASE = mkBaseDn inputs.self.lib.lib.domain;
   };
   arc = let
     ldapdm = cmd: pkgs.writeShellScriptBin "dm-${cmd}" ''
