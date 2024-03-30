@@ -5,7 +5,7 @@
   pkgs = import inputs.nixpkgs {
     inherit system;
     overlays = [
-      inputs.deploy-rs.overlay
+      inputs.deploy-rs.overlays.default or inputs.deploy-rs.overlay
       inputs.arcexprs.overlays.default
       (import ./barcodebuddy.nix)
       (import ./samba.nix)
