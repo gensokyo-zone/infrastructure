@@ -11,13 +11,10 @@
   inherit (inputs.self.lib.lib) domain;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (lib.strings) removeSuffix;
+  inherit (lib.attrsets) mapAttrs;
   cfg = config.access;
   systemConfig = config;
   systemAccess = access;
-  hasInt = config.proxmox.enabled && config.proxmox.network.internal.interface != null;
-  hasLocal = config.proxmox.enabled && config.proxmox.network.local.interface != null;
-  hasTail = cfg.tailscale.enable;
   nixosModule = {
     config,
     system,
@@ -26,10 +23,10 @@
   }: let
     cfg = config.networking.access;
     addressForAttr = if config.networking.enableIPv6 then "address6ForNetwork" else "address4ForNetwork";
-    has'Int = system.proxmox.enabled && system.proxmox.network.internal.interface != null;
-    has'Local = system.proxmox.enabled && system.proxmox.network.local.interface != null;
-    has'Tail' = config.services.tailscale.enable;
-    has'Tail = lib.warnIf (hasTail != has'Tail') "tailscale set incorrectly in system.access for ${config.networking.hostName}" has'Tail';
+    has'Int = system.network.networks.int.enable or false;
+    has'Local = system.network.networks.local.enable or false;
+    has'Tail' = system.network.networks.tail.enable or false;
+    has'Tail = lib.warnIf (has'Tail' != config.services.tailscale.enable) "tailscale set incorrectly in system.access for ${config.networking.hostName}" has'Tail';
   in {
     options.networking.access = with lib.types; {
       global.enable =
@@ -51,11 +48,11 @@
           in {
             lan =
               if has'Int then forSystem.access.${addressForAttr}.int or forSystem.access.${addressForAttr}.local or err
-              else if hasLocal then forSystem.access.${addressForAttr}.local or err
+              else if has'Local then forSystem.access.${addressForAttr}.local or err
               else err;
             ${if has'Local then "local" else null} = forSystem.access.${addressForAttr}.local or err;
             ${if has'Int then "int" else null} = forSystem.access.${addressForAttr}.int or err;
-            # TODO: tail
+            ${if has'Tail then "tail" else null} = forSystem.access.${addressForAttr}.tail or err;
           }.${network} or err;
         in {
           inherit (systemAccess) hostnameForNetwork address4ForNetwork address6ForNetwork;
@@ -84,8 +81,8 @@
             err = throw "no ${network} interface found between ${config.networking.hostName} and ${hostName}";
           in {
             lan =
-              if hasInt then forSystem.access.hostnameForNetwork.int or forSystem.access.hostnameForNetwork.local or err
-              else if hasLocal then forSystem.access.hostnameForNetwork.local or err
+              if has'Int then forSystem.access.hostnameForNetwork.int or forSystem.access.hostnameForNetwork.local or err
+              else if has'Local then forSystem.access.hostnameForNetwork.local or err
               else err;
             ${if has'Local then "local" else null} = forSystem.access.hostnameForNetwork.local or err;
             ${if has'Int then "int" else null} = forSystem.access.hostnameForNetwork.int or err;
@@ -134,53 +131,43 @@ in {
     ];
 
     access = let
-      local'interface = config.proxmox.network.local.interface;
-      int'interface = config.proxmox.network.internal.interface;
-      hasInt4 = hasInt && int'interface.address4 != null;
-      hasInt6 = hasInt && int'interface.address6 != null;
-      hasLocal4 = hasLocal && local'interface.local.address4 or null != null;
-      hasLocal6 = hasLocal && local'interface.local.address6 or null != null;
+      noNetwork = { enable = false; address4 = null; address6 = null; fqdn = null; };
+      local = config.network.networks.local or noNetwork;
+      int = config.network.networks.int or noNetwork;
+      mapNetwork' = mkDefault: attr: network: mkIf (network.enable && network.${attr} != null) (mkDefault network.${attr});
+      mapNetwork4 = mapNetwork' mkOptionDefault "address4";
+      mapNetwork6 = mapNetwork' mkOptionDefault "address6";
+      mapNetworkFqdn = mapNetwork' mkOptionDefault "fqdn";
     in {
       fqdn = mkOptionDefault "${cfg.hostName}.${cfg.domain}";
-      hostnameForNetwork = let
-        int = "${cfg.hostName}.int.${cfg.domain}";
-        local = "${cfg.hostName}.local.${cfg.domain}";
-        tail = "${cfg.hostName}.tail.${cfg.domain}";
-        global = "${cfg.hostName}.${cfg.domain}";
-      in {
-        lan = mkMerge [
-          (mkIf hasInt (mkDefault int))
-          (mkOptionDefault local)
-        ];
-        int = mkIf hasInt (mkOptionDefault int);
-        local = mkOptionDefault local;
-        tail = mkIf hasTail (mkOptionDefault tail);
-        global = mkIf cfg.global.enable (mkOptionDefault global);
-      };
-      address4ForNetwork = let
-        int = removeSuffix "/24" int'interface.address4;
-        local = removeSuffix "/24" local'interface.local.address4;
-      in {
-        lan = mkMerge [
-          (mkIf hasInt4 (mkDefault int))
-          (mkIf hasLocal4 (mkOptionDefault local))
-        ];
-        int = mkIf hasInt4 (mkOptionDefault int);
-        local = mkIf hasLocal4 (mkOptionDefault local);
-        # TODO: tail
-      };
-      address6ForNetwork = let
-        int = removeSuffix "/64" int'interface.address6;
-        local = removeSuffix "/64" local'interface.local.address6;
-      in {
-        lan = mkMerge [
-          (mkIf hasInt6 (mkDefault int))
-          (mkIf hasLocal6 (mkOptionDefault local))
-        ];
-        int = mkIf hasInt6 (mkOptionDefault int);
-        local = mkIf hasLocal6 (mkOptionDefault local);
-        # TODO: tail
-      };
+      hostnameForNetwork = mkMerge [
+        (mapAttrs (_: mapNetworkFqdn) config.network.networks)
+        {
+          lan = mkMerge [
+            (mapNetwork' mkDefault "fqdn" int)
+            (mapNetworkFqdn local)
+          ];
+          global = mkIf cfg.global.enable (mkOptionDefault cfg.fqdn);
+        }
+      ];
+      address4ForNetwork = mkMerge [
+        (mapAttrs (_: mapNetwork4) config.network.networks)
+        {
+          lan = mkMerge [
+            (mapNetwork' mkDefault "address4" int)
+            (mapNetwork4 local)
+          ];
+        }
+      ];
+      address6ForNetwork = mkMerge [
+        (mapAttrs (_: mapNetwork6) config.network.networks)
+        {
+          lan = mkMerge [
+            (mapNetwork' mkDefault "address6" int)
+            (mapNetwork6 local)
+          ];
+        }
+      ];
     };
 
     _module.args.access = {
