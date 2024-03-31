@@ -11,7 +11,7 @@
   tei = access.nixosFor "tei";
   utsuho = access.nixosFor "utsuho";
   inherit (mediabox.services) plex;
-  inherit (tei.services) home-assistant zigbee2mqtt;
+  inherit (tei.services) home-assistant zigbee2mqtt mosquitto;
   inherit (utsuho.services) unifi;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
@@ -34,6 +34,7 @@ in {
     nixos.vouch
     nixos.access.nginx
     nixos.access.global
+    nixos.access.mosquitto
     nixos.access.gensokyo
     nixos.access.keycloak
     nixos.access.vouch
@@ -86,6 +87,15 @@ in {
         access.hostnameForNetwork.local
         access.hostnameForNetwork.int
         (mkIf config.services.tailscale.enable access.hostnameForNetwork.tail)
+      ];
+    };
+    mosquitto = {
+      inherit (nginx) group;
+      domain = "mqtt.${config.networking.domain}";
+      extraDomainNames = [
+        "mqtt.local.${config.networking.domain}"
+        "mqtt.int.${config.networking.domain}"
+        (mkIf config.services.tailscale.enable "mqtt.tail.${config.networking.domain}")
       ];
     };
     sso = {
@@ -206,6 +216,9 @@ in {
     getHostnameFor = config.lib.access.getAddress4For;
   in {
     vouch.enableLocal = false;
+    access.mosquitto = assert mosquitto.enable; {
+      host = getHostnameFor "tei" "lan";
+    };
     access.plex = assert plex.enable; {
       url = "http://${getHostnameFor "mediabox" "lan"}:${toString plex.port}";
       externalPort = 41324;
@@ -219,6 +232,9 @@ in {
     };
     access.kitchencam = {
       streamPort = 41081;
+    };
+    stream.servers = {
+      mosquitto.ssl.cert.name = "mosquitto";
     };
     virtualHosts = {
       fallback.ssl.cert.name = "hakurei";

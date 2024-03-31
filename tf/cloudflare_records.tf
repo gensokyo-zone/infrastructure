@@ -34,6 +34,7 @@ module "hakurei_system_records" {
     "ldap",
     "pbx",
     "smb",
+    "mqtt",
     "kitchen",
     "yt",
   ]
