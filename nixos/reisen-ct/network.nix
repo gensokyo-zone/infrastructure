@@ -7,7 +7,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkBefore mkOrder;
-  enableDns = !config.services.dnsmasq.enable && config.networking.hostName != "utsuho" && config.networking.hostName != "ct";
+  enableDns = !config.services.dnsmasq.enable && config.networking.hostName != "utsuho";
 in {
   imports = let
     inherit (meta) nixos;

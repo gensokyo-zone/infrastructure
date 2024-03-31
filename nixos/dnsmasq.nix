@@ -38,8 +38,9 @@
   mkHostRecordPair = network: system: let
     address4 = system.config.network.networks.${network}.address4 or null;
     address6 = system.config.network.networks.${network}.address6 or null;
+    fqdn = system.config.network.networks.${network}.fqdn or null;
   in nameValuePair
-    system.config.network.networks.${network}.fqdn or "${network}.${system.config.access.fqdn}"
+    (if fqdn != null then fqdn else "${network}.${system.config.access.fqdn}")
     (concatStringsSep "," (
     lib.optional (address4 != null)
       (toString address4)

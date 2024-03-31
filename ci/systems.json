@@ -26,7 +26,11 @@
       "hostName": "ct",
       "networks": {
         "int": null,
-        "local": null,
+        "local": {
+          "address4": null,
+          "address6": null,
+          "macAddress": null
+        },
         "tail": null
       }
     }
