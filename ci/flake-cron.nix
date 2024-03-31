@@ -10,7 +10,6 @@ in {
   name = "flake-update";
 
   nixpkgs.args.localSystem = "x86_64-linux";
-  nixpkgs.args.config.checkMetaRecursively = false;
 
   ci = {
     version = "v0.7";
