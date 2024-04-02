@@ -23,6 +23,80 @@ ldap_parse() {
 	fi
 }
 
+sysaccount_password() {
+	local LDAP_SYSACCOUNT_UID=$1
+	local LDAP_SYSACCOUNT_PASSWORD_PATH=$2
+	shift 2
+
+	echo "updating uid=$LDAP_SYSACCOUNT_UID,$LDAP_DNSUFFIX_SYSACCOUNT ..." >&2
+	if ! ldappasswd -T "$LDAP_SYSACCOUNT_PASSWORD_PATH" "uid=$LDAP_SYSACCOUNT_UID,$LDAP_DNSUFFIX_SYSACCOUNT$LDAPBASE"; then
+		echo "failed to use ldappasswd, falling back to modify..." >&2
+		ldapmodify <<EOF
+dn: uid=$LDAP_SYSACCOUNT_UID,$LDAP_DNSUFFIX_SYSACCOUNT$LDAPBASE
+changetype: modify
+replace: userPassword
+userPassword:< file://$LDAP_SYSACCOUNT_PASSWORD_PATH
+-
+delete: passwordExpirationTime
+-
+EOF
+	fi
+}
+
+privilege_permissions() {
+	local LDAP_PRIVILEGE_CN=$1 LDAP_PRIVILEGE_PERMISSION_CN
+	shift 1
+
+	echo "updating cn=$LDAP_PRIVILEGE_CN,$LDAP_DNSUFFIX_PRIVILEGE ..." >&2
+	for LDAP_PRIVILEGE_PERMISSION_CN in "$@"; do
+		ipa privilege-add-permission "$LDAP_PRIVILEGE_CN" --permissions="$LDAP_PRIVILEGE_PERMISSION_CN" || true
+	done
+}
+
+role_privileges() {
+	local LDAP_ROLE_CN=$1 LDAP_ROLE_PRIVILEGE_CN
+	shift 1
+
+	echo "updating cn=$LDAP_ROLE_CN,$LDAP_DNSUFFIX_ROLE ..." >&2
+	for LDAP_ROLE_PRIVILEGE_CN in "$@"; do
+		ipa role-add-privilege "$LDAP_ROLE_CN" --privileges="$LDAP_ROLE_PRIVILEGE_CN" || true
+	done
+}
+
+role_members() {
+	local LDAP_ROLE_CN=$1 LDAP_ROLE_MEMBER_DN LDAP_ROLE_MEMBER_CN LDAP_ROLE_MEMBER_TYPE
+	shift 1
+
+	echo "updating cn=$LDAP_ROLE_CN,$LDAP_DNSUFFIX_ROLE ..." >&2
+	for LDAP_ROLE_MEMBER_DN in "$@"; do
+		case $LDAP_ROLE_MEMBER_DN in
+			uid=*",$LDAP_DNSUFFIX_USER"*)
+				LDAP_ROLE_MEMBER_TYPE=users
+				;;
+			cn=*",$LDAP_DNSUFFIX_GROUP"*)
+				LDAP_ROLE_MEMBER_TYPE=groups
+				;;
+			fqdn=*",$LDAP_DNSUFFIX_HOST"*)
+				LDAP_ROLE_MEMBER_TYPE=hosts
+				;;
+			cn=*",$LDAP_DNSUFFIX_HOSTGROUP"*)
+				LDAP_ROLE_MEMBER_TYPE=hostgroups
+				;;
+			krbprincipalname=*",$LDAP_DNSUFFIX_SERVICE"*)
+				LDAP_ROLE_MEMBER_TYPE=services
+				;;
+			*)
+				echo "WARN: unknown role member type for $LDAP_ROLE_MEMBER_DN" >&2
+				ipa role-modify "$LDAP_ROLE_CN" --addattr=member="$LDAP_ROLE_MEMBER_DN" || true
+				continue
+				;;
+		esac
+		LDAP_ROLE_MEMBER_CN=${LDAP_ROLE_MEMBER_DN%%,*}
+		LDAP_ROLE_MEMBER_CN=${LDAP_ROLE_MEMBER_CN#*=}
+		ipa role-add-member "$LDAP_ROLE_CN" --${LDAP_ROLE_MEMBER_TYPE}="$LDAP_ROLE_MEMBER_CN" || true
+	done
+}
+
 smbsync_group() {
 	local LDAP_GROUP_CN=$1 SMB_GROUP_DATA SMB_GROUP_SID
 	shift 1

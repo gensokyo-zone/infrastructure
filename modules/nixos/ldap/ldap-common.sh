@@ -29,6 +29,12 @@ ldapwhoami() {
 	command ldapwhoami "${LDAP_ARGS[@]}"
 }
 
+ldappasswd() {
+	local LDAP_ARGS=("$@")
+	ldap_args_op
+	command ldappasswd "${LDAP_ARGS[@]}"
+}
+
 ldapsearch() {
 	local LDAP_ARGS=("$@")
 	ldap_args_op

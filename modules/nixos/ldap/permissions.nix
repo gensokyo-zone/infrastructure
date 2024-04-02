@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapOptionDefaults mapListToAttrs;
-  inherit (lib.options) mkOption;
+  inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) attrNames mapAttrs mapAttrsToList;
   inherit (lib.lists) filter;
@@ -55,8 +55,7 @@
       };
       sysaccount = {
         location = ldap.sysAccountDnSuffix;
-        # TODO: targetFilter
-        target = "uid=*";
+        targetFilter = "(objectclass=account)";
       };
     };
   in {
@@ -95,13 +94,13 @@
       };
       members = mkOption {
         type = listOf str;
+        default = [ ];
       };
       object = mkOption {
         type = ldap.lib.objectSettingsType;
       };
     };
     config = let
-      conf.members = mkIf (config.bindType != "permission") (mkOptionDefault [ ]);
       conf.targetFilter = mkIf (config.target != null) (mkOptionDefault null);
       conf.object = {
         dn = mkOptionDefault (ldap.lib.withBaseDn "cn=${config.cn},${ldap.permissionDnSuffix}");
@@ -129,12 +128,93 @@
       };
     in mkMerge [ conf target ];
   };
+  privilegeModule = {config, name, ldap, ...}: {
+    options = with lib.types; {
+      enable = mkEnableOption "privilege" // {
+        default = true;
+      };
+      cn = mkOption {
+        type = str;
+        default = name;
+      };
+      permissions = mkOption {
+        type = listOf str;
+        default = [ ];
+      };
+      object = mkOption {
+        type = ldap.lib.objectSettingsType;
+      };
+    };
+    config = {
+      object = {
+        enable = mkAlmostOptionDefault config.enable;
+        dn = mkOptionDefault (ldap.lib.withBaseDn "cn=${config.cn},${ldap.privilegeDnSuffix}");
+        settings = {
+          changeType = mkAlmostOptionDefault "add";
+          settings = mapOptionDefaults {
+            cn = config.cn;
+            objectClass = [ "top" "nestedgroup" "groupofnames" ];
+          };
+        };
+      };
+    };
+  };
+  roleModule = {config, name, ldap, ...}: {
+    options = with lib.types; {
+      enable = mkEnableOption "role" // {
+        default = true;
+      };
+      cn = mkOption {
+        type = str;
+        default = name;
+      };
+      privileges = mkOption {
+        type = listOf str;
+        default = [ ];
+      };
+      members = mkOption {
+        type = listOf str;
+        default = [ ];
+      };
+      object = mkOption {
+        type = ldap.lib.objectSettingsType;
+      };
+    };
+    config = {
+      object = {
+        enable = mkAlmostOptionDefault config.enable;
+        dn = mkOptionDefault (ldap.lib.withBaseDn "cn=${config.cn},${ldap.roleDnSuffix}");
+        settings = {
+          changeType = mkAlmostOptionDefault "add";
+          settings = mapOptionDefaults {
+            cn = config.cn;
+            objectClass = [ "top" "nestedgroup" "groupofnames" ];
+            member = mkIf (config.members != [ ]) (mkOptionDefault (map ldap.lib.withBaseDn config.members));
+          };
+        };
+      };
+    };
+  };
 in {
   options.users.ldap = with lib.types; {
     management = {
       permissions = mkOption {
         type = attrsOf (submoduleWith {
           modules = [ permissionModule ];
+          inherit (config.lib.ldap) specialArgs;
+        });
+        default = { };
+      };
+      privileges = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [ privilegeModule ];
+          inherit (config.lib.ldap) specialArgs;
+        });
+        default = { };
+      };
+      roles = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [ roleModule ];
           inherit (config.lib.ldap) specialArgs;
         });
         default = { };
@@ -152,8 +232,9 @@ in {
   };
   config.users.ldap = {
     management.objects = let
-      permissionObjects = mapAttrsToList (_: user: user.object) cfg.management.permissions;
-      enabledObjects = filter (object: object.enable) (permissionObjects);
+      permissionObjects = mapAttrsToList (_: perm: perm.object) cfg.management.permissions;
+      privilegeObjects = mapAttrsToList (_: priv: priv.object) cfg.management.privileges;
+      enabledObjects = filter (object: object.enable) (permissionObjects ++ privilegeObjects);
     in mapListToAttrs ldap'lib.mapObjectSettingsToPair enabledObjects;
   };
 }

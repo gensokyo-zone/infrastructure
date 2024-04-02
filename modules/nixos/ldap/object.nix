@@ -62,7 +62,7 @@
       '';
     in {
       modify = object: let
-        enabledSettings' = filterAttrs (_: setting: setting.enable) object.settings;
+        enabledSettings' = filterAttrs (_: setting: setting.enable && !setting.initial) object.settings;
         enabledSettings = ldap'lib.mkLdapModifyObjectSettings enabledSettings';
         replaceSettings' = filterAttrs (_: setting: setting.modifyType == "replace") enabledSettings';
         replaceSettings = ldap'lib.mkLdapModifyObjectSettings replaceSettings';
@@ -113,6 +113,10 @@
       };
       value = mkOption {
         type = ldapValueType;
+      };
+      initial = mkOption {
+        type = bool;
+        default = false;
       };
       modifyType = mkOption {
         type = enum [ "replace" "add" "delete" ];
