@@ -36,6 +36,22 @@ in {
   config.users.users.barcodebuddy = mkIf cfg.enable {
     uid = 912;
   };
+  config.systemd.services = let
+    BindPaths = [
+      "/mnt/shared/barcodebuddy:${cfg.dataDir}"
+    ];
+  in mkIf cfg.enable {
+    phpfpm-barcodebuddy = {
+      serviceConfig = {
+        inherit BindPaths;
+      };
+    };
+    bbuddy-websocket = mkIf cfg.screen.enable {
+      serviceConfig = {
+        inherit BindPaths;
+      };
+    };
+  };
   config.sops.secrets.barcodebuddy-fastcgi-params = mkIf cfg.enable {
     sopsFile = mkDefault ./secrets/barcodebuddy.yaml;
     owner = mkDefault nginx.user;
