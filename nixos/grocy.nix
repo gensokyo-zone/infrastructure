@@ -1,8 +1,5 @@
 {config, lib, ...}: let
   inherit (lib.modules) mkIf mkDefault mkAfter;
-  inherit (lib.strings) escapeRegex;
-  inherit (config.services) nginx;
-  inherit (config) networking;
   cfg = config.services.grocy;
 in {
   config = {
@@ -69,6 +66,22 @@ in {
     };
     users.users.grocy = mkIf cfg.enable {
       uid = 911;
+    };
+    systemd.services = let
+      BindPaths = [
+        "/mnt/shared/grocy:${cfg.dataDir}"
+      ];
+    in mkIf cfg.enable {
+      grocy-setup = {
+        serviceConfig = {
+          inherit BindPaths;
+        };
+      };
+      phpfpm-grocy = {
+        serviceConfig = {
+          inherit BindPaths;
+        };
+      };
     };
   };
 }
