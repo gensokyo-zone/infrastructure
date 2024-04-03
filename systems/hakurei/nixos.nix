@@ -98,6 +98,14 @@ in {
         (mkIf config.services.tailscale.enable "mqtt.tail.${config.networking.domain}")
       ];
     };
+    samba = {
+      domain = "smb.${config.networking.domain}";
+      extraDomainNames = [
+        "smb.local.${config.networking.domain}"
+        "smb.int.${config.networking.domain}"
+        (mkIf config.services.tailscale.enable "smb.tail.${config.networking.domain}")
+      ];
+    };
     sso = {
       inherit (nginx) group;
       domain = virtualHosts.keycloak.serverName;
@@ -306,6 +314,9 @@ in {
         locations."/".proxyPass = "http://${getHostnameFor "mediabox" "lan"}:${toString mediabox.services.invidious.port}";
       };
     };
+  };
+  services.samba.tls = {
+    useACMECert = "samba";
   };
 
   services.tailscale.advertiseExitNode = true;

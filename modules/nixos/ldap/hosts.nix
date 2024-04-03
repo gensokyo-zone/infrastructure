@@ -77,6 +77,10 @@ in {
       type = str;
       default = "";
     };
+    idViewDnSuffix = mkOption {
+      type = str;
+      default = "";
+    };
     serviceDnSuffix = mkOption {
       type = str;
       default = "";

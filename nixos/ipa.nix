@@ -32,6 +32,7 @@ in {
       serviceDnSuffix = mkDefault "cn=services,cn=accounts,";
       hostDnSuffix = mkDefault "cn=computers,cn=accounts,";
       hostGroupDnSuffix = mkDefault "cn=hostgroups,cn=accounts,";
+      idViewDnSuffix = mkDefault "cn=views,cn=accounts,";
       sysAccountDnSuffix = mkDefault "cn=sysaccounts,cn=etc,";
       domainDnSuffix = mkDefault "cn=ad,cn=etc,";
     };
