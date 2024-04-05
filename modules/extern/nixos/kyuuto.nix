@@ -15,7 +15,11 @@
     ...
   }: let
     inherit (gensokyo-zone.lib) unmerged domain;
-    setFilesystemOptions = mkMerge [
+    inherit (nixosConfig.gensokyo-zone) access;
+    enabled = {
+      krb5 = nixosConfig.gensokyo-zone.krb5.enable or false;
+    };
+    setFilesystemOptions = [
       (mkIf config.nfs.enable config.nfs.fstabOptions)
       (mkIf config.smb.enable config.smb.fstabOptions)
       (mkIf config.automount.enable config.automount.fstabOptions)
@@ -23,21 +27,26 @@
   in {
     options = with lib.types; {
       enable = mkEnableOption "kyuuto";
-      media.enable =
-        mkEnableOption "/mnt/kyuuto-media"
-        // {
+      media = {
+        enable = mkEnableOption "/mnt/kyuuto-media" // {
           default = true;
         };
-      transfer.enable =
-        mkEnableOption "/mnt/kyuuto-transfer"
-        // {
+        krb5.enable = mkEnableOption "krb5" // {
+          default = enabled.krb5;
+        };
+      };
+      transfer = {
+        enable = mkEnableOption "/mnt/kyuuto-transfer" // {
           default = true;
         };
+        krb5.enable = mkEnableOption "krb5" // {
+          default = enabled.krb5;
+        };
+      };
       shared.enable = mkEnableOption "/mnt/kyuuto-shared";
       domain = mkOption {
         type = str;
       };
-      local.enable = mkEnableOption "LAN";
       automount = {
         enable =
           mkEnableOption "systemd automount"
@@ -75,18 +84,18 @@
     config = {
       domain = mkMerge [
         (mkOptionDefault (
-          if config.local.enable
+          if access.local.enable
           then "local.${domain}"
           else domain
         ))
-        (mkIf nixosConfig.services.tailscale.enable (
+        (mkIf access.tail.enabled (
           mkDefault
           "tail.${domain}"
         ))
       ];
       nfs.fstabOptions = [
         "noauto"
-        "nfsvers=4"
+        #"nfsvers=4"
         "soft"
         "retrans=2"
         "timeo=60"
@@ -105,7 +114,7 @@
           device = mkMerge [
             (mkIf config.nfs.enable "nfs.${config.domain}:/mnt/kyuuto-media")
             (mkIf config.smb.enable (
-              if config.smb.user != null && config.local.enable
+              if config.smb.user != null && access.local.enable
               then ''\\smb.${config.domain}\kyuuto-media''
               else if config.smb.user != null
               then ''\\smb.${config.domain}\kyuuto-media-global''
@@ -116,28 +125,42 @@
             (mkIf config.nfs.enable "nfs4")
             (mkIf config.smb.enable "smb3")
           ];
-          options = setFilesystemOptions;
+          options = mkMerge (setFilesystemOptions ++ [
+            (mkIf config.media.krb5.enable [
+              "sec=krb5"
+              (mkIf config.nfs.enable "nfsvers=4")
+            ])
+          ]);
         };
         "/mnt/kyuuto-transfer" = mkIf config.transfer.enable {
           device = mkMerge [
             (mkIf config.nfs.enable "nfs.${config.domain}:/mnt/kyuuto-media/transfer")
-            (mkIf (config.smb.enable && config.local.enable) ''\\smb.${config.domain}\kyuuto-transfer'')
+            (mkIf (config.smb.enable && access.local.enable) ''\\smb.${config.domain}\kyuuto-transfer'')
           ];
           fsType = mkMerge [
             (mkIf config.nfs.enable "nfs4")
             (mkIf config.smb.enable "smb3")
           ];
-          options = setFilesystemOptions;
+          options = mkMerge (setFilesystemOptions ++ [
+            (mkIf config.media.krb5.enable [
+              (if access.local.enable || access.tail.enabled then "sec=sys:krb5" else "sec=krb5")
+              #(mkIf config.nfs.enable "nfsvers=3")
+            ])
+          ]);
         };
         "/mnt/kyuuto-shared" = mkIf (config.shared.enable && config.smb.enable) {
           device = mkIf (config.smb.user != null) ''\\smb.${config.domain}\shared'';
           fsType = "smb3";
-          options = setFilesystemOptions;
+          options = mkMerge setFilesystemOptions;
         };
       };
     };
   };
 in {
+  imports = [
+    ./access.nix
+  ];
+
   options.gensokyo-zone.kyuuto = mkOption {
     type = lib.types.submoduleWith {
       modules = [kyuutoModule];

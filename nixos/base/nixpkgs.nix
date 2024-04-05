@@ -5,6 +5,7 @@
       (import ../../overlays/barcodebuddy.nix)
       (import ../../overlays/samba.nix)
       (import ../../overlays/nginx.nix)
+      (import ../../overlays/krb5.nix)
     ];
     config = {
       allowUnfree = true;

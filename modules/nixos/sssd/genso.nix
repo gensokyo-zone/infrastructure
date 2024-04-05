@@ -1,5 +1,5 @@
 { gensokyo-zone, pkgs, config, lib, ... }: let
-  inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults mapAlmostOptionDefaults;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults mapAlmostOptionDefaults mapDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault;
   inherit (config.security) krb5 ipa;
@@ -97,9 +97,9 @@ in {
       # or "ipaNTSecurityIdentifier" which isn't set for most groups, maybe check netgroups..?
       objectsid = "sambaSID";
       backendDomainSettings = {
-        ldap = mapAlmostOptionDefaults {
-          id_provider = mkDefault "ldap";
-          auth_provider = mkDefault "krb5";
+        ldap = mapDefaults {
+          id_provider = "ldap";
+          auth_provider = "krb5";
           access_provider = "ldap";
           ldap_tls_cacert = "/etc/ssl/certs/ca-bundle.crt";
         } // mapOptionDefaults {
@@ -108,7 +108,7 @@ in {
           ldap_default_bind_dn = genso.ldap.bind.dn;
           ldap_search_base = genso.ldap.baseDn;
           ldap_user_search_base = "cn=users,cn=accounts,${genso.ldap.baseDn}";
-          ldap_group_search_base = "cn=groups,cn=accounts,${config.ldap.baseDn}";
+          ldap_group_search_base = "cn=groups,cn=accounts,${genso.ldap.baseDn}";
           ldap_user_uuid = "ipaUniqueID";
           ldap_user_ssh_public_key = "ipaSshPubKey";
           ldap_user_objectsid = objectsid;

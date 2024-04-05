@@ -1,6 +1,8 @@
 keys:
 - &kat CD8CE78CB0B3BDD4 # https://inskip.me/pubkey.asc
 - &mew 65BD3044771CB6FB
+- &shanghai_osh age1ua5dukhxsmztpwqrcd25zyvdqhww565dn3uj5mqm7evg9khfjfnq66zywn
+- &nue_osh age19wwvlh83p4a3t76j8wzcmh2ns9w348ttff5n9h3zwnmxhm3vtgyqg7qh6x
 - &hakurei_osh age12ze362pu5mza6ef9akrptr7hfe4auaqul4rkta7kyy2tnrstqensgmujeq
 - &reimu_osh age176uyyyk7veqnzmm8xzwfhf0u23m6hm02cldlfkldunqe6std0gcq6lg057
 - &utsuho_osh age15hmlkd9p5rladsjzpmvrh6u34xvggu9mzdsdxdj3ms43tltxeuhq4g7g9k
@@ -29,6 +31,15 @@ creation_rules:
     - *mediabox_osh
     - *litterbox_osh
     - *keycloak_osh
+- path_regex: 'modules/extern/secrets/.+\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: &pgp_common
+    - *kat
+    - *mew
+    age: &extern_common
+    - *shanghai_osh
+    - *nue_osh
 - path_regex: 'systems/hakurei/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:

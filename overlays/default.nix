@@ -10,6 +10,7 @@
       (import ./barcodebuddy.nix)
       (import ./samba.nix)
       (import ./nginx.nix)
+      (import ./krb5.nix)
       (final: prev: {
         jemalloc =
           if final.hostPlatform != "aarch64-darwin"
