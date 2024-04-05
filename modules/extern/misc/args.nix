@@ -4,10 +4,7 @@
   ...
 }: let
   hasConfigLib = options ? lib;
-  gensokyo-zone = {
-    inherit inputs;
-    inherit (inputs.self.lib) tree meta lib;
-  };
+  gensokyo-zone = inputs.self.lib.gensokyo-zone // {};
 in {
   config = {
     ${

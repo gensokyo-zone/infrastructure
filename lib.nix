@@ -38,14 +38,15 @@
 
   mapListToAttrs = f: l: listToAttrs (map f l);
 
-
   overrideOptionDefault = 1500;
   overrideAlmostOptionDefault = 1400;
   overrideDefault = 1000;
   overrideNone = defaultOverridePriority; # 100
+  overrideAlmostForce = 75;
   overrideForce = 50;
   overrideVM = 10;
   mkAlmostOptionDefault = mkOverride overrideAlmostOptionDefault;
+  mkAlmostForce = mkOverride overrideAlmostForce;
   orderBefore = 500;
   orderNone = 1000;
   orderAfter = 1500;
@@ -77,11 +78,16 @@ in {
       eui64 mkWinPath mkBaseDn
       toHexStringLower hexCharToInt
       mapListToAttrs
-      mkAlmostOptionDefault mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
-      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideNone overrideForce overrideVM
+      mkAlmostOptionDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
+      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideNone overrideAlmostForce overrideForce overrideVM
       orderBefore orderNone orderAfter orderAlmostAfter
       mkAlmostAfter;
     inherit (inputs.arcexprs.lib) unmerged json;
+  };
+  gensokyo-zone = {
+    inherit inputs;
+    inherit (inputs) self;
+    inherit (inputs.self.lib) tree meta lib;
   };
   generate = import ./generate.nix {inherit inputs tree;};
 }

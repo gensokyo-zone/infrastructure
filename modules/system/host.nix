@@ -100,6 +100,7 @@ in {
     }) config.builder);
     specialArgs = {
       inherit name inputs std meta;
+      inherit (inputs.self.lib) gensokyo-zone;
       systemType = config.folder;
       system = config;
     };

@@ -73,7 +73,6 @@ in {
       netgroup = mkMerge [
         (mkBefore [ "files" ])
         (mkAfter [ "nis" ])
-        (mkIf config.services.sssd.enable [ "sss" ])
       ];
     };
     environment.etc."nsswitch.conf".text = mkIf (nssDatabases.netgroup != [ ]) (mkAfter ''
