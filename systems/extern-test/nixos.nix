@@ -28,6 +28,9 @@ in {
         sssd.enable = true;
         nfs.enable = true;
       };
+      dns = {
+        # TODO: enable = true;
+      };
       # TODO: users?
     };
 

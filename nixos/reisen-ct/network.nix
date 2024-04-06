@@ -32,7 +32,7 @@ in {
   # prioritize our resolver over systemd-resolved!
   system.nssDatabases.hosts = let
     avahiResolverEnabled = config.services.avahi.enable && (config.services.avahi.nssmdns4 || config.services.avahi.nssmdns4);
-  in mkIf (enableDns && (config.services.resolved.enable || avahiResolverEnabled)) (mkOrder 499 ["dns"]);
+  in mkIf (enableDns && (config.services.resolved.enable || avahiResolverEnabled)) (mkOrder 475 ["dns"]);
   services.resolved.extraConfig = mkIf enableDns ''
     DNSStubListener=no
   '';

@@ -87,7 +87,7 @@ in {
   gensokyo-zone = {
     inherit inputs;
     inherit (inputs) self;
-    inherit (inputs.self.lib) tree meta lib;
+    inherit (inputs.self.lib) tree meta lib systems;
   };
   generate = import ./generate.nix {inherit inputs tree;};
 }

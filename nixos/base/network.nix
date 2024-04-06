@@ -21,6 +21,6 @@ in {
 
   # work around https://github.com/NixOS/nixpkgs/issues/132646
   system.nssDatabases.hosts = mkIf config.services.resolved.enable (
-    mkOrder 500 [ "files" ]
+    mkOrder 450 [ "files" ]
   );
 }

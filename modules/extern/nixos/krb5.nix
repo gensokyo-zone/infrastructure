@@ -350,6 +350,13 @@ in {
     services.ntp.enable = mkIf (cfg.enable && cfg.ntp.enable) (mkAlmostOptionDefault true);
     networking = {
       timeServers = mkIf (cfg.enable && cfg.ntp.enable) cfg.ntp.servers;
+      hosts = let
+        inherit (gensokyo-zone.systems) freeipa;
+        # TODO: consider hakurei instead...
+      in mkIf (cfg.enable && !config.gensokyo-zone.dns.enable or false && config.gensokyo-zone.access.local.enable) {
+        ${freeipa.config.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [ cfg.host ]);
+        ${freeipa.config.access.address4ForNetwork.local} = mkBefore [ cfg.host ];
+      };
     };
     ${if options ? sops.secrets then "sops" else null}.secrets = let
       sopsFile = mkDefault ../secrets/krb5.yaml;
