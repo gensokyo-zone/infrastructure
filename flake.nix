@@ -1,13 +1,10 @@
 {
-  description = "kat's nixfiles";
+  description = "gensokyo.zone";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     arcexprs = {
       url = "github:arcnmx/nixexprs/master";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    std = {
-      url = "github:chessai/nix-std";
     };
     ci = {
       url = "github:arcnmx/ci/v0.7";
@@ -17,7 +14,6 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    nur.url = "github:nix-community/nur/master";
     flake-utils.url = "github:numtide/flake-utils";
     flakelib = {
       url = "github:flakelib/fl";
@@ -25,7 +21,6 @@
     };
     std-fl = {
       url = "github:flakelib/std";
-      inputs.nix-std.follows = "std";
     };
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -33,7 +28,7 @@
     };
     tree = {
       url = "github:kittywitch/tree";
-      inputs.std.follows = "std";
+      inputs.std.follows = "std-fl/nix-std";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     deploy-rs = {

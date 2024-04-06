@@ -4,7 +4,7 @@
 }: let
   lib = inputs.self.lib.nixlib;
   inherit (lib.strings) makeBinPath;
-  inherit (inputs.std.lib) string list set;
+  inherit (inputs.self.lib.std) string list set;
   packages = inputs.self.packages.${system};
   inherit (inputs.self.legacyPackages.${system}) pkgs;
   fmt = import ../ci/fmt.nix;

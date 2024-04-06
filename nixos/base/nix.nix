@@ -17,15 +17,11 @@ in {
     nix = {
       nixPath = [
         "nixpkgs=${inputs.nixpkgs}"
-        "nur=${inputs.nur}"
         "arc=${inputs.arcexprs}"
-        "ci=${inputs.ci}"
       ];
       registry = {
         nixpkgs.flake = inputs.nixpkgs;
-        nur.flake = inputs.nur;
         arc.flake = inputs.arcexprs;
-        ci.flake = inputs.ci;
       };
       settings = {
         experimental-features = lib.optional (lib.versionAtLeast config.nix.package.version "2.4") "nix-command flakes";
