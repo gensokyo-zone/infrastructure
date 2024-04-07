@@ -14,7 +14,17 @@
       devShells = import ./devShells.nix {inherit system inputs;};
       packages = import ./packages {inherit system inputs;};
       legacyPackages = {
-        inherit (import ./overlays {inherit system inputs;}) pkgs;
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [
+            inputs.self.overlays.default
+            inputs.self.overlays.deploy-rs
+            inputs.self.overlays.arc
+          ];
+          config = {
+            allowUnfree = true;
+          };
+        };
         patchedNixpkgs = pkgs.applyPatches {
           name = "nixpkgs";
           src = inputs.nixpkgs;
@@ -50,6 +60,7 @@
 in {
   inherit (outputs) devShells legacyPackages packages checks;
   inherit (systems) deploy nixosConfigurations;
+  inherit (tree.impure) overlays;
   nixosModules = treeToModulesOutput tree.impure.modules.extern.nixos;
   homeModules = treeToModulesOutput tree.impure.modules.extern.home;
   miscModules = treeToModulesOutput tree.impure.modules.extern.misc;

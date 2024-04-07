@@ -77,10 +77,6 @@
     "nixos/*".functor = {
       enable = true;
     };
-    "hardware".evaluateDefault = true;
-    "nixos/cross".evaluateDefault = true;
-    "hardware/*".evaluateDefault = true;
-    "home".evaluateDefault = true;
-    "home/*".functor.enable = true;
+    "overlays".evaluateDefault = true;
   };
 })

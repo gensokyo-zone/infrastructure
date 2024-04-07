@@ -338,6 +338,11 @@ in {
   };
 
   config = {
+    nixpkgs = mkIf cfg.enable {
+      overlays = [
+        gensokyo-zone.overlays.krb5
+      ];
+    };
     security = {
       krb5 = mkIf cfg.enable (unmerged.merge cfg.set.krb5Settings);
       ipa = mkIf cfg.enable (unmerged.merge cfg.set.ipaSettings);

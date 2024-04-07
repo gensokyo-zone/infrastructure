@@ -1,11 +1,10 @@
-{inputs, ...}: {
+{inputs, ...}: let
+  inherit (inputs.self) overlays;
+in {
   nixpkgs = {
     overlays = [
       inputs.arcexprs.overlays.default
-      (import ../../overlays/barcodebuddy.nix)
-      (import ../../overlays/samba.nix)
-      (import ../../overlays/nginx.nix)
-      (import ../../overlays/krb5.nix)
+      overlays.default
     ];
     config = {
       allowUnfree = true;
