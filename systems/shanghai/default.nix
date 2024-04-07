@@ -2,8 +2,8 @@
   inherit (lib.strings) concatStringsSep;
   dot = concatStringsSep ".";
   cutie = dot [ "cutie" "moe" ];
-  netname = { config, system, ... }: {
-    domain = dot [ config.name system.access.domain ];
+  netname = { config, ... }: {
+    domain = dot [ config.name cutie ];
   };
 in {
   type = "Linux";
