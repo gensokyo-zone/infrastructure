@@ -4,7 +4,6 @@
   inputs,
   ...
 }: let
-  inherit (inputs.self.lib) generate;
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkBefore mkDefault mkForce;
   inherit (lib.attrsets) filterAttrs mapAttrsToList nameValuePair listToAttrs;

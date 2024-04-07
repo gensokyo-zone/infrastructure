@@ -18,11 +18,11 @@ in {
   #services.resolved.enable = mkIf enableDns false;
   systemd.services.avahi-daemon = mkIf (options ? proxmoxLXC && config.services.avahi.enable) {
     serviceConfig.ExecStartPre = mkIf config.services.resolved.enable [
-      "+-${config.systemd.package}/bin/resolvectl mdns eth0 yes"
+      "+-${config.systemd.package}/bin/resolvectl mdns ${config.systemd.network.networks.eth0.name or "eth0"} yes"
     ];
   };
   systemd.network.networks.eth0 = mkIf (! options ? proxmoxLXC) {
-    matchConfig.Name = "eth0";
+    name = "eth0";
     linkConfig.Multicast = true;
     networkConfig.MulticastDNS = true;
   };
