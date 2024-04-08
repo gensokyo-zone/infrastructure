@@ -4,6 +4,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkDefault mkAfter;
+  inherit (lib) versions;
   cfg = config.services.postgresql;
 in {
   services.postgresql = {
@@ -33,10 +34,13 @@ in {
     ];
   };
 
-  systemd.services.postgresql = mkIf cfg.enable {
-    postStart = mkAfter ''
-      $PSQL -tAf ${config.sops.secrets.postgresql-init.path}
-    '';
+  systemd = {
+    services.postgresql = mkIf cfg.enable {
+      gensokyo-zone.sharedMounts."postgresql/${versions.major cfg.package.version}".path = cfg.dataDir;
+      postStart = mkAfter ''
+        $PSQL -tAf ${config.sops.secrets.postgresql-init.path}
+      '';
+    };
   };
 
   sops.secrets.postgresql-init = {
