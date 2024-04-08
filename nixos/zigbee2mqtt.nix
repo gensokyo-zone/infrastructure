@@ -9,10 +9,10 @@
   inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.zigbee2mqtt;
 in {
-  sops.secrets.z2m-secret = {
+  sops.secrets.z2m-secret = mkIf cfg.enable {
     sopsFile = mkDefault ./secrets/zigbee2mqtt.yaml;
     owner = "zigbee2mqtt";
-    path = "${cfg.dataDir}/secret.yaml";
+    path = "${config.systemd.services.zigbee2mqtt.gensokyo-zone.sharedMounts.zigbee2mqtt.path}/secret.yaml";
   };
 
   services.zigbee2mqtt = {
@@ -45,6 +45,14 @@ in {
         # minutes
         active.timeout = 10;
         passive.timeout = 60 * 50;
+      };
+    };
+  };
+  systemd.services.zigbee2mqtt = mkIf cfg.enable {
+    gensokyo-zone = {
+      sharedMounts.zigbee2mqtt.path = cfg.dataDir;
+      cacheMounts."zigbee2mqtt/log" = {
+        path = "${cfg.dataDir}/log";
       };
     };
   };

@@ -138,6 +138,7 @@ chown 100000:30000 /rpool/shared/nix/store
 chmod 1775 /rpool/shared/nix/store
 chown 100000:100000 /rpool/shared/nix/var
 
+mkcache zigbee2mqtt 100317 100317 0700
 mkcache plex 0 0 0755
 if [[ ! -d /rpool/caches/plex/Cache ]]; then
 	mkdir /rpool/caches/plex/Cache
