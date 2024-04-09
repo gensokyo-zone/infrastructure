@@ -7,10 +7,10 @@
   ...
 }: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults mapAlmostOptionDefaults;
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkDefault mkOptionDefault;
-  inherit (lib.lists) optional;
-  inherit (lib.strings) toUpper;
+  inherit (lib.options) mkOption mkEnableOption mkPackageOption;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkForce mkDefault mkOptionDefault;
+  inherit (lib.lists) optional elem;
+  inherit (lib.strings) toUpper concatStringsSep;
   inherit (gensokyo-zone.lib) unmerged;
   cfg = config.gensokyo-zone.krb5;
   krb5Module = {
@@ -127,6 +127,25 @@
       };
       nfs = {
         enable = mkEnableOption "nfs";
+        package = mkPackageOption pkgs "nfs-utils" { };
+        idmapd = {
+          localDomain = mkOption {
+            type = bool;
+            default = enabled.sssd && nixosConfig.services.sssd.services.nss.enable;
+          };
+          localRealms = mkOption {
+            type = listOf str;
+            default = [ config.realm ];
+          };
+          methods = mkOption {
+            type = listOf str;
+            default = [ "nsswitch" ];
+          };
+          authToLocalNames = mkOption {
+            type = attrsOf str;
+            default = config.authToLocalNames;
+          };
+        };
         debug.enable = mkEnableOption "nfs debug logs";
       };
       ipa = {
@@ -188,6 +207,19 @@
         };
       };
       db.backend = mkIf enabled.ipa (mkAlmostOptionDefault "ipa");
+      nfs = {
+        package = mkIf (elem "umich_ldap" config.nfs.idmapd.methods) (mkAlmostOptionDefault pkgs.nfs-utils-ldap);
+        idmapd = {
+          methods = mkMerge [
+            (mkIf (config.nfs.idmapd.authToLocalNames != { }) (
+              mkOptionDefault (mkBefore [ "static" ])
+            ))
+            (mkIf (!enabled.sssd) (
+              mkOptionDefault [ "umich_ldap" ]
+            ))
+          ];
+        };
+      };
       set = {
         krb5Settings = {
           enable = mkAlmostOptionDefault true;
@@ -252,9 +284,10 @@
           realm = config.realm;
           server = config.ipa.server;
           # TODO: dyndns?
-          overrideConfigs = {
-            sssd = mkAlmostOptionDefault false;
-            krb5 = mkAlmostOptionDefault false;
+        } // {
+          overrideConfigs = mapAlmostOptionDefaults {
+            sssd = false;
+            krb5 = false;
           };
         });
         nfsSettings = mkIf config.nfs.enable {
@@ -305,10 +338,32 @@
               rpc-verbosity = 3
             '')
           ];
-          idmapd.settings = mkIf false {
-            #General.Domain = mkForce config.domain;
-            #Local-Realms = concatStringsSep "," [ config.realm nixosConfig.networking.domain ];
-            #Translation.Method = mkForce (concatStringsSep "," [ "static" "nsswitch" ]);
+          # TODO: move this into a more generic /modules/nixos/nfs that gets configured...
+          idmapd.settings = {
+            General = mkIf config.nfs.idmapd.localDomain {
+              Domain = mkForce config.domain;
+              Local-Realms = concatStringsSep "," config.nfs.idmapd.localRealms;
+            };
+            Translation.Method = mkIf (config.nfs.idmapd.methods != [ "nsswitch" ]) (mkForce (
+              concatStringsSep "," config.nfs.idmapd.methods
+            ));
+            Static = mkIf (config.nfs.idmapd.authToLocalNames != { }) config.nfs.idmapd.authToLocalNames;
+            UMICH_SCHEMA = mkIf (elem "umich_ldap" config.nfs.idmapd.methods) (mapOptionDefaults {
+              LDAP_server = config.ldap.host;
+              LDAP_use_ssl = true;
+              LDAP_ca_cert = "/etc/ssl/certs/ca-bundle.crt";
+              LDAP_base = config.ldap.baseDn;
+              LDAP_people_base = "cn=users,cn=accounts,${config.ldap.baseDn}";
+              LDAP_group_base = "cn=groups,cn=accounts,${config.ldap.baseDn}";
+              NFSv4_person_objectclass = "posixaccount"; # or "person"?
+              NFSv4_name_attr = "krbCanonicalName"; # uid? cn? gecos?
+              GSS_principal_attr = "krbPrincipalName";
+              NFSv4_group_objectclass = "posixgroup";
+              NFSv4_group_attr = "cn";
+              #LDAP_use_memberof_for_groups = true;
+              #NFSv4_member_attr = "member";
+              LDAP_canonicalize_name = false;
+            });
           };
         };
       };
@@ -361,6 +416,18 @@ in {
       in mkIf (cfg.enable && !config.gensokyo-zone.dns.enable or false && config.gensokyo-zone.access.local.enable) {
         ${freeipa.config.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [ cfg.host ]);
         ${freeipa.config.access.address4ForNetwork.local} = mkBefore [ cfg.host ];
+      };
+    };
+    environment.etc = {
+      "request-key.conf" = mkIf (cfg.enable && cfg.nfs.enable && cfg.sssd.enable) {
+        source = let
+          nfsidmap = pkgs.writeShellScript "nfsidmap" ''
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${config.system.nssModules.path}"
+            exec ${cfg.nfs.package}/bin/nfsidmap "$@"
+          '';
+        in mkForce (pkgs.writeText "request-key.conf" ''
+          create id_resolver * * ${nfsidmap} -t 600 %k %d
+        '');
       };
     };
     ${if options ? sops.secrets then "sops" else null}.secrets = let

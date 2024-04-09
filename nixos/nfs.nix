@@ -1,21 +1,51 @@
 {
-  inputs,
+  gensokyo-zone,
   config,
   lib,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkBaseDn;
-  inherit (lib.modules) mkIf mkForce mkDefault;
+  inherit (gensokyo-zone.lib) mkBaseDn mapOptionDefaults;
+  inherit (lib.modules) mkIf mkMerge mkForce mkDefault mkOptionDefault;
   inherit (lib.lists) optional optionals;
   inherit (lib.strings) toUpper concatStringsSep;
   inherit (config.networking.access) cidrForNetwork;
   cfg = config.services.nfs;
   inherit (cfg.export) flagSets;
   inherit (config.networking) domain;
+  inherit (config.users) ldap;
   enableLdap = false;
   baseDn = mkBaseDn domain;
+  realm = toUpper domain;
+  debugLogging = true;
 in {
   config.services.nfs = {
+    settings = mkMerge [
+      (mkIf debugLogging {
+        mountd.debug = mkOptionDefault "all";
+        exportfs.debug = mkOptionDefault "all";
+        exportd.debug = mkOptionDefault "all";
+        gssd = mapOptionDefaults {
+          verbosity = 2;
+          rpc-verbosity = 2;
+        };
+        svcgssd = mapOptionDefaults {
+          verbosity = 2;
+          rpc-verbosity = 2;
+          idmap-verbosity = 2;
+        };
+      })
+      {
+        mountd.reverse-lookup = mkOptionDefault false;
+        gssd = {
+          preferred-realm = mkOptionDefault realm;
+        };
+        /*svcgssd = {
+          #principal = system
+          #principal = nfs/idp.${domain}@${realm}
+          #principal = nfs/${config.networking.fqdn}@${realm}
+        };*/
+      }
+    ];
     server = {
       enable = mkDefault true;
       statdPort = mkDefault 4000;
@@ -72,7 +102,7 @@ in {
       General = {
         Domain = mkForce domain;
         Local-Realms = concatStringsSep "," [
-          (toUpper domain)
+          realm
           #(toString config.networking.fqdn)
         ];
       };
@@ -88,8 +118,8 @@ in {
         LDAP_use_ssl = true;
         LDAP_ca_cert = "/etc/ssl/certs/ca-bundle.crt";
         LDAP_base = baseDn;
-        LDAP_people_base = "cn=users,cn=accounts,${baseDn}";
-        LDAP_group_base = "cn=groups,cn=accounts,${baseDn}";
+        LDAP_people_base = "${ldap.userDnSuffix}${baseDn}";
+        LDAP_group_base = "${ldap.groupDnSuffix}${baseDn}";
         GSS_principal_attr = "krbPrincipalName";
         NFSv4_person_objectclass = "posixaccount"; # or "person"?
         NFSv4_group_objectclass = "posixgroup";

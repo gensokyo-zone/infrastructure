@@ -8,6 +8,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (gensokyo-zone.lib) unmerged;
   cfg = config.gensokyo-zone.kyuuto;
+  nfsEnabled = config.boot.supportedFilesystems.nfs or config.boot.supportedFilesystems.nfs4 or false;
   kyuutoModule = {
     gensokyo-zone,
     nixosConfig,
@@ -112,7 +113,7 @@
       setFilesystems = {
         "/mnt/kyuuto-media" = mkIf config.media.enable {
           device = mkMerge [
-            (mkIf config.nfs.enable "nfs.${config.domain}:/mnt/kyuuto-media")
+            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/kyuuto/media")
             (mkIf config.smb.enable (
               if config.smb.user != null && access.local.enable
               then ''\\smb.${config.domain}\kyuuto-media''
@@ -134,7 +135,7 @@
         };
         "/mnt/kyuuto-transfer" = mkIf config.transfer.enable {
           device = mkMerge [
-            (mkIf config.nfs.enable "nfs.${config.domain}:/mnt/kyuuto-media/transfer")
+            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/kyuuto/transfer")
             (mkIf (config.smb.enable && access.local.enable) ''\\smb.${config.domain}\kyuuto-transfer'')
           ];
           fsType = mkMerge [
@@ -177,6 +178,10 @@ in {
     fileSystems = mkIf cfg.enable (
       unmerged.mergeAttrs cfg.setFilesystems
     );
+    systemd.services.rpc-svcgssd = mkIf (!config.services.nfs.server.enable && nfsEnabled) {
+      enable = false;
+    };
+
     lib.gensokyo-zone.kyuuto = {
       inherit cfg kyuutoModule;
     };

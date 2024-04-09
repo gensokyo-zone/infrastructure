@@ -98,6 +98,7 @@ in {
     config = mkIf (sssd.configText != null) (mkAlmostForce sssd.configText);
   };
   config.security.krb5 = mkIf cfg.enable {
+    enable = mkAlmostForce false;
     package = mkAlmostOptionDefault pkgs.krb5Full;
     settings = {
       libdefaults = mapOptionDefaults {
