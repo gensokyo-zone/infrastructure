@@ -29,6 +29,12 @@ in {
     editors = {
       gid = 8133;
     };
+    nixbuilder = {
+      gid = 8134;
+      members = mapAttrsToList (_: user: user.name) (
+        filterAttrs (_: user: userIs "peeps" user) config.users.users
+      );
+    };
 
     admin = {
       gid = 8126;
@@ -51,6 +57,11 @@ in {
     opl = {
       uid = 8125;
       group = "nogroup";
+      isSystemUser = true;
+    };
+    nixbld = {
+      uid = config.users.groups.nixbuilder.gid;
+      group = "nixbuilder";
       isSystemUser = true;
     };
   };

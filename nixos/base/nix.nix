@@ -24,6 +24,7 @@ in {
         arc.flake = inputs.arcexprs;
       };
       settings = {
+        allowed-users = [ "@nixbuilder" ];
         experimental-features = lib.optional (lib.versionAtLeast config.nix.package.version "2.4") "nix-command flakes";
         substituters = [
           "https://gensokyo-infrastructure.cachix.org"

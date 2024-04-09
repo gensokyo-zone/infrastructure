@@ -5,6 +5,7 @@
     nixos.sops
     nixos.base
     nixos.reisen-ct
+    nixos.nixbld
     nixos.tailscale
     nixos.github-runner.zone
   ];

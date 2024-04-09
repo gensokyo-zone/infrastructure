@@ -1,20 +1,23 @@
 {
   config,
+  options,
   lib,
   gensokyo-zone,
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault;
-  inherit (gensokyo-zone.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged mkAlmostOptionDefault;
   cfg = config.gensokyo-zone.nix;
   nixModule = {
     gensokyo-zone,
     nixosConfig,
+    nixosOptions,
     config,
     ...
   }: let
     inherit (gensokyo-zone.lib) unmerged domain;
+    inherit (nixosConfig.gensokyo-zone) access;
   in {
     options = with lib.types; {
       enable = mkEnableOption "nix settings";
@@ -37,6 +40,9 @@
           default = "ssh";
         };
         ssh = {
+          commonKey = mkEnableOption "shared secret nixbld key" // {
+            default = true;
+          };
           user = mkOption {
             type = str;
             default = "nixbld";
@@ -64,7 +70,7 @@
         };
       };
       setNixSettings = mkOption {
-        type = unmerged.types.attrs;
+        type = unmerged.type;
         default = {};
       };
       setNixBuildMachines = mkOption {
@@ -92,9 +98,14 @@
         })
       ];
       builder = {
-        domain = mkIf nixosConfig.services.tailscale.enable (
-          mkDefault
-          "nixbld.tail.${domain}"
+        domain = mkMerge [
+          (mkIf access.tail.enabled (mkAlmostOptionDefault "nixbld.tail.${domain}"))
+          (mkIf access.local.enable (mkDefault "nixbld.local.${domain}"))
+        ];
+        ssh.key = let
+          inherit (nixosConfig.sops) secrets;
+        in mkIf (nixosOptions ? sops.secrets && secrets ? gensokyo-zone-nix-bld-key) (mkAlmostOptionDefault
+          nixosConfig.sops.secrets.gensokyo-zone-nix-bld-key.path
         );
         setBuildMachine = {
           hostName = config.builder.domain;
@@ -121,6 +132,7 @@ in {
         inherit gensokyo-zone;
         inherit (gensokyo-zone) inputs;
         nixosConfig = config;
+        nixosOptions = options;
       };
     };
     default = { };
@@ -128,8 +140,15 @@ in {
 
   config = {
     nix = mkIf cfg.enable {
-      settings = unmerged.mergeAttrs cfg.setNixSettings;
+      settings = unmerged.merge cfg.setNixSettings;
       buildMachines = unmerged.merge cfg.setNixBuildMachines;
+    };
+    ${if options ? sops.secrets then "sops" else null}.secrets = let
+      sopsFile = mkDefault ../secrets/nix.yaml;
+    in mkIf cfg.enable {
+      gensokyo-zone-nix-bld-key = mkIf cfg.builder.ssh.commonKey {
+        inherit sopsFile;
+      };
     };
     lib.gensokyo-zone.nix = {
       inherit cfg nixModule;

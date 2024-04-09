@@ -122,6 +122,9 @@ in {
           isSystemUser = true;
           useDefaultShell = mkDefault true;
           group = mkIf (cfg.group != null) (mkDefault cfg.group);
+          extraGroups = [
+            "nixbuilder"
+          ];
           createHome = false;
           home = "/var/lib/github-runner/${cfg.keyPrefix}${toString i}";
         })))
