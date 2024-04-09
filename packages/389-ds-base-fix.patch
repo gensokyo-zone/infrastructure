@@ -1,0 +1,24 @@
+diff --git a/ldap/servers/slapd/back-ldbm/cache.c b/ldap/servers/slapd/back-ldbm/cache.c
+index 0dd53d72b..782987195 100644
+--- a/ldap/servers/slapd/back-ldbm/cache.c
++++ b/ldap/servers/slapd/back-ldbm/cache.c
+@@ -533,7 +533,6 @@ dbgec_test_if_entry_pointer_is_valid(void *e, void *prev, int slot, int line)
+          */ 
+         slapi_log_err(SLAPI_LOG_FATAL, "dbgec_test_if_entry_pointer_is_valid", "cache.c[%d]: Wrong entry address: %p Previous entry address is: %p hash table slot is %d\n", line, e, prev, slot);
+         slapi_log_backtrace(SLAPI_LOG_FATAL);
+-        *(char*)23 = 1;   /* abort() somehow corrupt gdb stack backtrace so lets generate a SIGSEGV */
+         abort();
+     }
+ }
+diff --git a/ldap/servers/slapd/tools/dbscan.c b/ldap/servers/slapd/tools/dbscan.c
+index abfd0113b..159096bd5 100644
+--- a/ldap/servers/slapd/tools/dbscan.c
++++ b/ldap/servers/slapd/tools/dbscan.c
+@@ -1127,7 +1127,6 @@ importdb(const char *dbimpl_name, const char *filename, const char *dump_name)
+ 
+     if (!dump) {
+         printf("Failed to open dump file %s. Error %d: %s\n", dump_name, errno, strerror(errno));
+-        fclose(dump);
+         return 1;
+     }
+ 
