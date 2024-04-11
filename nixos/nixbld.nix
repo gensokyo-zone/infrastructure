@@ -10,4 +10,5 @@ in {
       ];
     };
   };
+  config.nix.settings.trusted-users = ["nixbld"];
 }

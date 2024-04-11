@@ -3,9 +3,12 @@
   options,
   lib,
   inputs,
+  gensokyo-zone,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mkAlmostDefault;
   inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.attrsets) optionalAttrs;
   hasSops = options ? sops;
 in {
   config = {
@@ -15,13 +18,25 @@ in {
     };
 
     nix = {
-      nixPath = [
-        "nixpkgs=${inputs.nixpkgs}"
-        "arc=${inputs.arcexprs}"
-      ];
-      registry = {
-        nixpkgs.flake = inputs.nixpkgs;
-        arc.flake = inputs.arcexprs;
+      registry = let
+        lock = builtins.fromJSON (builtins.readFile ../../flake.lock);
+        mapFlake = name: let
+          node = lock.nodes.${name};
+        in {
+          inherit (node.original) type;
+          inherit (node.locked) lastModified rev narHash;
+        } // optionalAttrs (node.original.type == "github") {
+          inherit (node.original) repo owner;
+        };
+      in {
+        nixpkgs.to = mapFlake "nixpkgs";
+        arc.to = mapFlake "arcexprs";
+        ci = {
+          to = {
+            inherit (lock.nodes.ci.original) type owner repo;
+          };
+          exact = false;
+        };
       };
       settings = {
         allowed-users = [ "@nixbuilder" ];
@@ -39,7 +54,6 @@ in {
           "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
           "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
         ];
-        auto-optimise-store = true;
         trusted-users = ["root" "@wheel"];
       };
       extraOptions = mkIf hasSops ''
@@ -47,8 +61,12 @@ in {
       '';
       gc = {
         automatic = mkDefault true;
-        dates = mkDefault "weekly";
-        options = mkDefault "--delete-older-than 7d";
+        dates = mkDefault "Mon 02:45";
+        options = mkDefault "--delete-older-than 12d";
+      };
+      optimise = {
+        automatic = mkAlmostDefault true;
+        dates = mkDefault [ "03:25" ];
       };
     };
     ${
