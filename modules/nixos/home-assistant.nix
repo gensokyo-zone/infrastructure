@@ -142,7 +142,6 @@ in {
         input_text = {};
         logbook = {};
         schedule = {};
-        map = {};
         media_source = {};
         media_player = [];
         mobile_app = {};
@@ -253,6 +252,7 @@ in {
         "environment_canada"
         "met"
         "generic_thermostat"
+        "map"
         "mqtt"
         "zeroconf"
       ]
