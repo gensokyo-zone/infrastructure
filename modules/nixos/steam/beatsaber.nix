@@ -11,7 +11,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.strings) hasSuffix replaceStrings optionalString concatStringsSep escapeShellArg makeBinPath versionOlder;
   inherit (lib.attrsets) attrValues filterAttrs mapAttrs mapAttrs' mapAttrsToList listToAttrs nameValuePair;
-  inherit (lib.lists) concatMap head last filter sort singleton;
+  inherit (lib.lists) concatLists head last filter sort singleton;
   inherit (config.services.steam) accountSwitch;
   cfg = config.services.steam.beatsaber;
   sortedVersions = sort (a: b: versionOlder a.version b.version) (attrValues cfg.versions);
@@ -280,6 +280,18 @@
       '';
     };
   };
+  userModule = { config, name, ... }: {
+    options = with lib.types; {
+      name = mkOption {
+        type = str;
+        default = name;
+      };
+      preferredVersion = mkOption {
+        type = str;
+        default = cfg.defaultVersion;
+      };
+    };
+  };
   emptyFile = pkgs.writeText "empty.txt" "";
   emptyJson = pkgs.writeText "empty.json" "{}";
   emptyDir = pkgs.runCommand "empty" { } ''
@@ -335,6 +347,9 @@
     rmdir "%STEAM_BS_LIBRARY%"
     mklink /D "%STEAM_BS_LIBRARY%" "%STEAM_BS_LAUNCH%"
   '';
+  launch = ''
+    cd /d "%STEAM_BS_LIBRARY%"
+  '' + ''"%STEAM_BS_LIBRARY%\Beat Saber.exe'';
   setup = ''
     rmdir "%STEAM_BS_APPDATA%"
     rmdir "%STEAM_BS_LIBRARY%"
@@ -351,14 +366,12 @@
   launchbeatsaber = ''
     ${vars}
     ${mount}
-    cd /d "%STEAM_BS_LIBRARY%"
-    "%STEAM_BS_LIBRARY%\Beat Saber.exe"
+    ${launch}
     ${eof}
   '';
   fpfcbeatsaber = ''
     ${vars}
-    cd /d "%STEAM_BS_LIBRARY%"
-    "%STEAM_BS_LIBRARY%\Beat Saber.exe" fpfc
+    ${launch} fpfc
     ${eof}
   '';
   setupbeatsaber = ''
@@ -388,8 +401,15 @@
     set GENSO_STEAM_BS_LOCAL=1
     ${vars}
     ${mount}
-    cd /d "%STEAM_BS_LIBRARY%"
-    "%STEAM_BS_LIBRARY%\Beat Saber.exe"
+    ${launch}
+    ${eof}
+  '';
+  beatsaber-user = { user, version }: ''
+    set GENSO_STEAM_USER=${user}
+    set GENSO_STEAM_BS_VERSION=${version}
+    ${vars}
+    ${mount}
+    ${launch}
     ${eof}
   '';
   vanilla = ''
@@ -429,7 +449,7 @@ in {
       default = { };
     };
     users = mkOption {
-      type = listOf str;
+      type = attrsOf (submodule userModule);
     };
     dirName = mkOption {
       type = str;
@@ -695,11 +715,9 @@ in {
       defaultVersion = mkIf (allVersions != [ ]) (mkOptionDefault (
         head allVersions
       ));
-      users = mkOptionDefault (
-        mapAttrsToList (_: user: user.name) bsUsers
-      );
+      users = mapAttrs (_: user: { name = mkDefault user.name; }) bsUsers;
       setupServiceNames = mkOptionDefault (
-        map (user: "steam-setup-beatsaber-${user}.service") cfg.users
+        mapAttrsToList (_: user: "steam-setup-beatsaber-${user.name}.service") cfg.users
       );
       files = mkMerge [
         userFiles
@@ -718,9 +736,9 @@ in {
       serviceConfig = {
         Type = mkOptionDefault "oneshot";
         RemainAfterExit = mkOptionDefault true;
-        ExecStart = mkMerge (map (user:
+        ExecStart = mkMerge (mapAttrsToList (_: user:
           (mapAttrsToList (_: version:
-            "${mksetupbeatsaber { inherit user; inherit (version) version; }}"
+            "${mksetupbeatsaber { user = user.name; inherit (version) version; }}"
           ) cfg.versions)
         ) cfg.users);
       };
@@ -766,17 +784,17 @@ in {
             nameValuePair "${cfg.sharedDataDir}/${folder}" shared
           ) sharedFolders
         ))
-      ] ++ concatMap (owner:
+      ] ++ concatLists (mapAttrsToList (_: user:
         singleton {
-          ${cfg.dataDirFor owner} = personal owner;
-          "${cfg.dataDirFor owner}/AppData" = personal owner;
-          "${cfg.dataDirFor owner}/UserData" = personal owner;
+          ${cfg.dataDirFor user.name} = personal user.name;
+          "${cfg.dataDirFor user.name}/AppData" = personal user.name;
+          "${cfg.dataDirFor user.name}/UserData" = personal user.name;
         } ++ mapAttrsToList (_: version: {
-          "${cfg.dataDirFor owner}/${version.version}" = personal owner;
-          ${cfg.userWorkingDirFor owner} = personal owner;
-          ${cfg.workingDirFor { user = owner; inherit (version) version; }} = personal owner;
+          "${cfg.dataDirFor user.name}/${version.version}" = personal user.name;
+          ${cfg.userWorkingDirFor user.name} = personal user.name;
+          ${cfg.workingDirFor { user = user.name; inherit (version) version; }} = personal user.name;
         }) cfg.versions
-      ) cfg.users
+      ) cfg.users)
       ++ mapAttrsToList (_: version: {
         "${cfg.sharedDataDir}/${version.version}" = shared;
       }) cfg.versions;
@@ -793,6 +811,20 @@ in {
           };
         }
       ) cfg.versions;
+      userBinFiles = mapAttrs' (_: user: nameValuePair
+        "${cfg.binDir}/${user.name}.bat"
+        {
+          inherit (bin) owner group mode type;
+          src = pkgs.writeTextFile {
+            name = "beatsaber-${user.name}.bat";
+            executable = true;
+            text = beatsaber-user {
+              user = user.name;
+              version = user.preferredVersion;
+            };
+          };
+        }
+      ) cfg.users;
       binFiles = {
         "${cfg.binDir}/mount.bat" = {
           inherit (bin) owner group mode type;
@@ -866,7 +898,8 @@ in {
             executable = true;
           };
         };
-      } // versionBinFiles;
+      } // versionBinFiles
+      // userBinFiles;
     in {
       enable = mkIf cfg.setup true;
       files = mkIf cfg.setup (mkMerge (
