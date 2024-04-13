@@ -16,6 +16,10 @@ in {
       type = str;
       default = config.networking.domain;
     };
+    secretsFile = mkOption {
+      type = nullOr path;
+      default = null;
+    };
     homekit = {
       enable =
         mkEnableOption "homekit"
@@ -97,9 +101,14 @@ in {
 
     systemd.services.home-assistant = mkIf (cfg.enable && cfg.mutableUiConfig) {
       # UI-editable config files
-      preStart = mkBefore ''
-        touch ${cfg.configDir}/{automations,scenes,scripts,manual,homekit_entity_config,homekit_include_entities}.yaml
-      '';
+      preStart = mkMerge [
+        (mkBefore ''
+          touch "${cfg.configDir}/"{automations,scenes,scripts,manual,homekit_entity_config,homekit_include_entities}.yaml
+        '')
+        (mkIf (cfg.secretsFile != null) (mkBefore ''
+          ln -sf ${cfg.secretsFile} "${cfg.configDir}/secrets.yaml"
+        ''))
+      ];
     };
   };
 

@@ -7,16 +7,14 @@
   inherit (lib.modules) mkIf mkDefault;
   sopsFile = mkDefault ./secrets/home-assistant.yaml;
 in {
-  sops.secrets = {
+  sops.secrets = mkIf cfg.enable {
     ha-integration = {
       inherit sopsFile;
       owner = "hass";
-      path = "${cfg.configDir}/integration.yaml";
     };
     ha-secrets = {
       inherit sopsFile;
       owner = "hass";
-      path = "${cfg.configDir}/secrets.yaml";
     };
   };
 
@@ -24,6 +22,7 @@ in {
     enable = mkDefault true;
     mutableUiConfig = mkDefault true;
     domain = mkDefault "home.${config.networking.domain}";
+    secretsFile = mkDefault config.sops.secrets.ha-secrets.path;
     config = {
       homeassistant = {
         name = "Gensokyo";
@@ -75,7 +74,7 @@ in {
       };
       google_assistant = {
         project_id = "gensokyo-5cfaf";
-        service_account = "!include integration.yaml";
+        service_account = "!include ${config.sops.secrets.ha-integration.path}";
         report_state = true;
         exposed_domains = [
           "scene"
@@ -131,5 +130,8 @@ in {
       "withings"
       "wled"
     ];
+  };
+  systemd.services.home-assistant = mkIf cfg.enable {
+    gensokyo-zone.sharedMounts.hass.path = mkDefault cfg.configDir;
   };
 }
