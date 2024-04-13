@@ -91,10 +91,10 @@ in {
   };
   config.networking.firewall.interfaces = {
     local = mkIf cfg.enable {
-      allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.port];
+      allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.settings.port];
     };
     int = mkIf cfg.enable {
-      allowedTCPPorts = mkIf (any (user: user.authentication.int.allow) cfg.ensureUsers) [cfg.port];
+      allowedTCPPorts = mkIf (any (user: user.authentication.int.allow) cfg.ensureUsers) [cfg.settings.port];
     };
   };
 }
