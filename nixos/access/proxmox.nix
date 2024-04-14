@@ -16,7 +16,7 @@ in {
         if ($request_uri ~ "^/([^/]+).*") {
           set $prox_prefix $1;
         }
-        if ($request_uri ~ "^/(pve2/.*|pwt/.*|api2/.*|xtermjs/.*|[^/]+\.js.*)") {
+        if ($request_uri ~ "^/(pve2/.*|pwt/.*|api2/.*|xtermjs/.*|novnc/.*|[^/]+\.js.*)") {
           rewrite /(.*) /prox/$1 last;
         }
         if ($http_referer ~ "^https://${escapeRegex nginx.virtualHosts.prox.serverName}/([^/]+)/$") {
