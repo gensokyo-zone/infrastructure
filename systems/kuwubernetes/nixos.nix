@@ -5,6 +5,7 @@
   modulesPath,
   ...
 }: let
+  inherit (lib.modules) mkIf;
   inherit (lib.attrsets) genAttrs nameValuePair;
   inherit (builtins) listToAttrs;
   dexFiles = [
@@ -44,7 +45,10 @@ in {
     {device = "/dev/disk/by-uuid/b374e454-7af5-46fc-b949-24e38a2216d5";}
   ];
 
-  networking.interfaces.ens18.useDHCP = true;
+  networking.interfaces.ens18 = mkIf (!config.systemd.network.enable) {
+    # TODO: stop using dhcp
+    useDHCP = true;
+  };
 
   sops.secrets = let
     dexCommon = {
@@ -75,7 +79,7 @@ in {
     };
   };
 
-  systemd.network.networks.ens18 = {
+  systemd.network.networks._00-local = {
     name = "ens18";
     matchConfig = {
       MACAddress = "BC:24:11:49:FE:DC";

@@ -2,7 +2,7 @@
   inherit (lib.modules) mkDefault;
 in {
   config = {
-    systemd.network.networks.eth9 = {config, ...}: {
+    systemd.network.networks._00-int = {config, ...}: {
       networkConfig = {
         IPv6SendRA = mkDefault true;
       };

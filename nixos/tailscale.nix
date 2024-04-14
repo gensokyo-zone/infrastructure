@@ -48,7 +48,7 @@ in {
         '';
         # https://tailscale.com/kb/1320/performance-best-practices#ethtool-configuration
         exitNodeRouting = optionalString cfg.advertiseExitNode ''
-          netdev=$(${pkgs.iproute2}/bin/ip route show 0/0 | ${pkgs.coreutils}/bin/cut -f5 -d' ' || echo ${config.systemd.network.networks.eth0.name or "eth0"})
+          netdev=$(${pkgs.iproute2}/bin/ip route show 0/0 | ${pkgs.coreutils}/bin/cut -f5 -d' ' || echo ${config.systemd.network.networks._00-local.name or "eth0"})
           ${getExe pkgs.ethtool} -K "$netdev" rx-udp-gro-forwarding on rx-gro-list off || true
         '';
         advertiseExitNode = "--advertise-exit-node" + optionalString (!cfg.advertiseExitNode) "=false";

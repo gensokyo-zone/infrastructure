@@ -108,6 +108,9 @@
         gateway4 = mkMerge [
           (mkIf (system.proxmox.node.name == "reisen" && config.bridge == "vmbr0" && config.address4 != null && config.address4 != "dhcp") (mkAlmostOptionDefault "10.1.1.1"))
         ];
+        networkd.name = mkIf config.local.enable (
+          mkDefault "_00-local"
+        );
         networkd.networkSettings = {
           name = mkAlmostOptionDefault config.name;
           ipv6AcceptRAConfig = mkIf config.local.enable {
@@ -155,6 +158,7 @@
         macAddress = mkIf (system.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" system.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
           replaceStrings [ "BC:24:11:" ] [ "BC:24:19:" ] system.proxmox.network.interfaces.net0.macAddress
         ));
+        networkd.name = mkDefault "_00-int";
         networkd.networkSettings = {
           domains = mkDefault [ ]; # int.${domain}?
           linkConfig.RequiredForOnline = false;

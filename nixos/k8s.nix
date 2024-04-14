@@ -2,9 +2,10 @@
   config,
   pkgs,
   lib,
+  gensokyo-zone,
   ...
 }: let
-  inherit (inputs.self.lib.lib) domain;
+  inherit (gensokyo-zone.lib) domain;
   inherit (lib.modules) mkForce;
   inherit (lib.strings) escapeShellArgs;
   kubeMasterIP = "10.1.1.173";

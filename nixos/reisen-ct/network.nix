@@ -1,11 +1,13 @@
 {
   lib,
+  gensokyo-zone,
   config,
   options,
   meta,
   access,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf mkBefore mkOrder;
   enableDns = !config.services.dnsmasq.enable && config.networking.hostName != "utsuho";
 in {
@@ -18,11 +20,11 @@ in {
   #services.resolved.enable = mkIf enableDns false;
   systemd.services.avahi-daemon = mkIf (options ? proxmoxLXC && config.services.avahi.enable) {
     serviceConfig.ExecStartPre = mkIf config.services.resolved.enable [
-      "+-${config.systemd.package}/bin/resolvectl mdns ${config.systemd.network.networks.eth0.name or "eth0"} yes"
+      "+-${config.systemd.package}/bin/resolvectl mdns ${config.systemd.network.networks._00-local.name or "eth0"} yes"
     ];
   };
-  systemd.network.networks.eth0 = mkIf (! options ? proxmoxLXC) {
-    name = "eth0";
+  systemd.network.networks._00-local = mkIf (! options ? proxmoxLXC) {
+    name = mkAlmostOptionDefault "ens18";
     linkConfig.Multicast = true;
     networkConfig.MulticastDNS = true;
   };

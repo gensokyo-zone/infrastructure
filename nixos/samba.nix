@@ -133,7 +133,7 @@ in {
 
   services.samba-wsdd = {
     enable = mkIf cfg.enable (mkDefault true);
-    interface = mkDefault config.systemd.network.networks.eth0.name;
+    interface = mkDefault config.systemd.network.networks._00-local.name;
   };
 
   sops.secrets = {

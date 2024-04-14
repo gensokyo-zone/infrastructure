@@ -61,7 +61,7 @@ in {
     };
     dynamic.interface = mkOption {
       type = str;
-      default = "eth0";
+      default = config.systemd.network.networks._00-local.name or "eth0";
     };
   };
   config = {
