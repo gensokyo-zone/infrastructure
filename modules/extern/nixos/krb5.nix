@@ -152,7 +152,7 @@
         enable = mkEnableOption "IPA";
         httpHost = mkOption {
           type = str;
-          default = "freeipa.${config.domain}";
+          default = "ipa.${config.domain}";
         };
         host = mkOption {
           type = str;
@@ -246,8 +246,8 @@
           servers = optional access.local.enable "idp.local.${config.domain}"
             ++ [ "_srv" ];
           backups = mkMerge [
-            (mkIf access.tail.enabled (mkAlmostOptionDefault [ "freeipa.tail.${config.domain}" ]))
-            (mkIf access.local.enable (mkAlmostOptionDefault [ "freeipa.local.${config.domain}" ]))
+            (mkIf access.tail.enabled (mkAlmostOptionDefault [ "ipa.tail.${config.domain}" ]))
+            (mkIf access.local.enable (mkAlmostOptionDefault [ "ipa.local.${config.domain}" ]))
           ];
         in mkIf config.sssd.enable {
           enable = mkAlmostOptionDefault true;

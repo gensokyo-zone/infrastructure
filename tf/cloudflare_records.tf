@@ -12,11 +12,11 @@ module "hakurei_system_records" {
   net_data  = local.systems.hakurei.network
   local_subdomains = [
     "prox",
-    "id",
     "login",
     "sso",
     "ldap",
-    "freeipa",
+    "krb5",
+    "ipa",
     "unifi",
     "pbx",
     "smb",
@@ -31,8 +31,8 @@ module "hakurei_system_records" {
   global_subdomains = [
     "plex",
     "idp",
-    "freeipa",
     "ldap",
+    "krb5",
     "pbx",
     "smb",
     "mqtt",

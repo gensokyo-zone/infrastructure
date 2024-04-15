@@ -12,6 +12,7 @@ module "hakurei" {
   subdomains = [
     "@",
     "prox",
+    "ipa",
   ]
 }
 

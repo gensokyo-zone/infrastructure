@@ -63,6 +63,7 @@ in {
       ingress = {
         ${virtualHosts.prox.serverName}.service = localNginx;
         ${virtualHosts.gensokyoZone.serverName}.service = localNginx;
+        ${virtualHosts.freeipa'web.serverName}.service = localNginx;
       };
     };
   };
@@ -224,6 +225,7 @@ in {
       freeipa = {
         ssl.cert.enable = true;
       };
+      freeipa'web.proxied.enable = "cloudflared";
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;

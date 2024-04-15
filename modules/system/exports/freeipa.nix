@@ -3,7 +3,7 @@
   inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.freeipa = {
-    id = mkAlmostOptionDefault "freeipa";
+    id = mkAlmostOptionDefault "ipa";
     ports = mapAttrs (_: mapAlmostOptionDefaults) {
       default = {
         port = 443;

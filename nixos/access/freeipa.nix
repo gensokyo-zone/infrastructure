@@ -243,7 +243,7 @@ in {
         '';
       in mkIf access.preread.enable preread;
       virtualHosts = let
-        name.shortServer = mkDefault "freeipa";
+        name.shortServer = mkDefault "ipa";
       in {
         freeipa = {
           name.shortServer = mkDefault "idp";
