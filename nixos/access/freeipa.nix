@@ -8,8 +8,7 @@
 let
   inherit (gensokyo-zone.lib) mkAddress6;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
-  inherit (lib.strings) optionalString concatStringsSep;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (config.services) tailscale;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
@@ -125,27 +124,29 @@ in {
       stream = let
         prereadConf = {
           upstreams = {
-            freeipa.servers.access = let
-              system = config.lib.access.systemForService "freeipa";
-              inherit (system.exports.services) freeipa;
-            in {
-              addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
-              port = mkOptionDefault freeipa.ports.default.port;
+            freeipa = {
+              ssl.enable = true;
+              servers.access = let
+                system = config.lib.access.systemForService "freeipa";
+                inherit (system.exports.services) freeipa;
+              in {
+                addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
+                port = mkOptionDefault freeipa.ports.default.port;
+              };
             };
-            samba_access.servers.access = let
-              system = config.lib.access.systemForService "samba";
-              inherit (system.exports.services) samba;
-            in {
-              addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
-              port = mkOptionDefault samba.ports.default.port;
+            ldaps_access = {
+              ssl.enable = true;
+              servers.access = {
+                addr = mkDefault "localhost";
+                port = mkOptionDefault nginx.stream.servers.ldap.listen.ldaps.port;
+              };
             };
-            ldaps_access.servers.access = {
-              addr = mkDefault "localhost";
-              port = mkOptionDefault nginx.stream.servers.ldap.listen.ldaps.port;
-            };
-            nginx.servers.access = {
-              addr = mkDefault "localhost";
-              port = mkOptionDefault nginx.defaultSSLListenPort;
+            nginx = {
+              ssl.enable = true;
+              servers.access = {
+                addr = mkDefault "localhost";
+                port = mkOptionDefault nginx.defaultSSLListenPort;
+              };
             };
           };
           servers = {
@@ -223,7 +224,7 @@ in {
       streamConfig = let
         inherit (nginx.stream) upstreams;
         preread = ''
-          map $ssl_preread_server_name $ssl_server_name {
+          map $ssl_preread_server_name $https_upstream {
             hostnames;
             ${virtualHosts.freeipa.serverName} ${upstreams.freeipa.name};
             ${virtualHosts.freeipa'ca.serverName} ${upstreams.freeipa.name};
@@ -232,11 +233,6 @@ in {
             ${nginx.access.ldap.intDomain} ${upstreams.ldaps_access.name};
             ${nginx.access.ldap.tailDomain} ${upstreams.ldaps_access.name};
             default ${upstreams.nginx.name};
-          }
-          map $ssl_preread_alpn_protocols $https_upstream {
-            ~\bsmb\b ${upstreams.samba_access.name};
-            # XXX: if only there were an ldap protocol id...
-            default $ssl_server_name;
           }
 
           map $ssl_preread_server_name $ldap_upstream {
