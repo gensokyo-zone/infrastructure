@@ -4,7 +4,7 @@
   inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
+  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mkAlmostDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrsToList;
@@ -131,8 +131,8 @@
       ssl.cert = let
         cert = nixosConfig.security.acme.certs.${cfg.cert.name};
       in {
-        path = mkIf (cfg.cert.name != null) (mkAlmostOptionDefault "${cert.directory}/fullchain.pem");
-        keyPath = mkIf (cfg.cert.name != null) (mkAlmostOptionDefault "${cert.directory}/key.pem");
+        path = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/fullchain.pem");
+        keyPath = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/key.pem");
       };
       #listen.ssl = mkIf cfg.enable { ssl = true; };
       extraConfig = mkMerge [

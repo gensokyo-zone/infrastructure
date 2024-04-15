@@ -2,9 +2,11 @@
   config,
   meta,
   lib,
+  gensokyo-zone,
   ...
 }:
 let
+  inherit (gensokyo-zone.lib) mkAddress6;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.strings) optionalString concatStringsSep;
@@ -99,7 +101,7 @@ in {
       type = str;
       default = let
         scheme = if access.port == 443 then "https" else "http";
-      in "${scheme}://${access.host}:${toString access.port}";
+      in "${scheme}://${mkAddress6 access.host}:${toString access.port}";
     };
     port = mkOption {
       type = port;
