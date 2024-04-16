@@ -32,6 +32,10 @@ _: {
   };
   exports = {
     services = {
+      sshd = {
+        enable = true;
+        ports.public.enable = false;
+      };
       freeipa.enable = true;
       ldap.enable = true;
       kerberos.enable = true;

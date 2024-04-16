@@ -9,6 +9,7 @@ _: {
   ];
   exports = {
     services = {
+      sshd.enable = true;
       unifi.enable = true;
       mosquitto.enable = true;
       dnsmasq.enable = true;

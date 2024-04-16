@@ -19,4 +19,9 @@ _: {
       };
     };
   };
+  exports = {
+    services = {
+      sshd.enable = true;
+    };
+  };
 }

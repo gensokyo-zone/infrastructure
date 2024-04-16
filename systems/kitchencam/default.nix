@@ -17,6 +17,10 @@ _: {
   };
   exports = {
     services = {
+      sshd = {
+        enable = true;
+        ports.public.enable = false;
+      };
       motion = {
         id = "kitchen";
         enable = true;

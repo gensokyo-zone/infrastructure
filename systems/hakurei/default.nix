@@ -24,6 +24,14 @@ _: {
         enable = true;
         id = "login.local";
       };
+      sshd = {
+        enable = true;
+        ports.global = {
+          port = 41022;
+          transport = "tcp";
+          listen = "wan";
+        };
+      };
     };
     exports = {
       plex.enable = true;
