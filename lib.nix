@@ -6,7 +6,7 @@
   nixlib = inputs.nixpkgs.lib;
   inherit (nixlib.modules) mkOrder mkOverride defaultOverridePriority;
   inherit (nixlib.strings) splitString toLower;
-  inherit (nixlib.lists) imap0 elemAt;
+  inherit (nixlib.lists) imap0 elemAt findFirst;
   inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
   inherit (nixlib.strings) hasPrefix hasInfix substring fixedWidthString replaceStrings concatMapStringsSep;
   inherit (nixlib.trivial) flip toHexString bitOr;
@@ -37,6 +37,7 @@
   mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
   mkAddress6 = addr: if hasInfix ":" addr && ! hasPrefix "[" addr then "[${addr}]" else addr;
 
+  coalesce = findFirst (v: v != null) null;
   mapListToAttrs = f: l: listToAttrs (map f l);
 
   overrideOptionDefault = 1500;
@@ -80,7 +81,7 @@ in {
     inherit treeToModulesOutput userIs
       eui64 mkWinPath mkBaseDn mkAddress6
       toHexStringLower hexCharToInt
-      mapListToAttrs
+      mapListToAttrs coalesce
       mkAlmostOptionDefault mkAlmostDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
       overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
       orderBefore orderNone orderAfter orderAlmostAfter
