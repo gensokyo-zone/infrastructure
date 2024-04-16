@@ -13,7 +13,7 @@
   cfg = config.services.dnsmasq;
   inherit (inputs.self.lib) systems;
   localSystems = filterAttrs (_: system:
-    system.config.access.online.enable && system.config.network.local.enable or false
+    system.config.access.online.enable && system.config.network.networks.local.enable or false
   ) systems;
   mkHostRecordPairs = _: system: [
     (mkHostRecordPair "int" system)
