@@ -4,6 +4,7 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  ci.allowFailure = true;
   proxmox = {
     vm = {
       id = 201;

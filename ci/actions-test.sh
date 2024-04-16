@@ -10,6 +10,7 @@ fi
 NIX_BUILD_ARGS=(
 	--show-trace
 )
+NIX_BUILD_ARGS_ASYNC=()
 
 init_nfargs() {
 	nflinksuffix="$1"
@@ -44,16 +45,31 @@ for nfsystem in "${NF_NIX_SYSTEMS[@]}"; do
 	nfinstallable="${NF_CONFIG_ROOT}#nixosConfigurations.${nfsystem}.config.system.build.toplevel"
 	init_nfargs "-$nfsystem"
 
-	if [[ -n ${NF_ACTIONS_TEST_ASYNC-} ]]; then
-		NIX_BUILD_ARGS+=("$nfinstallable")
+	nfwarn=
+	if [[ " ${NF_NIX_SYSTEMS_WARN[*]} " = *" $nfsystem "* ]]; then
+		nfwarn=1
+	fi
+
+	if [[ -n ${NF_ACTIONS_TEST_ASYNC-} && -z $nfwarn ]]; then
+		NIX_BUILD_ARGS_ASYNC+=("$nfinstallable")
 		continue
 	fi
 
 	echo "building ${nfsystem}..." >&2
+	echo >&2
 
+	nfbuildexit=0
 	nix build "$nfinstallable" \
 		"${nfargs[@]}" \
-		"$@"
+		"$@" || nfbuildexit=$?
+
+	if [[ $nfbuildexit -ne 0 ]]; then
+		if [[ -n $nfwarn ]]; then
+			echo "build failure allowed for ${nfsystem}, ignoring..." >&2
+			continue
+		fi
+		exit $nfbuildexit
+	fi
 
 	nfgc
 done
@@ -62,6 +78,7 @@ if [[ -n ${NF_ACTIONS_TEST_ASYNC-} ]]; then
 	init_nfargs ""
 	nix build \
 		"${nfargs[@]}" \
+		"${NIX_BUILD_ARGS_ASYNC[@]}" \
 		"$@"
 
 	nfgc

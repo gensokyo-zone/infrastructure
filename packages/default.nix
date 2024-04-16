@@ -20,6 +20,15 @@
     NF_NIX_WHITELIST_DIRS=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelistDirs})
     NF_NIX_WHITELIST_FILES=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelist})
   '';
+  exportsSystems = let
+    inherit (inputs.self.lib) systems;
+    nixosSystems = set.filter (_: system: system.config.ci.enable) systems;
+    warnSystems = set.filter (_: system: system.config.ci.allowFailure) nixosSystems;
+    toSystems = systems: string.concatMapSep " " string.escapeShellArg (set.keys systems);
+  in ''
+    NF_NIX_SYSTEMS=(${toSystems nixosSystems})
+    NF_NIX_SYSTEMS_WARN=(${toSystems warnSystems})
+  '';
   output = {
     inherit
       (pkgs.buildPackages)
@@ -72,7 +81,7 @@
       '';
     nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''
       ${exports}
-      NF_NIX_SYSTEMS=(${string.concatMapSep " " string.escapeShellArg ci.nixosSystems})
+      ${exportsSystems}
       source ${../ci/actions-test.sh}
     '';
     nf-update = pkgs.writeShellScriptBin "nf-update" ''

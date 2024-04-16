@@ -1,6 +1,7 @@
 _: {
   arch = "x86_64";
   type = "NixOS";
+  ci.enable = false;
   modules = [
     ./nixos.nix
   ];

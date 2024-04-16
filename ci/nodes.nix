@@ -24,15 +24,14 @@ with lib; {
   };
 
   jobs = let
-    inherit ((import ./nix.nix).ci) nixosSystems;
+    enabledSystems = filterAttrs (_: system: system.config.ci.enable) channels.nixfiles.lib.systems;
   in
-    mapAttrs' (k: nameValuePair "${k}") (genAttrs nixosSystems (host: {
-      tasks.${host}.inputs = channels.nixfiles.nixosConfigurations.${host}.config.system.build.toplevel;
-    })) // {
-      extern = {
-        tasks.test.inputs = channels.nixfiles.nixosConfigurations.extern-test.config.system.build.toplevel;
+    mapAttrs' (name: system: nameValuePair "${name}" {
+      tasks.system = {
+        inputs = channels.nixfiles.nixosConfigurations.${name}.config.system.build.toplevel;
+        warn = system.config.ci.allowFailure;
       };
-    };
+    }) enabledSystems;
 
   ci.gh-actions.checkoutOptions.submodules = false;
   cache.cachix.arc = {
