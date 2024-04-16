@@ -140,6 +140,9 @@ in {
       default = domain;
     };
     global.enable = mkEnableOption "globally routeable";
+    online.enable = mkEnableOption "a deployed machine" // {
+      default = true;
+    };
     hostnameForNetwork = mkOption {
       type = attrsOf str;
       default = {};

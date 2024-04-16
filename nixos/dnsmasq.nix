@@ -12,8 +12,8 @@
   inherit (lib.trivial) mapNullable;
   cfg = config.services.dnsmasq;
   inherit (inputs.self.lib) systems;
-  reisenSystems = filterAttrs (_: system:
-    system.config.proxmox.enabled && system.config.proxmox.node.name == "reisen"
+  localSystems = filterAttrs (_: system:
+    system.config.access.online.enable && system.config.network.local.enable or false
   ) systems;
   mkHostRecordPairs = _: system: [
     (mkHostRecordPair "int" system)
@@ -70,7 +70,7 @@ in {
       resolveLocalQueries = mkForce false;
       settings = {
         host-record = mapAttrsToList mkHostRecord systemHosts;
-        dynamic-host = mapAttrsToList mkDynamicHostRecord reisenSystems;
+        dynamic-host = mapAttrsToList mkDynamicHostRecord localSystems;
         server =
           if config.networking.nameservers' != [ ] then map (ns: ns.address) (filter filterns' config.networking.nameservers')
           else filter filterns config.networking.nameservers

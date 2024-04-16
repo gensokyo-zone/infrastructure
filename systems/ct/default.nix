@@ -4,6 +4,7 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  access.online.enable = false;
   network.networks = {
     local = {
       fqdn = null;
