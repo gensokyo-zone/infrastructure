@@ -5,7 +5,8 @@
   ...
 }: let
   inherit (lib.strings) removePrefix;
-  lock = builtins.fromJSON (builtins.readFile ../flake.lock);
+  inherit (lib.trivial) importJSON;
+  lock = importJSON ../flake.lock;
   inherit (lock.nodes) barcodebuddy;
 in stdenvNoCC.mkDerivation {
   pname = "barcodebuddy";

@@ -9,6 +9,7 @@
   inherit (gensokyo-zone.lib) mkAlmostDefault;
   inherit (lib.modules) mkIf mkDefault;
   inherit (lib.attrsets) optionalAttrs;
+  inherit (lib.trivial) importJSON;
   hasSops = options ? sops;
 in {
   config = {
@@ -19,7 +20,7 @@ in {
 
     nix = {
       registry = let
-        lock = builtins.fromJSON (builtins.readFile ../../flake.lock);
+        lock = importJSON ../../flake.lock;
         mapFlake = name: let
           node = lock.nodes.${name};
         in {
