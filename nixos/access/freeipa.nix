@@ -116,10 +116,6 @@ in {
       access.freeipa = {
         host = mkOptionDefault (config.lib.access.getAddressFor (config.lib.access.systemForService "freeipa").name "lan");
       };
-      resolver.addresses = mkIf access.preread.enable (mkMerge [
-        (mkDefault [ "[::1]:5353" "127.0.0.1:5353" ])
-        (mkIf config.systemd.network.enable [ "127.0.0.53" ])
-      ]);
       defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
       stream = let
         prereadConf = {

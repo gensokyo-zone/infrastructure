@@ -4,7 +4,6 @@
   access,
   ...
 }: let
-  inherit (lib.options) mkOption;
   inherit (lib.modules) mkDefault;
   inherit (lib.attrsets) mapAttrs;
   inherit (config.services) nginx;
