@@ -1,11 +1,15 @@
 {
   config,
   lib,
+  utils,
   gensokyo-zone,
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.lists) optional;
+  inherit (lib.strings) concatMapStringsSep;
+  inherit (utils) escapeSystemdPath;
   inherit (gensokyo-zone.lib) unmerged;
   cfg = config.gensokyo-zone.kyuuto;
   nfsEnabled = config.boot.supportedFilesystems.nfs or config.boot.supportedFilesystems.nfs4 or false;
@@ -80,6 +84,11 @@
       };
       setFilesystems = mkOption {
         type = unmerged.types.attrs;
+        internal = true;
+      };
+      setUnits = mkOption {
+        type = unmerged.types.attrs;
+        internal = true;
       };
     };
     config = {
@@ -155,6 +164,30 @@
           options = mkMerge setFilesystemOptions;
         };
       };
+      setUnits = let
+        netMountConfig = {
+          overrideStrategy = mkDefault "asDropin";
+          text = let
+            after =
+              optional nixosConfig.systemd.network.enable "systemd-networkd.service"
+              ++ optional nixosConfig.networking.networkmanager.enable "NetworkManager.service"
+              ++ optional nixosConfig.services.connman.enable "connman.service"
+              ++ optional access.tail.enabled "tailscaled.service";
+          in ''
+            [Unit]
+            JobTimeoutSec=30
+            ${concatMapStringsSep "\n" (unit: "After=${unit}") after}
+
+            [Mount]
+            ForceUnmount=true
+            TimeoutSec=30
+          '';
+        };
+      in {
+        "${escapeSystemdPath "/mnt/kyuuto-media"}.mount" = mkIf config.media.enable netMountConfig;
+        "${escapeSystemdPath "/mnt/kyuuto-transfer"}.mount" = mkIf config.transfer.enable netMountConfig;
+        "${escapeSystemdPath "/mnt/kyuuto-shared"}.mount" = mkIf (config.shared.enable && config.smb.enable) netMountConfig;
+      };
     };
   };
 in {
@@ -181,6 +214,9 @@ in {
     systemd.services.rpc-svcgssd = mkIf (!config.services.nfs.server.enable && nfsEnabled) {
       enable = false;
     };
+    systemd.units = mkIf cfg.enable (
+      unmerged.mergeAttrs cfg.setUnits
+    );
 
     lib.gensokyo-zone.kyuuto = {
       inherit cfg kyuutoModule;
