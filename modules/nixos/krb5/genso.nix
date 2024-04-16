@@ -109,7 +109,7 @@ in {
         ca.cert = let
           caPem = pkgs.fetchurl {
             name = "${cfg.canonHost}.ca.pem";
-            url = "https://freeipa.${cfg.domain}/ipa/config/ca.crt";
+            url = "https://ipa.${cfg.domain}/ipa/config/ca.crt";
             sha256 = "sha256-PKjnjn1jIq9x4BX8+WGkZfj4HQtmnHqmFSALqggo91o=";
           };
         in mkOptionDefault caPem;
