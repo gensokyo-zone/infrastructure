@@ -5,7 +5,6 @@ in {
     overlays = [
       inputs.arcexprs.overlays.default
       overlays.default
-      overlays.unifi
     ];
     config = {
       allowUnfree = true;
