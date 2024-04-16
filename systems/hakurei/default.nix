@@ -24,6 +24,21 @@ _: {
         enable = true;
         id = "login.local";
       };
+      nginx = {
+        enable = true;
+        ports = {
+          https_global = {
+            port = 443;
+            protocol = "https";
+            listen = "wan";
+          };
+          https = {
+            enable = true;
+            port = 444;
+          };
+          http.listen = "wan";
+        };
+      };
       sshd = {
         enable = true;
         ports.global = {

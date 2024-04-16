@@ -10,6 +10,7 @@ _: {
   exports = {
     services = {
       sshd.enable = true;
+      nginx.enable = true;
       plex.enable = true;
       invidious.enable = true;
     };

@@ -10,6 +10,7 @@ _: {
   exports = {
     services = {
       sshd.enable = true;
+      nginx.enable = true;
       unifi.enable = true;
       mosquitto.enable = true;
       dnsmasq.enable = true;
