@@ -68,6 +68,7 @@
       nameservers = let
         inherit (gensokyo-zone.systems) utsuho hakurei;
       in mkMerge [
+        (mkOptionDefault [ ])
         (mkIf access.local.enable [
           (mkIf enableIPv6 utsuho.config.access.address6ForNetwork.local)
           utsuho.config.access.address4ForNetwork.local
