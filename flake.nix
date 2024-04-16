@@ -39,6 +39,10 @@
         utils.follows = "flake-utils";
       };
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     systemd2mqtt = {
       url = "github:arcnmx/systemd2mqtt";
       inputs = {

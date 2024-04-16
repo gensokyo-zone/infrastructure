@@ -12,6 +12,10 @@ _: {
   };
   exports = {
     services = {
+      sshd = {
+        enable = true;
+        ports.public.enable = false;
+      };
       proxmox.enable = true;
     };
   };

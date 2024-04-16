@@ -2,11 +2,12 @@
   extern'test'inputs,
   ...
 }: let
-  inherit (extern'test'inputs.self) nixosModules;
+  inherit (extern'test'inputs.self) nixosModules homeModules;
 in {
   imports = [
     nixosModules.default
     extern'test'inputs.sops-nix.nixosModules.sops
+    extern'test'inputs.home-manager.nixosModules.default
   ];
 
   config = {
@@ -41,6 +42,28 @@ in {
 
     sops = {
       age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+    };
+
+    users.users = {
+      me = {
+        isNormalUser = true;
+      };
+    };
+    home-manager = {
+      sharedModules = [
+        homeModules.default
+      ];
+      users.me = { config, ... }: {
+        config = {
+          home.stateVersion = "23.11";
+          gensokyo-zone = {
+            ssh = {
+              enable = true;
+            };
+          };
+          programs.ssh.enable = true;
+        };
+      };
     };
   };
 }

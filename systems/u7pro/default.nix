@@ -7,4 +7,12 @@ _: {
       address6 = null;
     };
   };
+  exports = {
+    services = {
+      sshd = {
+        enable = true;
+        ports.public.enable = false;
+      };
+    };
+  };
 }
