@@ -1,0 +1,28 @@
+{
+  "files": {
+    "/etc/network/interfaces.d/50-vmbr0-ipv6.conf": {
+      "group": "root",
+      "mode": "0644",
+      "owner": "root",
+      "source": "systems/reisen/net.50-vmbr0-ipv6.conf"
+    },
+    "/etc/sysctl.d/50-net.conf": {
+      "group": "root",
+      "mode": "0644",
+      "owner": "root",
+      "source": "systems/reisen/sysctl.50-net.conf"
+    },
+    "/etc/udev/rules.d/90-dri.rules": {
+      "group": "root",
+      "mode": "0644",
+      "owner": "root",
+      "source": "systems/reisen/udev.90-dri.rules"
+    },
+    "/etc/udev/rules.d/90-z2m.rules": {
+      "group": "root",
+      "mode": "0644",
+      "owner": "root",
+      "source": "systems/reisen/udev.90-z2m.rules"
+    }
+  }
+}

@@ -1,6 +1,9 @@
-{config, lib, ...}: let
-  inherit (lib.options) mkOption;
-  fileModule = {config, name, ...}: {
+let
+  fileModule = {config, name, gensokyo-zone, lib, ...}: let
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkOptionDefault;
+    inherit (lib.strings) hasPrefix removePrefix;
+  in {
     options = with lib.types; {
       path = mkOption {
         type = str;
@@ -21,12 +24,32 @@
       source = mkOption {
         type = path;
       };
+      relativeSource = mkOption {
+        type = nullOr str;
+      };
+    };
+    config = {
+      relativeSource = let
+        flakeRoot = toString gensokyo-zone.self + "/";
+        sourcePath = toString config.source;
+      in mkOptionDefault (
+        if hasPrefix flakeRoot sourcePath then removePrefix flakeRoot sourcePath
+        else null
+      );
     };
   };
+in {config, gensokyo-zone, lib, ...}: let
+  inherit (lib.options) mkOption;
 in {
   options.extern = with lib.types; {
     files = mkOption {
-      type = attrsOf (submodule fileModule);
+      type = attrsOf (submoduleWith {
+        modules = [ fileModule ];
+        specialArgs = {
+          inherit gensokyo-zone;
+          system = config;
+        };
+      });
       default = { };
     };
   };

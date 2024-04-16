@@ -40,9 +40,16 @@
     };
   };
   mkNodeSystems = systems: mapAttrs (_: mkNodeSystem) systems;
-  mkNode = {name}: {
+  mkExtern = system: {
+    files = mapAttrs' (_: file: nameValuePair file.path {
+      source = assert file.relativeSource != null; file.relativeSource;
+      inherit (file) owner group mode;
+    }) system.extern.files;
+  };
+  mkNode = system: {
     users = mkNodeUsers templateUsers;
-    systems = mkNodeSystems (nodeSystems name);
+    systems = mkNodeSystems (nodeSystems system.config.name);
+    extern = mkExtern system.config;
   };
   mkNetwork = system: {
     inherit (system.config.access) hostName;
@@ -58,6 +65,8 @@
     network = mkNetwork system;
   };
 in {
-  reisen = mkNode {name = "reisen";};
+  nodes = let
+    nodes = filterAttrs (_: node: node.config.proxmox.node.enable) systems;
+  in mapAttrs (_: mkNode) nodes;
   systems = mapAttrs mkSystem systems;
 }
