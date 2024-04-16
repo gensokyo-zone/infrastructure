@@ -77,7 +77,7 @@ in {
     }.secrets.github-access-token-public = {
       sopsFile = mkDefault ../secrets/nix.yaml;
       group = mkDefault "users";
-      mode = mkDefault "0644";
+      mode = mkDefault "0640";
     };
   };
 }
