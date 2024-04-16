@@ -148,6 +148,7 @@
       "ldaps://idp.${inputs.self.lib.lib.domain}"
     ];
     LDAPBASE = mkBaseDn inputs.self.lib.lib.domain;
+    LDAPSASL_NOCANON = "on";
   };
   arc = let
     ldapdm = cmd: pkgs.writeShellScriptBin "dm-${cmd}" ''
