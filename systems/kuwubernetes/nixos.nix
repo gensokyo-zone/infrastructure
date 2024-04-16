@@ -45,7 +45,7 @@ in {
     {device = "/dev/disk/by-uuid/b374e454-7af5-46fc-b949-24e38a2216d5";}
   ];
 
-  networking.interfaces.ens18 = mkIf (!config.systemd.network.enable) {
+  networking.interfaces.ens18 = mkIf (!config.networking.useNetworkd) {
     # TODO: stop using dhcp
     useDHCP = true;
   };
