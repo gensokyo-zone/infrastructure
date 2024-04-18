@@ -11,12 +11,21 @@ let
     inherit (gensokyo-zone.lib) unmerged coalesce mkAlmostOptionDefault mapListToAttrs;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault mkDefault;
-    inherit (lib.lists) length head elem optional filter unique intersectLists;
+    inherit (lib.lists) head elem optional filter unique intersectLists;
     inherit (lib.attrsets) filterAttrs mapAttrsToList nameValuePair;
     inherit (lib.strings) optionalString;
     inherit (osConfig.gensokyo-zone) access;
     cfg = gensokyo-zone.ssh.cfg;
     system = gensokyo-zone.systems.${config.systemName}.config;
+    networks = let
+      fallbackNetwork =
+        if system.network.networks.local.enable or false && access.local.enable then "local"
+        else if system.access.global.enable then null
+        else if system.network.networks.int.enable or false then "int"
+        else if system.network.networks.local.enable or false then "local"
+        else null;
+      networks = map (name: coalesce [ name fallbackNetwork ]) config.networks;
+    in unique networks;
   in {
     options = with lib.types; {
       enable = mkEnableOption "ssh client configuration" // {
@@ -56,18 +65,11 @@ let
       networks = let
         enabledNetworks = filterAttrs (_: net: net.enable) system.network.networks;
         networkNames = mapAttrsToList (_: net: net.name) enabledNetworks;
-        networks' = filter (name: name == null || elem name networkNames) cfg.networks;
-        fallbackNetwork =
-          if system.network.networks.local.enable or false && access.local.enable then "local"
-          else if system.access.global.enable then null
-          else if system.network.networks.int.enable or false then "int"
-          else if system.network.networks.local.enable or false then "local"
-          else null;
-        networks = map (name: coalesce [ name fallbackNetwork ]) networks';
-      in mkOptionDefault (unique networks);
+        networks = filter (name: name == null || elem name networkNames) cfg.networks;
+      in mkOptionDefault networks;
       set = {
         matchBlocksSettings = let
-          canonNetworkName' = intersectLists config.networks [ null "int" "local" ];
+          canonNetworkName' = intersectLists networks [ null "int" "local" ];
           canonNetworkName = if canonNetworkName' != [ ] then head canonNetworkName' else null;
         in mapListToAttrs (network: let
           name = config.name + optionalString (network != canonNetworkName) "-${network}";
@@ -85,9 +87,9 @@ let
           );
           user = mkIf (config.user != null) (mkDefault config.user);
           port = mkIf (port != 22) (mkDefault port);
-          proxyJump = mkIf needsProxy (assert config.name != cfg.proxyJump;
-            mkAlmostOptionDefault cfg.proxyJump
-          );
+          proxyJump = mkIf needsProxy (lib.warnIf (config.name == cfg.proxyJump) "proxyJump self-reference" (mkAlmostOptionDefault (
+            cfg.proxyJump
+          )));
           identitiesOnly = mkIf (config.systemName == "u7pro") (mkAlmostOptionDefault true);
           extraOptions = mkMerge [
             (unmerged.mergeAttrs config.extraOptions)
@@ -95,7 +97,7 @@ let
               HostKeyAlias = mkIf (config.hostName != null && network != null) (mkOptionDefault system.access.fqdn);
             }
           ];
-        }) config.networks;
+        }) networks;
       };
     };
   };
