@@ -72,7 +72,7 @@ in {
   services.vouch-proxy = {
     authUrl = "https://${virtualHosts.keycloak'local.serverName}/realms/${config.networking.domain}";
     domain = "login.local.${config.networking.domain}";
-    #cookie.domain = "local.${config.networking.domain}";
+    settings.cookie.domain = "local.${config.networking.domain}";
   };
 
   security.acme.certs = {
@@ -257,13 +257,13 @@ in {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
+        proxy.url = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
       };
       barcodebuddy = {
         # not the real bbuddy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        locations."/".proxyPass = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
+        proxy.url = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
       };
       freepbx = {
         ssl.cert.enable = true;

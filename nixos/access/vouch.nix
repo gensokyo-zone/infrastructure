@@ -14,52 +14,51 @@ in {
       locations = {
         "/" = {
           ssl.force = true;
+          proxy.enable = true;
           extraConfig = ''
             proxy_redirect default;
-            set $x_proxy_host $x_forwarded_host;
           '';
         };
         "/validate" = {config, virtualHost, ...}: {
           proxied.enable = true;
-          proxyPass = mkDefault (virtualHost.locations."/".proxyPass + "/validate");
-          proxy.headers.enableRecommended = true;
+          proxy.enable = true;
           local.denyGlobal = true;
-          extraConfig = ''
-            set $x_proxy_host $x_forwarded_host;
-          '';
         };
       };
       localLocations = kanidmDomain: mkIf (nginx.vouch.localSso.enable && false) {
-        "/" = {
-          proxied.xvars.enable = true;
+        "/" = { xvars, ... }: {
           extraConfig = ''
-            proxy_redirect https://sso.${networking.domain}/ $x_scheme://${kanidmDomain}/;
+            proxy_redirect https://sso.${networking.domain}/ ${xvars.get.scheme}://${kanidmDomain}/;
           '';
         };
       };
       name.shortServer = mkDefault "login";
     in {
-      vouch = {
-        inherit name;
+      vouch = { xvars, ... }: {
+        inherit name locations;
         serverAliases = [ nginx.vouch.doubleProxy.serverName ];
         proxied.enable = true;
+        proxy = {
+          url = mkDefault (
+            access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login"; }
+          );
+          host = mkDefault xvars.get.host;
+        };
         local.denyGlobal = true;
-        locations = mkMerge [
-          locations
-          {
-            "/".proxyPass = mkDefault (
-              access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login"; }
-            );
-          }
-        ];
       };
-      vouch'local = {
+      vouch'local = { xvars, ... }: {
         name = {
           inherit (name) shortServer;
           includeTailscale = mkDefault false;
         };
         serverAliases = mkIf cfg.enable [ nginx.vouch.doubleProxy.localServerName ];
         proxied.enable = true;
+        proxy = {
+          url = mkDefault (
+            access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login.local"; }
+          );
+          host = mkDefault xvars.get.host;
+        };
         local.enable = true;
         ssl = {
           force = true;
@@ -67,15 +66,10 @@ in {
         };
         locations = mkMerge [
           locations
-          {
-            "/".proxyPass = mkDefault (
-              access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login.local"; }
-            );
-          }
           (localLocations "sso.local.${networking.domain}")
         ];
       };
-      vouch'tail = {
+      vouch'tail = { xvars, ... }: {
         enable = mkDefault (tailscale.enable && !nginx.virtualHosts.vouch'local.name.includeTailscale);
         ssl.cert.copyFromVhost = "vouch'local";
         name = {
@@ -83,11 +77,12 @@ in {
           qualifier = mkDefault "tail";
         };
         local.enable = true;
+        proxy = {
+          url = mkDefault nginx.virtualHosts.vouch'local.locations."/".proxyPass;
+          host = mkDefault xvars.get.host;
+        };
         locations = mkMerge [
           locations
-          {
-            "/".proxyPass = mkDefault nginx.virtualHosts.vouch'local.locations."/".proxyPass;
-          }
           (localLocations "sso.tail.${networking.domain}")
         ];
       };

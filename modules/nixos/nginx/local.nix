@@ -56,7 +56,7 @@
       set ${varPrefix}client 1;
     }
   '';
-  localModule = {config, ...}: let
+  localModule = {config, xvars, ...}: let
     cfg = config.local;
   in {
     options.local = with lib.types; {
@@ -100,7 +100,7 @@
       in mkMerge [
         (mkIf cfg.emitDenyGlobal (mkBefore allowDirectives))
         (mkIf cfg.emitVars (mkBefore (mkAddrVar "$remote_addr" "$local_")))
-        (mkIf cfg.emitVars (mkBefore (mkAddrVar "$x_remote_addr" "$x_local_")))
+        (mkIf (cfg.emitVars && config.xvars.enable) (mkBefore (mkAddrVar (xvars.remote_addr.get) "$x_local_")))
       ];
     };
   };
@@ -130,13 +130,7 @@
 
     options = with lib.types; {
       locations = mkOption {
-        type = attrsOf (submoduleWith {
-          modules = [locationModule];
-          shorthandOnlyDefinesConfig = true;
-          specialArgs = {
-            virtualHost = config;
-          };
-        });
+        type = attrsOf (submodule [locationModule]);
       };
     };
 
@@ -149,13 +143,7 @@
 in {
   options = with lib.types; {
     services.nginx.virtualHosts = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [hostModule];
-        shorthandOnlyDefinesConfig = true;
-        specialArgs = {
-          nixosConfig = config;
-        };
-      });
+      type = attrsOf (submodule [hostModule]);
     };
   };
 }

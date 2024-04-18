@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.lists) optional;
   inherit (config.services) nginx;
   system = access.systemForService "freepbx";
@@ -15,38 +15,50 @@ in {
       proxyScheme = "https";
       url = access.proxyUrlFor { serviceName = "freepbx"; portName = proxyScheme; };
       ucpUrl = access.proxyUrlFor { serviceName = "freepbx"; portName = "ucp-ssl"; };
+      ucpPath = "/socket.io";
       # TODO: ports.asterisk/asterisk-ssl?
       extraConfig = ''
         proxy_buffer_size 128k;
         proxy_buffers 4 256k;
         proxy_busy_buffers_size 256k;
-
-        set $pbx_scheme $scheme;
-        if ($http_x_forwarded_proto) {
-          set $pbx_scheme $http_x_forwarded_proto;
-        }
-        proxy_redirect ${proxyScheme}://$host/ $pbx_scheme://$host/;
       '';
       locations = {
-        "/" = {
-          proxyPass = mkDefault url;
+        "/" = { xvars, ... }: {
+          xvars.enable = true;
+          proxy = {
+            enable = true;
+            redirect = {
+              enable = true;
+              fromScheme = xvars.get.proxy_scheme;
+            };
+          };
         };
-        "/socket.io" = {
-          proxy.websocket.enable = true;
-          proxyPass = mkDefault "${ucpUrl}/socket.io";
+        ${ucpPath} = { xvars, virtualHost, ... }: {
+          proxy = {
+            enable = true;
+            websocket.enable = true;
+          };
           extraConfig = ''
             proxy_hide_header Access-Control-Allow-Origin;
-            add_header Access-Control-Allow-Origin $pbx_scheme://$host;
+            add_header Access-Control-Allow-Origin ${xvars.get.scheme}://${virtualHost.serverName};
           '';
         };
       };
+      allLocations = mkMerge [
+        locations
+        {
+          ${ucpPath}.proxy.url = mkDefault nginx.virtualHosts.freepbx'ucp.proxy.url;
+        }
+      ];
       name.shortServer = mkDefault "pbx";
       kTLS = mkDefault true;
     in {
       freepbx = {
         vouch.enable = mkDefault true;
         ssl.force = true;
-        inherit name locations extraConfig kTLS;
+        proxy.url = mkDefault url;
+        locations = allLocations;
+        inherit name extraConfig kTLS;
       };
       freepbx'ucp = {
         serverName = mkDefault nginx.virtualHosts.freepbx.serverName;
@@ -62,12 +74,14 @@ in {
             extraParameters = [ "default_server" ];
           };
         };
-        proxy.websocket.enable = true;
+        proxy = {
+          url = mkDefault ucpUrl;
+          websocket.enable = true;
+        };
         vouch.enable = mkDefault true;
         local.denyGlobal = mkDefault nginx.virtualHosts.freepbx.local.denyGlobal;
-        locations."/socket.io" = {
-          inherit (locations."/socket.io") proxy extraConfig;
-          proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/socket.io".proxyPass;
+        locations = {
+          inherit (locations) "/socket.io";
         };
         inherit extraConfig kTLS;
       };
@@ -84,16 +98,9 @@ in {
           };
         };
         ssl.cert.copyFromVhost = "freepbx";
+        proxy.url = mkDefault nginx.virtualHosts.freepbx.proxy.url;
         local.enable = true;
-        locations = {
-          "/" = {
-            proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/".proxyPass;
-          };
-          "/socket.io" = {
-            inherit (locations."/socket.io") proxy extraConfig;
-            proxyPass = mkDefault nginx.virtualHosts.freepbx.locations."/socket.io".proxyPass;
-          };
-        };
+        locations = allLocations;
         inherit name extraConfig kTLS;
       };
     };

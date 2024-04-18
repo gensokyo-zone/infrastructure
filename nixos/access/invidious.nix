@@ -22,15 +22,17 @@ in {
         # Buffering off send to the client as soon as the data is received from invidious.
         proxy_redirect off;
         proxy_buffering off;
-        set $x_proxy_host $x_forwarded_host;
       '';
-      location = {
-        proxy.websocket.enable = true;
-        proxy.headers.enableRecommended = true;
+      location = { xvars, ... }: {
+        proxy = {
+          enable = true;
+          websocket.enable = true;
+          headers.enableRecommended = true;
+        };
         extraConfig = ''
           proxy_hide_header content-security-policy;
           add_header content-security-policy "${contentSecurityPolicy}";
-          proxy_cookie_domain ${virtualHosts.invidious.serverName} $x_forwarded_host;
+          proxy_cookie_domain ${virtualHosts.invidious.serverName} ${xvars.get.host};
         '';
       };
       name.shortServer = mkDefault "yt";
@@ -40,20 +42,22 @@ in {
       invidious = {
         # lua can't handle HTTP 2.0 requests, so layer it behind another proxy...
         inherit name extraConfig kTLS;
-        locations."/" = {
-          proxyPass = "http://localhost:${toString config.services.nginx.defaultHTTPListenPort}";
-          proxy.headers.enableRecommended = true;
+        proxy = {
+          url = mkDefault "http://localhost:${toString config.services.nginx.defaultHTTPListenPort}";
+          host = mkDefault virtualHosts.invidious'int.serverName;
+        };
+        locations."/" = { xvars, ... }: {
+          proxy.enable = true;
           extraConfig = ''
             proxy_http_version 1.1;
-            set $x_proxy_host ${virtualHosts.invidious'int.serverName};
-            set $invidious_req_check $x_scheme:$request_uri;
+            set $invidious_req_check ${xvars.get.scheme}:$request_uri;
             if ($invidious_req_check = "http:/") {
-              return ${toString virtualHosts.invidious.redirectCode} https://$x_forwarded_host$request_uri;
+              return ${toString virtualHosts.invidious.redirectCode} https://${xvars.get.host}$request_uri;
             }
           '';
         };
       };
-      invidious'int = { config, ... }: {
+      invidious'int = { config, xvars, ... }: {
         serverName = "@invidious_internal";
         proxied.enable = true;
         local.denyGlobal = true;
@@ -82,29 +86,31 @@ in {
             '';
           };
         };
+        proxy = {
+          host = mkDefault xvars.get.host;
+          url = mkDefault (if cfg.enable
+            then "http://localhost:${toString cfg.port}"
+            else access.proxyUrlFor { serviceName = "invidious"; }
+          );
+        };
         locations = {
           "/" = mkMerge [
             location
             {
               vouch.requireAuth = true;
-              proxyPass = mkDefault (if cfg.enable
-                then "http://localhost:${toString cfg.port}"
-                else access.proxyUrlFor { serviceName = "invidious"; }
-              );
             }
           ];
         };
         inherit extraConfig;
       };
-      invidious'local = {
+      invidious'local = { xvars, ... }: {
         local.enable = true;
         ssl.cert.copyFromVhost = "invidious";
-        locations."/" = mkMerge [
-          location
-          {
-            proxyPass = mkDefault virtualHosts.invidious'int.locations."/".proxyPass;
-          }
-        ];
+        proxy = {
+          host = mkDefault xvars.get.host;
+          url = mkDefault virtualHosts.invidious'int.proxy.url;
+        };
+        locations."/" = location;
         inherit name extraConfig kTLS;
       };
     };

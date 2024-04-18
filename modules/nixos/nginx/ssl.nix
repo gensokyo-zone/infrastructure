@@ -10,9 +10,11 @@
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.trivial) warnIf;
   inherit (config.services) nginx;
-  forceRedirectConfig = virtualHost: ''
-    if ($x_scheme = http) {
-      return ${toString virtualHost.redirectCode} https://$x_forwarded_host$request_uri;
+  forceRedirectConfig = virtualHost: let
+    xvars = virtualHost.xvars.lib;
+  in ''
+    if (${xvars.get.scheme} = http) {
+      return ${toString virtualHost.redirectCode} https://${xvars.get.host}$request_uri;
     }
   '';
   locationModule = { config, virtualHost, ... }: let
@@ -23,7 +25,7 @@
       force = mkEnableOption "redirect to SSL";
     };
     config = {
-      proxied.xvars.enable = mkIf emitForce true;
+      xvars.enable = mkIf emitForce true;
       extraConfig = mkIf emitForce (forceRedirectConfig virtualHost);
     };
   };
@@ -119,7 +121,7 @@
       sslCertificate = mkIf (cfg.cert.path != null) (mkAlmostOptionDefault cfg.cert.path);
       sslCertificateKey = mkIf (cfg.cert.keyPath != null) (mkAlmostOptionDefault cfg.cert.keyPath);
 
-      proxied.xvars.enable = mkIf emitForce true;
+      xvars.enable = mkIf emitForce true;
       extraConfig = mkIf emitForce (forceRedirectConfig config);
     };
   };

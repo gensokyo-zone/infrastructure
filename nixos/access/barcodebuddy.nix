@@ -7,9 +7,6 @@
   inherit (config.services) barcodebuddy nginx;
   name.shortServer = mkDefault "bbuddy";
   serverName = "@bbuddy_internal";
-  extraConfig = ''
-    set $x_proxy_host ${serverName};
-  '';
 in {
   config.services.nginx.virtualHosts = {
     barcodebuddy'php = mkIf barcodebuddy.enable {
@@ -18,35 +15,44 @@ in {
       local.denyGlobal = true;
     };
     barcodebuddy = {
-      inherit name extraConfig;
+      inherit name;
       vouch = {
         enable = true;
         requireAuth = false;
       };
+      proxy = {
+        url = mkIf barcodebuddy.enable (mkDefault
+          "http://localhost:${toString nginx.defaultHTTPListenPort}"
+        );
+        host = mkDefault serverName;
+      };
       locations = {
         "/api/" = {
-          proxy.headers.enableRecommended = true;
-          proxyPass = mkDefault "${nginx.virtualHosts.barcodebuddy.locations."/".proxyPass}/api/";
+          proxy.enable = true;
         };
         "/" = {
-          proxy.headers.enableRecommended = true;
+          proxy.enable = true;
           vouch.requireAuth = true;
-          proxyPass = mkIf barcodebuddy.enable (mkDefault
-            "http://localhost:${toString nginx.defaultHTTPListenPort}"
-          );
         };
       };
     };
     barcodebuddy'local = {
-      inherit name extraConfig;
+      inherit name;
       ssl.cert.copyFromVhost = "barcodebuddy";
       local.enable = mkDefault true;
-      locations."/" = {
-        proxy.headers.enableRecommended = true;
+      proxy = {
+        url = mkDefault nginx.virtualHosts.barcodebuddy.proxy.url;
+        host = mkDefault nginx.virtualHosts.barcodebuddy.proxy.host;
+      };
+      locations."/" = { config, ... }: {
+        proxy = {
+          headers.enableRecommended = true;
+          redirect = {
+            enable = true;
+            fromHost = config.proxy.host;
+          };
+        };
         proxyPass = mkDefault nginx.virtualHosts.barcodebuddy.locations."/".proxyPass;
-        extraConfig = ''
-          proxy_redirect $x_scheme://${serverName}/ $x_scheme://$x_host/;
-        '';
       };
     };
   };

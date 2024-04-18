@@ -8,7 +8,7 @@
   inherit (nixlib.strings) splitString toLower;
   inherit (nixlib.lists) imap0 elemAt findFirst;
   inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
-  inherit (nixlib.strings) hasPrefix hasInfix substring fixedWidthString replaceStrings concatMapStringsSep;
+  inherit (nixlib.strings) hasPrefix hasInfix removePrefix substring fixedWidthString replaceStrings concatMapStringsSep match toInt;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
   toHexStringLower = v: toLower (toHexString v);
@@ -31,6 +31,18 @@
       nibble0 + (fixedWidthString 1 "0" (toHexStringLower nibble1));
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 
+  parseUrl = url: let
+    parts = match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
+    port' = elemAt parts 2;
+  in assert parts != null; rec {
+    inherit url parts;
+    scheme = elemAt parts 0;
+    host = elemAt parts 1;
+    port = if port' != "" then toInt (removePrefix ":" port') else null;
+    hostport = host + port';
+    path = elemAt parts 3;
+  };
+
   userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
 
   mkWinPath = replaceStrings ["/"] ["\\"];
@@ -51,11 +63,17 @@
   mkAlmostOptionDefault = mkOverride overrideAlmostOptionDefault;
   mkAlmostDefault = mkOverride overrideAlmostDefault;
   mkAlmostForce = mkOverride overrideAlmostForce;
+  orderJustBefore = 400;
   orderBefore = 500;
+  orderAlmostBefore = 600;
   orderNone = 1000;
-  orderAfter = 1500;
   orderAlmostAfter = 1400;
-  mkAlmostAfter = mkOrder 1400;
+  orderAfter = 1500;
+  orderJustAfter = 1600;
+  mkJustBefore = mkOrder orderJustBefore;
+  mkAlmostBefore = mkOrder orderAlmostBefore;
+  mkAlmostAfter = mkOrder orderAlmostAfter;
+  mkJustAfter = mkOrder orderJustAfter;
   mapOverride = priority: mapAttrs (_: mkOverride priority);
   mapOptionDefaults = mapOverride overrideOptionDefault;
   mapAlmostOptionDefaults = mapOverride overrideAlmostOptionDefault;
@@ -79,13 +97,13 @@ in {
   lib = {
     domain = "gensokyo.zone";
     inherit treeToModulesOutput userIs
-      eui64 mkWinPath mkBaseDn mkAddress6
+      eui64 parseUrl mkWinPath mkBaseDn mkAddress6
       toHexStringLower hexCharToInt
       mapListToAttrs coalesce
-      mkAlmostOptionDefault mkAlmostDefault mkAlmostForce  mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
+      mkAlmostOptionDefault mkAlmostDefault mkAlmostForce mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
       overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
-      orderBefore orderNone orderAfter orderAlmostAfter
-      mkAlmostAfter;
+      orderJustBefore orderBefore orderAlmostBefore orderNone orderAfter orderAlmostAfter orderJustAfter
+      mkJustBefore mkAlmostBefore mkAlmostAfter mkJustAfter;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   gensokyo-zone = {

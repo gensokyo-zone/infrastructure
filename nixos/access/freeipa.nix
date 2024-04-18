@@ -18,31 +18,28 @@ let
     ssl_verify_client optional_no_ca;
   '';
   locations' = domain: {
-    "/" = {
+    "/" = { config, xvars, ... }: {
+      proxy = {
+        enable = true;
+        url = mkDefault access.proxyPass;
+        host = mkDefault domain;
+        headers = {
+          rewriteReferer.enable = true;
+          set = {
+            X-SSL-CERT = "$ssl_client_escaped_cert";
+          };
+        };
+        redirect = {
+          enable = true;
+          fromHost = config.proxy.host;
+          fromScheme = xvars.get.proxy_scheme;
+        };
+      };
       proxyPass = mkDefault access.proxyPass;
       recommendedProxySettings = false;
       extraConfig = ''
-        proxy_set_header Host ${domain};
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Server $host;
-        proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
-        proxy_redirect https://${domain}/ $scheme://$host/;
-
         proxy_ssl_server_name on;
         proxy_ssl_name ${domain};
-
-        set $x_referer $http_referer;
-        if ($x_referer ~ "^https://([^/]*)/(.*)$") {
-          set $x_referer_host $1;
-          set $x_referer_path $2;
-        }
-        if ($x_referer_host = $host) {
-          set $x_referer "https://${domain}/$x_referer_path";
-        }
-        proxy_set_header Referer $x_referer;
       '';
     };
   };

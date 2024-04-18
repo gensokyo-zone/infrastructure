@@ -3,25 +3,24 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
-  inherit (lib.strings) escapeRegex;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.strings) removePrefix escapeRegex;
   inherit (config.services) grocy nginx;
   inherit (config) networking;
   name.shortServer = mkDefault "grocy";
   serverName = "@grocy_internal";
   serverName'local = "@grocy_internal_local";
   extraConfig = ''
-    set $x_proxy_host ${serverName};
     set $grocy_user "";
   '';
-  location = {
+  locations."/" = {
     vouch.setProxyHeader = true;
-    proxy.headers.enableRecommended = true;
-    extraConfig = ''
-      proxy_set_header X-Grocy-User $grocy_user;
-    '';
+    proxy = {
+      enable = true;
+      headers.set.X-Grocy-User = mkOptionDefault "$grocy_user";
+    };
   };
-  luaAuthHost = { config, ... }: {
+  luaAuthHost = { config, xvars, ... }: {
     vouch.auth.lua = {
       enable = true;
       accessRequest = ''
@@ -34,7 +33,7 @@
             status = ngx.HTTP_OK,
             header = { },
           }
-        -- elseif ngx.re.match(ngx.var["x_forwarded_host"], [[grocy\.(local|tail)\.${escapeRegex networking.domain}$]]) then
+        -- elseif ngx.re.match(ngx.var["${removePrefix "$" (xvars.get.host)}"], [[grocy\.(local|tail)\.${escapeRegex networking.domain}$]]) then
         --   ngx.ctx.auth_res = {
         --     status = ngx.HTTP_OK,
         --     header = { },
@@ -54,35 +53,40 @@ in {
         inherit serverName;
       };
       grocy = mkMerge [ luaAuthHost {
-        inherit name extraConfig;
+        inherit name extraConfig locations;
         vouch.enable = true;
-        locations."/" = mkMerge [ location {
-          proxyPass = mkIf (grocy.enable) (mkDefault
+        proxy = {
+          url = mkIf grocy.enable (mkDefault
             "http://localhost:${toString nginx.defaultHTTPListenPort}"
           );
-        } ];
+          host = mkDefault serverName;
+        };
       } ];
       grocy'local = {
         inherit name;
         local.enable = mkDefault true;
         ssl.cert.copyFromVhost = "grocy";
-        locations."/" = {
-          proxy.headers.enableRecommended = true;
-          proxyPass = mkDefault "http://localhost:${toString nginx.defaultHTTPListenPort}";
+        proxy = {
+          url = mkDefault "http://localhost:${toString nginx.defaultHTTPListenPort}";
+          host = nginx.virtualHosts.grocy'local'int.serverName;
         };
-        extraConfig = ''
-          set $x_proxy_host ${serverName'local};
-        '';
+        locations."/" = {
+          proxy.enable = true;
+        };
       };
       grocy'local'int = mkMerge [ luaAuthHost {
         # internal proxy workaround for http2 lua compat issues
         serverName = serverName'local;
-        inherit name extraConfig;
+        inherit name extraConfig locations;
+        proxy = {
+          url = mkDefault nginx.virtualHosts.grocy.proxy.url;
+          host = mkDefault nginx.virtualHosts.grocy.proxy.host;
+        };
         proxied.enable = true;
-        vouch.enable = true;
-        locations."/" = mkMerge [ location {
-          proxyPass = mkDefault nginx.virtualHosts.grocy.locations."/".proxyPass;
-        } ];
+        vouch = {
+          enable = true;
+          localSso.enable = true;
+        };
       } ];
     };
   };
