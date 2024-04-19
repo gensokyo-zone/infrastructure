@@ -301,7 +301,7 @@ EOT
 
   memory {
     dedicated = 16384
-    swap      = 12288
+    swap      = 32768
   }
 
   cpu {

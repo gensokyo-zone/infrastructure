@@ -20,6 +20,8 @@
     networkNamespace.name = "ns1";
   };
 
+  boot.tmp.tmpfsSize = "32G";
+
   networking.namespaces.ns1 = {
     dhcpcd.enable = true;
     nftables = {
