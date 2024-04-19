@@ -59,7 +59,7 @@ in {
     };
     preread = {
       enable = mkEnableOption "ssl preread" // {
-        default = true;
+        # TODO: default = true;
       };
       port = mkOption {
         type = port;

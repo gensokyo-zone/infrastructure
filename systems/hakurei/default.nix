@@ -1,4 +1,4 @@
-_: {
+{ lib, ... }: {
   imports = [
     ./proxmox.nix
   ];
@@ -24,17 +24,20 @@ _: {
         enable = true;
         id = "login.local";
       };
-      nginx = {
+      nginx = let
+        inherit (lib.modules) mkIf;
+        preread = false;
+      in {
         enable = true;
         ports = {
-          https_global = {
+          https_global = mkIf preread {
             port = 443;
             protocol = "https";
             listen = "wan";
           };
           https = {
-            enable = true;
-            port = 444;
+            port = mkIf preread 444;
+            listen = mkIf (!preread) "wan";
           };
           http.listen = "wan";
         };
