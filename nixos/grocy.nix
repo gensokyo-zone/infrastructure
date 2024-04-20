@@ -1,5 +1,5 @@
 {config, lib, ...}: let
-  inherit (lib.modules) mkIf mkDefault mkAfter;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   cfg = config.services.grocy;
 in {
   config = {
@@ -12,50 +12,57 @@ in {
       };
     };
     services.nginx.virtualHosts = {
-      grocy'php = mkIf cfg.enable ({config, xvars, ...}: let
-        extraConfig = mkAfter ''
-          set $grocy_user guest;
-          set $grocy_middleware Grocy\Middleware\ReverseProxyAuthMiddleware;
-          set $grocy_auth_header GENSO_GROCY_USER;
-          set $grocy_auth_env true;
-
-          if ($http_grocy_api_key) {
-            set $grocy_user "";
-          }
-          if ($request_uri ~ "^/api(/.*|)$") {
-            set $grocy_user "";
-          }
-          if ($http_x_vouch_user ~ "^([^@]+)@.*$") {
-            set $grocy_user $1;
-          }
-          if ($http_x_grocy_user) {
-            #set $grocy_auth_header X-Grocy-User;
-            #set $grocy_auth_env false;
-            set $grocy_user $http_x_grocy_user;
-          }
-          if ($grocy_user = "") {
+      grocy'php = mkIf cfg.enable ({config, ...}: let
+        authHeader = "GENSO_GROCY_USER";
+        extraConfig = mkMerge [
+          (mkBefore ''
             set $grocy_middleware Grocy\Middleware\DefaultAuthMiddleware;
-          }
+            set $grocy_user "";
+          '')
+          (mkIf config.proxied.enable ''
+            set $grocy_user guest;
+            set $grocy_auth_header ${authHeader};
+            set $grocy_auth_env true;
 
-          fastcgi_param GROCY_AUTH_CLASS $grocy_middleware;
-          fastcgi_param GROCY_REVERSE_PROXY_AUTH_USE_ENV $grocy_auth_env;
-          fastcgi_param GROCY_REVERSE_PROXY_AUTH_HEADER $grocy_auth_header;
-          fastcgi_param GENSO_GROCY_USER $grocy_user;
+            if ($http_grocy_api_key) {
+              set $grocy_user "";
+            }
+            if ($request_uri ~ "^/api(/.*|)$") {
+              set $grocy_user "";
+            }
+            if ($http_x_vouch_user ~ "^([^@]+)@.*$") {
+              set $grocy_user $1;
+            }
+            if ($http_x_grocy_user) {
+              #set $grocy_auth_header X-Grocy-User;
+              #set $grocy_auth_env false;
+              set $grocy_user $http_x_grocy_user;
+            }
 
-          set $grocy_https "";
-          if (${xvars.get.scheme} = https) {
-            set $grocy_https 1;
-          }
-          fastcgi_param HTTP_HOST ${xvars.get.host};
-          fastcgi_param REQUEST_SCHEME ${xvars.get.scheme};
-          fastcgi_param HTTPS $grocy_https if_not_empty;
-        '';
+            if ($grocy_user) {
+              set $grocy_middleware Grocy\Middleware\ReverseProxyAuthMiddleware;
+            }
+          '')
+        ];
       in {
         name.shortServer = mkDefault "grocy";
-        proxied.enable = true;
-        xvars.enable = true;
-        local.denyGlobal = true;
         locations."~ \\.php$" = {
+          fastcgi = {
+            enable = true;
+            phpfpmPool = "grocy";
+            socket = null;
+            includeDefaults = false;
+            params = mkMerge [
+              {
+                GROCY_AUTH_CLASS = "$grocy_middleware";
+              }
+              (mkIf config.proxied.enable {
+                GROCY_REVERSE_PROXY_AUTH_USE_ENV = "$grocy_auth_env";
+                GROCY_REVERSE_PROXY_AUTH_HEADER = "$grocy_auth_header";
+                ${authHeader} = "$grocy_user";
+              })
+            ];
+          };
           inherit extraConfig;
         };
       });

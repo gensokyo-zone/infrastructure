@@ -93,9 +93,8 @@ let
         xvars.get.proxy_host
       ];
       rewriteReferer = ''
-        set $x_set_referer ${xvars.get.referer};
         if (${xvars.get.referer_host} = $host) {
-          set $x_set_referer ${config.proxy.parsed.scheme}://${hostHeader}${xvars.get.referer_path};
+          ${xvars.init "referer" "${config.proxy.parsed.scheme}://${hostHeader}${xvars.get.referer_path}"}
         }
       '';
       redirect = ''
@@ -106,6 +105,7 @@ let
         name: value: "proxy_set_header ${name} ${xvars.escapeString value};"
       ) setHeaders');
     in {
+      xvars.enable = mkIf cfg.headers.rewriteReferer.enable true;
       proxy = {
         enabled = mkOptionDefault (config.proxyPass != null);
         path = mkIf (hasPrefix "/" name) (mkOptionDefault name);
@@ -122,7 +122,7 @@ let
               Host = mkIf (cfg.headers.enableRecommended != "nixpkgs") (mkAlmostOptionDefault cfg.host);
             })
             (mkIf cfg.headers.rewriteReferer.enable {
-              Referer = mkAlmostOptionDefault "$x_set_referer";
+              Referer = mkAlmostOptionDefault xvars.get.referer;
             })
             (mkIf cfg.websocket.enable (mapOptionDefaults {
               Upgrade = "$http_upgrade";

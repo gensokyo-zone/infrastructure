@@ -1,7 +1,7 @@
-{ config, lib, inputs, pkgs, ... }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapOptionDefaults;
+{ config, lib, gensokyo-zone, pkgs, ... }: let
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults unmerged;
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrs' nameValuePair;
   inherit (lib.lists) isList imap0;
   inherit (lib.strings) concatStringsSep;
@@ -77,8 +77,17 @@ in {
     nginxConfig = mkOption {
       type = lines;
     };
-    nginxPhpConfig = mkOption {
-      type = lines;
+    nginxPhpLocation = mkOption {
+      type = str;
+      default = "~ \\.php$";
+    };
+    nginxPhpSettings = mkOption {
+      type = unmerged.type;
+    };
+    phpConfig = mkOption {
+      type = str;
+      default = "";
+      description = "CONFIG_PATH (conf.php) contents";
     };
   };
 
@@ -92,7 +101,7 @@ in {
           DISABLE_AUTHENTICATION = false;
           DATABASE_PATH = cfg.databasePath;
           AUTHDB_PATH = cfg.authDatabasePath;
-          CONFIG_PATH = "${pkgs.writeText "barcodebuddy.conf.php" ""}";
+          CONFIG_PATH = "${pkgs.writeText "barcodebuddy.conf.php" cfg.phpConfig}";
         };
         redis = mapOptionDefaults {
           USE_REDIS = cfg.redis.enable;
@@ -101,19 +110,19 @@ in {
           REDIS_PW = toString cfg.redis.password;
         };
       in mkMerge [ defaults (mkIf cfg.redis.enable redis) ];
-      nginxConfig = mkMerge [
-        ''
-          index index.php index.html index.htm;
-          include ${config.services.nginx.package}/conf/fastcgi.conf;
-          fastcgi_read_timeout 80s;
-        ''
-        (mkIf cfg.reverseProxy.enable ''
-          fastcgi_pass_header "X-Accel-Buffering";
-        '')
-      ];
-      nginxPhpConfig = mkAfter ''
-        fastcgi_pass unix:${config.services.phpfpm.pools.barcodebuddy.socket};
+      nginxConfig = ''
+        index index.php index.html index.htm;
       '';
+      nginxPhpSettings = {
+        fastcgi = {
+          enable = true;
+          phpfpmPool = "barcodebuddy";
+          passHeaders.X-Accel-Buffering = mkIf cfg.reverseProxy.enable (mkOptionDefault true);
+        };
+        extraConfig = ''
+          fastcgi_read_timeout 80s;
+        '';
+      };
       redis = let
         redis = config.services.redis.servers.${cfg.redis.server};
       in mkIf (cfg.redis.server != null) {
@@ -175,7 +184,7 @@ in {
           "/api/".extraConfig = ''
             try_files $uri /api/index.php$is_args$query_string;
           '';
-          "~ \\.php$".extraConfig = cfg.nginxPhpConfig;
+          ${cfg.nginxPhpLocation} = unmerged.merge cfg.nginxPhpSettings;
         };
         extraConfig = cfg.nginxConfig;
       };

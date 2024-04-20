@@ -1,36 +1,27 @@
-{config, lib, ...}: let
-  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault;
+{config, access, lib, ...}: let
+  inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) nginx;
   cfg = config.services.barcodebuddy;
 in {
   config.services.barcodebuddy = {
     enable = mkDefault true;
     hostName = mkDefault "barcodebuddy'php";
-    reverseProxy.enable = mkDefault true;
+    reverseProxy = {
+      enable = mkDefault nginx.virtualHosts.${cfg.hostName}.proxied.enable;
+      trustedAddresses = access.cidrForNetwork.allLan.all;
+    };
     settings = {
       EXTERNAL_GROCY_URL = "https://grocy.${config.networking.domain}";
       DISABLE_AUTHENTICATION = true;
     };
-    nginxConfig = let
-      xvars = nginx.virtualHosts.barcodebuddy'php.xvars.lib;
-    in mkMerge [
-      ''
-        include ${config.sops.secrets.barcodebuddy-fastcgi-params.path};
-      ''
-      (mkIf cfg.reverseProxy.enable (mkAfter ''
-        set $bbuddy_https "";
-        if (${xvars.get.scheme} = https) {
-          set $bbuddy_https 1;
-        }
-        fastcgi_param HTTPS $bbuddy_https if_not_empty;
-        fastcgi_param REQUEST_SCHEME ${xvars.get.scheme};
-        fastcgi_param HTTP_HOST ${xvars.get.host};
-      ''))
-    ];
+    nginxPhpSettings.extraConfig = ''
+      include ${config.sops.secrets.barcodebuddy-fastcgi-params.path};
+    '';
   };
-  config.services.nginx.virtualHosts.barcodebuddy'php = mkIf cfg.enable {
-    proxied.enable = cfg.reverseProxy.enable;
+  config.services.nginx.virtualHosts.${cfg.hostName} = mkIf cfg.enable {
     name.shortServer = mkDefault "bbuddy";
+    proxied.enable = mkDefault true;
+    local.denyGlobal = mkDefault true;
   };
   config.users.users.barcodebuddy = mkIf cfg.enable {
     uid = 912;

@@ -51,6 +51,8 @@ in {
     virtualHosts = {
       grocy'php = mkIf grocy.enable {
         inherit serverName;
+        proxied.enable = true;
+        local.denyGlobal = true;
       };
       grocy = mkMerge [ luaAuthHost {
         inherit name extraConfig locations;

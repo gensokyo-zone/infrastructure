@@ -33,6 +33,7 @@ let
             forwarded_server = host;
             host = "$host";
             referer = "$http_referer";
+            https = "$https";
             proxy_host = null;
             proxy_scheme = null;
           };
@@ -57,7 +58,8 @@ let
         name: value: "set $x_${name} ${escapeString value};"
       ) (filterAttrs (_: value: value != null) cfg.defaults));
       parseReferer = ''
-        if (${xvars.get.referer} ~ "^(https?)://([^/]*)(/.*)$") {
+        set $hack_referer $http_referer;
+        if ($hack_referer ~ "^(https?)://([^/]+)(/.*)$") {
           ${xvars.init "referer_scheme" "$1"}
           ${xvars.init "referer_host" "$2"}
           ${xvars.init "referer_path" "$3"}

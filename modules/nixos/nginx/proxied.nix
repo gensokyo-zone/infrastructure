@@ -11,6 +11,10 @@
     if ($http_x_forwarded_proto) {
       ${xvars.init "scheme" "$http_x_forwarded_proto"}
     }
+    ${xvars.init "https" ""}
+    if (${xvars.get.scheme} = https) {
+      ${xvars.init "https" "on"}
+    }
     if ($http_x_real_ip) {
       ${xvars.init "remote_addr" "$http_x_real_ip"}
     }
@@ -48,6 +52,11 @@
           rewriteReferer.enable = mkIf cfg.enabled (mkAlmostOptionDefault true);
         };
         redirect.enable = mkIf cfg.enabled (mkAlmostOptionDefault true);
+      };
+      fastcgi = {
+        passHeaders = {
+          X-Accel-Buffering = mkOptionDefault true;
+        };
       };
       xvars.enable = mkIf cfg.enabled true;
       extraConfig = mkMerge [
