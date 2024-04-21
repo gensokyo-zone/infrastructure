@@ -20,7 +20,7 @@ echo "checking that nodes still build..." >&2
 if [[ -n ${NF_UPDATE_CACHIX_PUSH-} ]]; then
 	export NF_ACTIONS_TEST_OUTLINK=${NF_ACTIONS_TEST_OUTLINK-result}
 fi
-nf-actions-test
+nf-actions-test -L
 
 if [[ -n ${NF_UPDATE_CACHIX_PUSH-} ]]; then
 	cachix push gensokyo-infrastructure "./${NF_ACTIONS_TEST_OUTLINK}"*/ &
