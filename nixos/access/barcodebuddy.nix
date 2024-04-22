@@ -8,6 +8,7 @@
   name.shortServer = mkDefault "bbuddy";
   serverName = "@bbuddy_internal";
 in {
+  config.services.nginx.vouch.enable = true;
   config.services.nginx.virtualHosts = {
     barcodebuddy'php = mkIf barcodebuddy.enable {
       inherit serverName;

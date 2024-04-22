@@ -1,12 +1,13 @@
 {
   config,
+  system,
   lib,
-  inputs,
+  gensokyo-zone,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault mkDefault;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) toLower replaceStrings removePrefix;
   inherit (config) networking;
@@ -23,7 +24,7 @@
     };
     config = let
       enableVouchLocal = virtualHost.vouch.localSso.enable;
-      enableVouchTail = enableVouchLocal && tailscale.enable;
+      enableVouchTail = enableVouchLocal && tailscale.enable && false;
       allowOrigin = url: "add_header Access-Control-Allow-Origin ${url};";
     in mkIf config.vouch.requireAuth {
       lua = mkIf virtualHost.vouch.auth.lua.enable {
@@ -183,9 +184,14 @@
         ${cfg.auth.requestLocation} = { config, xvars, ... }: {
           proxy = {
             enable = true;
-            url = vouch.proxyOrigin;
+            inheritServerDefaults = false;
+            upstream = mkDefault (
+              if vouch.doubleProxy.enable then "vouch'proxy"
+              else if cfg.localSso.enable then "vouch'auth'local"
+              else "vouch'auth"
+            );
             # nginx-proxied vouch must use X-Forwarded-Host, but vanilla vouch requires Host
-            host = if vouch.doubleProxy.enable
+            host = if config.proxy.upstream == "vouch'proxy"
               then (if cfg.localSso.enable then vouch.doubleProxy.localServerName else vouch.doubleProxy.serverName)
               else xvars.get.host;
             headers = {
@@ -205,17 +211,10 @@ in {
     services.nginx = {
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
-        enableLocal = mkEnableOption "use local vouch instance" // {
-          default = true;
-        };
         localSso = {
           enable = mkEnableOption "lan-local auth" // {
             default = true;
           };
-        };
-        proxyOrigin = mkOption {
-          type = str;
-          default = "https://login.local.${networking.domain}";
         };
         doubleProxy = {
           enable = mkOption {
@@ -254,25 +253,69 @@ in {
     };
   };
   config.services.nginx = {
-    vouch = mkMerge [
-      {
-        proxyOrigin = mkIf (tailscale.enable && !vouch-proxy.enable) (
-          mkAlmostOptionDefault "http://login.tail.${networking.domain}"
-        );
-      }
-      (mkIf (vouch.enableLocal && vouch-proxy.enable) {
-        proxyOrigin = let
-          inherit (vouch-proxy.settings.vouch) listen port;
-          host =
-            if listen == "0.0.0.0" || listen == "[::]"
-            then "localhost"
-            else listen;
-        in
-          mkAlmostOptionDefault "http://${host}:${toString port}";
-        authUrl = mkAlmostOptionDefault vouch-proxy.authUrl;
-        url = mkAlmostOptionDefault vouch-proxy.url;
-        doubleProxy.enable = mkAlmostOptionDefault false;
-      })
-    ];
+    upstreams' = let
+      localVouch = let
+        inherit (vouch-proxy.settings.vouch) listen port;
+        host =
+          if listen == "0.0.0.0" || listen == "[::]"
+          then "localhost"
+          else listen;
+      in {
+        # TODO: serviceAccess.exportedId = "login";
+        enable = mkAlmostOptionDefault vouch-proxy.enable;
+        port = mkIf vouch-proxy.enable (mkOptionDefault port);
+        addr = mkIf vouch-proxy.enable (mkAlmostOptionDefault host);
+      };
+    in {
+      vouch'auth = {
+        enable = vouch.enable;
+        servers = {
+          local = localVouch;
+          service = { upstream, ... }: {
+            enable = mkIf upstream.servers.local.enable false;
+            accessService = {
+              name = "vouch-proxy";
+              id = "login";
+            };
+          };
+        };
+      };
+      vouch'auth'local = {
+        enable = vouch.enable && vouch.localSso.enable;
+        servers = {
+          local = localVouch // {
+            enable = mkAlmostOptionDefault false;
+          };
+          service = { upstream, ... }: {
+            enable = mkIf upstream.servers.local.enable false;
+            accessService = {
+              name = "vouch-proxy";
+              id = "login.local";
+            };
+          };
+        };
+      };
+      vouch'proxy = {
+        enable = vouch.enable && vouch.doubleProxy.enable;
+        servers = {
+          lan = { upstream, ... }: {
+            enable = mkAlmostOptionDefault (!upstream.servers.int.enable);
+            addr = mkAlmostOptionDefault "login.local.${networking.domain}";
+            port = mkOptionDefault null;
+            ssl.enable = mkAlmostOptionDefault true;
+          };
+          int = { upstream, ... }: {
+            enable = mkAlmostOptionDefault system.network.networks.int.enable or false;
+            addr = mkAlmostOptionDefault "login.int.${networking.domain}";
+            port = mkOptionDefault null;
+          };
+          tail = { upstream, ... }: {
+            enable = mkAlmostOptionDefault (tailscale.enable && !upstream.servers.lan.enable && !upstream.servers.int.enable);
+            addr = mkAlmostOptionDefault "login.tail.${networking.domain}";
+            port = mkOptionDefault null;
+          };
+        };
+      };
+    };
   };
 }

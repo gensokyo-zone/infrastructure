@@ -1,14 +1,29 @@
 {
   config,
   lib,
-  access,
   ...
 }: let
   inherit (lib.modules) mkDefault;
-  inherit (config.services) nginx;
   cfg = config.services.unifi;
+  upstreamName = "unifi'access";
 in {
   config.services.nginx = {
+    vouch.enable = true;
+    upstreams'.${upstreamName}.servers = {
+      local = {
+        enable = mkDefault cfg.enable;
+        addr = mkDefault "localhost";
+        port = mkDefault 8443;
+        ssl.enable = mkDefault true;
+      };
+      access = { upstream, ... }: {
+        enable = mkDefault (!upstream.servers.local.enable);
+        accessService = {
+          name = "unifi";
+          port = "management";
+        };
+      };
+    };
     virtualHosts = let
       extraConfig = ''
         proxy_redirect off;
@@ -26,22 +41,23 @@ in {
         };
       };
       name.shortServer = mkDefault "unifi";
-      kTLS = mkDefault true;
+      copyFromVhost = mkDefault "unifi";
     in {
       unifi = {
-        inherit name extraConfig kTLS locations;
+        inherit name extraConfig locations;
         vouch.enable = mkDefault true;
         ssl.force = mkDefault true;
-        proxy.url = mkDefault (if cfg.enable
-          then "https://localhost:8443"
-          else access.proxyUrlFor { serviceName = "unifi"; portName = "management"; }
-        );
+        proxy.upstream = mkDefault upstreamName;
       };
       unifi'local = {
-        inherit name extraConfig kTLS locations;
-        ssl.cert.copyFromVhost = "unifi";
+        inherit name extraConfig locations;
+        ssl.cert = {
+          inherit copyFromVhost;
+        };
         local.enable = true;
-        proxy.url = mkDefault nginx.virtualHosts.unifi.proxy.url;
+        proxy = {
+          inherit copyFromVhost;
+        };
       };
     };
   };

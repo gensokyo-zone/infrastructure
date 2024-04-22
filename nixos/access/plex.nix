@@ -7,41 +7,63 @@
   inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) nginx;
   cfg = config.services.plex;
+  upstreamName = "plex'access";
 in {
   config.services.nginx = {
+    upstreams'.${upstreamName}.servers = {
+      local = {
+        enable = mkDefault cfg.enable;
+        addr = mkDefault "localhost";
+        port = mkDefault cfg.port;
+      };
+      access = { upstream, ... }: {
+        enable = mkDefault (!upstream.servers.local.enable);
+        accessService.name = "plex";
+      };
+    };
     virtualHosts = let
       extraConfig = ''
         # Some players don't reopen a socket and playback stops totally instead of resuming after an extended pause
         send_timeout 100m;
-        # Plex headers
-        proxy_set_header X-Plex-Client-Identifier $http_x_plex_client_identifier;
-        proxy_set_header X-Plex-Device $http_x_plex_device;
-        proxy_set_header X-Plex-Device-Name $http_x_plex_device_name;
-        proxy_set_header X-Plex-Platform $http_x_plex_platform;
-        proxy_set_header X-Plex-Platform-Version $http_x_plex_platform_version;
-        proxy_set_header X-Plex-Product $http_x_plex_product;
-        proxy_set_header X-Plex-Token $http_x_plex_token;
-        proxy_set_header X-Plex-Version $http_x_plex_version;
-        proxy_set_header X-Plex-Nocache $http_x_plex_nocache;
-        proxy_set_header X-Plex-Provides $http_x_plex_provides;
-        proxy_set_header X-Plex-Device-Vendor $http_x_plex_device_vendor;
-        proxy_set_header X-Plex-Model $http_x_plex_model;
         # Buffering off send to the client as soon as the data is received from Plex.
         proxy_redirect off;
         proxy_buffering off;
       '';
-      locations."/" = {
-        proxy.websocket.enable = mkDefault true;
-        proxyPass = mkDefault (if cfg.enable
-          then "http://localhost:${toString cfg.port}"
-          else access.proxyUrlFor { serviceName = "plex"; }
-        );
+      headers.set = {
+        X-Plex-Client-Identifier = "$http_x_plex_client_identifier";
+        X-Plex-Device = "$http_x_plex_device";
+        X-Plex-Device-Name = "$http_x_plex_device_name";
+        X-Plex-Platform = "$http_x_plex_platform";
+        X-Plex-Platform-Version = "$http_x_plex_platform_version";
+        X-Plex-Product = "$http_x_plex_product";
+        X-Plex-Token = "$http_x_plex_token";
+        X-Plex-Version = "$http_x_plex_version";
+        X-Plex-Nocache = "$http_x_plex_nocache";
+        X-Plex-Provides = "$http_x_plex_provides";
+        X-Plex-Device-Vendor = "$http_x_plex_device_vendor";
+        X-Plex-Model = "$http_x_plex_model";
+      };
+      locations = {
+        "/" = {
+          proxy = {
+            enable = true;
+            inherit headers;
+          };
+        };
+        "/websockets/" = {
+          proxy = {
+            enable = true;
+            websocket.enable = true;
+            inherit headers;
+          };
+        };
       };
       name.shortServer = mkDefault "plex";
-      kTLS = mkDefault true;
+      copyFromVhost = mkDefault "plex";
     in {
       plex = {
-        inherit name locations extraConfig kTLS;
+        inherit name locations extraConfig;
+        proxy.upstream = mkDefault upstreamName;
         listen' = {
           http = { };
           https.ssl = true;
@@ -53,8 +75,13 @@ in {
         };
       };
       plex'local = {
-        inherit name locations extraConfig kTLS;
-        ssl.cert.copyFromVhost = "plex";
+        inherit name locations extraConfig;
+        ssl.cert = {
+          inherit copyFromVhost;
+        };
+        proxy = {
+          inherit copyFromVhost;
+        };
         local.enable = true;
       };
     };

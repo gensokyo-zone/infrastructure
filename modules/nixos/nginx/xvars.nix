@@ -18,7 +18,7 @@ let
     inherit (lib.attrsets) attrValues filterAttrs mapAttrs mapAttrsToList;
     inherit (lib.lists) any;
     cfg = config.xvars;
-    escapeString = value: if value == "" then ''""'' else value;
+    escapeString = value: if value == "" then ''""'' else toString value;
   in {
     options = with lib.types; {
       xvars = {
@@ -34,7 +34,9 @@ let
             host = "$host";
             referer = "$http_referer";
             https = "$https";
-            proxy_host = null;
+            proxy_host = "$proxy_host";
+            proxy_port = "$proxy_port";
+            proxy_hostport = "${proxy_host}:${proxy_port}";
             proxy_scheme = null;
           };
         };

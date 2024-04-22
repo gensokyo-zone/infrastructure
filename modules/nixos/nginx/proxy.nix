@@ -1,11 +1,12 @@
 let
-  locationModule = { config, name, virtualHost, xvars, gensokyo-zone, lib, ... }: let
+  locationModule = { config, nixosConfig, name, virtualHost, xvars, gensokyo-zone, lib, ... }: let
     inherit (gensokyo-zone.lib) mkJustBefore mkJustAfter mkAlmostOptionDefault mapOptionDefaults coalesce parseUrl;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault;
     inherit (lib.attrsets) filterAttrs mapAttrsToList;
-    inherit (lib.strings) hasPrefix removeSuffix concatStringsSep;
+    inherit (lib.strings) hasPrefix removeSuffix optionalString concatStringsSep;
     inherit (lib.trivial) mapNullable;
+    inherit (nixosConfig.services) nginx;
     cfg = config.proxy;
   in {
     options = with lib.types; {
@@ -14,6 +15,10 @@ let
         enabled = mkOption {
           type = bool;
           readOnly = true;
+        };
+        inheritServerDefaults = mkOption {
+          type = bool;
+          default = true;
         };
         url = mkOption {
           type = str;
@@ -25,7 +30,21 @@ let
           type = nullOr str;
         };
         websocket.enable = mkEnableOption "websocket proxy" // {
-          default = virtualHost.proxy.websocket.enable;
+          default = cfg.inheritServerDefaults && virtualHost.proxy.websocket.enable;
+        };
+        ssl = {
+          enabled = mkOption {
+            type = bool;
+          };
+          verify = mkEnableOption "proxy_ssl_verify";
+          sni = mkEnableOption "proxy_ssl_server_name" // {
+            default = cfg.ssl.host != null;
+          };
+          host = mkOption {
+            type = nullOr str;
+            default = null;
+            example = "xvars.get.proxy_host";
+          };
         };
         parsed = {
           scheme = mkOption {
@@ -35,9 +54,6 @@ let
             type = nullOr str;
           };
           host = mkOption {
-            type = nullOr str;
-          };
-          hostport = mkOption {
             type = nullOr str;
           };
           port = mkOption {
@@ -71,8 +87,10 @@ let
     config = let
       emitHeaders = setHeaders' != { };
       url = parseUrl config.proxyPass;
+      upstream = nginx.upstreams'.${cfg.upstream};
+      upstreamServer = upstream.servers.${upstream.defaultServerName};
       recommendedHeaders = {
-        Host = if cfg.host == null then xvars.get.proxy_host else cfg.host;
+        Host = if cfg.host == null then xvars.get.proxy_hostport else cfg.host;
         Referer = xvars.get.referer;
         X-Real-IP = xvars.get.remote_addr;
         X-Forwarded-For = xvars.get.forwarded_for;
@@ -80,21 +98,52 @@ let
         X-Forwarded-Host = xvars.get.host;
         X-Forwarded-Server = xvars.get.forwarded_server;
       };
-      initProxyVars = ''
-        ${xvars.init "proxy_scheme" cfg.parsed.scheme}
-        ${xvars.init "proxy_host" "$proxy_host"}
-        if (${xvars.get.proxy_host} = "") {
-          ${xvars.init "proxy_host" cfg.parsed.hostport}
-        }
-      '';
+      schemePort = {
+        http = 80;
+        https = 443;
+      }.${cfg.parsed.scheme} or (throw "unsupported proxy_scheme ${toString cfg.parsed.scheme}");
+      port = coalesce [ cfg.parsed.port schemePort ];
+      hostport = cfg.parsed.host + optionalString (port != schemePort) ":${toString cfg.parsed.port}";
+      initProxyVars = let
+        initScheme = xvars.init "proxy_scheme" cfg.parsed.scheme;
+        initHost = xvars.init "proxy_host" cfg.parsed.host;
+        initPort = xvars.init "proxy_port" port;
+        initHostPort = xvars.init "proxy_hostport" hostport;
+        initUpstream = ''
+          ${initScheme}
+          ${initHost}
+          ${initPort}
+          ${initHostPort}
+        '';
+        initDynamic = ''
+          ${initScheme}
+          ${xvars.init "proxy_host" "$proxy_host"}
+          if (${xvars.get.proxy_host} = "") {
+            ${initHost}
+          }
+          ${xvars.init "proxy_port" "$proxy_port"}
+          if (${xvars.get.proxy_port} = "") {
+            ${initPort}
+          }
+
+          ${xvars.init "proxy_hostport" "${xvars.get.proxy_host}:${xvars.get.proxy_port}"}
+          if (${xvars.get.proxy_port} = ${toString schemePort}) {
+            ${xvars.init "proxy_hostport" xvars.get.proxy_host}
+          }
+          if (${xvars.get.proxy_port} = "") {
+            ${xvars.init "proxy_hostport" xvars.get.proxy_host}
+          }
+        '';
+        init = if cfg.upstream != null then initUpstream else initDynamic;
+      in init;
       hostHeader = coalesce [
         cfg.headers.set.Host or null
         cfg.host
-        xvars.get.proxy_host
+        xvars.get.proxy_hostport
       ];
       rewriteReferer = ''
         if (${xvars.get.referer_host} = $host) {
-          ${xvars.init "referer" "${config.proxy.parsed.scheme}://${hostHeader}${xvars.get.referer_path}"}
+          ${xvars.init "referer" "${xvars.get.proxy_scheme}://${hostHeader}${xvars.get.referer_path}"}
         }
       '';
       redirect = ''
@@ -105,15 +154,19 @@ let
         name: value: "proxy_set_header ${name} ${xvars.escapeString value};"
       ) setHeaders');
     in {
-      xvars.enable = mkIf cfg.headers.rewriteReferer.enable true;
+      xvars.enable = mkIf (cfg.headers.rewriteReferer.enable || (cfg.enable && cfg.upstream != null)) true;
       proxy = {
         enabled = mkOptionDefault (config.proxyPass != null);
         path = mkIf (hasPrefix "/" name) (mkOptionDefault name);
-        url = mkIf (virtualHost.proxy.url != null) (mkOptionDefault virtualHost.proxy.url);
+        url = mkIf (cfg.inheritServerDefaults && virtualHost.proxy.url != null) (mkOptionDefault virtualHost.proxy.url);
+        ssl = {
+          enabled = mkOptionDefault (cfg.parsed.scheme == "https");
+        };
         headers = {
           enableRecommended = mkOptionDefault (
-            if cfg.enable && virtualHost.proxy.headers.enableRecommended != false then true
-            else virtualHost.proxy.headers.enableRecommended
+            if cfg.enable && (!cfg.inheritServerDefaults || virtualHost.proxy.headers.enableRecommended != false) then true
+            else if cfg.inheritServerDefaults then virtualHost.proxy.headers.enableRecommended
+            else if nginx.recommendedProxySettings then "nixpkgs" else false
           );
           set = mkMerge [
             (mkOptionDefault { })
@@ -131,7 +184,7 @@ let
           ];
         };
         host = mkOptionDefault (
-          if virtualHost.proxy.host != null then virtualHost.proxy.host
+          if cfg.inheritServerDefaults && virtualHost.proxy.host != null then virtualHost.proxy.host
           else if cfg.headers.enableRecommended == false then null
           else xvars.get.host
         );
@@ -143,29 +196,33 @@ let
             mapNullable (_: url.path) config.proxyPass
           );
           host = mkOptionDefault (
-            mapNullable (_: url.host) config.proxyPass
-          );
-          hostport = mkOptionDefault (
-            mapNullable (_: url.hostport) config.proxyPass
+            if cfg.upstream != null then assert url.host == upstream.name; upstreamServer.addr
+            else mapNullable (_: url.host) config.proxyPass
           );
           port = mkOptionDefault (
-            mapNullable (_: url.port) config.proxyPass
+            if cfg.upstream != null && url.port == null then assert url.host == upstream.name; upstreamServer.port
+            else mapNullable (_: url.port) config.proxyPass
           );
         };
       };
       proxyPass = mkIf cfg.enable (mkAlmostOptionDefault (removeSuffix "/" cfg.url + cfg.path));
       recommendedProxySettings = mkAlmostOptionDefault (cfg.headers.enableRecommended == "nixpkgs");
-      extraConfig = mkMerge [
-        (mkIf (cfg.enabled && virtualHost.xvars.enable) (mkJustBefore initProxyVars))
-        (mkIf (cfg.enabled && cfg.headers.rewriteReferer.enable) (mkJustBefore rewriteReferer))
-        (mkIf (cfg.enabled && cfg.redirect.enable) (mkBefore redirect))
-        (mkIf (cfg.enabled && emitHeaders) (mkJustAfter setHeaders))
-      ];
+      extraConfig = mkIf cfg.enabled (mkMerge [
+        (mkIf (virtualHost.xvars.enable) (mkJustBefore initProxyVars))
+        (mkIf (cfg.headers.rewriteReferer.enable) (mkJustBefore rewriteReferer))
+        (mkIf (cfg.redirect.enable) (mkBefore redirect))
+        (mkIf (emitHeaders) (mkJustAfter setHeaders))
+        (mkIf (cfg.ssl.enabled && cfg.ssl.sni) "proxy_ssl_server_name on;")
+        (mkIf (cfg.ssl.enabled && cfg.ssl.host != null) "proxy_ssl_name ${cfg.ssl.host};")
+        (mkIf (cfg.ssl.enabled && cfg.ssl.verify) "proxy_ssl_verify on;")
+        (mkIf cfg.websocket.enable "proxy_cache_bypass $http_upgrade;")
+      ]);
     };
   };
-  hostModule = { config, nixosConfig, lib, ... }: let
+  hostModule = { config, nixosConfig, gensokyo-zone, lib, ... }: let
+    inherit (gensokyo-zone.lib) mapAlmostOptionDefaults;
     inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf;
+    inherit (lib.modules) mkIf mkMerge;
     inherit (lib.attrsets) attrValues;
     inherit (lib.lists) any;
     inherit (nixosConfig.services) nginx;
@@ -178,6 +235,10 @@ let
           default = null;
         };
         url = mkOption {
+          type = nullOr str;
+          default = null;
+        };
+        copyFromVhost = mkOption {
           type = nullOr str;
           default = null;
         };
@@ -196,8 +257,21 @@ let
     };
     config = let
       needsReferer = loc: loc.proxy.enabled && loc.proxy.headers.rewriteReferer.enable;
+      confCopy = let
+        proxyHost = nginx.virtualHosts.${cfg.copyFromVhost};
+      in mapAlmostOptionDefaults {
+        inherit (proxyHost.proxy) host url upstream;
+      } // {
+        websocket = mapAlmostOptionDefaults {
+          inherit (proxyHost.proxy.websocket) enable;
+        };
+        headers = mapAlmostOptionDefaults {
+          inherit (proxyHost.proxy.headers) enableRecommended;
+        };
+      };
     in {
       xvars.parseReferer = mkIf (any needsReferer (attrValues config.locations)) true;
+      proxy = mkIf (cfg.copyFromVhost != null) confCopy;
     };
   };
 in {

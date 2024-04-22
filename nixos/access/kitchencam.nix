@@ -40,14 +40,13 @@ in {
         };
       };
       name.shortServer = mkDefault "kitchen";
-      kTLS = mkDefault true;
     in {
       kitchencam = {
-        inherit name locations listen' kTLS;
+        inherit name locations listen';
         vouch.enable = true;
       };
       kitchencam'local = {
-        inherit name listen' kTLS;
+        inherit name listen';
         ssl.cert.copyFromVhost = "kitchencam";
         local.enable = true;
         locations = mapAttrs (name: location: location // {

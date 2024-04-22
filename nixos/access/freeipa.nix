@@ -17,12 +17,13 @@ let
   extraConfig = ''
     ssl_verify_client optional_no_ca;
   '';
-  locations' = domain: {
+  locations = {
     "/" = { config, xvars, ... }: {
       proxy = {
         enable = true;
         url = mkDefault access.proxyPass;
-        host = mkDefault domain;
+        host = mkDefault virtualHosts.freeipa.serverName;
+        ssl.host = mkDefault config.proxy.host;
         headers = {
           rewriteReferer.enable = true;
           set = {
@@ -37,15 +38,8 @@ let
       };
       proxyPass = mkDefault access.proxyPass;
       recommendedProxySettings = false;
-      extraConfig = ''
-        proxy_ssl_server_name on;
-        proxy_ssl_name ${domain};
-      '';
     };
   };
-  locations = locations' virtualHosts.freeipa.serverName;
-  caLocations = locations' virtualHosts.freeipa'ca.serverName;
-  kTLS = mkDefault true;
 in {
   imports = let
     inherit (meta) nixos;
@@ -200,12 +194,12 @@ in {
             kticket4 = mkKrb5Server null "ticket4";
           };
         };
+        conf.upstreams.ldap'access.servers.ldaps.enable = false;
         conf.servers = {
           ldap = {
             listen = {
               ldaps.port = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
             };
-            proxy.upstream = mkDefault "ldap";
             ssl.cert.copyFromVhost = mkDefault "freeipa";
           };
         };
@@ -240,7 +234,7 @@ in {
       in {
         freeipa = {
           name.shortServer = mkDefault "idp";
-          inherit locations extraConfig kTLS;
+          inherit locations extraConfig;
           ssl.force = mkDefault true;
         };
         freeipa'web = {
@@ -248,21 +242,26 @@ in {
             force = mkDefault virtualHosts.freeipa.ssl.force;
             cert.copyFromVhost = "freeipa";
           };
-          inherit name locations extraConfig kTLS;
+          inherit name locations extraConfig;
         };
         freeipa'ca = {
           name.shortServer = mkDefault "idp-ca";
-          locations = caLocations;
+          locations."/" = mkMerge [
+            locations."/"
+            {
+              proxy.host = virtualHosts.freeipa'ca.serverName;
+            }
+          ];
           ssl = {
             force = mkDefault virtualHosts.freeipa.ssl.force;
             cert.copyFromVhost = "freeipa";
           };
-          inherit extraConfig kTLS;
+          inherit extraConfig;
         };
         freeipa'web'local = {
           ssl.cert.copyFromVhost = "freeipa'web";
           local.enable = true;
-          inherit name locations kTLS;
+          inherit name locations;
         };
         freeipa'ldap = {
           serverName = mkDefault ldap.domain;

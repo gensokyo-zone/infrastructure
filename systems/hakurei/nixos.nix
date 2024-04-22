@@ -215,7 +215,11 @@ in {
   };
 
   services.nginx = {
-    vouch.enableLocal = false;
+    vouch.enable = true;
+    upstreams' = {
+      vouch'auth.servers.local.enable = false;
+      vouch'auth'local.servers.local.enable = true;
+    };
     stream.servers = {
       mosquitto.ssl.cert.name = "mosquitto";
     };

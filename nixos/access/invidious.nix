@@ -1,15 +1,28 @@
 {
   config,
-  access,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkMerge mkBefore mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.strings) replaceStrings concatStringsSep concatMapStringsSep escapeRegex;
   inherit (config.services.nginx) virtualHosts;
   cfg = config.services.invidious;
+  upstreamName = "invidious'access";
 in {
   config.services.nginx = {
+    upstreams'.${upstreamName}.servers = {
+      local = {
+        enable = mkDefault cfg.enable;
+        addr = mkDefault "localhost";
+        port = mkIf cfg.enable (mkDefault cfg.port);
+      };
+      service = { upstream, ... }: {
+        enable = mkIf upstream.servers.local.enable (mkDefault false);
+        accessService = {
+          name = "invidious";
+        };
+      };
+    };
     virtualHosts = let
       invidiousDomains =
         virtualHosts.invidious.allServerNames
@@ -36,12 +49,11 @@ in {
         '';
       };
       name.shortServer = mkDefault "yt";
-      kTLS = mkDefault true;
       localDomains = virtualHosts.invidious'local.allServerNames;
     in {
       invidious = {
         # lua can't handle HTTP 2.0 requests, so layer it behind another proxy...
-        inherit name extraConfig kTLS;
+        inherit name extraConfig;
         proxy = {
           url = mkDefault "http://localhost:${toString config.services.nginx.defaultHTTPListenPort}";
           host = mkDefault virtualHosts.invidious'int.serverName;
@@ -88,10 +100,7 @@ in {
         };
         proxy = {
           host = mkDefault xvars.get.host;
-          url = mkDefault (if cfg.enable
-            then "http://localhost:${toString cfg.port}"
-            else access.proxyUrlFor { serviceName = "invidious"; }
-          );
+          upstream = mkDefault upstreamName;
         };
         locations = {
           "/" = mkMerge [
@@ -107,11 +116,11 @@ in {
         local.enable = true;
         ssl.cert.copyFromVhost = "invidious";
         proxy = {
+          copyFromVhost = mkDefault "invidious'int";
           host = mkDefault xvars.get.host;
-          url = mkDefault virtualHosts.invidious'int.proxy.url;
         };
         locations."/" = location;
-        inherit name extraConfig kTLS;
+        inherit name extraConfig;
       };
     };
     lua.http.enable = true;

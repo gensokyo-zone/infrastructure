@@ -1,15 +1,23 @@
 {
   config,
   lib,
-  access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
-  inherit (config) networking;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) tailscale nginx;
   cfg = config.services.vouch-proxy;
 in {
   config.services.nginx = {
+    upstreams'.vouch'access.servers.access = {
+      accessService = {
+        inherit (nginx.upstreams'.vouch'auth.servers.service.accessService) system name id port;
+      };
+    };
+    upstreams'.vouch'access'local.servers.access = {
+      accessService = {
+        inherit (nginx.upstreams'.vouch'auth'local.servers.service.accessService) system name id port;
+      };
+    };
     virtualHosts = let
       locations = {
         "/" = {
@@ -25,13 +33,6 @@ in {
           local.denyGlobal = true;
         };
       };
-      localLocations = kanidmDomain: mkIf (nginx.vouch.localSso.enable && false) {
-        "/" = { xvars, ... }: {
-          extraConfig = ''
-            proxy_redirect https://sso.${networking.domain}/ ${xvars.get.scheme}://${kanidmDomain}/;
-          '';
-        };
-      };
       name.shortServer = mkDefault "login";
     in {
       vouch = { xvars, ... }: {
@@ -39,9 +40,7 @@ in {
         serverAliases = [ nginx.vouch.doubleProxy.serverName ];
         proxied.enable = true;
         proxy = {
-          url = mkDefault (
-            access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login"; }
-          );
+          upstream = mkDefault "vouch'access";
           host = mkDefault xvars.get.host;
         };
         local.denyGlobal = true;
@@ -54,9 +53,7 @@ in {
         serverAliases = mkIf cfg.enable [ nginx.vouch.doubleProxy.localServerName ];
         proxied.enable = true;
         proxy = {
-          url = mkDefault (
-            access.proxyUrlFor { serviceName = "vouch-proxy"; serviceId = "login.local"; }
-          );
+          upstream = mkDefault "vouch'access'local";
           host = mkDefault xvars.get.host;
         };
         local.enable = true;
@@ -64,10 +61,7 @@ in {
           force = true;
           cert.copyFromVhost = "vouch";
         };
-        locations = mkMerge [
-          locations
-          (localLocations "sso.local.${networking.domain}")
-        ];
+        inherit locations;
       };
       vouch'tail = { xvars, ... }: {
         enable = mkDefault (tailscale.enable && !nginx.virtualHosts.vouch'local.name.includeTailscale);
@@ -78,13 +72,10 @@ in {
         };
         local.enable = true;
         proxy = {
-          url = mkDefault nginx.virtualHosts.vouch'local.locations."/".proxyPass;
+          upstream = mkDefault nginx.virtualHosts.vouch'local.proxy.upstream;
           host = mkDefault xvars.get.host;
         };
-        locations = mkMerge [
-          locations
-          (localLocations "sso.tail.${networking.domain}")
-        ];
+        inherit locations;
       };
     };
   };

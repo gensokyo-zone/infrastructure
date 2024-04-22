@@ -51,14 +51,13 @@ in {
         }
       ];
       name.shortServer = mkDefault "pbx";
-      kTLS = mkDefault true;
     in {
       freepbx = {
         vouch.enable = mkDefault true;
         ssl.force = true;
         proxy.url = mkDefault url;
         locations = allLocations;
-        inherit name extraConfig kTLS;
+        inherit name extraConfig;
       };
       freepbx'ucp = {
         serverName = mkDefault nginx.virtualHosts.freepbx.serverName;
@@ -83,7 +82,7 @@ in {
         locations = {
           inherit (locations) "/socket.io";
         };
-        inherit extraConfig kTLS;
+        inherit extraConfig;
       };
       freepbx'local = {
         listen' = {
@@ -101,7 +100,7 @@ in {
         proxy.url = mkDefault nginx.virtualHosts.freepbx.proxy.url;
         local.enable = true;
         locations = allLocations;
-        inherit name extraConfig kTLS;
+        inherit name extraConfig;
       };
     };
   };

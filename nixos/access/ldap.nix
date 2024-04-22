@@ -12,8 +12,7 @@ let
   inherit (config.services) nginx;
   portPlaintext = 389;
   portSsl = 636;
-  system = access.systemForService "ldap";
-  inherit (system.exports.services) ldap;
+  upstreamName = "ldap'access";
 in {
   options.services.nginx.access.ldap = with lib.types; {
     domain = mkOption {
@@ -36,19 +35,32 @@ in {
   config = {
     services.nginx = {
       stream = {
-        upstreams = let
-          addr = mkAlmostOptionDefault (access.getAddressFor system.name "lan");
-        in {
-          ldap.servers.access = {
-            inherit addr;
-            port = mkOptionDefault ldap.ports.default.port;
+        upstreams = {
+          ${upstreamName}.servers = {
+            ldaps = {
+              accessService = {
+                inherit (nginx.stream.upstreams.ldaps.servers.access.accessService) system name id port;
+              };
+            };
+            ldap = { upstream, ... }: {
+              enable = mkIf upstream.servers.ldaps.enable false;
+              accessService = {
+                inherit (nginx.stream.upstreams.ldap.servers.access.accessService) system name id port;
+              };
+            };
           };
-          ldaps = {
-            enable = mkAlmostOptionDefault ldap.ports.ssl.enable;
-            ssl.enable = mkAlmostOptionDefault true;
+          ldap.servers.access = {
+            accessService = {
+              name = "ldap";
+            };
+          };
+          ldaps = { config, ... }: {
+            enable = mkAlmostOptionDefault config.servers.access.enable;
             servers.access = {
-              inherit addr;
-              port = mkOptionDefault ldap.ports.ssl.port;
+              accessService = {
+                name = "ldap";
+                port = "ssl";
+              };
             };
           };
         };
@@ -60,9 +72,7 @@ in {
               ssl = true;
             };
           };
-          proxy.upstream = mkAlmostOptionDefault (
-            if nginx.stream.upstreams.ldaps.enable then "ldaps" else "ldap"
-          );
+          proxy.upstream = mkAlmostOptionDefault upstreamName;
         };
       };
     };

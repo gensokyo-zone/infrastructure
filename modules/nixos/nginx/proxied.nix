@@ -51,7 +51,10 @@
           enableRecommended = mkIf cfg.enabled (mkAlmostOptionDefault true);
           rewriteReferer.enable = mkIf cfg.enabled (mkAlmostOptionDefault true);
         };
-        redirect.enable = mkIf cfg.enabled (mkAlmostOptionDefault true);
+        redirect = mkIf cfg.enabled {
+          enable = mkAlmostOptionDefault true;
+          fromScheme = mkAlmostOptionDefault xvars.get.proxy_scheme;
+        };
       };
       fastcgi = {
         passHeaders = {

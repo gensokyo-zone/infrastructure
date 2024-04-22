@@ -120,6 +120,7 @@
       useACMEHost = mkAlmostOptionDefault cfg.cert.name;
       sslCertificate = mkIf (cfg.cert.path != null) (mkAlmostOptionDefault cfg.cert.path);
       sslCertificateKey = mkIf (cfg.cert.keyPath != null) (mkAlmostOptionDefault cfg.cert.keyPath);
+      kTLS = mkAlmostOptionDefault true;
 
       xvars.enable = mkIf emitForce true;
       extraConfig = mkIf emitForce (forceRedirectConfig config);
@@ -129,6 +130,11 @@
     cfg = config.ssl;
   in {
     imports = [ sslModule ];
+    options.ssl = with lib.types; {
+      kTLS = mkEnableOption "kTLS support" // {
+        default = true;
+      };
+    };
     config = {
       ssl.cert = let
         cert = nixosConfig.security.acme.certs.${cfg.cert.name};
@@ -137,10 +143,11 @@
         keyPath = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/key.pem");
       };
       #listen.ssl = mkIf cfg.enable { ssl = true; };
-      extraConfig = mkMerge [
+      extraConfig = mkIf cfg.enable (mkMerge [
         (mkIf (cfg.cert.path != null) "ssl_certificate ${cfg.cert.path};")
         (mkIf (cfg.cert.keyPath != null) "ssl_certificate_key ${cfg.cert.keyPath};")
-      ];
+        (mkIf cfg.kTLS "ssl_conf_command Options KTLS;")
+      ]);
     };
   };
 in {

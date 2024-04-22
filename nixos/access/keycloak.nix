@@ -1,33 +1,49 @@
 {
   config,
   lib,
-  access,
   ...
 }: let
-  inherit (lib.modules) mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.keycloak;
-  inherit (config.services) nginx;
+  upstreamName = "keycloak'access";
+  locations."/".proxy.enable = true;
+  name.shortServer = mkDefault "sso";
+  copyFromVhost = mkDefault "keycloak";
 in {
   config.services.nginx = {
+    upstreams'.${upstreamName}.servers = {
+      local = mkIf cfg.enable {
+        enable = mkDefault true;
+        addr = mkDefault "localhost";
+        port = mkDefault cfg.port;
+        ssl.enable = mkIf (cfg.protocol == "https") true;
+      };
+      access = { upstream, ... }: {
+        enable = mkDefault (!upstream.servers.local.enable or false);
+        accessService = {
+          name = "keycloak";
+          port = "https";
+        };
+      };
+    };
     virtualHosts = {
       keycloak = {
-        name.shortServer = mkDefault "sso";
+        inherit name locations;
         ssl.force = mkDefault true;
-        locations."/".proxyPass = let
-          url = mkDefault "${cfg.protocol}://localhost:${toString cfg.port}";
-        in mkDefault (
-          if cfg.enable then url
-          else access.proxyUrlFor { serviceName = "keycloak"; portName = "https"; }
-        );
+        proxy.upstream = mkDefault upstreamName;
       };
       keycloak'local = {
-        name.shortServer = mkDefault "sso";
+        inherit name locations;
         ssl = {
           force = mkDefault true;
-          cert.copyFromVhost = "keycloak";
+          cert = {
+            inherit copyFromVhost;
+          };
         };
         local.enable = true;
-        locations."/".proxyPass = mkDefault nginx.virtualHosts.keycloak.locations."/".proxyPass;
+        proxy = {
+          inherit copyFromVhost;
+        };
       };
     };
   };
