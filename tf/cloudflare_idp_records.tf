@@ -81,7 +81,7 @@ resource "cloudflare_record" "kerberos_uri_tcp" {
   priority = 0
   data {
     weight  = 100
-    content = "krb5srv:m:tcp:${local.idp_fqdn}."
+    target = "krb5srv:m:tcp:${local.idp_fqdn}."
   }
   ttl = 3600
 }
@@ -93,7 +93,7 @@ resource "cloudflare_record" "kerberos_uri_udp" {
   priority = 0
   data {
     weight  = 100
-    content = "krb5srv:m:udp:${local.idp_fqdn}."
+    target = "krb5srv:m:udp:${local.idp_fqdn}."
   }
   ttl = 3600
 }
@@ -137,7 +137,7 @@ resource "cloudflare_record" "kpasswd_uri_tcp" {
   priority = 0
   data {
     weight  = 100
-    content = "krb5srv:m:tcp:${local.idp_fqdn}."
+    target = "krb5srv:m:tcp:${local.idp_fqdn}."
   }
   ttl = 3600
 }
@@ -149,7 +149,7 @@ resource "cloudflare_record" "kpasswd_uri_udp" {
   priority = 0
   data {
     weight  = 100
-    content = "krb5srv:m:udp:${local.idp_fqdn}."
+    target = "krb5srv:m:udp:${local.idp_fqdn}."
   }
   ttl = 3600
 }
