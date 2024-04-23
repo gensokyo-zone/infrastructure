@@ -1,24 +1,48 @@
 let
   locationModule = { config, virtualHost, lib, ... }: let
-    inherit (lib.options) mkEnableOption;
+    inherit (lib.options) mkEnableOption mkOption;
+    inherit (lib.attrsets) mapAttrs;
     cfg = config.xvars;
   in {
     options.xvars = with lib.types; {
       enable = mkEnableOption "$x_variables";
+      defaults = mkOption {
+        type = attrsOf (nullOr str);
+        default = { };
+      };
+      lib = mkOption {
+        type = attrs;
+      };
     };
-    config = let
-    in {
+    config = {
+      xvars = {
+        lib = let
+          xvars = virtualHost.xvars.lib;
+          get = mapAttrs (name: default: if virtualHost.xvars.enable then "$x_${name}" else assert default != null; default) cfg.defaults;
+        in xvars // {
+          get = xvars.get // get;
+        };
+      };
+      _module.args.xvars = config.xvars.lib;
     };
   };
   hostModule = { config, nixosConfig, gensokyo-zone, xvars, lib, ... }: let
     inherit (gensokyo-zone.lib) mkJustBefore;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-    inherit (lib.strings) concatStringsSep;
     inherit (lib.attrsets) attrValues filterAttrs mapAttrs mapAttrsToList;
     inherit (lib.lists) any;
+    inherit (lib.strings) concatStringsSep hasPrefix hasInfix;
+    inherit (lib.trivial) isInt;
     cfg = config.xvars;
-    escapeString = value: if value == "" then ''""'' else toString value;
+    escapeString = value:
+      if value == "" then ''""''
+      else if isInt value then toString value
+      else if hasPrefix ''"'' value || hasPrefix "'" value then value # already escaped, may include trailing arguments
+      else if hasInfix ''"'' value then "'${value}'"
+      else if hasInfix " " value || hasInfix ";" value || hasInfix "'" value then ''"${value}"''
+      else value;
+    anyLocations = f: any (loc: loc.enable && f loc) (attrValues config.locations);
   in {
     options = with lib.types; {
       xvars = {
@@ -34,10 +58,6 @@ let
             host = "$host";
             referer = "$http_referer";
             https = "$https";
-            proxy_host = "$proxy_host";
-            proxy_port = "$proxy_port";
-            proxy_hostport = "${proxy_host}:${proxy_port}";
-            proxy_scheme = null;
           };
         };
         lib = mkOption {
@@ -49,7 +69,7 @@ let
           modules = [ locationModule ];
           shorthandOnlyDefinesConfig = true;
           specialArgs = {
-            inherit nixosConfig gensokyo-zone xvars;
+            inherit nixosConfig gensokyo-zone;
             virtualHost = config;
           };
         });
@@ -70,7 +90,7 @@ let
     in {
       xvars = {
         enable = mkMerge [
-          (mkIf (any (loc: loc.xvars.enable) (attrValues config.locations)) true)
+          (mkIf (anyLocations (loc: loc.xvars.enable)) true)
           (mkIf cfg.parseReferer true)
         ];
         defaults = mkIf cfg.parseReferer (mkOptionDefault {

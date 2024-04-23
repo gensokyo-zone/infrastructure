@@ -68,6 +68,10 @@ let
           set = mkOption {
             type = attrsOf (nullOr str);
           };
+          hide = mkOption {
+            type = attrsOf bool;
+            default = { };
+          };
         };
         redirect = {
           enable = mkEnableOption "proxy_redirect";
@@ -103,12 +107,12 @@ let
         https = 443;
       }.${cfg.parsed.scheme} or (throw "unsupported proxy_scheme ${toString cfg.parsed.scheme}");
       port = coalesce [ cfg.parsed.port schemePort ];
-      hostport = cfg.parsed.host + optionalString (port != schemePort) ":${toString cfg.parsed.port}";
+      hostport = cfg.parsed.host + optionalString (port != schemePort) ":${toString port}";
       initProxyVars = let
-        initScheme = xvars.init "proxy_scheme" cfg.parsed.scheme;
-        initHost = xvars.init "proxy_host" cfg.parsed.host;
-        initPort = xvars.init "proxy_port" port;
-        initHostPort = xvars.init "proxy_hostport" hostport;
+        initScheme = xvars.init "proxy_scheme" config.xvars.defaults.proxy_scheme;
+        initHost = xvars.init "proxy_host" config.xvars.defaults.proxy_host;
+        initPort = xvars.init "proxy_port" config.xvars.defaults.proxy_port;
+        initHostPort = xvars.init "proxy_hostport" config.xvars.defaults.proxy_hostport;
         initUpstream = ''
           ${initScheme}
           ${initHost}
@@ -153,8 +157,17 @@ let
       setHeaders = concatStringsSep "\n" (mapAttrsToList (
         name: value: "proxy_set_header ${name} ${xvars.escapeString value};"
       ) setHeaders');
+      hideHeaders = mapAttrsToList (header: hide: mkIf hide "proxy_hide_header ${xvars.escapeString header};") cfg.headers.hide;
     in {
-      xvars.enable = mkIf (cfg.headers.rewriteReferer.enable || (cfg.enable && cfg.upstream != null)) true;
+      xvars = {
+        enable = mkIf cfg.headers.rewriteReferer.enable true;
+        defaults = mkIf cfg.enabled (mapOptionDefaults {
+          proxy_scheme = cfg.parsed.scheme;
+          proxy_host = cfg.parsed.host;
+          proxy_port = toString port;
+          proxy_hostport = hostport;
+        });
+      };
       proxy = {
         enabled = mkOptionDefault (config.proxyPass != null);
         path = mkIf (hasPrefix "/" name) (mkOptionDefault name);
@@ -207,8 +220,8 @@ let
       };
       proxyPass = mkIf cfg.enable (mkAlmostOptionDefault (removeSuffix "/" cfg.url + cfg.path));
       recommendedProxySettings = mkAlmostOptionDefault (cfg.headers.enableRecommended == "nixpkgs");
-      extraConfig = mkIf cfg.enabled (mkMerge [
-        (mkIf (virtualHost.xvars.enable) (mkJustBefore initProxyVars))
+      extraConfig = mkIf cfg.enabled (mkMerge ([
+        (mkIf virtualHost.xvars.enable (mkJustBefore initProxyVars))
         (mkIf (cfg.headers.rewriteReferer.enable) (mkJustBefore rewriteReferer))
         (mkIf (cfg.redirect.enable) (mkBefore redirect))
         (mkIf (emitHeaders) (mkJustAfter setHeaders))
@@ -216,17 +229,18 @@ let
         (mkIf (cfg.ssl.enabled && cfg.ssl.host != null) "proxy_ssl_name ${cfg.ssl.host};")
         (mkIf (cfg.ssl.enabled && cfg.ssl.verify) "proxy_ssl_verify on;")
         (mkIf cfg.websocket.enable "proxy_cache_bypass $http_upgrade;")
-      ]);
+      ] ++ hideHeaders));
     };
   };
   hostModule = { config, nixosConfig, gensokyo-zone, lib, ... }: let
-    inherit (gensokyo-zone.lib) mapAlmostOptionDefaults;
+    inherit (gensokyo-zone.lib) mapOptionDefaults mapAlmostOptionDefaults;
     inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf mkMerge;
+    inherit (lib.modules) mkIf mkOptionDefault;
     inherit (lib.attrsets) attrValues;
     inherit (lib.lists) any;
     inherit (nixosConfig.services) nginx;
     cfg = config.proxy;
+    anyLocations = f: any (loc: loc.enable && f loc) (attrValues config.locations);
   in {
     options = with lib.types; {
       proxy = {
@@ -270,7 +284,15 @@ let
         };
       };
     in {
-      xvars.parseReferer = mkIf (any needsReferer (attrValues config.locations)) true;
+      xvars = {
+        parseReferer = mkIf (anyLocations needsReferer) true;
+        defaults = mkIf (anyLocations (loc: loc.proxy.enabled)) (mkOptionDefault (mapOptionDefaults rec {
+          proxy_scheme = null;
+          proxy_host = "$proxy_host";
+          proxy_port = "$proxy_port";
+          proxy_hostport = "${proxy_host}:${proxy_port}";
+        }));
+      };
       proxy = mkIf (cfg.copyFromVhost != null) confCopy;
     };
   };

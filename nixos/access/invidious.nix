@@ -40,11 +40,10 @@ in {
         proxy = {
           enable = true;
           websocket.enable = true;
-          headers.enableRecommended = true;
+          headers.hide.content-security-policy = true;
         };
+        headers.set.content-security-policy = contentSecurityPolicy;
         extraConfig = ''
-          proxy_hide_header content-security-policy;
-          add_header content-security-policy "${contentSecurityPolicy}";
           proxy_cookie_domain ${virtualHosts.invidious.serverName} ${xvars.get.host};
         '';
       };

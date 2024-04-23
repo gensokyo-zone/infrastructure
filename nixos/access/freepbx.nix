@@ -37,11 +37,9 @@ in {
           proxy = {
             enable = true;
             websocket.enable = true;
+            headers.hide.Access-Control-Allow-Origin = true;
           };
-          extraConfig = ''
-            proxy_hide_header Access-Control-Allow-Origin;
-            add_header Access-Control-Allow-Origin ${xvars.get.scheme}://${virtualHost.serverName};
-          '';
+          headers.set.Access-Control-Allow-Origin = "${xvars.get.scheme}://${virtualHost.serverName}";
         };
       };
       allLocations = mkMerge [
