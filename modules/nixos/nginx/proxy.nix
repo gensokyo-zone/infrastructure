@@ -1,4 +1,42 @@
 let
+  serverModule = {config, name, options, gensokyo-zone, lib, ...}: let
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkMerge mkAfter;
+    cfg = config.proxy;
+  in {
+    options = with lib.types; {
+      proxy = {
+        enable = mkEnableOption "proxy_pass";
+        transparent.enable = mkEnableOption "proxy_bind transparent";
+        ssl = {
+          enable = mkEnableOption "ssl upstream";
+          verify = mkEnableOption "proxy_ssl_verify";
+        };
+        url = mkOption {
+          type = str;
+        };
+      };
+    };
+
+    config = let
+      warnProxy = lib.warnIf (!cfg.enable && options.proxy.url.isDefined) "nginx.stream.servers.${name}.proxy.url set without proxy.enable";
+    in {
+      streamConfig = warnProxy (mkMerge [
+        (mkIf cfg.transparent.enable ''
+          proxy_bind $remote_addr transparent;
+        '')
+        (mkIf cfg.ssl.enable
+          "proxy_ssl on;"
+        )
+        (mkIf (cfg.ssl.enable && cfg.ssl.verify)
+          "proxy_ssl_verify on;"
+        )
+        (mkIf cfg.enable (mkAfter
+          "proxy_pass ${cfg.url};"
+        ))
+      ]);
+    };
+  };
   locationModule = { config, nixosConfig, name, virtualHost, xvars, gensokyo-zone, lib, ... }: let
     inherit (gensokyo-zone.lib) mkJustBefore mkJustAfter mkAlmostOptionDefault mapOptionDefaults coalesce parseUrl;
     inherit (lib.options) mkOption mkEnableOption;
@@ -44,6 +82,7 @@ let
             type = nullOr str;
             default = null;
             example = "xvars.get.proxy_host";
+            # $upstream_last_server_name is commercial-only :<
           };
         };
         parsed = {
@@ -304,9 +343,15 @@ in {
 }: let
   inherit (lib.options) mkOption;
 in {
-  options = with lib.types; {
-    services.nginx.virtualHosts = mkOption {
+  options.services.nginx = with lib.types; {
+    virtualHosts = mkOption {
       type = attrsOf (submodule [hostModule]);
+    };
+    stream.servers = mkOption {
+      type = attrsOf (submoduleWith {
+        modules = [serverModule];
+        shorthandOnlyDefinesConfig = false;
+      });
     };
   };
 }

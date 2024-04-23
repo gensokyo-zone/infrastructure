@@ -38,6 +38,7 @@ let
         '';
       };
       proxy = mkIf cfg.enable {
+        enable = mkAlmostOptionDefault true;
         ssl.enable = false;
         upstream = mkAlmostOptionDefault cfg.upstream;
       };

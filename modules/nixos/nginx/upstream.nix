@@ -225,6 +225,7 @@ let
         else assert proxyUpstream.enable; proxyUpstream.name;
     in {
       proxy = {
+        enable = mkIf (config.proxy.upstream != null) true;
         url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault proxyPass);
         ssl.enable = mkIf (hasUpstream && proxyUpstream.ssl.enable) (mkAlmostOptionDefault true);
       };
