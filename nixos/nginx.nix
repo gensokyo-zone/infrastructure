@@ -1,13 +1,16 @@
 {
   config,
   lib,
-  pkgs,
   ...
-}:
-with lib; {
-  networking.firewall.interfaces.local.allowedTCPPorts = [
-    443
-    80
+}: let
+  inherit (lib.modules) mkIf mkDefault;
+  cfg = config.services.nginx;
+in {
+  networking.firewall.interfaces.local.allowedTCPPorts = let
+    inherit (cfg.ssl) preread;
+  in mkIf cfg.enable [
+    (if preread.enable then preread.serverPort else cfg.defaultSSLListenPort)
+    cfg.defaultHTTPListenPort
   ];
 
   services.nginx = {

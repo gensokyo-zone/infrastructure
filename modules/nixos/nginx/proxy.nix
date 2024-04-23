@@ -93,6 +93,8 @@ let
       url = parseUrl config.proxyPass;
       upstream = nginx.upstreams'.${cfg.upstream};
       upstreamServer = upstream.servers.${upstream.defaultServerName};
+      dynamicUpstream = hasPrefix "$" cfg.upstream;
+      hasUpstream = cfg.upstream != null && !dynamicUpstream && upstream.defaultServerName != null;
       recommendedHeaders = {
         Host = if cfg.host == null then xvars.get.proxy_hostport else cfg.host;
         Referer = xvars.get.referer;
@@ -209,11 +211,11 @@ let
             mapNullable (_: url.path) config.proxyPass
           );
           host = mkOptionDefault (
-            if cfg.upstream != null then assert url.host == upstream.name; upstreamServer.addr
+            if hasUpstream then assert url.host == upstream.name; upstreamServer.addr
             else mapNullable (_: url.host) config.proxyPass
           );
           port = mkOptionDefault (
-            if cfg.upstream != null && url.port == null then assert url.host == upstream.name; upstreamServer.port
+            if hasUpstream && url.port == null then assert url.host == upstream.name; upstreamServer.port
             else mapNullable (_: url.port) config.proxyPass
           );
         };

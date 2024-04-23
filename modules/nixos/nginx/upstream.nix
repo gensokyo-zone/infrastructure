@@ -204,6 +204,7 @@ let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf;
+    inherit (lib.strings) hasPrefix;
     inherit (nixosConfig.services) nginx;
   in {
     options = with lib.types; {
@@ -217,12 +218,15 @@ let
 
     config = let
       proxyUpstream = nginx.stream.upstreams.${config.proxy.upstream};
+      dynamicUpstream = hasPrefix "$" config.proxy.upstream;
+      hasUpstream = config.proxy.upstream != null && !dynamicUpstream;
+      proxyPass =
+        if dynamicUpstream then config.proxy.upstream
+        else assert proxyUpstream.enable; proxyUpstream.name;
     in {
       proxy = {
-        url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault (assert proxyUpstream.enable;
-          proxyUpstream.name
-        ));
-        ssl.enable = mkIf (config.proxy.upstream != null && proxyUpstream.ssl.enable) (mkAlmostOptionDefault true);
+        url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault proxyPass);
+        ssl.enable = mkIf (hasUpstream && proxyUpstream.ssl.enable) (mkAlmostOptionDefault true);
       };
     };
   };
@@ -240,20 +244,27 @@ let
   locationModule = {config, nixosConfig, virtualHost, gensokyo-zone, lib, ...}: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
     inherit (lib.modules) mkIf mkOptionDefault;
+    inherit (lib.strings) hasPrefix;
     inherit (nixosConfig.services) nginx;
   in {
     imports = [ proxyUpstreamModule ];
 
     config = let
       proxyUpstream = nginx.upstreams'.${config.proxy.upstream};
-      proxyScheme = if proxyUpstream.ssl.enable then "https" else "http";
+      proxyScheme = if config.proxy.ssl.enabled then "https" else "http";
+      dynamicUpstream = hasPrefix "$" config.proxy.upstream;
+      hasUpstream = config.proxy.upstream != null && !dynamicUpstream;
+      proxyHost =
+        if dynamicUpstream then config.proxy.upstream
+        else assert proxyUpstream.enable; proxyUpstream.name;
     in {
       proxy = {
         upstream = mkOptionDefault virtualHost.proxy.upstream;
         enable = mkIf (config.proxy.upstream != null && virtualHost.proxy.upstream == null) true;
-        url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault (assert proxyUpstream.enable;
-          "${proxyScheme}://${proxyUpstream.name}"
-        ));
+        url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault
+          "${proxyScheme}://${proxyHost}"
+        );
+        ssl.enabled = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
       };
     };
   };

@@ -25,9 +25,6 @@
         type = lines;
         internal = true;
       };
-      ssl = {
-        preread.enable = mkEnableOption "ngx_stream_ssl_preread_module";
-      };
       proxy = {
         ssl = {
           enable = mkEnableOption "ssl upstream";
@@ -41,12 +38,8 @@
     };
 
     config = {
-      proxy.ssl.enable = mkIf config.ssl.preread.enable false;
       streamConfig = mkMerge [
         config.extraConfig
-        (mkIf config.ssl.preread.enable
-          "ssl_preread on;"
-        )
         (mkIf config.proxy.ssl.enable
           "proxy_ssl on;"
         )

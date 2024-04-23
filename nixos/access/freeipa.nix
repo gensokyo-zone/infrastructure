@@ -6,7 +6,7 @@
   ...
 }:
 let
-  inherit (gensokyo-zone.lib) mkAddress6;
+  inherit (gensokyo-zone.lib) mkAddress6 mapOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (config.services) tailscale;
@@ -52,13 +52,6 @@ in {
       type = str;
     };
     preread = {
-      enable = mkEnableOption "ssl preread" // {
-        # TODO: default = true;
-      };
-      port = mkOption {
-        type = port;
-        default = 444;
-      };
       ldapPort = mkOption {
         type = port;
         default = 637;
@@ -104,10 +97,10 @@ in {
   };
   config = {
     services.nginx = {
+      # TODO: ssl.preread.enable = mkDefault true;
       access.freeipa = {
         host = mkOptionDefault (config.lib.access.getAddressFor (config.lib.access.systemForService "freeipa").name "lan");
       };
-      defaultSSLListenPort = mkIf access.preread.enable access.preread.port;
       stream = let
         prereadConf = {
           upstreams = {
@@ -128,28 +121,29 @@ in {
                 port = mkOptionDefault nginx.stream.servers.ldap.listen.ldaps.port;
               };
             };
-            nginx = {
-              ssl.enable = true;
-              servers.access = {
-                addr = mkDefault "localhost";
-                port = mkOptionDefault nginx.defaultSSLListenPort;
-              };
-            };
           };
           servers = {
-            preread'https = {
-              listen = {
-                https.port = 443;
+            ${nginx.ssl.preread.serverName} = {
+              ssl.preread.upstreams = mapOptionDefaults {
+                ${virtualHosts.freeipa.serverName} = "freeipa";
+                ${virtualHosts.freeipa'ca.serverName} = "freeipa";
+                ${nginx.access.ldap.domain} = "ldaps_access";
+                ${nginx.access.ldap.localDomain} = "ldaps_access";
+                ${nginx.access.ldap.intDomain} = "ldaps_access";
+                ${nginx.access.ldap.tailDomain} = "ldaps_access";
               };
-              ssl.preread.enable = true;
-              proxy.url = "$https_upstream";
             };
             preread'ldap = {
               listen = {
-                ldaps.port = 636;
+                ldaps.port = access.ldapPort;
               };
-              ssl.preread.enable = true;
-              proxy.url = "$ldap_upstream";
+              ssl.preread = {
+                enable = true;
+                upstreams = mapOptionDefaults {
+                  ${virtualHosts.freeipa.serverName} = "ldaps";
+                  default = "ldaps_access";
+                };
+              };
             };
           };
         };
@@ -198,37 +192,16 @@ in {
         conf.servers = {
           ldap = {
             listen = {
-              ldaps.port = mkIf access.preread.enable (mkDefault access.preread.ldapPort);
+              ldaps.port = mkIf nginx.ssl.preread.enable (mkDefault access.preread.ldapPort);
             };
             ssl.cert.copyFromVhost = mkDefault "freeipa";
           };
         };
       in mkMerge [
         conf
-        (mkIf access.preread.enable prereadConf)
+        (mkIf nginx.ssl.preread.enable prereadConf)
         (mkIf access.kerberos.enable kerberosConf)
       ];
-      streamConfig = let
-        inherit (nginx.stream) upstreams;
-        preread = ''
-          map $ssl_preread_server_name $https_upstream {
-            hostnames;
-            ${virtualHosts.freeipa.serverName} ${upstreams.freeipa.name};
-            ${virtualHosts.freeipa'ca.serverName} ${upstreams.freeipa.name};
-            ${nginx.access.ldap.domain} ${upstreams.ldaps_access.name};
-            ${nginx.access.ldap.localDomain} ${upstreams.ldaps_access.name};
-            ${nginx.access.ldap.intDomain} ${upstreams.ldaps_access.name};
-            ${nginx.access.ldap.tailDomain} ${upstreams.ldaps_access.name};
-            default ${upstreams.nginx.name};
-          }
-
-          map $ssl_preread_server_name $ldap_upstream {
-            hostnames;
-            ${virtualHosts.freeipa.serverName} ${upstreams.ldaps.name};
-            default ${upstreams.ldaps_access.name};
-          }
-        '';
-      in mkIf access.preread.enable preread;
       virtualHosts = let
         name.shortServer = mkDefault "ipa";
       in {
@@ -292,8 +265,8 @@ in {
           access.kerberos.ports.kpasswd
           access.kerberos.ports.kadmin
         ])
-        (mkIf access.preread.enable [
-          636
+        (mkIf nginx.ssl.preread.enable [
+          access.ldapPort
         ])
       ];
       allowedUDPPorts = mkIf access.kerberos.enable [
