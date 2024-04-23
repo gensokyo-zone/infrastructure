@@ -10,14 +10,12 @@
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.trivial) warnIf;
   inherit (config.services) nginx;
-  forceRedirectConfig = virtualHost: let
-    xvars = virtualHost.xvars.lib;
-  in ''
+  forceRedirectConfig = { virtualHost, xvars }: ''
     if (${xvars.get.scheme} = http) {
       return ${toString virtualHost.redirectCode} https://${xvars.get.host}$request_uri;
     }
   '';
-  locationModule = { config, virtualHost, ... }: let
+  locationModule = { config, virtualHost, xvars, ... }: let
     cfg = config.ssl;
     emitForce = cfg.force && !virtualHost.ssl.forced;
   in {
@@ -26,7 +24,7 @@
     };
     config = {
       xvars.enable = mkIf emitForce true;
-      extraConfig = mkIf emitForce (forceRedirectConfig virtualHost);
+      extraConfig = mkIf emitForce (forceRedirectConfig { inherit xvars virtualHost; });
     };
   };
   sslModule = { config, name, ... }: let
@@ -87,7 +85,7 @@
       };
     };
   };
-  hostModule = { config, name, ... }: let
+  hostModule = { config, name, xvars, ... }: let
     cfg = config.ssl;
     emitForce = cfg.forced && config.proxied.enabled;
   in {
@@ -123,7 +121,7 @@
       kTLS = mkAlmostOptionDefault true;
 
       xvars.enable = mkIf emitForce true;
-      extraConfig = mkIf emitForce (forceRedirectConfig config);
+      extraConfig = mkIf emitForce (forceRedirectConfig { virtualHost = config; inherit xvars; });
     };
   };
   upstreamServerModule = { config, nixosConfig, ... }: let
