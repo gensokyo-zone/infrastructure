@@ -1,16 +1,19 @@
 let
-  serverModule = {config, name, options, gensokyo-zone, lib, ...}: let
+  proxyModule = {config, name, options, gensokyo-zone, lib, ...}: let
     inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf mkMerge mkAfter;
+    inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
+    inherit (lib.strings) optionalString;
     cfg = config.proxy;
   in {
     options = with lib.types; {
       proxy = {
         enable = mkEnableOption "proxy_pass";
-        transparent.enable = mkEnableOption "proxy_bind transparent";
-        ssl = {
-          enable = mkEnableOption "ssl upstream";
-          verify = mkEnableOption "proxy_ssl_verify";
+        bind = {
+          enable = mkEnableOption "proxy_bind";
+          transparent = mkEnableOption "proxy_bind transparent";
+          address = mkOption {
+            type = str;
+          };
         };
         url = mkOption {
           type = str;
@@ -18,23 +21,29 @@ let
       };
     };
 
+    config = {
+      proxy = {
+        bind.address = mkIf cfg.bind.transparent (mkOptionDefault "$remote_addr");
+      };
+      extraConfig = mkIf cfg.enable (mkMerge [
+        (mkIf cfg.bind.enable (mkAfter (
+          "proxy_bind ${cfg.bind.address}" + optionalString cfg.bind.transparent " transparent" + ";"
+        )))
+      ]);
+    };
+  };
+  serverModule = {config, name, options, gensokyo-zone, lib, ...}: let
+    inherit (lib.modules) mkIf mkAfter;
+    cfg = config.proxy;
+  in {
+    imports = [ proxyModule ];
+
     config = let
       warnProxy = lib.warnIf (!cfg.enable && options.proxy.url.isDefined) "nginx.stream.servers.${name}.proxy.url set without proxy.enable";
     in {
-      streamConfig = warnProxy (mkMerge [
-        (mkIf cfg.transparent.enable ''
-          proxy_bind $remote_addr transparent;
-        '')
-        (mkIf cfg.ssl.enable
-          "proxy_ssl on;"
-        )
-        (mkIf (cfg.ssl.enable && cfg.ssl.verify)
-          "proxy_ssl_verify on;"
-        )
-        (mkIf cfg.enable (mkAfter
-          "proxy_pass ${cfg.url};"
-        ))
-      ]);
+      streamConfig = warnProxy (mkIf cfg.enable (mkAfter
+        "proxy_pass ${cfg.url};"
+      ));
     };
   };
   locationModule = { config, nixosConfig, name, virtualHost, xvars, gensokyo-zone, lib, ... }: let
@@ -47,9 +56,10 @@ let
     inherit (nixosConfig.services) nginx;
     cfg = config.proxy;
   in {
+    imports = [ proxyModule ];
+
     options = with lib.types; {
       proxy = {
-        enable = mkEnableOption "proxy";
         enabled = mkOption {
           type = bool;
           readOnly = true;
@@ -57,9 +67,6 @@ let
         inheritServerDefaults = mkOption {
           type = bool;
           default = true;
-        };
-        url = mkOption {
-          type = str;
         };
         path = mkOption {
           type = str;
@@ -69,21 +76,6 @@ let
         };
         websocket.enable = mkEnableOption "websocket proxy" // {
           default = cfg.inheritServerDefaults && virtualHost.proxy.websocket.enable;
-        };
-        ssl = {
-          enabled = mkOption {
-            type = bool;
-          };
-          verify = mkEnableOption "proxy_ssl_verify";
-          sni = mkEnableOption "proxy_ssl_server_name" // {
-            default = cfg.ssl.host != null;
-          };
-          host = mkOption {
-            type = nullOr str;
-            default = null;
-            example = "xvars.get.proxy_host";
-            # $upstream_last_server_name is commercial-only :<
-          };
         };
         parsed = {
           scheme = mkOption {
@@ -213,9 +205,6 @@ let
         enabled = mkOptionDefault (config.proxyPass != null);
         path = mkIf (hasPrefix "/" name) (mkOptionDefault name);
         url = mkIf (cfg.inheritServerDefaults && virtualHost.proxy.url != null) (mkOptionDefault virtualHost.proxy.url);
-        ssl = {
-          enabled = mkOptionDefault (cfg.parsed.scheme == "https");
-        };
         headers = {
           enableRecommended = mkOptionDefault (
             if cfg.enable && (!cfg.inheritServerDefaults || virtualHost.proxy.headers.enableRecommended != false) then true
@@ -266,9 +255,6 @@ let
         (mkIf (cfg.headers.rewriteReferer.enable) (mkJustBefore rewriteReferer))
         (mkIf (cfg.redirect.enable) (mkBefore redirect))
         (mkIf (emitHeaders) (mkJustAfter setHeaders))
-        (mkIf (cfg.ssl.enabled && cfg.ssl.sni) "proxy_ssl_server_name on;")
-        (mkIf (cfg.ssl.enabled && cfg.ssl.host != null) "proxy_ssl_name ${cfg.ssl.host};")
-        (mkIf (cfg.ssl.enabled && cfg.ssl.verify) "proxy_ssl_verify on;")
         (mkIf cfg.websocket.enable "proxy_cache_bypass $http_upgrade;")
       ] ++ hideHeaders));
     };

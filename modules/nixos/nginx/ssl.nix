@@ -1,68 +1,50 @@
-{
-  config,
-  lib,
-  inputs,
-  ...
-}: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mkAlmostDefault;
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
-  inherit (lib.attrsets) mapAttrsToList;
-  inherit (lib.trivial) warnIf;
-  inherit (config.services) nginx;
-  forceRedirectConfig = { virtualHost, xvars }: ''
-    if (${xvars.get.scheme} = http) {
-      return ${toString virtualHost.redirectCode} https://${xvars.get.host}$request_uri;
-    }
-  '';
-  locationModule = { config, virtualHost, xvars, ... }: let
-    cfg = config.ssl;
-    emitForce = cfg.force && !virtualHost.ssl.forced;
-  in {
-    options.ssl = {
-      force = mkEnableOption "redirect to SSL";
-    };
-    config = {
-      xvars.enable = mkIf emitForce true;
-      extraConfig = mkIf emitForce (forceRedirectConfig { inherit xvars virtualHost; });
-    };
-  };
-  sslModule = { config, name, ... }: let
+let
+  sslModule = { config, nixosConfig, gensokyo-zone, lib, ... }: let
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+    inherit (nixosConfig.services) nginx;
     cfg = config.ssl;
   in {
-    options.ssl = with lib.types; {
-      enable = mkOption {
-        type = bool;
+    options = with lib.types; {
+      ssl = {
+        enable = mkOption {
+          type = bool;
+        };
+        force = mkOption {
+          # TODO: "force-nonlocal"? exceptions for tailscale?
+          type = enum [ false true "only" "reject" ];
+          default = false;
+        };
+        forced = mkOption {
+          type = bool;
+          readOnly = true;
+        };
+        cert = {
+          name = mkOption {
+            type = nullOr str;
+            default = null;
+          };
+          keyPath = mkOption {
+            type = nullOr path;
+            default = null;
+          };
+          path = mkOption {
+            type = nullOr path;
+            default = null;
+          };
+          copyFromVhost = mkOption {
+            type = nullOr str;
+            default = null;
+          };
+          copyFromStreamServer = mkOption {
+            type = nullOr str;
+            default = null;
+          };
+        };
       };
-      force = mkOption {
-        # TODO: "force-nonlocal"? exceptions for tailscale?
-        type = enum [ false true "only" "reject" ];
-        default = false;
-      };
-      forced = mkOption {
-        type = bool;
-        readOnly = true;
-      };
-      cert = {
-        name = mkOption {
-          type = nullOr str;
-          default = null;
-        };
-        keyPath = mkOption {
-          type = nullOr path;
-          default = null;
-        };
-        path = mkOption {
-          type = nullOr path;
-          default = null;
-        };
-        copyFromVhost = mkOption {
-          type = nullOr str;
-          default = null;
-        };
-        copyFromStreamServer = mkOption {
-          type = nullOr str;
-          default = null;
+      proxy.ssl = {
+        enabled = mkOption {
+          type = bool;
         };
       };
     };
@@ -85,7 +67,104 @@
       };
     };
   };
-  hostModule = { config, name, xvars, ... }: let
+  sslProxyModule = { config, lib, ... }: let
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkMerge mkAfter;
+    inherit (config) proxy;
+    cfg = proxy.ssl;
+  in {
+    options.proxy.ssl = with lib.types; {
+      enable = mkOption {
+        type = bool;
+      };
+      verify = mkEnableOption "proxy_ssl_verify";
+      sni = mkEnableOption "proxy_ssl_server_name" // {
+        default = cfg.host != null;
+      };
+      host = mkOption {
+        type = nullOr str;
+        default = null;
+        example = "xvars.get.proxy_host";
+        description = "proxy_ssl_name";
+        # $upstream_last_server_name is commercial-only :<
+      };
+    };
+    config = {
+      extraConfig = mkIf (proxy.enable && cfg.enable) (mkMerge [
+        (mkIf cfg.verify "proxy_ssl_verify on;")
+        (mkIf cfg.sni "proxy_ssl_server_name on;")
+        (mkIf (cfg.host != null) (mkAfter "proxy_ssl_name ${cfg.host};"))
+      ]);
+    };
+  };
+  streamServerModule = { config, nixosConfig, gensokyo-zone, lib, ... }: let
+    inherit (gensokyo-zone.lib) mkAlmostDefault;
+    inherit (lib.options) mkEnableOption;
+    inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+    cfg = config.ssl;
+  in {
+    imports = [ sslModule sslProxyModule ];
+    options = with lib.types; {
+      ssl = {
+        kTLS = mkEnableOption "kTLS support" // {
+          default = true;
+        };
+      };
+    };
+    config = let
+      inherit (config) proxy;
+      cert = nixosConfig.security.acme.certs.${cfg.cert.name};
+      conf.ssl.cert = {
+        path = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/fullchain.pem");
+        keyPath = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/key.pem");
+      };
+      conf.proxy.ssl.enable = mkOptionDefault false;
+      #confSsl.listen.ssl = { ssl = true; };
+      confSsl.extraConfig = mkMerge [
+        (mkIf (cfg.cert.path != null) "ssl_certificate ${cfg.cert.path};")
+        (mkIf (cfg.cert.keyPath != null) "ssl_certificate_key ${cfg.cert.keyPath};")
+        (mkIf cfg.kTLS "ssl_conf_command Options KTLS;")
+      ];
+      confProxy.extraConfig = mkIf proxy.ssl.enable "proxy_ssl on;";
+    in mkMerge [
+      conf
+      (mkIf cfg.enable confSsl)
+      (mkIf proxy.enable confProxy)
+    ];
+  };
+in {
+  config,
+  gensokyo-zone,
+  lib,
+  ...
+}: let
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+  inherit (lib.options) mkOption mkEnableOption;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.trivial) warnIf;
+  inherit (lib.strings) hasPrefix;
+  inherit (config.services) nginx;
+  forceRedirectConfig = { virtualHost, xvars }: ''
+    if (${xvars.get.scheme} = http) {
+      return ${toString virtualHost.redirectCode} https://${xvars.get.host}$request_uri;
+    }
+  '';
+  locationModule = { config, virtualHost, xvars, ... }: let
+    cfg = config.ssl;
+    emitForce = cfg.force && !virtualHost.ssl.forced;
+  in {
+    imports = [ sslProxyModule ];
+    options.ssl = {
+      force = mkEnableOption "redirect to SSL";
+    };
+    config = {
+      proxy.ssl.enable = mkOptionDefault (hasPrefix "https://" config.proxyPass);
+      xvars.enable = mkIf emitForce true;
+      extraConfig = mkIf emitForce (forceRedirectConfig { inherit xvars virtualHost; });
+    };
+  };
+  hostModule = { config, xvars, ... }: let
     cfg = config.ssl;
     emitForce = cfg.forced && config.proxied.enabled;
   in {
@@ -124,30 +203,6 @@
       extraConfig = mkIf emitForce (forceRedirectConfig { virtualHost = config; inherit xvars; });
     };
   };
-  upstreamServerModule = { config, nixosConfig, ... }: let
-    cfg = config.ssl;
-  in {
-    imports = [ sslModule ];
-    options.ssl = with lib.types; {
-      kTLS = mkEnableOption "kTLS support" // {
-        default = true;
-      };
-    };
-    config = {
-      ssl.cert = let
-        cert = nixosConfig.security.acme.certs.${cfg.cert.name};
-      in {
-        path = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/fullchain.pem");
-        keyPath = mkIf (cfg.cert.name != null) (mkAlmostDefault "${cert.directory}/key.pem");
-      };
-      #listen.ssl = mkIf cfg.enable { ssl = true; };
-      extraConfig = mkIf cfg.enable (mkMerge [
-        (mkIf (cfg.cert.path != null) "ssl_certificate ${cfg.cert.path};")
-        (mkIf (cfg.cert.keyPath != null) "ssl_certificate_key ${cfg.cert.keyPath};")
-        (mkIf cfg.kTLS "ssl_conf_command Options KTLS;")
-      ]);
-    };
-  };
 in {
   options.services.nginx = with lib.types; {
     virtualHosts = mkOption {
@@ -158,7 +213,7 @@ in {
     };
     stream.servers = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ upstreamServerModule ];
+        modules = [ streamServerModule ];
         shorthandOnlyDefinesConfig = false;
       });
     };

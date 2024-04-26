@@ -252,7 +252,7 @@ let
 
     config = let
       proxyUpstream = nginx.upstreams'.${config.proxy.upstream};
-      proxyScheme = if config.proxy.ssl.enabled then "https" else "http";
+      proxyScheme = if config.proxy.ssl.enable then "https" else "http";
       dynamicUpstream = hasPrefix "$" config.proxy.upstream;
       hasUpstream = config.proxy.upstream != null && !dynamicUpstream;
       proxyHost =
@@ -265,7 +265,7 @@ let
         url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault
           "${proxyScheme}://${proxyHost}"
         );
-        ssl.enabled = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
+        ssl.enable = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
       };
     };
   };
