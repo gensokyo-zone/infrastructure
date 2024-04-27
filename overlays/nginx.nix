@@ -1,13 +1,15 @@
 final: prev: let
   inherit (final) lib;
-  luaOverlay = luafinal: luaprev: {
-    lua-resty-core = luaprev.lua-resty-core.overrideAttrs (old: rec {
-      version = lib.warnIf (old.version != "0.1.24") "lua-resty-core updated upstream" "0.1.28";
+  luaOverlay = luafinal: luaprev: let
+    mkRestyCore = { nixpkgsVersion, version, sha256 }: luaprev.lua-resty-core.overrideAttrs (old: {
+      version = lib.warnIf (old.version != nixpkgsVersion) "lua-resty-core updated upstream" version;
       src = old.src.override {
         rev = "v${version}";
-        sha256 = "sha256-RJ2wcHTu447wM0h1fa2qCBl4/p9XL6ZqX9pktRW64RI=";
+        inherit sha256;
       };
     });
+  in {
+    #lua-resty-core = mkRestyCore { nixpkgsVersion = "0.1.24"; version = "0.1.28"; sha256 = "sha256-RJ2wcHTu447wM0h1fa2qCBl4/p9XL6ZqX9pktRW64RI="; };
   };
 in {
   nginxModules = prev.nginxModules // {
