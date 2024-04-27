@@ -151,6 +151,10 @@ let
       };
       ssl = {
         enable = mkEnableOption "ssl upstream";
+        host = mkOption {
+          type = nullOr str;
+          default = null;
+        };
       };
       defaultServerName = mkOption {
         type = nullOr str;
@@ -227,7 +231,10 @@ let
       proxy = {
         enable = mkIf (config.proxy.upstream != null) true;
         url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault proxyPass);
-        ssl.enable = mkIf (hasUpstream && proxyUpstream.ssl.enable) (mkAlmostOptionDefault true);
+        ssl = mkIf (hasUpstream && proxyUpstream.ssl.enable) {
+          enable = mkAlmostOptionDefault true;
+          host = mkAlmostOptionDefault proxyUpstream.ssl.host;
+        };
       };
     };
   };
@@ -265,7 +272,10 @@ let
         url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault
           "${proxyScheme}://${proxyHost}"
         );
-        ssl.enable = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
+        ssl = {
+          enable = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
+          host = mkIf hasUpstream (mkAlmostOptionDefault proxyUpstream.ssl.host);
+        };
       };
     };
   };

@@ -1,18 +1,19 @@
 {
   config,
   meta,
-  lib,
+  access,
   gensokyo-zone,
+  lib,
   ...
 }:
 let
-  inherit (gensokyo-zone.lib) mkAddress6 mapOptionDefaults;
+  inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (config.services) tailscale;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
-  access = nginx.access.freeipa;
+  cfg = nginx.access.freeipa;
   inherit (nginx.access) ldap;
   extraConfig = ''
     ssl_verify_client optional_no_ca;
@@ -21,9 +22,8 @@ let
     "/" = { config, xvars, ... }: {
       proxy = {
         enable = true;
-        url = mkDefault access.proxyPass;
-        host = mkDefault virtualHosts.freeipa.serverName;
-        ssl.host = mkDefault config.proxy.host;
+        upstream = "freeipa";
+        host = mkDefault config.proxy.ssl.host;
         headers = {
           rewriteReferer.enable = true;
           set = {
@@ -36,10 +36,10 @@ let
           fromScheme = xvars.get.proxy_scheme;
         };
       };
-      proxyPass = mkDefault access.proxyPass;
       recommendedProxySettings = false;
     };
   };
+  ldapsPort = 636;
 in {
   imports = let
     inherit (meta) nixos;
@@ -48,9 +48,6 @@ in {
   ];
 
   options.services.nginx.access.freeipa = with lib.types; {
-    host = mkOption {
-      type = str;
-    };
     preread = {
       ldapPort = mkOption {
         type = port;
@@ -80,38 +77,27 @@ in {
         };
       };
     };
-    proxyPass = mkOption {
-      type = str;
-      default = let
-        scheme = if access.port == 443 then "https" else "http";
-      in "${scheme}://${mkAddress6 access.host}:${toString access.port}";
-    };
-    port = mkOption {
-      type = port;
-      default = 443;
-    };
-    ldapPort = mkOption {
-      type = port;
-      default = 636;
-    };
   };
   config = {
     services.nginx = {
       # TODO: ssl.preread.enable = mkDefault true;
-      access.freeipa = {
-        host = mkOptionDefault (config.lib.access.getAddressFor (config.lib.access.systemForService "freeipa").name "lan");
+      upstreams'.freeipa = {config, ...}: {
+        ssl.host = mkDefault (access.systemFor config.servers.access.accessService.system).access.fqdn;
+        servers.access = {
+          accessService = {
+            name = "freeipa";
+          };
+        };
       };
       stream = let
         prereadConf = {
           upstreams = {
-            freeipa = {
-              ssl.enable = true;
-              servers.access = let
-                system = config.lib.access.systemForService "freeipa";
-                inherit (system.exports.services) freeipa;
-              in {
-                addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
-                port = mkOptionDefault freeipa.ports.default.port;
+            freeipa = let
+              inherit (nginx.upstreams') freeipa;
+            in {
+              ssl.host = mkDefault freeipa.ssl.host;
+              servers.access.accessService = {
+                inherit (freeipa.servers.access.accessService) system name id port;
               };
             };
             ldaps_access = {
@@ -135,7 +121,7 @@ in {
             };
             preread'ldap = {
               listen = {
-                ldaps.port = access.ldapPort;
+                ldaps.port = ldapsPort;
               };
               ssl.preread = {
                 enable = true;
@@ -148,26 +134,28 @@ in {
           };
         };
         kerberosConf = let
-          system = config.lib.access.systemForService "kerberos";
+          system = access.systemFor nginx.stream.upstreams.krb5.servers.access.accessService.system;
           inherit (system.exports.services) kerberos;
         in {
           upstreams = let
-            addr = mkDefault (config.lib.access.getAddressFor system.name "lan");
-            mkKrb5Upstream = portName: {
-              enable = mkDefault kerberos.ports.${portName}.enable;
+            mkKrb5Upstream = port: {config, ...}: {
+              enable = mkDefault config.servers.access.enable;
               servers.access = {
-                port = mkOptionDefault kerberos.ports.${portName}.port;
-                inherit addr;
+                accessService = {
+                  name = "kerberos";
+                  inherit port;
+                };
               };
             };
           in {
             krb5 = mkKrb5Upstream "default";
             kadmin = mkKrb5Upstream "kadmin";
             kpasswd = mkKrb5Upstream "kpasswd";
-            kticket5 = mkKrb5Upstream "ticket4";
+            kticket4 = mkKrb5Upstream "ticket4";
           };
           servers = let
             mkKrb5Server = tcpPort: udpPort: { name, ... }: {
+              enable = mkDefault nginx.stream.upstreams.${name}.enable;
               listen = {
                 tcp = mkIf (tcpPort != null) {
                   enable = mkDefault kerberos.ports.${tcpPort}.enable;
@@ -192,7 +180,7 @@ in {
         conf.servers = {
           ldap = {
             listen = {
-              ldaps.port = mkIf nginx.ssl.preread.enable (mkDefault access.preread.ldapPort);
+              ldaps.port = mkIf nginx.ssl.preread.enable (mkDefault cfg.preread.ldapPort);
             };
             ssl.cert.copyFromVhost = mkDefault "freeipa";
           };
@@ -200,7 +188,7 @@ in {
       in mkMerge [
         conf
         (mkIf nginx.ssl.preread.enable prereadConf)
-        (mkIf access.kerberos.enable kerberosConf)
+        (mkIf cfg.kerberos.enable kerberosConf)
       ];
       virtualHosts = let
         name.shortServer = mkDefault "ipa";
@@ -222,7 +210,7 @@ in {
           locations."/" = mkMerge [
             locations."/"
             {
-              proxy.host = virtualHosts.freeipa'ca.serverName;
+              proxy.ssl.host = virtualHosts.freeipa'ca.serverName;
             }
           ];
           ssl = {
@@ -258,22 +246,20 @@ in {
       };
     };
 
-    networking.firewall = {
+    networking.firewall = let
+      inherit (nginx.stream.servers) krb5 kadmin kpasswd kticket4;
+    in {
       allowedTCPPorts = mkMerge [
-        (mkIf access.kerberos.enable [
-          access.kerberos.ports.ticket
-          access.kerberos.ports.kpasswd
-          access.kerberos.ports.kadmin
-        ])
+        (mkIf cfg.kerberos.enable (map (server:
+          mkIf (server.enable && server.listen.tcp.enable) server.listen.tcp.port
+        ) [ krb5 kticket4 kpasswd kadmin ]))
         (mkIf nginx.ssl.preread.enable [
-          access.ldapPort
+          ldapsPort
         ])
       ];
-      allowedUDPPorts = mkIf access.kerberos.enable [
-        access.kerberos.ports.ticket
-        access.kerberos.ports.ticket4
-        access.kerberos.ports.kpasswd
-      ];
+      allowedUDPPorts = mkIf cfg.kerberos.enable (map (server:
+        mkIf (server.enable && server.listen.udp.enable) server.listen.udp.port
+      ) [ krb5 kticket4 kpasswd ]);
     };
   };
 }
