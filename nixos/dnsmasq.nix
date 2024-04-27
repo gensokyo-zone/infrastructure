@@ -90,6 +90,7 @@ in {
             "play.inpvp.net"
             "mco.lbsg.net"
             "play.galaxite.net"
+            "mco.cubecraft.net"
           ];
           bedrockRecords = map (flip mkHostRecord bedrockRecord) bedrockRecordNames;
         in mkMerge [

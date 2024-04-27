@@ -1,7 +1,37 @@
-{ config, lib, pkgs, ... }: let
+let
+  allowListModule = {config, name, gensokyo-zone, lib, ...}: let
+    inherit (gensokyo-zone.lib) hexToInt;
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkOptionDefault;
+    inherit (builtins) typeOf;
+  in {
+    options = with lib.types; {
+      name = mkOption {
+        type = str;
+        default = name;
+      };
+      xuid = mkOption {
+        type = oneOf [ int str ];
+      };
+      settings = mkOption {
+        type = attrsOf str;
+      };
+    };
+    config = {
+      settings = {
+        name = mkOptionDefault config.name;
+        xuid = mkOptionDefault {
+          string = toString (hexToInt config.xuid);
+          int = toString config.xuid;
+        }.${typeOf config.xuid};
+      };
+    };
+  };
+in { config, gensokyo-zone, lib, pkgs, ... }: let
   # see https://gist.github.com/datakurre/cfdf627fb23ed8ff62bb7b3520b92674
+  inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.options) mkOption mkPackageOption;
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) concatStringsSep;
   inherit (lib.trivial) boolToString;
@@ -35,32 +65,6 @@ in {
 
     serverProperties = mkOption {
       type = attrsOf (oneOf [ bool int str float ]);
-      default = {
-        server-name = "Dedicated Server";
-        gamemode = "survival";
-        difficulty = "easy";
-        allow-cheats = false;
-        max-players = 10;
-        online-mode = false;
-        white-list = false;
-        server-port = 19132;
-        server-portv6 = 19133;
-        view-distance = 32;
-        tick-distance = 4;
-        player-idle-timeout = 30;
-        max-threads = 8;
-        level-name = "Bedrock level";
-        level-seed = "";
-        default-player-permission-level = "member";
-        texturepack-required = false;
-        content-log-file-enabled = false;
-        compression-threshold = 1;
-        server-authoritative-movement = "server-auth";
-        player-movement-score-threshold = 20;
-        player-movement-distance-threshold = 0.3;
-        player-movement-duration-threshold-in-ms = 500;
-        correct-player-movement = false;
-      };
       example = literalExample ''
         {
           server-name = "Dedicated Server";
@@ -111,43 +115,123 @@ in {
       type = str;
       default = cfg.user;
     };
+
+    allowPlayers = mkOption {
+      type = nullOr (attrsOf (submoduleWith {
+        modules = [ allowListModule ];
+        specialArgs = {
+          inherit gensokyo-zone;
+          nixosConfig = config;
+        };
+      }));
+      default = null;
+    };
+
+    allowList = mkOption {
+      type = nullOr path;
+    };
   };
 
-  config = mkIf cfg.enable {
-    users.users.${cfg.user} = {
+  config = let
+    confService.services.minecraft-bedrock-server = {
+      serverProperties = mapOptionDefaults {
+        server-name = "Dedicated Server";
+        gamemode = "survival";
+        difficulty = "easy";
+        allow-cheats = false;
+        max-players = 10;
+        online-mode = false;
+        allow-list = cfg.allowList != null;
+        server-port = 19132;
+        server-portv6 = 19133;
+        view-distance = 32;
+        tick-distance = 4;
+        player-idle-timeout = 30;
+        max-threads = 8;
+        level-name = "Bedrock level";
+        level-seed = "";
+        default-player-permission-level = "member";
+        texturepack-required = false;
+        content-log-file-enabled = false;
+        compression-threshold = 1;
+        server-authoritative-movement = "server-auth";
+        player-movement-score-threshold = 20;
+        player-movement-distance-threshold = 0.3;
+        player-movement-duration-threshold-in-ms = 500;
+        correct-player-movement = false;
+      };
+      allowList = let
+        allowPlayers = mapAttrsToList (_: allow: allow.settings) cfg.allowPlayers;
+        allowListJson = pkgs.writeText "minecraft-bedrock-server-allowlist.json" (
+          builtins.toJSON allowPlayers
+        );
+      in mkOptionDefault (
+        if cfg.allowPlayers != null then allowListJson
+        else null
+      );
+    };
+    conf.users.users.${cfg.user} = {
       inherit (cfg) group;
       description     = "Minecraft server service user";
       home            = cfg.dataDir;
       createHome      = true;
       isSystemUser = true;
     };
-    users.groups.${cfg.group} = {};
+    conf.users.groups.${cfg.group} = {};
 
-    systemd.services.minecraft-bedrock-server = {
+    conf.systemd.services.minecraft-bedrock-server = {
       description   = "Minecraft Bedrock Server Service";
       wantedBy      = [ "multi-user.target" ];
       after         = [ "network.target" ];
 
       serviceConfig = {
+        BindReadOnlyPaths = let
+          packageResources = map (subpath: "${cfg.package}/var/lib/${subpath}:${cfg.dataDir}/${subpath}") [
+            "definitions/attachables"
+            "definitions/biomes"
+            "definitions/feature_rules"
+            "definitions/features"
+            "definitions/persona"
+            "definitions/sdl_layouts"
+            "definitions/spawn_groups"
+            "resource_packs/vanilla"
+            "resource_packs/chemistry"
+            "config/default"
+            "bedrock_server_symbols.debug"
+            "env-vars"
+            "permissions.json"
+          ];
+        in mkMerge [
+          packageResources
+          (mkIf (cfg.allowList != null) "${cfg.allowList}:${cfg.dataDir}/allowlist.json")
+        ];
         ExecStart = [
           "${cfg.package}/bin/bedrock_server"
         ];
         Restart = "always";
         User = cfg.user;
         WorkingDirectory = cfg.dataDir;
+        LogFilterPatterns = [
+          "~.*minecraft:trial_chambers/chamber/end"
+          "~Running AutoCompaction"
+        ];
       };
 
       preStart = ''
-        cp -a -n ${cfg.package}/var/lib/* .
+        mkdir -p behavior_packs
+        ln -sf ${cfg.package}/var/lib/behavior_packs/* behavior_packs/
         cp -f ${serverPropertiesFile} server.properties
         chmod +w server.properties
       '';
     };
 
-    networking.firewall = let
+    conf.networking.firewall = let
       ports = [ cfg.serverProperties.server-port cfg.serverProperties.server-portv6 ];
     in mkIf cfg.openFirewall {
       allowedUDPPorts = ports;
     };
-  };
+  in mkMerge [
+    confService
+    (mkIf cfg.enable conf)
+  ];
 }

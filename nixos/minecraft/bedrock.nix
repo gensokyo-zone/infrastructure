@@ -6,29 +6,20 @@ in {
     enable = mkDefault true;
     serverProperties = {
       server-name = "Kat's Server";
-      gamemode = "survival";
-      difficulty = "easy";
-      allow-cheats = false;
-      max-players = 10;
       online-mode = true;
-      white-list = false;
-      server-port = 19132;
-      server-portv6 = 19133;
-      view-distance = 32;
-      tick-distance = 4;
-      player-idle-timeout = 30;
-      max-threads = 8;
-      level-name = "Bedrock level";
-      level-seed = "";
-      default-player-permission-level = "member";
-      texturepack-required = false;
-      content-log-file-enabled = false;
-      compression-threshold = 1;
-      server-authoritative-movement = "server-auth";
-      player-movement-score-threshold = 20;
-      player-movement-distance-threshold = 0.3;
-      player-movement-duration-threshold-in-ms = 500;
-      correct-player-movement = false;
+      level-name = "KatBedrock";
+    };
+    allowPlayers = let
+      base = 2535460000000000;
+    in {
+      Kyxna.xuid = base + 4308966797;
+      arcnmx.xuid = base + 13399068799;
+    };
+  };
+  systemd.services.minecraft-bedrock-server = mkIf cfg.enable {
+    gensokyo-zone.sharedMounts."minecraft/bedrock" = {config, ...}: {
+      root = config.rootDir + "/${config.subpath}";
+      path = mkDefault cfg.dataDir;
     };
   };
   users = mkIf cfg.enable {

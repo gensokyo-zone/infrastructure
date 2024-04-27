@@ -6,9 +6,9 @@
   nixlib = inputs.nixpkgs.lib;
   inherit (nixlib.modules) mkOrder mkOverride defaultOverridePriority;
   inherit (nixlib.strings) splitString toLower;
-  inherit (nixlib.lists) imap0 elemAt findFirst;
+  inherit (nixlib.lists) imap0 elemAt findFirst foldl;
   inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
-  inherit (nixlib.strings) hasPrefix hasInfix removePrefix substring fixedWidthString replaceStrings concatMapStringsSep match toInt;
+  inherit (nixlib.strings) hasPrefix hasInfix removePrefix substring fixedWidthString replaceStrings concatMapStringsSep stringToCharacters match toInt;
   inherit (nixlib.trivial) flip toHexString bitOr;
 
   toHexStringLower = v: toLower (toHexString v);
@@ -19,6 +19,7 @@
     idx = listToAttrs pairs;
   in
     char: idx.${char};
+  hexToInt = str: foldl (value: chr: value * 16 + hexCharToInt chr) 0 (stringToCharacters (toLower str));
 
   eui64 = mac: let
     parts = map toLower (splitString ":" mac);
@@ -98,7 +99,7 @@ in {
     domain = "gensokyo.zone";
     inherit treeToModulesOutput userIs
       eui64 parseUrl mkWinPath mkBaseDn mkAddress6
-      toHexStringLower hexCharToInt
+      toHexStringLower hexToInt hexCharToInt
       mapListToAttrs coalesce
       mkAlmostOptionDefault mkAlmostDefault mkAlmostForce mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
       overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
