@@ -3,6 +3,7 @@
 		"lxc.mount.entry": [
 			"/rpool/shared/nix/store nix/store none bind,create=dir",
 			"/rpool/shared/nix/var nix/var none bind,create=dir",
+			"/rpool/shared/minecraft/bedrock mnt/shared/minecraft/bedrock none bind,optional,create=dir",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
 		],
 		"lxc.idmap": [

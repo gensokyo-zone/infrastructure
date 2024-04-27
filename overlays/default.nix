@@ -6,6 +6,7 @@
 in rec {
   default = nixlib.composeManyExtensions [
     barcodebuddy
+    minecraft
     krb5
     nfs
     nginx
@@ -13,6 +14,7 @@ in rec {
   ];
   barcodebuddy = import ./barcodebuddy.nix;
   krb5 = import ./krb5.nix;
+  minecraft = import ./minecraft.nix;
   nfs = import ./nfs.nix;
   nginx = import ./nginx.nix;
   samba = import ./samba.nix;

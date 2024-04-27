@@ -160,6 +160,8 @@ mkshared plex 100193 100193 0750
 mkshared postgresql 100071 100071 0750
 mkshared unifi 100990 100990 0750
 mkshared zigbee2mqtt 100317 100317 0700
+mkshared minecraft 0 0 0750
+mkshared minecraft/bedrock 100913 100913 0750
 
 ln -sf /lib/systemd/system/auth-rpcgss-module.service /etc/systemd/system/
 mkdir -p /etc/systemd/system/auth-rpcgss-module.service.d

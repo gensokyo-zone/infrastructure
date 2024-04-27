@@ -8,6 +8,7 @@
     nixos.nixbld
     nixos.tailscale
     nixos.github-runner.zone
+    nixos.minecraft.bedrock
   ];
 
   nix.gc = {
