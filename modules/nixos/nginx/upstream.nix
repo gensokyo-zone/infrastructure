@@ -149,6 +149,10 @@ let
       servers = mkOption {
         type = attrsOf upstreamServer;
       };
+      host = mkOption {
+        type = nullOr str;
+        default = null;
+      };
       ssl = {
         enable = mkEnableOption "ssl upstream";
         host = mkOption {
@@ -276,6 +280,7 @@ let
           enable = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
           host = mkIf hasUpstream (mkAlmostOptionDefault proxyUpstream.ssl.host);
         };
+        host = mkIf (hasUpstream && proxyUpstream.host != null) (mkAlmostOptionDefault proxyUpstream.host);
       };
     };
   };

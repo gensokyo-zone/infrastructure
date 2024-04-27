@@ -23,7 +23,6 @@ let
       proxy = {
         enable = true;
         upstream = "freeipa";
-        host = mkDefault config.proxy.ssl.host;
         headers = {
           rewriteReferer.enable = true;
           set = {
@@ -83,6 +82,7 @@ in {
       # TODO: ssl.preread.enable = mkDefault true;
       upstreams'.freeipa = {config, ...}: {
         ssl.host = mkDefault (access.systemFor config.servers.access.accessService.system).access.fqdn;
+        host = mkDefault config.ssl.host;
         servers.access = {
           accessService = {
             name = "freeipa";
@@ -209,9 +209,10 @@ in {
           name.shortServer = mkDefault "idp-ca";
           locations."/" = mkMerge [
             locations."/"
-            {
-              proxy.ssl.host = virtualHosts.freeipa'ca.serverName;
-            }
+            ({config, virtualHost, ...}: {
+              proxy.ssl.host = virtualHost.serverName;
+              proxy.host = config.proxy.ssl.host;
+            })
           ];
           ssl = {
             force = mkDefault virtualHosts.freeipa.ssl.force;

@@ -5,28 +5,39 @@
 }: let
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   inherit (lib.strings) replaceStrings concatStringsSep concatMapStringsSep escapeRegex;
-  inherit (config.services.nginx) virtualHosts;
+  inherit (config.services) nginx;
   cfg = config.services.invidious;
   upstreamName = "invidious'access";
+  upstreamNginx = "invidious'access'nginx";
 in {
   config.services.nginx = {
-    upstreams'.${upstreamName}.servers = {
-      local = {
-        enable = mkDefault cfg.enable;
-        addr = mkDefault "localhost";
-        port = mkIf cfg.enable (mkDefault cfg.port);
+    upstreams' = {
+      ${upstreamName}.servers = {
+        local = {
+          enable = mkDefault cfg.enable;
+          addr = mkDefault "localhost";
+          port = mkIf cfg.enable (mkDefault cfg.port);
+        };
+        service = { upstream, ... }: {
+          enable = mkIf upstream.servers.local.enable (mkDefault false);
+          accessService = {
+            name = "invidious";
+          };
+        };
       };
-      service = { upstream, ... }: {
-        enable = mkIf upstream.servers.local.enable (mkDefault false);
-        accessService = {
-          name = "invidious";
+      ${upstreamNginx} = {
+        enable = mkDefault nginx.virtualHosts.invidious'int.enable;
+        host = mkDefault nginx.virtualHosts.invidious'int.serverName;
+        servers.local = {
+          addr = mkDefault "localhost";
+          port = nginx.defaultHTTPListenPort;
         };
       };
     };
     virtualHosts = let
       invidiousDomains =
-        virtualHosts.invidious.allServerNames
-        ++ virtualHosts.invidious'local.allServerNames;
+        nginx.virtualHosts.invidious.allServerNames
+        ++ nginx.virtualHosts.invidious'local.allServerNames;
       contentSecurityPolicy' = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; media-src 'self' blob: https://*.googlevideo.com:443 https://*.youtube.com:443; child-src 'self' blob:; frame-src 'self'; frame-ancestors 'none'";
       contentSecurityPolicy = replaceStrings ["'self'"] ["'self' ${concatStringsSep " " invidiousDomains}"] contentSecurityPolicy';
       extraConfig = mkBefore ''
@@ -44,26 +55,23 @@ in {
         };
         headers.set.content-security-policy = contentSecurityPolicy;
         extraConfig = ''
-          proxy_cookie_domain ${virtualHosts.invidious.serverName} ${xvars.get.host};
+          proxy_cookie_domain ${nginx.virtualHosts.invidious.serverName} ${xvars.get.host};
         '';
       };
       name.shortServer = mkDefault "yt";
-      localDomains = virtualHosts.invidious'local.allServerNames;
+      localDomains = nginx.virtualHosts.invidious'local.allServerNames;
     in {
       invidious = {
         # lua can't handle HTTP 2.0 requests, so layer it behind another proxy...
         inherit name extraConfig;
-        proxy = {
-          url = mkDefault "http://localhost:${toString config.services.nginx.defaultHTTPListenPort}";
-          host = mkDefault virtualHosts.invidious'int.serverName;
-        };
-        locations."/" = { xvars, ... }: {
+        proxy.upstream = upstreamNginx;
+        locations."/" = { xvars, virtualHost, ... }: {
           proxy.enable = true;
           extraConfig = ''
             proxy_http_version 1.1;
             set $invidious_req_check ${xvars.get.scheme}:$request_uri;
             if ($invidious_req_check = "http:/") {
-              return ${toString virtualHosts.invidious.redirectCode} https://${xvars.get.host}$request_uri;
+              return ${toString virtualHost.redirectCode} https://${xvars.get.host}$request_uri;
             }
           '';
         };

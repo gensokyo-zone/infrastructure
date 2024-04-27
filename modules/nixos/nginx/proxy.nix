@@ -51,6 +51,7 @@ let
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault;
     inherit (lib.attrsets) filterAttrs mapAttrsToList;
+    inherit (lib.lists) optional;
     inherit (lib.strings) hasPrefix removeSuffix optionalString concatStringsSep;
     inherit (lib.trivial) mapNullable;
     inherit (nixosConfig.services) nginx;
@@ -125,7 +126,8 @@ let
       upstream = nginx.upstreams'.${cfg.upstream};
       upstreamServer = upstream.servers.${upstream.defaultServerName};
       dynamicUpstream = hasPrefix "$" cfg.upstream;
-      hasUpstream = cfg.upstream != null && !dynamicUpstream && upstream.defaultServerName != null;
+      hasUpstream = cfg.upstream != null && !dynamicUpstream;
+      hasUpstreamServer = upstream.defaultServerName != null;
       recommendedHeaders = {
         Host = if cfg.host == null then xvars.get.proxy_hostport else cfg.host;
         Referer = xvars.get.referer;
@@ -139,6 +141,7 @@ let
         http = 80;
         https = 443;
       }.${cfg.parsed.scheme} or (throw "unsupported proxy_scheme ${toString cfg.parsed.scheme}");
+      upstreamHost = coalesce ([ upstream.host ] ++ optional hasUpstreamServer upstreamServer.addr);
       port = coalesce [ cfg.parsed.port schemePort ];
       hostport = cfg.parsed.host + optionalString (port != schemePort) ":${toString port}";
       initProxyVars = let
@@ -239,11 +242,11 @@ let
             mapNullable (_: url.path) config.proxyPass
           );
           host = mkOptionDefault (
-            if hasUpstream then assert url.host == upstream.name; upstreamServer.addr
+            if hasUpstream then assert url.host == upstream.name; upstreamHost
             else mapNullable (_: url.host) config.proxyPass
           );
           port = mkOptionDefault (
-            if hasUpstream && url.port == null then assert url.host == upstream.name; upstreamServer.port
+            if hasUpstream && hasUpstreamServer && url.port == null then assert url.host == upstream.name; upstreamServer.port
             else mapNullable (_: url.port) config.proxyPass
           );
         };

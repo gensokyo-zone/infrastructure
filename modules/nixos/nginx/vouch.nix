@@ -261,7 +261,7 @@ in {
           then "localhost"
           else listen;
       in {
-        # TODO: serviceAccess.exportedId = "login";
+        # TODO: accessService.exportedId = "login";
         enable = mkAlmostOptionDefault vouch-proxy.enable;
         port = mkIf vouch-proxy.enable (mkOptionDefault port);
         addr = mkIf vouch-proxy.enable (mkAlmostOptionDefault host);
