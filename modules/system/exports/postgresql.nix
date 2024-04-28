@@ -8,6 +8,7 @@ in {
     in f nixosConfig cfg;
   in {
     nixos = {
+      serviceAttr = "postgresql";
       assertions = mkIf config.enable [
         (mkAssertion (nixosConfig: cfg: {
           assertion = config.ports.default.port == cfg.settings.port;
