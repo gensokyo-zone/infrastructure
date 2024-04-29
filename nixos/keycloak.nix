@@ -1,9 +1,8 @@
-{inputs, system, config, lib, ...}: let
+{inputs, system, access, config, lib, ...}: let
   inherit (lib.modules) mkIf mkForce mkDefault;
   inherit (lib.lists) optional;
-  inherit (config.lib.access) mkSnakeOil;
   cfg = config.services.keycloak;
-  cert = mkSnakeOil {
+  cert = access.mkSnakeOil {
     name = "keycloak-selfsigned";
     domain = hostname;
   };
@@ -33,7 +32,7 @@ in {
     };
   };
 
-  networking.firewall.interfaces.int.allowedTCPPorts = mkIf cfg.enable [
+  networking.firewall.interfaces.lan.allowedTCPPorts = mkIf cfg.enable [
     cfg.port
   ];
   systemd.services.keycloak = mkIf cfg.enable {
@@ -43,11 +42,15 @@ in {
   services.keycloak = {
     enable = true;
 
-    database = {
-      host = "postgresql.int.${config.networking.domain}";
+    database = let
+      system = access.systemForService "postgresql";
+      inherit (system.exports.services) postgresql;
+    in {
+      host = access.getAddressFor system.name "lan";
+      port = postgresql.ports.default.port;
       passwordFile = config.sops.secrets.keycloak_db_password.path;
       createLocally = false;
-      useSSL = false;
+      useSSL = postgresql.ports.default.ssl;
     };
 
     settings = {

@@ -93,7 +93,7 @@ in {
     local = mkIf cfg.enable {
       allowedTCPPorts = mkIf (any (user: user.authentication.local.allow) cfg.ensureUsers) [cfg.settings.port];
     };
-    int = mkIf cfg.enable {
+    lan = mkIf cfg.enable {
       allowedTCPPorts = mkIf (any (user: user.authentication.int.allow) cfg.ensureUsers) [cfg.settings.port];
     };
   };

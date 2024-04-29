@@ -22,8 +22,8 @@ in {
         requireAuth = false;
       };
       proxy = {
-        url = mkIf barcodebuddy.enable (mkDefault
-          "http://localhost:${toString nginx.defaultHTTPListenPort}"
+        upstream = mkIf barcodebuddy.enable (mkDefault
+          "nginx'proxied"
         );
         host = mkDefault serverName;
       };
@@ -42,7 +42,7 @@ in {
       ssl.cert.copyFromVhost = "barcodebuddy";
       local.enable = mkDefault true;
       proxy = {
-        url = mkDefault nginx.virtualHosts.barcodebuddy.proxy.url;
+        upstream = mkDefault nginx.virtualHosts.barcodebuddy.proxy.upstream;
         host = mkDefault nginx.virtualHosts.barcodebuddy.proxy.host;
       };
       locations."/" = { config, ... }: {

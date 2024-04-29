@@ -59,8 +59,8 @@ in {
         inherit name extraConfig locations;
         vouch.enable = true;
         proxy = {
-          url = mkIf grocy.enable (mkDefault
-            "http://localhost:${toString nginx.defaultHTTPListenPort}"
+          upstream = mkIf grocy.enable (mkDefault
+            "nginx'proxied"
           );
           host = mkDefault serverName;
         };
@@ -70,7 +70,7 @@ in {
         local.enable = mkDefault true;
         ssl.cert.copyFromVhost = "grocy";
         proxy = {
-          url = mkDefault "http://localhost:${toString nginx.defaultHTTPListenPort}";
+          upstream = mkDefault "nginx'proxied";
           host = nginx.virtualHosts.grocy'local'int.serverName;
         };
         locations."/" = {
@@ -82,7 +82,7 @@ in {
         serverName = serverName'local;
         inherit name extraConfig locations;
         proxy = {
-          url = mkDefault nginx.virtualHosts.grocy.proxy.url;
+          upstream = mkDefault nginx.virtualHosts.grocy.proxy.upstream;
           host = mkDefault nginx.virtualHosts.grocy.proxy.host;
         };
         proxied.enable = true;

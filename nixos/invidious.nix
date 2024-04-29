@@ -16,7 +16,7 @@ in {
     invidious_hmac_key = commonSecret;
   };
 
-  networking.firewall.interfaces.int.allowedTCPPorts = [cfg.port];
+  networking.firewall.interfaces.lan.allowedTCPPorts = [cfg.port];
   users.groups.invidious = {};
   users.users.invidious = {
     isSystemUser = true;

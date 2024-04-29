@@ -25,7 +25,7 @@ in {
   };
 
   networking.firewall = mkIf cfg.enable {
-    interfaces.int = {
+    interfaces.lan = {
       allowedTCPPorts = [
         8443 # remote login
       ];

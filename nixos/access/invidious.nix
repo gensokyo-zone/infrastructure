@@ -1,5 +1,6 @@
 {
   config,
+  system,
   lib,
   ...
 }: let
@@ -29,8 +30,9 @@ in {
         enable = mkDefault nginx.virtualHosts.invidious'int.enable;
         host = mkDefault nginx.virtualHosts.invidious'int.serverName;
         servers.local = {
-          addr = mkDefault "localhost";
-          port = nginx.defaultHTTPListenPort;
+          accessService = {
+            inherit (nginx.upstreams'.nginx'proxied.servers.local.accessService) system name id port;
+          };
         };
       };
     };

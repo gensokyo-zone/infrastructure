@@ -18,18 +18,13 @@ in {
   ];
 
   services.cloudflared = let
-    inherit (nginx) virtualHosts defaultHTTPListenPort;
+    inherit (nginx) virtualHosts;
     tunnelId = "28bcd3fc-3467-4997-806b-546ba9995028";
-    localNginx = "http://localhost:${toString defaultHTTPListenPort}";
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
-      ingress = {
-        ${virtualHosts.unifi.serverName} = {
-          service = localNginx;
-        };
-      };
+      ingress = virtualHosts.unifi.proxied.cloudflared.getIngress {};
     };
   };
 

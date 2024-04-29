@@ -1,13 +1,15 @@
 {
-  lib,
-  inputs,
-  modulesPath,
+  config,
   system,
+  gensokyo-zone,
+  lib,
+  modulesPath,
   ...
 }: let
-  inherit (inputs.self.lib.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged coalesce;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.trivial) mapNullable;
   inherit (system) proxmox;
 in {
   imports = [
@@ -28,11 +30,15 @@ in {
     networks.${interface.networkd.name} = unmerged.mergeAttrs interface.networkd.networkSettings;
   }) proxmox.network.interfaces));
 
-  networking.firewall.interfaces.int = let
-    inherit (proxmox.network.internal) interface;
-  in mkIf (interface != null) {
-    nftables.conditions = [
-      "iifname ${interface.name}"
+  networking.firewall.interfaces.lan = let
+    inherit (proxmox.network) internal local;
+    conditions = coalesce [
+      (mapNullable (interface: [ "iifname ${interface.name}" ]) internal.interface)
+      (mapNullable (interface: config.networking.interfaces.local.nftables.conditions) local.interface)
     ];
+  in mkIf (conditions != null) {
+    nftables = {
+      inherit conditions;
+    };
   };
 }

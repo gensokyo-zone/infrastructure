@@ -111,7 +111,7 @@
           };
         conditions = mkOption {
           type = types.listOf types.str;
-          default = "iifname ${name}";
+          default = [ "iifname ${name}" ];
         };
       };
     };

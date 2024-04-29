@@ -11,12 +11,22 @@ in {
       assertion = config.ports.http.port == cfg.defaultHTTPListenPort && config.ports.https.port == cfg.defaultSSLListenPort;
       message = "ports mismatch";
     };
+    assertProxied = nixosConfig: cfg: {
+      assertion = config.ports.proxied.enable == cfg.proxied.enabled;
+      message = "proxied mismatch";
+    };
+    assertProxiedPort = nixosConfig: cfg: {
+      assertion = !config.ports.proxied.enable || config.ports.proxied.port == cfg.proxied.listenPort;
+      message = "proxied.port mismatch";
+    };
   in {
     nixos = {
       serviceAttr = "nginx";
-      assertions = mkIf config.enable [
-        (mkAssertion assertPorts)
-      ];
+      assertions = mkIf config.enable (map mkAssertion [
+        assertPorts
+        assertProxied
+        assertProxiedPort
+      ]);
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = mapAttrs (_: mapAlmostOptionDefaults) {
@@ -28,6 +38,12 @@ in {
         enable = false;
         port = 443;
         protocol = "https";
+      };
+      proxied = {
+        enable = false;
+        port = 9080;
+        protocol = "http";
+        listen = "lan";
       };
     };
   };

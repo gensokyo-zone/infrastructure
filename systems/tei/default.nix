@@ -10,7 +10,10 @@ _: {
   exports = {
     services = {
       sshd.enable = true;
-      nginx.enable = true;
+      nginx = {
+        enable = true;
+        ports.proxied.enable = true;
+      };
       tailscale.enable = true;
       home-assistant.enable = true;
       zigbee2mqtt.enable = true;

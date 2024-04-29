@@ -40,6 +40,7 @@
             listen = mkIf (!preread) "wan";
           };
           http.listen = "wan";
+          proxied.enable = true;
         };
       };
       sshd = {

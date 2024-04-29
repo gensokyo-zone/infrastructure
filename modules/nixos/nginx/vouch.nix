@@ -297,22 +297,23 @@ in {
       };
       vouch'proxy = {
         enable = vouch.enable && vouch.doubleProxy.enable;
+        # TODO: need exported hosts options for this to detect the correct host/port/etc
         servers = {
           lan = { upstream, ... }: {
             enable = mkAlmostOptionDefault (!upstream.servers.int.enable);
             addr = mkAlmostOptionDefault "login.local.${networking.domain}";
-            port = mkOptionDefault null;
+            port = mkOptionDefault 9080;
             ssl.enable = mkAlmostOptionDefault true;
           };
           int = { upstream, ... }: {
             enable = mkAlmostOptionDefault system.network.networks.int.enable or false;
             addr = mkAlmostOptionDefault "login.int.${networking.domain}";
-            port = mkOptionDefault null;
+            port = mkOptionDefault 9080;
           };
           tail = { upstream, ... }: {
             enable = mkAlmostOptionDefault (tailscale.enable && !upstream.servers.lan.enable && !upstream.servers.int.enable);
             addr = mkAlmostOptionDefault "login.tail.${networking.domain}";
-            port = mkOptionDefault null;
+            port = mkOptionDefault 9080;
           };
         };
       };

@@ -53,18 +53,16 @@ in {
   };
 
   services.cloudflared = let
-    inherit (nginx) defaultHTTPListenPort;
     tunnelId = "964121e3-b3a9-4cc1-8480-954c4728b604";
-    localNginx = "http://localhost:${toString defaultHTTPListenPort}";
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
-      ingress = {
-        ${virtualHosts.prox.serverName}.service = localNginx;
-        ${virtualHosts.gensokyoZone.serverName}.service = localNginx;
-        ${virtualHosts.freeipa'web.serverName}.service = localNginx;
-      };
+      ingress = mkMerge [
+        (virtualHosts.freeipa'web.proxied.cloudflared.getIngress {})
+        (virtualHosts.prox.proxied.cloudflared.getIngress {})
+        (virtualHosts.gensokyoZone.proxied.cloudflared.getIngress {})
+      ];
     };
   };
 
@@ -219,6 +217,12 @@ in {
     upstreams' = {
       vouch'auth.servers.local.enable = false;
       vouch'auth'local.servers.local.enable = true;
+      tei'nginx'proxied.servers.nginx.accessService = {
+        # TODO: host exports
+        system = "tei";
+        name = "nginx";
+        port = "proxied";
+      };
     };
     stream.servers = {
       mosquitto.ssl.cert.name = "mosquitto";
@@ -261,13 +265,13 @@ in {
         # not the real grocy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        proxy.url = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
+        proxy.upstream = "tei'nginx'proxied";
       };
       barcodebuddy = {
         # not the real bbuddy record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
-        proxy.url = "http://${mkAddress6 (access.getAddressFor "tei" "lan")}";
+        proxy.upstream = "tei'nginx'proxied";
       };
       freepbx = {
         ssl.cert.enable = true;

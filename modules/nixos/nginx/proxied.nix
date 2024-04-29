@@ -1,11 +1,4 @@
-{
-  lib,
-  inputs,
-  ...
-}: let
-  inherit (inputs.self.lib.lib) mkJustBefore mkAlmostOptionDefault orderJustBefore;
-  inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkMerge mkOrder mkDefault mkOptionDefault;
+let
   xHeadersProxied = { xvars }: ''
     ${xvars.init "forwarded_for" "$proxy_add_x_forwarded_for"}
     if ($http_x_forwarded_proto) {
@@ -25,7 +18,10 @@
       ${xvars.init "forwarded_server" "$http_x_forwarded_server"}
     }
   '';
-  locationModule = { config, virtualHost, xvars, ... }: let
+  locationModule = { config, virtualHost, xvars, gensokyo-zone, lib, ... }: let
+    inherit (gensokyo-zone.lib) mkJustBefore mkAlmostOptionDefault;
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkMerge mkOptionDefault;
     cfg = config.proxied;
   in {
     options = with lib.types; {
@@ -69,7 +65,11 @@
       ];
     };
   };
-  hostModule = { config, xvars, ... }: let
+  hostModule = { config, nixosConfig, xvars, gensokyo-zone, lib, ... }: let
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault orderJustBefore unmerged;
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkOrder mkDefault;
+    inherit (nixosConfig.services) nginx;
     cfg = config.proxied;
   in {
     options = with lib.types; {
@@ -82,6 +82,14 @@
           type = bool;
           default = cfg.enable != false;
         };
+        cloudflared = {
+          ingressSettings = mkOption {
+            type = unmerged.types.attrs;
+          };
+          getIngress = mkOption {
+            type = functionTo unspecified;
+          };
+        };
       };
       locations = mkOption {
         type = attrsOf (submoduleWith {
@@ -91,18 +99,83 @@
       };
     };
 
-    config = {
+    config = let
+      listenProxied = cfg.enabled;
+    in {
+      proxied = {
+        cloudflared = let
+          listen = config.listen'.proxied;
+          scheme = if listen.ssl then "https" else "http";
+        in mkIf (cfg.enable == "cloudflared") {
+          ingressSettings.${config.serverName} = {
+            service = "${scheme}://localhost:${toString listen.port}";
+            originRequest.${if scheme == "https" then "noTLSVerify" else null} = true;
+          };
+          getIngress = {}: unmerged.mergeAttrs cfg.cloudflared.ingressSettings;
+        };
+      };
       xvars.enable = mkIf cfg.enabled true;
-      local.denyGlobal = mkIf (cfg.enable == "cloudflared") (mkDefault true);
+      local.denyGlobal = mkIf listenProxied (mkDefault true);
+      listen' = mkIf listenProxied {
+        proxied = {
+          addr = "[::]";
+          port = mkAlmostOptionDefault nginx.proxied.listenPort;
+        };
+      };
       extraConfig = mkIf (cfg.enabled && config.xvars.enable) (
         mkOrder (orderJustBefore + 25) (xHeadersProxied { inherit xvars; })
       );
     };
   };
 in {
-  options = with lib.types; {
-    services.nginx.virtualHosts = mkOption {
+  config,
+  system,
+  lib,
+  ...
+}: let
+  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.attrsets) attrValues;
+  inherit (lib.lists) any;
+  inherit (config.services) nginx;
+  cfg = nginx.proxied;
+in {
+  options.services.nginx = with lib.types; {
+    proxied = {
+      enabled = mkOption {
+        type = bool;
+      };
+      listenPort = mkOption {
+        type = port;
+        default = 9080;
+      };
+    };
+    virtualHosts = mkOption {
       type = attrsOf (submodule [hostModule]);
+    };
+  };
+  config = {
+    services.nginx = let
+      hasProxiedHosts = any (virtualHost: virtualHost.enable && virtualHost.proxied.enabled) (attrValues nginx.virtualHosts);
+    in {
+      proxied = {
+        enabled = mkOptionDefault hasProxiedHosts;
+      };
+      upstreams' = {
+        nginx'proxied = mkIf cfg.enabled {
+          servers.local = {
+            accessService = {
+              system = system.name;
+              name = "nginx";
+              port = "proxied";
+            };
+          };
+        };
+      };
+      # TODO: virtualHosts.fallback'proxied.reuseport = true;
+    };
+    networking.firewall.interfaces.lan = mkIf nginx.enable {
+      allowedTCPPorts = mkIf cfg.enabled [ cfg.listenPort ];
     };
   };
 }
