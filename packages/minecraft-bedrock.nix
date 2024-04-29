@@ -5,7 +5,10 @@
 #, minecraft-bedrock-server-libCrypto
 , autoPatchelfHook
 , curl, gcc-unwrapped, openssl, unzip
-}: stdenv.mkDerivation rec {
+, lib
+}: let
+  inherit (lib) licenses;
+in stdenv.mkDerivation rec {
   pname = "minecraft-bedrock-server";
   version = "1.20.80.05";
   src = fetchurl {
@@ -26,15 +29,20 @@
   buildPhase = ''
     minecraft-bedrock-server-patchdebug bedrock_server_symbols.debug bedrock_server_symbols_patched.debug
   '';
+  dataDir = "/var/lib/minecraft-bedrock";
   installPhase = ''
     install -m755 -D bedrock_server $out/bin/bedrock_server
-    rm bedrock_server
-    rm server.properties
-    mkdir -p $out/var
-    cp -a . $out/var/lib
+    install -d $out$dataDir
+    cp -a definitions behavior_packs resource_packs config env-vars *.json *.debug *.properties $out$dataDir/
   '';
   fixupPhase = ''
     autoPatchelf $out/bin/bedrock_server
   '';
   dontStrip = true;
+
+  meta = {
+    platforms = [ "x86_64-linux" ];
+    license = licenses.unfree;
+    mainProgram = "bedrock_server";
+  };
 }

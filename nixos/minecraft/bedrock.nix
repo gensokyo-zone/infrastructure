@@ -1,4 +1,4 @@
-{config, lib, ...}: let
+{config, lib, pkgs, ...}: let
   inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.minecraft-bedrock-server;
 in {
@@ -9,6 +9,14 @@ in {
       online-mode = true;
       level-name = "KatBedrock";
     };
+    packs = let
+      addons = pkgs.minecraft-bedrock-addons;
+    in {
+      #tree-capitator-bp.package = addons.true-tree-capitator-bp;
+      #tree-capitator-rp.package = addons.true-tree-capitator-rp;
+      #tree-capitator-bh.package = addons.definitive-tree-capitator-bh;
+      #tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
+    };
     allowPlayers = let
       base = 2535460000000000;
     in {
@@ -17,6 +25,7 @@ in {
     };
   };
   systemd.services.minecraft-bedrock-server = mkIf cfg.enable {
+    confinement.enable = true;
     gensokyo-zone.sharedMounts."minecraft/bedrock" = {config, ...}: {
       root = config.rootDir + "/${config.subpath}";
       path = mkDefault cfg.dataDir;

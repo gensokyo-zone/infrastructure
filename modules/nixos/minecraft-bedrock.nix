@@ -27,14 +27,68 @@ let
       };
     };
   };
+  packModule = {config, lib, ...}: let
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkOptionDefault;
+    inherit (lib.strings) splitString;
+    inherit (builtins) typeOf;
+  in {
+    options = with lib.types; {
+      enable = mkEnableOption "pack" // {
+        default = true;
+      };
+      package = mkOption {
+        type = nullOr package;
+        default = null;
+      };
+      packDir = mkOption {
+        type = str;
+      };
+      packType = mkOption {
+        type = enum [ "resource_packs" "behavior_packs" ];
+      };
+      packId = mkOption {
+        type = str;
+      };
+      version = mkOption {
+        type = oneOf [ str (listOf str) ];
+      };
+      settings = mkOption {
+        type = attrsOf (oneOf [ str (listOf str) ]);
+      };
+    };
+    config = {
+      packId = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.pack_id) (mkOptionDefault
+        config.package.minecraft-bedrock.pack.pack_id
+      );
+      packType = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.type) (mkOptionDefault
+        config.package.minecraft-bedrock.pack.type
+      );
+      version = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.version) (mkOptionDefault
+        config.package.minecraft-bedrock.pack.version
+      );
+      packDir = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.dir) (mkOptionDefault
+        config.package.minecraft-bedrock.pack.dir
+      );
+      settings = {
+        pack_id = mkOptionDefault config.packId;
+        version = mkOptionDefault {
+          string = splitString "." config.version;
+          list = config.version;
+        }.${typeOf config.version};
+      };
+    };
+  };
 in { config, gensokyo-zone, lib, pkgs, ... }: let
   # see https://gist.github.com/datakurre/cfdf627fb23ed8ff62bb7b3520b92674
   inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.options) mkOption mkPackageOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-  inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList;
   inherit (lib.strings) concatStringsSep;
   inherit (lib.trivial) boolToString;
+  inherit (lib.meta) getExe;
+  inherit (builtins) toJSON;
   cfg = config.services.minecraft-bedrock-server;
 
   cfgToString = v: if builtins.isBool v then boolToString v else toString v;
@@ -130,6 +184,17 @@ in {
     allowList = mkOption {
       type = nullOr path;
     };
+
+    packs = mkOption {
+      type = attrsOf (submoduleWith {
+        modules = [ packModule ];
+        specialArgs = {
+          inherit gensokyo-zone;
+          nixosConfig = config;
+        };
+      });
+      default = { };
+    };
   };
 
   config = let
@@ -163,7 +228,7 @@ in {
       allowList = let
         allowPlayers = mapAttrsToList (_: allow: allow.settings) cfg.allowPlayers;
         allowListJson = pkgs.writeText "minecraft-bedrock-server-allowlist.json" (
-          builtins.toJSON allowPlayers
+          toJSON allowPlayers
         );
       in mkOptionDefault (
         if cfg.allowPlayers != null then allowListJson
@@ -186,7 +251,7 @@ in {
 
       serviceConfig = {
         BindReadOnlyPaths = let
-          packageResources = map (subpath: "${cfg.package}/var/lib/${subpath}:${cfg.dataDir}/${subpath}") [
+          packageResources = map (subpath: "${cfg.package}/var/lib/minecraft-bedrock/${subpath}:${cfg.dataDir}/${subpath}") [
             "definitions/attachables"
             "definitions/biomes"
             "definitions/feature_rules"
@@ -201,12 +266,32 @@ in {
             "env-vars"
             "permissions.json"
           ];
+          mkWorldPacks = type: let
+            enabledPacks = filterAttrs (_: pack: pack.enable && pack.packType == "${type}_packs") cfg.packs;
+            jsonName = "world_${type}_packs.json";
+            packsJson = mapAttrsToList (_: pack: pack.settings) enabledPacks;
+            packsJsonPath = pkgs.writeText jsonName (toJSON packsJson);
+          in mkIf (enabledPacks != { }) [
+            "${packsJsonPath}:${cfg.dataDir}/worlds/${cfg.serverProperties.level-name}/${jsonName}"
+          ];
+          mapWorldPacks = packs: let
+            enabledPacks = filterAttrs (_: pack: pack.enable && pack.package != null) packs;
+            mapPackPath = _: pack: let
+              subDir = "${pack.packType}/${pack.packDir}";
+            in "${pack.package}/${cfg.package.dataDir}/${subDir}:${cfg.dataDir}/${subDir}";
+          in mapAttrsToList mapPackPath enabledPacks;
+          packsPaths = mkMerge [
+            (mkWorldPacks "behavior")
+            (mkWorldPacks "resource")
+            (mapWorldPacks cfg.packs)
+          ];
         in mkMerge [
           packageResources
-          (mkIf (cfg.allowList != null) "${cfg.allowList}:${cfg.dataDir}/allowlist.json")
+          (mkIf (cfg.allowList != null) [ "${cfg.allowList}:${cfg.dataDir}/allowlist.json" ])
+          (mkIf (cfg.packs != { }) packsPaths)
         ];
         ExecStart = [
-          "${cfg.package}/bin/bedrock_server"
+          "${getExe cfg.package}"
         ];
         Restart = "always";
         User = cfg.user;
@@ -219,7 +304,7 @@ in {
 
       preStart = ''
         mkdir -p behavior_packs
-        ln -sf ${cfg.package}/var/lib/behavior_packs/* behavior_packs/
+        ln -sf ${cfg.package}/var/lib/minecraft-bedrock/behavior_packs/* behavior_packs/
         cp -f ${serverPropertiesFile} server.properties
         chmod +w server.properties
       '';
