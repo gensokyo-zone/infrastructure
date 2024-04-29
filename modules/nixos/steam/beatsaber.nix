@@ -349,7 +349,7 @@
   '';
   launch = ''
     cd /d "%STEAM_BS_LIBRARY%"
-  '' + ''"%STEAM_BS_LIBRARY%\Beat Saber.exe'';
+  '' + ''"%STEAM_BS_LIBRARY%\Beat Saber.exe"'';
   setup = ''
     rmdir "%STEAM_BS_APPDATA%"
     rmdir "%STEAM_BS_LIBRARY%"
