@@ -132,6 +132,7 @@ in {
       mcpackId = "e01dd561-a1d9-45d0-b6ad-cd3858b93fe7";
       mcpackVersion = "1.0.0";
       mcVersion = "1.13.0";
+      mcpackType = "resource_packs";
       src = final.fetchurl {
         url = "https://mediafilez.forgecdn.net/files/5214/134/Definitive%20Tree%20Capitator%20RS.mcpack";
         sha256 = "22c8ff1c85720052d9f2a0af1c205b5457a9bb806d65125cff3751fdbe22b864";

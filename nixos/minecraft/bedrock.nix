@@ -14,8 +14,8 @@ in {
     in {
       #tree-capitator-bp.package = addons.true-tree-capitator-bp;
       #tree-capitator-rp.package = addons.true-tree-capitator-rp;
-      #tree-capitator-bh.package = addons.definitive-tree-capitator-bh;
-      #tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
+      tree-capitator-bh.package = addons.definitive-tree-capitator-bh;
+      tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
     };
     allowPlayers = let
       base = 2535460000000000;
