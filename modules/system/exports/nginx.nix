@@ -12,7 +12,7 @@ in {
       message = "ports mismatch";
     };
     assertProxied = nixosConfig: cfg: {
-      assertion = config.ports.proxied.enable == cfg.proxied.enabled;
+      assertion = config.ports.proxied.enable == cfg.proxied.enable;
       message = "proxied mismatch";
     };
     assertProxiedPort = nixosConfig: cfg: {

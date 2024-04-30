@@ -29,6 +29,7 @@ in {
   };
 
   services.nginx = {
+    proxied.enable = true;
     virtualHosts = {
       unifi.proxied.enable = "cloudflared";
     };

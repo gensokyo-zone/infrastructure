@@ -9,9 +9,9 @@
   inherit (config.services) nginx;
   cfg = config.services.invidious;
   upstreamName = "invidious'access";
-  upstreamNginx = "invidious'access'nginx";
 in {
   config.services.nginx = {
+    proxied.enable = true;
     upstreams' = {
       ${upstreamName}.servers = {
         local = {
@@ -23,15 +23,6 @@ in {
           enable = mkIf upstream.servers.local.enable (mkDefault false);
           accessService = {
             name = "invidious";
-          };
-        };
-      };
-      ${upstreamNginx} = {
-        enable = mkDefault nginx.virtualHosts.invidious'int.enable;
-        host = mkDefault nginx.virtualHosts.invidious'int.serverName;
-        servers.local = {
-          accessService = {
-            inherit (nginx.upstreams'.nginx'proxied.servers.local.accessService) system name id port;
           };
         };
       };
@@ -66,7 +57,10 @@ in {
       invidious = {
         # lua can't handle HTTP 2.0 requests, so layer it behind another proxy...
         inherit name extraConfig;
-        proxy.upstream = upstreamNginx;
+        proxy = mkIf nginx.virtualHosts.invidious'int.enable {
+          upstream = "nginx'proxied";
+          host = mkDefault nginx.virtualHosts.invidious'int.serverName;
+        };
         locations."/" = { xvars, virtualHost, ... }: {
           proxy.enable = true;
           extraConfig = ''

@@ -8,6 +8,7 @@
   cfg = config.services.vouch-proxy;
 in {
   config.services.nginx = {
+    proxied.enable = true;
     upstreams'.vouch'access.servers.access = {
       accessService = {
         inherit (nginx.upstreams'.vouch'auth.servers.service.accessService) system name id port;

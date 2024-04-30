@@ -37,6 +37,7 @@ in {
     virtualHosts.fallback = {
       serverName = null;
       default = mkDefault true;
+      reuseport = mkDefault true;
       locations."/".extraConfig = mkDefault ''
         return 404;
       '';

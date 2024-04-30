@@ -213,6 +213,7 @@ in {
   };
 
   services.nginx = {
+    proxied.enable = true;
     vouch.enable = true;
     upstreams' = {
       vouch'auth.servers.local.enable = false;

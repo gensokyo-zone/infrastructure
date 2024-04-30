@@ -49,6 +49,7 @@ in {
   config.services.nginx = {
     lua.http.enable = true;
     vouch.enable = true;
+    proxied.enable = true;
     virtualHosts = {
       grocy'php = mkIf grocy.enable {
         inherit serverName;

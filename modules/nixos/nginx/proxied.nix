@@ -118,7 +118,7 @@ let
       local.denyGlobal = mkIf listenProxied (mkDefault true);
       listen' = mkIf listenProxied {
         proxied = {
-          addr = "[::]";
+          addr = mkAlmostOptionDefault nginx.proxied.listenAddr;
           port = mkAlmostOptionDefault nginx.proxied.listenPort;
         };
       };
@@ -130,10 +130,12 @@ let
 in {
   config,
   system,
+  gensokyo-zone,
   lib,
   ...
 }: let
-  inherit (lib.options) mkOption;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+  inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) any;
@@ -142,8 +144,10 @@ in {
 in {
   options.services.nginx = with lib.types; {
     proxied = {
-      enabled = mkOption {
-        type = bool;
+      enable = mkEnableOption "proxy";
+      listenAddr = mkOption {
+        type = str;
+        default = "[::]";
       };
       listenPort = mkOption {
         type = port;
@@ -156,13 +160,11 @@ in {
   };
   config = {
     services.nginx = let
+      warnEnable = lib.warnIf (cfg.enable != hasProxiedHosts) "services.nginx.proxied.enable expected to be set";
       hasProxiedHosts = any (virtualHost: virtualHost.enable && virtualHost.proxied.enabled) (attrValues nginx.virtualHosts);
     in {
-      proxied = {
-        enabled = mkOptionDefault hasProxiedHosts;
-      };
       upstreams' = {
-        nginx'proxied = mkIf cfg.enabled {
+        nginx'proxied = mkIf (warnEnable cfg.enable) {
           servers.local = {
             accessService = {
               system = system.name;
@@ -172,10 +174,23 @@ in {
           };
         };
       };
-      # TODO: virtualHosts.fallback'proxied.reuseport = true;
+      virtualHosts = {
+        fallback'proxied = mkIf cfg.enable {
+          serverName = null;
+          reuseport = mkAlmostOptionDefault true;
+          default = mkAlmostOptionDefault true;
+          listen'.proxied = {
+            addr = mkAlmostOptionDefault cfg.listenAddr;
+            port = mkAlmostOptionDefault cfg.listenPort;
+          };
+          locations."/".extraConfig = mkAlmostOptionDefault ''
+            return 502;
+          '';
+        };
+      };
     };
     networking.firewall.interfaces.lan = mkIf nginx.enable {
-      allowedTCPPorts = mkIf cfg.enabled [ cfg.listenPort ];
+      allowedTCPPorts = mkIf cfg.enable [ cfg.listenPort ];
     };
   };
 }

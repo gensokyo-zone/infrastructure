@@ -24,6 +24,7 @@
   ];
 
   services.nginx = {
+    proxied.enable = true;
     virtualHosts = {
       zigbee2mqtt.proxied.enable = "cloudflared";
       grocy.proxied.enable = "cloudflared";
