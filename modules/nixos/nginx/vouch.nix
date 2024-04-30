@@ -219,7 +219,7 @@ in {
         doubleProxy = {
           enable = mkOption {
             type = bool;
-            default = true;
+            default = false;
           };
           serverName = mkOption {
             type = str;
