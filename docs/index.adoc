@@ -25,3 +25,8 @@ Local network subnets and IP address reservations
 
 <<./steam.adoc#beatsaber,Beat Saber>>:::
 Individual user and game version profiles deployed over the network
+
+== Physical
+
+<<./av.adoc#,A/V Setup>>::
+TV and Receiver Configuration
