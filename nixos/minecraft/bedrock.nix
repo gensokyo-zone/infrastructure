@@ -18,10 +18,12 @@ in {
       tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
     };
     allowPlayers = let
-      base = 2535460000000000;
+      base = 2535420000000000;
+      nums = 1760;
     in {
-      Kyxna.xuid = base + 4308966797;
-      arcnmx.xuid = base + 13399068799;
+      Kyxna.xuid = base + 44308966797;
+      arcnmx.xuid = base + 413399068799;
+      "ConnieHeart${toString (base / 1000000000000 + nums)}".xuid = base + 417602225;
     };
   };
   systemd.services.minecraft-bedrock-server = mkIf cfg.enable {
@@ -35,9 +37,10 @@ in {
     users.${cfg.user}.uid = 913;
     groups.${cfg.group}.gid = config.users.users.${cfg.user}.uid;
   };
-  networking.firewall.interfaces.local = let
+  networking.firewall.interfaces = let
     ports = [ cfg.serverProperties.server-port cfg.serverProperties.server-portv6 ];
   in mkIf cfg.enable {
-    allowedUDPPorts = ports;
+    local.allowedUDPPorts = ports;
+    peeps.allowedUDPPorts = ports;
   };
 }

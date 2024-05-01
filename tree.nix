@@ -55,6 +55,7 @@
         ];
       };
     };
+    "modules/nixos/access".functor.enable = true;
     "modules/nixos/ldap".functor.enable = true;
     "modules/nixos/krb5".functor.enable = true;
     "modules/nixos/sssd".functor.enable = true;
