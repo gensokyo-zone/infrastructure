@@ -13,17 +13,31 @@ let
       xuid = mkOption {
         type = oneOf [ int str ];
       };
+      permission = mkOption {
+        type = enum [ "visitor" "member" "operator" ];
+        default = "member";
+      };
       settings = mkOption {
         type = attrsOf str;
       };
+      permissionSettings = mkOption {
+        type = attrsOf str;
+      };
     };
-    config = {
+    config = let
+      xuid = {
+        string = toString (hexToInt config.xuid);
+        int = toString config.xuid;
+      }.${typeOf config.xuid};
+    in {
       settings = {
         name = mkOptionDefault config.name;
-        xuid = mkOptionDefault {
-          string = toString (hexToInt config.xuid);
-          int = toString config.xuid;
-        }.${typeOf config.xuid};
+        xuid = mkOptionDefault xuid;
+        # TODO: ignoresPlayerLimit = true/false
+      };
+      permissionSettings = {
+        xuid = mkOptionDefault xuid;
+        permission = mkOptionDefault config.permission;
       };
     };
   };
@@ -85,6 +99,7 @@ in { config, gensokyo-zone, lib, pkgs, ... }: let
   inherit (lib.options) mkOption mkPackageOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
+  inherit (lib.lists) optional;
   inherit (lib.strings) concatStringsSep;
   inherit (lib.trivial) boolToString;
   inherit (lib.meta) getExe;
@@ -185,6 +200,10 @@ in {
       type = nullOr path;
     };
 
+    permissions = mkOption {
+      type = nullOr path;
+    };
+
     packs = mkOption {
       type = attrsOf (submoduleWith {
         modules = [ packModule ];
@@ -234,6 +253,15 @@ in {
         if cfg.allowPlayers != null then allowListJson
         else null
       );
+      permissions = let
+        permissions = mapAttrsToList (_: allow: allow.permissionSettings) cfg.allowPlayers;
+        permissionsJson = pkgs.writeText "minecraft-bedrock-server-permissions.json" (
+          toJSON permissions
+        );
+      in mkOptionDefault (
+        if cfg.allowPlayers != null then permissionsJson
+        else null
+      );
     };
     conf.users.users.${cfg.user} = {
       inherit (cfg) group;
@@ -251,7 +279,7 @@ in {
 
       serviceConfig = {
         BindReadOnlyPaths = let
-          packageResources = map (subpath: "${cfg.package}/var/lib/minecraft-bedrock/${subpath}:${cfg.dataDir}/${subpath}") [
+          packageResources = map (subpath: "${cfg.package}/var/lib/minecraft-bedrock/${subpath}:${cfg.dataDir}/${subpath}") ([
             "definitions/attachables"
             "definitions/biomes"
             "definitions/feature_rules"
@@ -264,8 +292,7 @@ in {
             "config/default"
             "bedrock_server_symbols.debug"
             "env-vars"
-            "permissions.json"
-          ];
+          ] ++ optional (cfg.permissions == null) "permissions.json");
           mkWorldPacks = type: let
             enabledPacks = filterAttrs (_: pack: pack.enable && pack.packType == "${type}_packs") cfg.packs;
             jsonName = "world_${type}_packs.json";
@@ -288,6 +315,7 @@ in {
         in mkMerge [
           packageResources
           (mkIf (cfg.allowList != null) [ "${cfg.allowList}:${cfg.dataDir}/allowlist.json" ])
+          (mkIf (cfg.permissions != null) [ "${cfg.permissions}:${cfg.dataDir}/permissions.json" ])
           (mkIf (cfg.packs != { }) packsPaths)
         ];
         ExecStart = [

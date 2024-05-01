@@ -21,8 +21,14 @@ in {
       base = 2535420000000000;
       nums = 1760;
     in {
-      Kyxna.xuid = base + 44308966797;
-      arcnmx.xuid = base + 413399068799;
+      Kyxna = {
+        xuid = base + 44308966797;
+        permission = "operator";
+      };
+      arcnmx = {
+        xuid = base + 53399068799;
+        permission = "operator";
+      };
       "ConnieHeart${toString (base / 1000000000000 + nums)}".xuid = base + 417602225;
     };
   };
