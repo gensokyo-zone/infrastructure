@@ -1,5 +1,6 @@
-{config, lib, inputs, ...}: let
-  inherit (inputs.self.lib.lib) unmerged eui64 toHexStringLower mkAlmostOptionDefault mapAlmostOptionDefaults;
+{config, gensokyo-zone, lib, Std, ...}: let
+  inherit (Std) UInt;
+  inherit (gensokyo-zone.lib) unmerged eui64 mkAlmostOptionDefault mapAlmostOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues;
@@ -154,7 +155,7 @@
         name = mkIf system.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
         address4 = mkAlmostOptionDefault "10.9.1.${toString index}/24";
-        address6 = mkAlmostOptionDefault "fd0c::${toHexStringLower index}/64";
+        address6 = mkAlmostOptionDefault "fd0c::${UInt.toHexLower index}/64";
         macAddress = mkIf (system.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" system.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
           replaceStrings [ "BC:24:11:" ] [ "BC:24:19:" ] system.proxmox.network.interfaces.net0.macAddress
         ));
@@ -163,7 +164,7 @@
           domains = mkDefault [ ]; # int.${domain}?
           linkConfig.RequiredForOnline = false;
           ipv6AcceptRAConfig = {
-            Token = mkOptionDefault "static:::${toHexStringLower index}";
+            Token = mkOptionDefault "static:::${UInt.toHexLower index}";
             DHCPv6Client = mkOptionDefault false;
           };
           networkConfig = {

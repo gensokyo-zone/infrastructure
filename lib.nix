@@ -5,52 +5,40 @@
 }: let
   nixlib = inputs.nixpkgs.lib;
   inherit (nixlib.modules) mkOrder mkOverride defaultOverridePriority;
-  inherit (nixlib.strings) splitString toLower;
-  inherit (nixlib.lists) imap0 elemAt findFirst foldl;
-  inherit (nixlib.attrsets) mapAttrs listToAttrs nameValuePair;
-  inherit (nixlib.strings) hasPrefix hasInfix removePrefix substring fixedWidthString replaceStrings concatMapStringsSep stringToCharacters match toInt;
-  inherit (nixlib.trivial) flip toHexString bitOr;
-
-  toHexStringLower = v: toLower (toHexString v);
-
-  hexCharToInt = let
-    hexChars = ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f"];
-    pairs = imap0 (flip nameValuePair) hexChars;
-    idx = listToAttrs pairs;
-  in
-    char: idx.${char};
-  hexToInt = str: foldl (value: chr: value * 16 + hexCharToInt chr) 0 (stringToCharacters (toLower str));
+  inherit (nixlib.attrsets) mapAttrs listToAttrs;
+  inherit (inputs.self.lib.Std) List Str Regex UInt Opt;
 
   eui64 = mac: let
-    parts = map toLower (splitString ":" mac);
-    part = elemAt parts;
+    parts = List.map Str.toLower (Regex.splitOn ":" mac);
+    part = List.index parts;
     part0 = part: let
-      nibble1' = hexCharToInt (substring 1 1 part);
-      nibble1 = bitOr 2 nibble1';
-      nibble0 = substring 0 1 part;
+      nibble1' = UInt.FromHexDigit (Str.index part 1);
+      nibble1 = UInt.or' 2 nibble1';
+      nibble0 = Str.index part 0;
     in
-      nibble0 + (fixedWidthString 1 "0" (toHexStringLower nibble1));
+      nibble0 + UInt.toHexLower nibble1;
   in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 
   parseUrl = url: let
-    parts = match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
-    port' = elemAt parts 2;
-  in assert parts != null; rec {
+    parts' = Regex.match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
+    parts = parts'.value;
+    port' = List.index parts 2;
+  in assert Opt.isJust parts'; rec {
     inherit url parts;
-    scheme = elemAt parts 0;
-    host = elemAt parts 1;
-    port = if port' != "" then toInt (removePrefix ":" port') else null;
+    scheme = List.index parts 0;
+    host = List.index parts 1;
+    port = if port' != "" then UInt.Parse (Str.removePrefix ":" port') else null;
     hostport = host + port';
-    path = elemAt parts 3;
+    path = List.index parts 3;
   };
 
   userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
 
-  mkWinPath = replaceStrings ["/"] ["\\"];
-  mkBaseDn = domain: concatMapStringsSep "," (part: "dc=${part}") (splitString "." domain);
-  mkAddress6 = addr: if hasInfix ":" addr && ! hasPrefix "[" addr then "[${addr}]" else addr;
+  mkWinPath = Str.replace ["/"] ["\\"];
+  mkBaseDn = domain: Str.concatMapSep "," (part: "dc=${part}") (Regex.splitOn "\\." domain);
+  mkAddress6 = addr: if Str.hasInfix ":" addr && ! Str.hasPrefix "[" addr then "[${addr}]" else addr;
 
-  coalesce = findFirst (v: v != null) null;
+  coalesce = values: Opt.default null (List.find (v: v != null) values);
   mapListToAttrs = f: l: listToAttrs (map f l);
 
   overrideOptionDefault = 1500;
@@ -99,7 +87,6 @@ in {
     domain = "gensokyo.zone";
     inherit treeToModulesOutput userIs
       eui64 parseUrl mkWinPath mkBaseDn mkAddress6
-      toHexStringLower hexToInt hexCharToInt
       mapListToAttrs coalesce
       mkAlmostOptionDefault mkAlmostDefault mkAlmostForce mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
       overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
@@ -111,7 +98,7 @@ in {
     inherit inputs;
     inherit (inputs) self;
     inherit (inputs.self) overlays;
-    inherit (inputs.self.lib) tree meta lib systems;
+    inherit (inputs.self.lib) tree meta lib systems std Std;
   };
   generate = import ./generate.nix {inherit inputs tree;};
 }

@@ -1,6 +1,6 @@
 let
   allowListModule = {config, name, gensokyo-zone, lib, ...}: let
-    inherit (gensokyo-zone.lib) hexToInt;
+    inherit (gensokyo-zone.Std) UInt;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkOptionDefault;
     inherit (builtins) typeOf;
@@ -26,7 +26,7 @@ let
     };
     config = let
       xuid = {
-        string = toString (hexToInt config.xuid);
+        string = toString (UInt.FromHex config.xuid);
         int = toString config.xuid;
       }.${typeOf config.xuid};
     in {

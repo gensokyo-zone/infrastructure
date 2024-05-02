@@ -1,7 +1,7 @@
 {inputs}: let
   # The purpose of this file is to set up the host module which allows assigning of the system, e.g. aarch64-linux and the builder used with less pain.
   lib = inputs.self.lib.nixlib;
-  inherit (inputs.self.lib) meta std;
+  inherit (inputs.self.lib) meta std Std;
   inherit (lib.modules) evalModules;
   inherit (std) set;
   hostConfigs = set.map (name: path:
@@ -11,7 +11,7 @@
         meta.modules.system
       ];
       specialArgs = {
-        inherit name inputs std meta;
+        inherit name inputs std Std meta;
         inherit (inputs.self.lib) gensokyo-zone;
       };
     })
