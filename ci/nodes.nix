@@ -25,13 +25,20 @@ with lib; {
 
   jobs = let
     enabledSystems = filterAttrs (_: system: system.config.ci.enable) channels.nixfiles.lib.systems;
-  in
-    mapAttrs' (name: system: nameValuePair "${name}" {
+    mkSystemJob = name: system: nameValuePair "${name}" {
       tasks.system = {
         inputs = channels.nixfiles.nixosConfigurations.${name}.config.system.build.toplevel;
         warn = system.config.ci.allowFailure;
       };
-    }) enabledSystems;
+    };
+    systemJobs = mapAttrs' mkSystemJob enabledSystems;
+  in {
+    deploy-rs = {
+      tasks.binary = {
+        inputs = channels.nixfiles.packages.x86_64-linux.deploy-rs;
+      };
+    };
+  } // systemJobs;
 
   ci.gh-actions.checkoutOptions.submodules = false;
   cache.cachix.arc = {

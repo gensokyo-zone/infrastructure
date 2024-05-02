@@ -44,11 +44,6 @@
 
     inherit (pkgs) freeipa-ipasam samba-ldap samba-ipa;
 
-    nf-deploy = pkgs.writeShellScriptBin "nf-deploy" ''
-      ${exports}
-      ${exportsSsh}
-      exec ${pkgs.runtimeShell} ${../ci/deploy.sh} "$@"
-    '';
     nf-setup-node = let
       reisen = ../systems/reisen;
       inherit (inputs.self.lib.lib) userIs;
