@@ -27,10 +27,6 @@ in {
         port = 19132;
         transport = "udp";
       };
-      tcp = {
-        port = config.ports.default.port;
-        transport = "tcp";
-      };
       v6 = {
         port = 19133;
         transport = "udp";
