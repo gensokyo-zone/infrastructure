@@ -46,6 +46,14 @@ nf-sops-keyscan ct.local
 vim .sops.yaml
 ```
 
+## Updating
+
+### Terraform
+
+```shell
+nf-tf init -upgrade
+```
+
 ## Proxmox
 
 ### Template
