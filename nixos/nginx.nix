@@ -15,6 +15,7 @@ in {
 
   services.nginx = {
     enable = true;
+    enableReload = mkDefault true;
     recommendedGzipSettings = true;
     recommendedOptimisation = true;
     recommendedProxySettings = true;
