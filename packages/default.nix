@@ -42,7 +42,11 @@
       ;
     inherit (inputs.deploy-rs.packages.${system}) deploy-rs;
 
-    inherit (pkgs) freeipa-ipasam samba-ldap samba-ipa;
+    inherit (pkgs)
+      freeipa-ipasam samba-ldap samba-ipa
+      krb5-ldap
+      nfs-utils-ldap
+      barcodebuddy;
 
     nf-setup-node = let
       reisen = ../systems/reisen;
