@@ -7,7 +7,9 @@ in {
     serverProperties = {
       server-name = "Kat's Server";
       online-mode = true;
+      #allow-cheats = true;
       level-name = "KatBedrock";
+      default-player-permission-level = "visitor";
     };
     packs = let
       addons = pkgs.minecraft-bedrock-addons;
