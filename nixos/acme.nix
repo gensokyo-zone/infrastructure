@@ -63,4 +63,14 @@ in {
     acme_cloudflare_email = acmeSecret;
     acme_cloudflare_token = acmeSecret;
   };
+  systemd.services = let
+    after = [ "systemd-tmpfiles-resetup.service" ];
+  in {
+    acme-fixperms = {
+      inherit after;
+    };
+    acme-lockfiles = {
+      inherit after;
+    };
+  };
 }
