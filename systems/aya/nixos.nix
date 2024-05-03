@@ -17,7 +17,7 @@
   };
 
   services.github-runner-zone = {
-    count = 16;
+    count = 32;
     networkNamespace.name = "ns1";
   };
 
