@@ -8,16 +8,17 @@ in {
       server-name = "Kat's Server";
       online-mode = true;
       #allow-cheats = true;
-      level-name = "KatBedrock";
+      #level-name = "KatBedrock";
+      level-name = "KatBedrockBeta";
       default-player-permission-level = "visitor";
     };
     packs = let
       addons = pkgs.minecraft-bedrock-addons;
     in {
-      #tree-capitator-bp.package = addons.true-tree-capitator-bp;
-      #tree-capitator-rp.package = addons.true-tree-capitator-rp;
-      tree-capitator-bh.package = addons.definitive-tree-capitator-bh;
-      tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
+      tree-capitator-bp.package = addons.true-tree-capitator-bp;
+      tree-capitator-rp.package = addons.true-tree-capitator-rp;
+      #tree-capitator-bh.package = addons.definitive-tree-capitator-bh;
+      #tree-capitator-rs.package = addons.definitive-tree-capitator-rs;
     };
     allowPlayers = let
       base = 2535420000000000;
