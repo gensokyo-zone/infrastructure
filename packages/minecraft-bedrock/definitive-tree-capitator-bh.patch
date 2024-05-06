@@ -1,0 +1,27 @@
+diff --git a/subpacks/VanillaOnly/functions/axe2.mcfunction b/subpacks/VanillaOnly/functions/axe2.mcfunction
+index 305bc6e..7bccacb 100644
+--- a/subpacks/VanillaOnly/functions/axe2.mcfunction
++++ b/subpacks/VanillaOnly/functions/axe2.mcfunction
+@@ -6,4 +6,5 @@ execute as @s if block ~~~ stripped_oak_log [] run fill ~~5~~~~ air [] destroy
+ execute as @s if block ~~~ stripped_jungle_log [] run fill ~~5~~~~ air [] destroy
+ execute as @s if block ~~~ stripped_spruce_log [] run fill ~~5~~~~ air [] destroy
+ execute as @s if block ~~~ stripped_warped_stem [] run fill ~~5~~~~ air [] destroy
+-execute as @s if block ~~~ stripped_acacia_log [] run fill ~~5~~~~ air [] destroy
+\ No newline at end of file
++execute as @s if block ~~~ stripped_acacia_log [] run fill ~~5~~~~ air [] destroy
++execute as @s if block ~~~ stripped_cherry_log [] run fill ~~5~~~~ air [] destroy
+diff --git a/subpacks/VanillaOnly/scripts/main.js b/subpacks/VanillaOnly/scripts/main.js
+index 9ed2185..ad9d990 100644
+--- a/subpacks/VanillaOnly/scripts/main.js
++++ b/subpacks/VanillaOnly/scripts/main.js
+@@ -26,8 +26,7 @@ world.events.playerBreakBlock.subscribe((blockEvent) => {
+       axe.runCommandAsync("function axe")
+       axe.runCommandAsync("function axe2")
+       axe.runCommandAsync("particle new:polvo ~~~")
+-      axe.runCommandAsync("playsound random.axe @p ~~~ 4 1 4")
+     }
+   }
+ 
+-});
+\ No newline at end of file
++});

@@ -10,6 +10,9 @@
       url = "https://mediafilez.forgecdn.net/files/5214/136/Definitive%20Tree%20Capitator%20BH.mcpack";
       sha256 = "941564d65386fd2701dfe017408d8c1d5b6d6a90a017e60b7ef9f6ff6de7b51a";
     };
+    patches = [
+      ./definitive-tree-capitator-bh.patch
+    ];
   };
   definitive-tree-capitator-rs = mkMinecraftBedrockServerAddon {
     pname = "definitive-tree-capitator-rs";
