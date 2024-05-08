@@ -40,7 +40,7 @@ git add flake.lock
 env \
 	GIT_{COMMITTER,AUTHOR}_EMAIL=github@kittywit.ch \
 	GIT_{COMMITTER,AUTHOR}_NAME="flake cron job" \
-git commit --message="ci: flake update"
+git commit --message="chore(ci): flake update"
 
 if [[ ${GITHUB_REF-} = refs/heads/${NF_UPDATE_BRANCH-main} ]]; then
 	git push origin HEAD:${NF_UPDATE_BRANCH-main}
