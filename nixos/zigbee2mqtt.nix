@@ -27,7 +27,7 @@ in {
         user = "z2m";
         password = "!secret z2m_pass";
         server = let
-          url = access.proxyUrlFor { serviceName = "mosquitto"; scheme = "mqtt"; };
+          url = access.proxyUrlFor { serviceName = "mosquitto"; scheme = "mqtt"; getAddressFor = "getAddress4For"; };
         in mkIf (!config.services.mosquitto.enable) (
           mkAlmostDefault url
         );

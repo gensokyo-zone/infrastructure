@@ -108,13 +108,14 @@
             portName ? "default",
             network ? "lan",
             scheme ? null,
+            getAddressFor ? "getAddressFor"
           }: let
             port = service.ports.${portName};
             scheme' = if scheme == null then port.protocol else scheme;
             port' = if !port.enable
               then throw "${system.name}.exports.services.${service.name}.ports.${portName} isn't enabled"
               else ":${toString port.port}";
-            host = access.getAddressFor system.name network;
+            host = access.${getAddressFor} system.name network;
             url = "${scheme'}://${mkAddress6 host}${port'}";
           in assert service.enable; url;
         };
