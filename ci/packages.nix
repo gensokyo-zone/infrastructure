@@ -28,5 +28,9 @@ in {
       packages.x86_64-linux.krb5-ldap
       legacyPackages.x86_64-linux.pkgs._389-ds-base
     ];
+    openwebrx.inputs = [
+      packages.x86_64-linux.openwebrxplus
+      # TODO: packages.aarch64-linux.openwebrxplus
+    ];
   };
 }

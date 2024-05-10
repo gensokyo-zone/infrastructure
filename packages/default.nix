@@ -46,7 +46,8 @@
       freeipa-ipasam samba-ldap samba-ipa
       krb5-ldap
       nfs-utils-ldap
-      barcodebuddy;
+      barcodebuddy
+      openwebrxplus;
 
     nf-setup-node = let
       reisen = ../systems/reisen;

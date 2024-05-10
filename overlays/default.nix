@@ -6,10 +6,11 @@
 in rec {
   default = nixlib.composeManyExtensions [
     barcodebuddy
-    minecraft
     krb5
+    minecraft
     nfs
     nginx
+    openwebrx
     samba
   ];
   barcodebuddy = import ./barcodebuddy.nix;
@@ -18,6 +19,7 @@ in rec {
   nfs = import ./nfs.nix;
   nginx = import ./nginx.nix;
   samba = import ./samba.nix;
+  openwebrx = import ./openwebrxplus.nix;
   deploy-rs = inputs.deploy-rs.overlays.default or inputs.deploy-rs.overlay;
   arc = inputs.arcexprs.overlays.default;
 }

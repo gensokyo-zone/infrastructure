@@ -99,6 +99,16 @@
       }
     }
   },
+  "kasen": {
+    "network": {
+      "hostName": "kasen",
+      "networks": {
+        "int": null,
+        "local": null,
+        "tail": null
+      }
+    }
+  },
   "keycloak": {
     "network": {
       "hostName": "keycloak",
