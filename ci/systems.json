@@ -104,7 +104,11 @@
       "hostName": "kasen",
       "networks": {
         "int": null,
-        "local": null,
+        "local": {
+          "address4": "10.1.1.49",
+          "address6": "fd0a::ba27:ebff:fe7e:e241",
+          "macAddress": "b8:27:eb:7e:e2:41"
+        },
         "tail": null
       }
     }

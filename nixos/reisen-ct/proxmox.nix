@@ -34,7 +34,7 @@ in {
     inherit (proxmox.network) internal local;
     conditions = coalesce [
       (mapNullable (interface: [ "iifname ${interface.name}" ]) internal.interface)
-      (mapNullable (interface: config.networking.interfaces.local.nftables.conditions) local.interface)
+      (mapNullable (interface: config.networking.firewall.interfaces.local.nftables.conditions) local.interface)
     ];
   in mkIf (conditions != null) {
     nftables = {

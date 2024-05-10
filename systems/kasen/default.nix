@@ -1,7 +1,6 @@
 _: {
   imports = [
   ];
-  deploy.hostname = "10.1.1.139";
   # TODO: get an aarch64-linux builder on aya!
   ci.enable = false;
   arch = "aarch64";
@@ -14,5 +13,11 @@ _: {
         nginx.enable = true;
         sshd.enable = true;
       };
+  };
+  network.networks = {
+    local = {
+      macAddress = "b8:27:eb:7e:e2:41";
+      address4 = "10.1.1.49";
+    };
   };
 }
