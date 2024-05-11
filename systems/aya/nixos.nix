@@ -6,6 +6,7 @@
     nixos.base
     nixos.reisen-ct
     nixos.nixbld
+    #nixos.cross.aarch64
     nixos.tailscale
     nixos.github-runner.zone
     nixos.minecraft.bedrock

@@ -10,6 +10,7 @@
   inherit (gensokyo-zone.lib) unmerged mkAlmostOptionDefault;
   cfg = config.gensokyo-zone.nix;
   nixModule = {
+    lib,
     gensokyo-zone,
     nixosConfig,
     nixosOptions,
@@ -17,6 +18,7 @@
     ...
   }: let
     inherit (gensokyo-zone.lib) unmerged domain;
+    inherit (lib.modules) mkOptionDefault;
     inherit (nixosConfig.gensokyo-zone) access;
   in {
     options = with lib.types; {
@@ -31,6 +33,10 @@
       };
       builder = {
         enable = mkEnableOption "aya nixbld remote builder";
+        cross = {
+          aarch64 = mkEnableOption "qemu-aarch64";
+          armv7l = mkEnableOption "qemu arm";
+        };
         domain = mkOption {
           type = str;
           default = "nixbld.${domain}";
@@ -98,6 +104,10 @@
         })
       ];
       builder = {
+        systems = mkMerge [
+          (mkIf config.builder.cross.aarch64 (mkOptionDefault [ "aarch64-linux" ]))
+          (mkIf config.builder.cross.armv7l (mkOptionDefault [ "armv7l-linux" ]))
+        ];
         domain = mkMerge [
           (mkIf access.tail.enabled (mkAlmostOptionDefault "nixbld.tail.${domain}"))
           (mkIf access.local.enable (mkDefault "nixbld.local.${domain}"))
