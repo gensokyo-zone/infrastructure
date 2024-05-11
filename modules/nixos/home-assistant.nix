@@ -190,9 +190,6 @@ in {
       pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
       home-assistant = pkgs.home-assistant.override {
         packageOverrides = self: super: {
-          pydantic = let
-            pydantic2 = self.callPackage (pkgs.path + "/pkgs/development/python-modules/pydantic") { };
-          in lib.warnIf (lib.versionAtLeast super.pydantic.version "2.0") "home-assistant pydantic override may no longer be needed" pydantic2;
           brother = super.brother.overridePythonAttrs (old: {
             dontCheckRuntimeDeps =
               if old.dontCheckRuntimeDeps or false
