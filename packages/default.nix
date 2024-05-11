@@ -47,7 +47,8 @@
       krb5-ldap
       nfs-utils-ldap
       barcodebuddy
-      openwebrxplus;
+      openwebrxplus
+      systemd2mqtt;
 
     nf-setup-node = let
       reisen = ../systems/reisen;

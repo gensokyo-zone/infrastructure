@@ -23,6 +23,7 @@ in {
     nixos.tailscale
     nixos.ipa
     nixos.cloudflared
+    nixos.systemd2mqtt
     nixos.ddclient
     nixos.acme
     nixos.nginx
@@ -44,6 +45,7 @@ in {
     nixos.access.proxmox
     nixos.access.plex
     nixos.access.invidious
+    nixos.wake-chen
     nixos.samba
     ./reisen-ssh.nix
   ];

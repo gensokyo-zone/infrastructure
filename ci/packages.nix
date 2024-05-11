@@ -32,5 +32,8 @@ in {
       packages.x86_64-linux.openwebrxplus
       # TODO: packages.aarch64-linux.openwebrxplus
     ];
+    systemd2mqtt.inputs = [
+      packages.x86_64-linux.systemd2mqtt
+    ];
   };
 }

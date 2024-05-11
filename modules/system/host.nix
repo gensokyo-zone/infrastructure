@@ -28,7 +28,7 @@ in {
     };
     type = mkOption {
       description = "Operating system type of the host";
-      type = enum ["NixOS" "MacOS" "Darwin" "Linux"];
+      type = enum ["NixOS" "MacOS" "Darwin" "Linux" "Windows"];
       default = "NixOS";
     };
     folder = mkOption {
@@ -73,6 +73,7 @@ in {
         macos = "darwin";
         darwin = "darwin";
         linux = "linux";
+        windows = "windows";
       }
       .${string.toLower config.type};
     modules = mkIf (config.folder != "linux") [

@@ -19,6 +19,7 @@
           overlays = [
             inputs.self.overlays.default
             inputs.self.overlays.deploy-rs
+            inputs.self.overlays.systemd2mqtt
             inputs.self.overlays.arc
           ];
           config = {

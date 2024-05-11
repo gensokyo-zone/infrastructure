@@ -21,5 +21,6 @@ in rec {
   samba = import ./samba.nix;
   openwebrx = import ./openwebrxplus.nix;
   deploy-rs = inputs.deploy-rs.overlays.default or inputs.deploy-rs.overlay;
+  systemd2mqtt = inputs.systemd2mqtt.overlays.default;
   arc = inputs.arcexprs.overlays.default;
 }
