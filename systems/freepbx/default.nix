@@ -17,7 +17,9 @@ _: {
   extern.files = {
     "/etc/sysconfig/network-scripts/ifcfg-eth0" = {
       source = ./ifcfg-eth0;
-      mode = "0644";
+    };
+    "/root/.ssh/authorized_keys" = {
+      source = ../reisen/root.authorized_keys;
     };
   };
   exports = {

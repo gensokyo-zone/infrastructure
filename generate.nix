@@ -40,16 +40,21 @@
     };
   };
   mkNodeSystems = systems: mapAttrs (_: mkNodeSystem) systems;
-  mkExtern = system: {
+  mkExtern = system: let
+    enabledFiles = filterAttrs (_: file: file.enable) system.extern.files;
+  in {
     files = mapAttrs' (_: file: nameValuePair file.path {
       source = assert file.relativeSource != null; file.relativeSource;
       inherit (file) owner group mode;
-    }) system.extern.files;
+    }) enabledFiles;
   };
   mkNode = system: {
     users = mkNodeUsers templateUsers;
     systems = mkNodeSystems (nodeSystems system.config.name);
     extern = mkExtern system.config;
+    ssh.root.authorizedKeys = {
+      inherit (templateSystem.config.environment.etc."ssh/authorized_keys.d/root".source) text;
+    };
   };
   mkNetwork = system: {
     inherit (system.config.access) hostName;

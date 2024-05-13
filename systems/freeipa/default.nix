@@ -19,7 +19,6 @@ _: {
   extern.files = {
     "/etc/systemd/resolved.conf" = {
       source = ./resolved.conf;
-      mode = "0644";
     };
     "/etc/NetworkManager/system-connections/ens18.nmconnection" = {
       source = ./ens18.nmconnection;
@@ -28,6 +27,9 @@ _: {
     "/etc/NetworkManager/system-connections/int.nmconnection" = {
       source = ./int.nmconnection;
       mode = "0600";
+    };
+    "/root/.ssh/authorized_keys" = {
+      source = ../reisen/root.authorized_keys;
     };
   };
   exports = {

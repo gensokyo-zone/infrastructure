@@ -16,6 +16,11 @@ _: {
     "/etc/udev/rules.d/90-z2m.rules" = {
       source = ./udev.90-z2m.rules;
     };
+    "/root/.ssh/authorized_keys" = {
+      # TODO: this can't be deployed here...
+      enable = false;
+      source = ./root.authorized_keys;
+    };
   };
   network.networks = {
     local = {

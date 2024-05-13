@@ -1,10 +1,13 @@
 let
   fileModule = {config, name, gensokyo-zone, lib, ...}: let
-    inherit (lib.options) mkOption;
+    inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkOptionDefault;
     inherit (lib.strings) hasPrefix removePrefix;
   in {
     options = with lib.types; {
+      enable = mkEnableOption "external file" // {
+        default = true;
+      };
       path = mkOption {
         type = str;
         default = name;
