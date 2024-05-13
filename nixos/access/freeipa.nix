@@ -37,6 +37,20 @@ let
       };
     };
   };
+  locations'cockpit = {
+    "/" = {xvars, ...}: {
+      proxy = {
+        enable = true;
+        host = xvars.get.host;
+      };
+    };
+    "/cockpit/socket" = {
+      proxy = {
+        enable = true;
+        websocket.enable = true;
+      };
+    };
+  };
   ldapsPort = 636;
 in {
   imports = let
@@ -239,18 +253,21 @@ in {
           name = name'cockpit;
           vouch.enable = mkDefault true;
           ssl = {
-            force = mkDefault virtualHosts.freeipa'web.ssl.force;
+            force = mkDefault true;
             cert.copyFromVhost = "freeipa'web";
           };
           proxy.upstream = "freeipa'cockpit";
-          locations."/".proxy.enable = true;
+          locations = locations'cockpit;
         };
         freeipa'cockpit'local = {
           name = name'cockpit;
-          ssl.cert.copyFromVhost = "freeipa'cockpit";
+          ssl = {
+            force = mkDefault true;
+            cert.copyFromVhost = "freeipa'cockpit";
+          };
           proxy.copyFromVhost = "freeipa'cockpit";
           local.enable = true;
-          locations."/".proxy.enable = true;
+          locations = locations'cockpit;
         };
         freeipa'ldap = {
           serverName = mkDefault ldap.domain;
