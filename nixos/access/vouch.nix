@@ -28,7 +28,11 @@ in {
             proxy_redirect default;
           '';
         };
-        "/validate" = {config, virtualHost, ...}: {
+        "/validate" = {
+          config,
+          virtualHost,
+          ...
+        }: {
           proxied.enable = true;
           proxy.enable = true;
           local.denyGlobal = true;
@@ -36,9 +40,9 @@ in {
       };
       name.shortServer = mkDefault "login";
     in {
-      vouch = { xvars, ... }: {
+      vouch = {xvars, ...}: {
         inherit name locations;
-        serverAliases = [ nginx.vouch.doubleProxy.serverName ];
+        serverAliases = [nginx.vouch.doubleProxy.serverName];
         proxied.enable = true;
         proxy = {
           upstream = mkDefault "vouch'access";
@@ -46,12 +50,12 @@ in {
         };
         local.denyGlobal = true;
       };
-      vouch'local = { xvars, ... }: {
+      vouch'local = {xvars, ...}: {
         name = {
           inherit (name) shortServer;
           includeTailscale = mkDefault false;
         };
-        serverAliases = mkIf cfg.enable [ nginx.vouch.doubleProxy.localServerName ];
+        serverAliases = mkIf cfg.enable [nginx.vouch.doubleProxy.localServerName];
         proxied.enable = true;
         proxy = {
           upstream = mkDefault "vouch'access'local";
@@ -64,7 +68,7 @@ in {
         };
         inherit locations;
       };
-      vouch'tail = { xvars, ... }: {
+      vouch'tail = {xvars, ...}: {
         enable = mkDefault (tailscale.enable && !nginx.virtualHosts.vouch'local.name.includeTailscale);
         ssl.cert.copyFromVhost = "vouch'local";
         name = {

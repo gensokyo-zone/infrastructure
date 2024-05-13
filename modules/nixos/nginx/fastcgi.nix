@@ -30,7 +30,7 @@ let
       };
       passHeaders = mkOption {
         type = attrsOf bool;
-        default = { };
+        default = {};
         description = "fastcgi_pass_header";
       };
       socket = mkOption {
@@ -43,7 +43,8 @@ let
 
     config = {
       fastcgi = {
-        socket = mkIf (cfg.phpfpmPool != null) (mkAlmostOptionDefault
+        socket = mkIf (cfg.phpfpmPool != null) (
+          mkAlmostOptionDefault
           nixosConfig.services.phpfpm.pools.${cfg.phpfpmPool}.socket
         );
         params = mapOptionDefaults {
@@ -60,18 +61,24 @@ let
       extraConfig = let
         passHeadersConfig = map (header: "fastcgi_pass_header ${xvars.escapeString header};") passHeaders;
         paramsConfig = mapAttrsToList (param: value: mkJustAfter "fastcgi_param ${param} ${xvars.escapeString value};") params;
-      in mkIf cfg.enable (mkMerge ([
-        (mkIf cfg.includeDefaults (mkAlmostBefore ''
-          include ${nginx.package}/conf/fastcgi.conf;
-        ''))
-        (mkIf (cfg.socket != null) (mkJustAfter ''
-          fastcgi_pass unix:${cfg.socket};
-        ''))
-      ] ++ passHeadersConfig
-      ++ paramsConfig));
+      in
+        mkIf cfg.enable (mkMerge ([
+            (mkIf cfg.includeDefaults (mkAlmostBefore ''
+              include ${nginx.package}/conf/fastcgi.conf;
+            ''))
+            (mkIf (cfg.socket != null) (mkJustAfter ''
+              fastcgi_pass unix:${cfg.socket};
+            ''))
+          ]
+          ++ passHeadersConfig
+          ++ paramsConfig));
     };
   };
-  hostModule = {config, lib, ...}: let
+  hostModule = {
+    config,
+    lib,
+    ...
+  }: let
     inherit (lib.options) mkOption;
   in {
     options = with lib.types; {
@@ -80,15 +87,13 @@ let
       };
     };
   };
-in {
-  lib,
-  ...
-}: let
-  inherit (lib.options) mkOption;
-in {
-  options = with lib.types; {
-    services.nginx.virtualHosts = mkOption {
-      type = attrsOf (submodule [hostModule]);
+in
+  {lib, ...}: let
+    inherit (lib.options) mkOption;
+  in {
+    options = with lib.types; {
+      services.nginx.virtualHosts = mkOption {
+        type = attrsOf (submodule [hostModule]);
+      };
     };
-  };
-}
+  }

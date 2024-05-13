@@ -21,7 +21,7 @@ in {
           (nginx.virtualHosts.barcodebuddy.proxied.cloudflared.getIngress {})
           {
             ${home-assistant.domain} = assert home-assistant.enable; {
-              service = access.proxyUrlFor { serviceName = "home-assistant"; };
+              service = access.proxyUrlFor {serviceName = "home-assistant";};
             };
           }
         ];

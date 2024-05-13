@@ -1,4 +1,8 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.lists) filter optional;
@@ -7,21 +11,32 @@
   enabledNameservers = filter (ns: ns.enable) (config.networking.nameservers');
   nameserverModule = {config, ...}: let
     dnsPort = 53;
-    mkResolvedValue = { address, port, interface ? null, host ? null }: let
+    mkResolvedValue = {
+      address,
+      port,
+      interface ? null,
+      host ? null,
+    }: let
       isIpv6 = hasInfix ":" address;
       isPlain = port == dnsPort && interface == null && host == null;
-      addr = if isIpv6 && !isPlain then "[${address}]" else address;
-    in concatStrings (
-      [ addr ]
-      ++ optional (port != dnsPort) ":${toString port}"
-      ++ optional (interface != null) "%${interface}"
-      ++ optional (host != null) "#${host}"
-    );
+      addr =
+        if isIpv6 && !isPlain
+        then "[${address}]"
+        else address;
+    in
+      concatStrings (
+        [addr]
+        ++ optional (port != dnsPort) ":${toString port}"
+        ++ optional (interface != null) "%${interface}"
+        ++ optional (host != null) "#${host}"
+      );
   in {
     options = with lib.types; {
-      enable = mkEnableOption "nameserver" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "nameserver"
+        // {
+          default = true;
+        };
       address = mkOption {
         type = str;
       };
@@ -59,12 +74,16 @@ in {
   options.networking = with lib.types; {
     nameservers' = mkOption {
       type = listOf (submodule nameserverModule);
-      default = { };
+      default = {};
     };
   };
   config = {
-    networking.nameservers = mkIf (config.networking.nameservers' != [ ]) (
-      map (ns: if resolved.enable then ns.resolvedValue else ns.value) enabledNameservers
+    networking.nameservers = mkIf (config.networking.nameservers' != []) (
+      map (ns:
+        if resolved.enable
+        then ns.resolvedValue
+        else ns.value)
+      enabledNameservers
     );
   };
 }

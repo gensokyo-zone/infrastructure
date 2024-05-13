@@ -1,4 +1,10 @@
-{ gensokyo-zone, pkgs, config, lib, ... }: let
+{
+  gensokyo-zone,
+  pkgs,
+  config,
+  lib,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkBaseDn mapDefaults mkAlmostOptionDefault mapOptionDefaults domain;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkDefault mkOptionDefault mkForce;
@@ -50,12 +56,12 @@ in {
       };
     };
     db.backend = mkOption {
-      type = enum [ "kldap" "ipa" ];
+      type = enum ["kldap" "ipa"];
       default = "kldap";
     };
     authToLocalNames = mkOption {
       type = attrsOf str;
-      default = { };
+      default = {};
     };
   };
   config = {
@@ -64,32 +70,36 @@ in {
         krb5-ldap = pkgs.krb5.override {
           withLdap = true;
         };
-      in mkIf (cfg.enable && cfg.db.backend == "kldap") (mkDefault pkgs.krb5-ldap or krb5-ldap);
+      in
+        mkIf (cfg.enable && cfg.db.backend == "kldap") (mkDefault pkgs.krb5-ldap or krb5-ldap);
       settings = mkIf cfg.enable {
         dbmodules = {
           genso-kldap = mkIf (cfg.db.backend == "kldap") (mapDefaults {
-            db_library = "kldap";
-            ldap_servers = concatStringsSep " " cfg.ldap.urls;
-            ldap_kdc_dn = cfg.ldap.bind.dn;
-            ldap_kerberos_container_dn = cfg.ldap.baseDn;
-          } // {
-            ldap_service_password_file = mkIf (cfg.ldap.bind.passwordFile != null) (mkDefault cfg.ldap.bind.passwordFile);
-          });
+              db_library = "kldap";
+              ldap_servers = concatStringsSep " " cfg.ldap.urls;
+              ldap_kdc_dn = cfg.ldap.bind.dn;
+              ldap_kerberos_container_dn = cfg.ldap.baseDn;
+            }
+            // {
+              ldap_service_password_file = mkIf (cfg.ldap.bind.passwordFile != null) (mkDefault cfg.ldap.bind.passwordFile);
+            });
           genso-ipa = mkIf (cfg.db.backend == "ipa") (mapDefaults {
             db_library = "${ipa.package}/lib/krb5/plugins/kdb/ipadb.so";
           });
-          ${cfg.realm} = mkIf ipa.enable (mkForce { });
+          ${cfg.realm} = mkIf ipa.enable (mkForce {});
         };
-        realms.${cfg.realm} = mapDefaults {
-          kdc = "${cfg.host}:88";
-          master_kdc = "${cfg.host}:88";
-          admin_server = "${cfg.host}:749";
-          default_domain = cfg.domain;
-          pkinit_anchors = [ "FILE:${cfg.ca.cert}" ];
-        } // {
-          database_module = mkOptionDefault "genso-${cfg.db.backend}";
-          auth_to_local_names = mkIf (cfg.authToLocalNames != { }) (mkDefault (subsection cfg.authToLocalNames));
-        };
+        realms.${cfg.realm} =
+          mapDefaults {
+            kdc = "${cfg.host}:88";
+            master_kdc = "${cfg.host}:88";
+            admin_server = "${cfg.host}:749";
+            default_domain = cfg.domain;
+            pkinit_anchors = ["FILE:${cfg.ca.cert}"];
+          }
+          // {
+            database_module = mkOptionDefault "genso-${cfg.db.backend}";
+            auth_to_local_names = mkIf (cfg.authToLocalNames != {}) (mkDefault (subsection cfg.authToLocalNames));
+          };
         domain_realm = mapOptionDefaults {
           ${cfg.domain} = cfg.realm;
           ".${cfg.domain}" = cfg.realm;
@@ -112,7 +122,8 @@ in {
             url = "https://ipa.${cfg.domain}/ipa/config/ca.crt";
             sha256 = "sha256-PKjnjn1jIq9x4BX8+WGkZfj4HQtmnHqmFSALqggo91o=";
           };
-        in mkOptionDefault caPem;
+        in
+          mkOptionDefault caPem;
         db.backend = mkIf ipa.enable (mkAlmostOptionDefault "ipa");
         ldap.urls = mkOptionDefault [
           "ldaps://ldap.${cfg.domain}"
@@ -120,16 +131,18 @@ in {
         ];
       };
     };
-    networking.timeServers = mkIf (cfg.enable && enabled) [ "2.fedora.pool.ntp.org" ];
+    networking.timeServers = mkIf (cfg.enable && enabled) ["2.fedora.pool.ntp.org"];
     security.ipa = mkIf cfg.enable {
       certificate = mkDefault cfg.ca.cert;
       basedn = mkDefault cfg.ldap.baseDn;
       domain = mkDefault cfg.domain;
       realm = mkDefault cfg.realm;
       server = mkDefault cfg.canonHost;
-      ifpAllowedUids = [
-        "root"
-      ] ++ config.users.groups.wheel.members;
+      ifpAllowedUids =
+        [
+          "root"
+        ]
+        ++ config.users.groups.wheel.members;
       dyndns.enable = mkDefault false;
     };
   };

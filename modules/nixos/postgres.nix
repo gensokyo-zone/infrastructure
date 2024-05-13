@@ -40,9 +40,11 @@
           allow = mkEnableOption "tailscale TCP connections";
         };
         int = {
-          allow = mkEnableOption "internal TCP connections" // {
-            default = config.authentication.local.allow;
-          };
+          allow =
+            mkEnableOption "internal TCP connections"
+            // {
+              default = config.authentication.local.allow;
+            };
         };
         local = {
           allow = mkEnableOption "local TCP connections";

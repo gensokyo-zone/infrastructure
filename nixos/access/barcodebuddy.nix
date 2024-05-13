@@ -25,7 +25,8 @@ in {
         requireAuth = false;
       };
       proxy = {
-        upstream = mkIf barcodebuddy.enable (mkDefault
+        upstream = mkIf barcodebuddy.enable (
+          mkDefault
           "nginx'proxied"
         );
         host = mkDefault serverName;
@@ -48,7 +49,7 @@ in {
         upstream = mkDefault nginx.virtualHosts.barcodebuddy.proxy.upstream;
         host = mkDefault nginx.virtualHosts.barcodebuddy.proxy.host;
       };
-      locations."/" = { config, ... }: {
+      locations."/" = {config, ...}: {
         proxy = {
           headers.enableRecommended = true;
           redirect = {

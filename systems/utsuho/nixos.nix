@@ -1,4 +1,8 @@
-{meta, config, ...}: let
+{
+  meta,
+  config,
+  ...
+}: let
   inherit (config.services) nginx;
 in {
   imports = let

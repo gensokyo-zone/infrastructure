@@ -29,12 +29,13 @@ in {
     networkConfig.MulticastDNS = true;
   };
   networking.nameservers' = mkIf enableDns (mkBefore [
-    { address = access.getAddressFor (access.systemForService "dnsmasq").name "lan"; }
+    {address = access.getAddressFor (access.systemForService "dnsmasq").name "lan";}
   ]);
   # prioritize our resolver over systemd-resolved!
   system.nssDatabases.hosts = let
     avahiResolverEnabled = config.services.avahi.enable && (config.services.avahi.nssmdns4 || config.services.avahi.nssmdns4);
-  in mkIf (enableDns && (config.services.resolved.enable || avahiResolverEnabled)) (mkOrder 475 ["dns"]);
+  in
+    mkIf (enableDns && (config.services.resolved.enable || avahiResolverEnabled)) (mkOrder 475 ["dns"]);
   services.resolved.extraConfig = mkIf enableDns ''
     DNSStubListener=no
   '';

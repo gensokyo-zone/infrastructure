@@ -8,10 +8,15 @@
 in {
   networking.firewall.interfaces.local.allowedTCPPorts = let
     inherit (cfg.ssl) preread;
-  in mkIf cfg.enable [
-    (if preread.enable then preread.serverPort else cfg.defaultSSLListenPort)
-    cfg.defaultHTTPListenPort
-  ];
+  in
+    mkIf cfg.enable [
+      (
+        if preread.enable
+        then preread.serverPort
+        else cfg.defaultSSLListenPort
+      )
+      cfg.defaultHTTPListenPort
+    ];
 
   services.nginx = {
     enable = true;

@@ -1,13 +1,21 @@
 let
-  fileModule = {config, name, gensokyo-zone, lib, ...}: let
+  fileModule = {
+    config,
+    name,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkOptionDefault;
     inherit (lib.strings) hasPrefix removePrefix;
   in {
     options = with lib.types; {
-      enable = mkEnableOption "external file" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "external file"
+        // {
+          default = true;
+        };
       path = mkOption {
         type = str;
         default = name;
@@ -35,25 +43,33 @@ let
       relativeSource = let
         flakeRoot = toString gensokyo-zone.self + "/";
         sourcePath = toString config.source;
-      in mkOptionDefault (
-        if hasPrefix flakeRoot sourcePath then removePrefix flakeRoot sourcePath
-        else null
-      );
+      in
+        mkOptionDefault (
+          if hasPrefix flakeRoot sourcePath
+          then removePrefix flakeRoot sourcePath
+          else null
+        );
     };
   };
-in {config, gensokyo-zone, lib, ...}: let
-  inherit (lib.options) mkOption;
-in {
-  options.extern = with lib.types; {
-    files = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [ fileModule ];
-        specialArgs = {
-          inherit gensokyo-zone;
-          system = config;
-        };
-      });
-      default = { };
+in
+  {
+    config,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
+    inherit (lib.options) mkOption;
+  in {
+    options.extern = with lib.types; {
+      files = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [fileModule];
+          specialArgs = {
+            inherit gensokyo-zone;
+            system = config;
+          };
+        });
+        default = {};
+      };
     };
-  };
-}
+  }

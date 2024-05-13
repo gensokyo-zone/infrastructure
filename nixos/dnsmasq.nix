@@ -13,38 +13,49 @@
   inherit (lib.trivial) mapNullable flip;
   cfg = config.services.dnsmasq;
   inherit (gensokyo-zone) systems;
-  localSystems = filterAttrs (_: system:
-    system.config.access.online.enable && system.config.network.networks.local.enable or false
-  ) systems;
+  localSystems =
+    filterAttrs (
+      _: system:
+        system.config.access.online.enable && system.config.network.networks.local.enable or false
+    )
+    systems;
   mkHostRecordPairs = _: system: [
     (mkHostRecordPair "int" system)
     (mkHostRecordPair "local" system)
     (mkHostRecordPair "tail" system)
   ];
-  mapDynamic4 = replaceStrings [ "10.1.1." ] [ "0.0.0." ];
-  mapDynamic6 = replaceStrings [ "fd0a::" ] [ "2001::" ];
+  mapDynamic4 = replaceStrings ["10.1.1."] ["0.0.0."];
+  mapDynamic6 = replaceStrings ["fd0a::"] ["2001::"];
   mkDynamicHostRecord = _: system: let
     address4 = system.config.network.networks.local.address4 or null;
     address6 = system.config.network.networks.local.address6 or null;
-  in concatStringsSep "," ([
-    system.config.access.fqdn
-  ] ++ optional (address4 != null)
-    (toString (mapNullable mapDynamic4 address4))
-  ++ optional (address6 != null)
-    (toString (mapNullable mapDynamic6 address6))
-  ++ singleton
-    cfg.dynamic.interface
-  );
+  in
+    concatStringsSep "," (
+      [
+        system.config.access.fqdn
+      ]
+      ++ optional (address4 != null)
+      (toString (mapNullable mapDynamic4 address4))
+      ++ optional (address6 != null)
+      (toString (mapNullable mapDynamic6 address6))
+      ++ singleton
+      cfg.dynamic.interface
+    );
   mkHostRecordPair = network: system: let
     address4 = system.config.network.networks.${network}.address4 or null;
     address6 = system.config.network.networks.${network}.address6 or null;
     fqdn = system.config.network.networks.${network}.fqdn or null;
-  in nameValuePair
-    (if fqdn != null then fqdn else "${network}.${system.config.access.fqdn}")
+  in
+    nameValuePair
+    (
+      if fqdn != null
+      then fqdn
+      else "${network}.${system.config.access.fqdn}"
+    )
     (concatStringsSep "," (
-    optional (address4 != null)
+      optional (address4 != null)
       (toString address4)
-    ++ optional (address6 != null)
+      ++ optional (address6 != null)
       (toString address6)
     ));
   systemHosts = filterAttrs (_: value: value != "") (
@@ -93,15 +104,16 @@ in {
             "mco.cubecraft.net"
           ];
           bedrockRecords = map (flip mkHostRecord bedrockRecord) bedrockRecordNames;
-        in mkMerge [
-          (mapAttrsToList mkHostRecord systemHosts)
-          (mkIf (cfg.bedrockConnect.address != null || cfg.bedrockConnect.address6 != null) bedrockRecords)
-        ];
+        in
+          mkMerge [
+            (mapAttrsToList mkHostRecord systemHosts)
+            (mkIf (cfg.bedrockConnect.address != null || cfg.bedrockConnect.address6 != null) bedrockRecords)
+          ];
         dynamic-host = mapAttrsToList mkDynamicHostRecord localSystems;
         server =
-          if config.networking.nameservers' != [ ] then map (ns: ns.address) (filter filterns' config.networking.nameservers')
-          else filter filterns config.networking.nameservers
-        ;
+          if config.networking.nameservers' != []
+          then map (ns: ns.address) (filter filterns' config.networking.nameservers')
+          else filter filterns config.networking.nameservers;
         max-cache-ttl = 60;
       };
       bedrockConnect = let
@@ -118,11 +130,11 @@ in {
     };
     networking = mkIf cfg.enable {
       firewall = {
-        interfaces.local.allowedTCPPorts = [ 53 ];
-        interfaces.local.allowedUDPPorts = [ 53 ];
+        interfaces.local.allowedTCPPorts = [53];
+        interfaces.local.allowedUDPPorts = [53];
       };
       nameservers' = mkIf cfg.resolveLocalQueries' (mkBefore [
-        { address = "127.0.0.1"; }
+        {address = "127.0.0.1";}
       ]);
     };
   };

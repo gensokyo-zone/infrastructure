@@ -162,7 +162,7 @@
           modules = [userModule];
           inherit specialArgs;
         });
-        default = { };
+        default = {};
       };
       excludeUsers = mkOption {
         type = listOf str;
@@ -172,7 +172,7 @@
           modules = [groupModule];
           inherit specialArgs;
         });
-        default = { };
+        default = {};
       };
       excludeGroups = mkOption {
         type = listOf str;

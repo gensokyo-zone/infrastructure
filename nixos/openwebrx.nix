@@ -31,14 +31,15 @@ in {
 
   sops.secrets = let
     sopsFile = mkDefault ./secrets/openwebrx.yaml;
-  in mkIf cfg.enable {
-    openwebrx-users = {
-      inherit sopsFile;
-      owner = cfg.user;
-      group = cfg.group;
-      path = "${cfg.dataDir}/users.json";
+  in
+    mkIf cfg.enable {
+      openwebrx-users = {
+        inherit sopsFile;
+        owner = cfg.user;
+        group = cfg.group;
+        path = "${cfg.dataDir}/users.json";
+      };
     };
-  };
 
   networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = mkIf cfg.enable [

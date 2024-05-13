@@ -1,12 +1,17 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.minecraft-bedrock-server = { config, ... }: let
+  config.exports.services.minecraft-bedrock-server = {config, ...}: let
     mkAssertion = f: nixosConfig: let
       cfg = nixosConfig.services.minecraft-bedrock-server;
-    in f nixosConfig cfg;
+    in
+      f nixosConfig cfg;
   in {
     nixos = {
       serviceAttr = "minecraft-bedrock-server";

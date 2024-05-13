@@ -12,7 +12,11 @@
   inherit (lib.trivial) mapNullable;
   inherit (lib.strings) concatStringsSep;
   systemConfig = config;
-  portModule = {config, service, ...}: {
+  portModule = {
+    config,
+    service,
+    ...
+  }: {
     options = with lib.types; {
       enable =
         mkEnableOption "port"
@@ -86,7 +90,7 @@
         };
         assertions = mkOption {
           type = listOf (functionTo attrs);
-          default = [ ];
+          default = [];
         };
       };
       defaults = {
@@ -107,7 +111,8 @@
           serviceConfig = getAttrFromPath config.nixos.serviceAttrPath;
           mkAssertion = f: nixosConfig: let
             cfg = serviceConfig nixosConfig;
-          in f nixosConfig cfg;
+          in
+            f nixosConfig cfg;
           enableAssertion = nixosConfig: cfg: {
             assertion = (! cfg ? enable) || (config.enable == cfg.enable);
             message = "enable == nixosConfig.${concatStringsSep "." config.nixos.serviceAttrPath}.enable";
@@ -120,12 +125,18 @@
       };
     };
   };
-  nixosModule = {config, system, ...}: let
+  nixosModule = {
+    config,
+    system,
+    ...
+  }: let
     mapAssertion = service: a: let
       res = a config;
-    in res // {
-      message = "system.exports.${service.name}: " + res.message or "assertion failed";
-    };
+    in
+      res
+      // {
+        message = "system.exports.${service.name}: " + res.message or "assertion failed";
+      };
     assertions = mapAttrsToList (_: service: map (mapAssertion service) service.nixos.assertions) system.exports.services;
   in {
     config = {

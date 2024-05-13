@@ -1,4 +1,9 @@
-{config, lib, pkgs, ...}: let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.minecraft-bedrock-server;
 in {
@@ -47,9 +52,10 @@ in {
     groups.${cfg.group}.gid = config.users.users.${cfg.user}.uid;
   };
   networking.firewall.interfaces = let
-    ports = [ cfg.serverProperties.server-port cfg.serverProperties.server-portv6 ];
-  in mkIf cfg.enable {
-    local.allowedUDPPorts = ports;
-    peeps.allowedUDPPorts = ports;
-  };
+    ports = [cfg.serverProperties.server-port cfg.serverProperties.server-portv6];
+  in
+    mkIf cfg.enable {
+      local.allowedUDPPorts = ports;
+      peeps.allowedUDPPorts = ports;
+    };
 }

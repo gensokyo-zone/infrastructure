@@ -4,8 +4,7 @@
   gensokyo-zone,
   access,
   ...
-}:
-let
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkOptionDefault;
@@ -42,7 +41,7 @@ in {
                 inherit (nginx.stream.upstreams.ldaps.servers.access.accessService) system name id port;
               };
             };
-            ldap = { upstream, ... }: {
+            ldap = {upstream, ...}: {
               enable = mkIf upstream.servers.ldaps.enable false;
               accessService = {
                 inherit (nginx.stream.upstreams.ldap.servers.access.accessService) system name id port;
@@ -54,7 +53,7 @@ in {
               name = "ldap";
             };
           };
-          ldaps = { config, ... }: {
+          ldaps = {config, ...}: {
             enable = mkAlmostOptionDefault config.servers.access.enable;
             servers.access = {
               accessService = {

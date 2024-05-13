@@ -82,7 +82,7 @@ in {
         interfaces.local = {
           allowedTCPPorts = mkMerge [
             (mkIf (!cfg.homekit.openFirewall) homekitTcp)
-            (mkIf (!cfg.openFirewall) [ cfg.config.http.server_port ])
+            (mkIf (!cfg.openFirewall) [cfg.config.http.server_port])
           ];
           allowedUDPPortRanges = mkIf (!cfg.cast.openFirewall) castUdpRanges;
         };

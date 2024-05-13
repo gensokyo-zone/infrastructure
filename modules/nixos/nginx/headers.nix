@@ -1,5 +1,12 @@
 let
-  locationModule = { config, virtualHost, xvars, gensokyo-zone, lib, ... }: let
+  locationModule = {
+    config,
+    virtualHost,
+    xvars,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mapOptionDefaults;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
@@ -13,25 +20,32 @@ let
         default = true;
       };
       set = mkOption {
-        type = attrsOf (nullOr (oneOf [ str (listOf str) ]));
+        type = attrsOf (nullOr (oneOf [str (listOf str)]));
       };
     };
     config = let
       mkHeader = name: value:
-        if isList value then mkMerge (map (mkHeader name) value)
+        if isList value
+        then mkMerge (map (mkHeader name) value)
         else mkAfter "add_header ${name} ${xvars.escapeString value};";
       setHeaders = mapAttrsToList (name: value: mkIf (value != null) (mkHeader name value)) cfg.set;
     in {
       headers = {
         set = mkMerge [
-          (mkOptionDefault { })
+          (mkOptionDefault {})
           (mkIf cfg.inheritServerDefaults (mapOptionDefaults virtualHost.headers.set))
         ];
       };
       extraConfig = mkMerge setHeaders;
     };
   };
-  hostModule = { config, nixosConfig, gensokyo-zone, lib, ... }: let
+  hostModule = {
+    config,
+    nixosConfig,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mapOptionDefaults;
     inherit (lib.options) mkOption;
     inherit (nixosConfig.services) nginx;
@@ -39,12 +53,12 @@ let
     options = with lib.types; {
       headers = {
         set = mkOption {
-          type = attrsOf (nullOr (oneOf [ str (listOf str) ]));
+          type = attrsOf (nullOr (oneOf [str (listOf str)]));
         };
       };
       locations = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ locationModule ];
+          modules = [locationModule];
           shorthandOnlyDefinesConfig = true;
         });
       };
@@ -55,22 +69,20 @@ let
       };
     };
   };
-in {
-  lib,
-  ...
-}: let
-  inherit (lib.options) mkOption;
-in {
-  options.services.nginx = with lib.types; {
-    headers = {
-      set = mkOption {
-        type = attrsOf (nullOr (oneOf [ str (listOf str) ]));
-        default = {
+in
+  {lib, ...}: let
+    inherit (lib.options) mkOption;
+  in {
+    options.services.nginx = with lib.types; {
+      headers = {
+        set = mkOption {
+          type = attrsOf (nullOr (oneOf [str (listOf str)]));
+          default = {
+          };
         };
       };
+      virtualHosts = mkOption {
+        type = attrsOf (submodule [hostModule]);
+      };
     };
-    virtualHosts = mkOption {
-      type = attrsOf (submodule [hostModule]);
-    };
-  };
-}
+  }

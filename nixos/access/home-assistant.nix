@@ -7,12 +7,12 @@
   inherit (config.services) nginx home-assistant;
   name.shortServer = mkDefault "home";
   listen' = {
-    http = { };
+    http = {};
     https.ssl = true;
     hass = {
       enable = !home-assistant.enable;
       port = mkDefault home-assistant.config.http.server_port;
-      extraParameters = [ "default_server" ];
+      extraParameters = ["default_server"];
     };
   };
   upstreamName = "home-assistant'access";
@@ -24,7 +24,7 @@ in {
         addr = mkDefault "localhost";
         port = mkIf home-assistant.enable (mkDefault home-assistant.config.http.server_port);
       };
-      service = { upstream, ... }: {
+      service = {upstream, ...}: {
         enable = mkIf upstream.servers.local.enable (mkDefault false);
         accessService = {
           name = "home-assistant";
@@ -63,7 +63,8 @@ in {
   };
   config.networking.firewall.allowedTCPPorts = let
     inherit (nginx.virtualHosts.home-assistant'local) listen';
-  in mkIf nginx.virtualHosts.home-assistant'local.enable [
-    (mkIf listen'.hass.enable listen'.hass.port)
-  ];
+  in
+    mkIf nginx.virtualHosts.home-assistant'local.enable [
+      (mkIf listen'.hass.enable listen'.hass.port)
+    ];
 }

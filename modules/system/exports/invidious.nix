@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
-  config.exports.services.invidious = { config, ... }: {
+  config.exports.services.invidious = {config, ...}: {
     id = mkAlmostOptionDefault "yt";
     nixos = {
       serviceAttr = "invidious";

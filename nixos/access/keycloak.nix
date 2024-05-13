@@ -18,7 +18,7 @@ in {
         port = mkDefault cfg.port;
         ssl.enable = mkIf (cfg.protocol == "https") true;
       };
-      access = { upstream, ... }: {
+      access = {upstream, ...}: {
         enable = mkDefault (!upstream.servers.local.enable or false);
         accessService = {
           name = "keycloak";

@@ -23,12 +23,14 @@ in {
         lock = importJSON ../../flake.lock;
         mapFlake = name: let
           node = lock.nodes.${name};
-        in {
-          inherit (node.original) type;
-          inherit (node.locked) lastModified rev narHash;
-        } // optionalAttrs (node.original.type == "github") {
-          inherit (node.original) repo owner;
-        };
+        in
+          {
+            inherit (node.original) type;
+            inherit (node.locked) lastModified rev narHash;
+          }
+          // optionalAttrs (node.original.type == "github") {
+            inherit (node.original) repo owner;
+          };
       in {
         nixpkgs.to = mapFlake "nixpkgs";
         arc.to = mapFlake "arcexprs";
@@ -40,7 +42,7 @@ in {
         };
       };
       settings = {
-        allowed-users = [ "@nixbuilder" ];
+        allowed-users = ["@nixbuilder"];
         experimental-features = lib.optional (lib.versionAtLeast config.nix.package.version "2.4") "nix-command flakes";
         substituters = [
           "https://gensokyo-infrastructure.cachix.org"
@@ -67,7 +69,7 @@ in {
       };
       optimise = {
         automatic = mkAlmostDefault true;
-        dates = mkDefault [ "03:25" ];
+        dates = mkDefault ["03:25"];
       };
     };
     ${

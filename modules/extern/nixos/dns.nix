@@ -42,7 +42,7 @@
         type = listOf str;
       };
       fallback = mkOption {
-        type = nullOr (enum [ "cloudflare" "google" ]);
+        type = nullOr (enum ["cloudflare" "google"]);
         default = "cloudflare";
       };
       fallbackNameservers = mkOption {
@@ -67,32 +67,38 @@
       ];
       nameservers = let
         inherit (gensokyo-zone.systems) utsuho hakurei;
-      in mkMerge [
-        (mkOptionDefault [ ])
-        (mkIf access.local.enable [
-          (mkIf enableIPv6 utsuho.config.access.address6ForNetwork.local)
-          utsuho.config.access.address4ForNetwork.local
-        ])
-        # TODO: mirror or tunnel on hakurei or something .-.
-        (mkIf (access.tail.enabled && false) [
-          (mkIf enableIPv6 hakurei.config.access.address6ForNetwork.tail)
-          hakurei.config.access.address4ForNetwork.tail
-        ])
-      ];
-      fallbackNameservers = mkOptionDefault {
-        cloudflare = [
-          "1.1.1.1#cloudflare-dns.com"
-          "1.0.0.1#cloudflare-dns.com"
+      in
+        mkMerge [
+          (mkOptionDefault [])
+          (mkIf access.local.enable [
+            (mkIf enableIPv6 utsuho.config.access.address6ForNetwork.local)
+            utsuho.config.access.address4ForNetwork.local
+          ])
+          # TODO: mirror or tunnel on hakurei or something .-.
+          (mkIf (access.tail.enabled && false) [
+            (mkIf enableIPv6 hakurei.config.access.address6ForNetwork.tail)
+            hakurei.config.access.address4ForNetwork.tail
+          ])
         ];
-        google = optionals enableIPv6 [
-          "[2001:4860:4860::8888]#dns.google"
-          "[2001:4860:4860::8844]#dns.google"
-        ] ++ [
-          "8.8.8.8#dns.google"
-          "8.8.4.4#dns.google"
-        ];
-        ${toString null} = [ ];
-      }.${toString config.fallback};
+      fallbackNameservers =
+        mkOptionDefault
+        {
+          cloudflare = [
+            "1.1.1.1#cloudflare-dns.com"
+            "1.0.0.1#cloudflare-dns.com"
+          ];
+          google =
+            optionals enableIPv6 [
+              "[2001:4860:4860::8888]#dns.google"
+              "[2001:4860:4860::8844]#dns.google"
+            ]
+            ++ [
+              "8.8.8.8#dns.google"
+              "8.8.4.4#dns.google"
+            ];
+          ${toString null} = [];
+        }
+        .${toString config.fallback};
       set = {
         nssSettings = {
           hosts = mkMerge [
@@ -123,11 +129,11 @@ in {
         nixosConfig = config;
       };
     };
-    default = { };
+    default = {};
   };
 
   config = {
-    networking.nameservers = mkIf (cfg.enable && cfg.nameservers != [ ]) (mkMerge [
+    networking.nameservers = mkIf (cfg.enable && cfg.nameservers != []) (mkMerge [
       (mkBefore cfg.nameservers)
       cfg.fallbackNameservers
     ]);

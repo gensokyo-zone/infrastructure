@@ -20,7 +20,11 @@
       headers.set.X-Grocy-User = mkOptionDefault "$grocy_user";
     };
   };
-  luaAuthHost = { config, xvars, ... }: {
+  luaAuthHost = {
+    config,
+    xvars,
+    ...
+  }: {
     vouch.auth.lua = {
       enable = true;
       accessRequest = ''
@@ -56,16 +60,20 @@ in {
         proxied.enable = true;
         local.denyGlobal = true;
       };
-      grocy = mkMerge [ luaAuthHost {
-        inherit name extraConfig locations;
-        vouch.enable = true;
-        proxy = {
-          upstream = mkIf grocy.enable (mkDefault
-            "nginx'proxied"
-          );
-          host = mkDefault serverName;
-        };
-      } ];
+      grocy = mkMerge [
+        luaAuthHost
+        {
+          inherit name extraConfig locations;
+          vouch.enable = true;
+          proxy = {
+            upstream = mkIf grocy.enable (
+              mkDefault
+              "nginx'proxied"
+            );
+            host = mkDefault serverName;
+          };
+        }
+      ];
       grocy'local = {
         inherit name;
         local.enable = mkDefault true;
@@ -78,20 +86,23 @@ in {
           proxy.enable = true;
         };
       };
-      grocy'local'int = mkMerge [ luaAuthHost {
-        # internal proxy workaround for http2 lua compat issues
-        serverName = serverName'local;
-        inherit name extraConfig locations;
-        proxy = {
-          upstream = mkDefault nginx.virtualHosts.grocy.proxy.upstream;
-          host = mkDefault nginx.virtualHosts.grocy.proxy.host;
-        };
-        proxied.enable = true;
-        vouch = {
-          enable = true;
-          localSso.enable = true;
-        };
-      } ];
+      grocy'local'int = mkMerge [
+        luaAuthHost
+        {
+          # internal proxy workaround for http2 lua compat issues
+          serverName = serverName'local;
+          inherit name extraConfig locations;
+          proxy = {
+            upstream = mkDefault nginx.virtualHosts.grocy.proxy.upstream;
+            host = mkDefault nginx.virtualHosts.grocy.proxy.host;
+          };
+          proxied.enable = true;
+          vouch = {
+            enable = true;
+            localSso.enable = true;
+          };
+        }
+      ];
     };
   };
 }

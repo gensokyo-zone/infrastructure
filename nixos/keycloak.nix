@@ -1,4 +1,11 @@
-{inputs, system, access, config, lib, ...}: let
+{
+  inputs,
+  system,
+  access,
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf mkForce mkDefault;
   inherit (lib.lists) optional;
   cfg = config.services.keycloak;
@@ -20,9 +27,10 @@ in {
       sopsFile = ./secrets/keycloak.yaml;
       owner = "keycloak";
     };
-  in mkIf cfg.enable {
-    keycloak_db_password = commonSecret;
-  };
+  in
+    mkIf cfg.enable {
+      keycloak_db_password = commonSecret;
+    };
   users = mkIf cfg.enable {
     users.keycloak = {
       isSystemUser = true;
@@ -54,8 +62,16 @@ in {
     };
 
     settings = {
-      hostname = mkDefault (if hostname-strict then hostname else null);
-      proxy = mkDefault (if cfg.protocol == "https" then "reencrypt" else "edge");
+      hostname = mkDefault (
+        if hostname-strict
+        then hostname
+        else null
+      );
+      proxy = mkDefault (
+        if cfg.protocol == "https"
+        then "reencrypt"
+        else "edge"
+      );
       hostname-strict = mkDefault hostname-strict;
       hostname-strict-https = mkDefault hostname-strict;
       proxy-headers = mkDefault "xforwarded";

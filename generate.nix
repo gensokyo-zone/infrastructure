@@ -19,23 +19,33 @@
   };
   nodeSystems = let
     matchesNode = nodeName: system: system.config.proxmox.enabled && system.config.proxmox.node.name == nodeName;
-  in nodeName: filterAttrs (_: matchesNode nodeName) systems;
+  in
+    nodeName: filterAttrs (_: matchesNode nodeName) systems;
   mkNodeSystem = system: {
     inherit (system.config.access) hostName;
     network = let
       inherit (system.config.network) networks;
     in {
       networks = {
-        int = if networks.int.enable or false then {
-          inherit (networks.int) macAddress address4 address6;
-        } else null;
-        local = if networks.local.enable or false then {
-          inherit (networks.local) macAddress address4 address6;
-        } else null;
-        tail = if networks.tail.enable or false then {
-          inherit (networks.tail) address4 address6;
-          macAddress = null;
-        } else null;
+        int =
+          if networks.int.enable or false
+          then {
+            inherit (networks.int) macAddress address4 address6;
+          }
+          else null;
+        local =
+          if networks.local.enable or false
+          then {
+            inherit (networks.local) macAddress address4 address6;
+          }
+          else null;
+        tail =
+          if networks.tail.enable or false
+          then {
+            inherit (networks.tail) address4 address6;
+            macAddress = null;
+          }
+          else null;
       };
     };
   };
@@ -43,10 +53,12 @@
   mkExtern = system: let
     enabledFiles = filterAttrs (_: file: file.enable) system.extern.files;
   in {
-    files = mapAttrs' (_: file: nameValuePair file.path {
-      source = assert file.relativeSource != null; file.relativeSource;
-      inherit (file) owner group mode;
-    }) enabledFiles;
+    files = mapAttrs' (_: file:
+      nameValuePair file.path {
+        source = assert file.relativeSource != null; file.relativeSource;
+        inherit (file) owner group mode;
+      })
+    enabledFiles;
   };
   mkNode = system: {
     users = mkNodeUsers templateUsers;
@@ -58,13 +70,17 @@
   };
   mkNetwork = system: {
     inherit (system.config.access) hostName;
-    networks = {
-      int = null;
-      local = null;
-      tail = null;
-    } // mapAttrs' (_: network: nameValuePair network.name {
-      inherit (network) macAddress address4 address6;
-    }) system.config.network.networks;
+    networks =
+      {
+        int = null;
+        local = null;
+        tail = null;
+      }
+      // mapAttrs' (_: network:
+        nameValuePair network.name {
+          inherit (network) macAddress address4 address6;
+        })
+      system.config.network.networks;
   };
   mkSystem = name: system: {
     network = mkNetwork system;
@@ -72,6 +88,7 @@
 in {
   nodes = let
     nodes = filterAttrs (_: node: node.config.proxmox.node.enable) systems;
-  in mapAttrs (_: mkNode) nodes;
+  in
+    mapAttrs (_: mkNode) nodes;
   systems = mapAttrs mkSystem systems;
 }

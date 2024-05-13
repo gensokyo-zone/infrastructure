@@ -1,4 +1,10 @@
-{ gensokyo-zone, access, config, lib, ... }: let
+{
+  gensokyo-zone,
+  access,
+  config,
+  lib,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf mkBefore mkAfter mkDefault;
   inherit (lib.lists) tail;
@@ -11,12 +17,13 @@ in {
 
   config = {
     services.sssd = {
-      enable = (mkDefault true);
+      enable = mkDefault true;
       gensokyo-zone = let
         serviceFragment = service: service;
         toService = service: hostname: let
           segments = splitString "." hostname;
-        in concatStringsSep "." ([ (serviceFragment service) ] ++ tail segments);
+        in
+          concatStringsSep "." ([(serviceFragment service)] ++ tail segments);
         toFreeipa = toService "freeipa";
         tailName = access.getHostnameFor "hakurei" "tail";
         mkServers = serviceName: let
@@ -46,21 +53,23 @@ in {
           bind.passwordFile = mkIf (cfg.gensokyo-zone.backend == "ldap") config.sops.secrets.gensokyo-zone-peep-passwords.path;
         };
       };
-      environmentFile = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") (mkAlmostOptionDefault
+      environmentFile = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") (
+        mkAlmostOptionDefault
         config.sops.secrets.gensokyo-zone-sssd-passwords.path
       );
     };
 
     sops.secrets = let
       sopsFile = mkDefault ./secrets/krb5.yaml;
-    in mkIf (cfg.enable && cfg.gensokyo-zone.enable) {
-      gensokyo-zone-krb5-peep-password = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") {
-        inherit sopsFile;
+    in
+      mkIf (cfg.enable && cfg.gensokyo-zone.enable) {
+        gensokyo-zone-krb5-peep-password = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") {
+          inherit sopsFile;
+        };
+        # TODO: this shouldn't be needed, module is incomplete :(
+        gensokyo-zone-sssd-passwords = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") {
+          inherit sopsFile;
+        };
       };
-      # TODO: this shouldn't be needed, module is incomplete :(
-      gensokyo-zone-sssd-passwords = mkIf (cfg.gensokyo-zone.enable && cfg.gensokyo-zone.backend == "ldap") {
-        inherit sopsFile;
-      };
-    };
   };
 }

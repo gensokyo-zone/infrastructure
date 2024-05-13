@@ -21,16 +21,20 @@
     (mkIf (cfg.server.mountdPort != null) cfg.server.mountdPort)
   ];
   concatFlags = concatStringsSep ",";
-  clientModule = { config, name, ... }: {
+  clientModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       machine = mkOption {
-        type = oneOf [ str (listOf str) ];
+        type = oneOf [str (listOf str)];
         default = name;
         example = "*";
       };
       flags = mkOption {
         type = listOf str;
-        default = [ ];
+        default = [];
       };
       entry = mkOption {
         type = str;
@@ -38,12 +42,17 @@
     };
     config = {
       entry = let
-        flags = optionalString (config.flags != [ ]) "(${concatFlags config.flags})";
+        flags = optionalString (config.flags != []) "(${concatFlags config.flags})";
         machines = toList config.machine;
-      in mkOptionDefault (concatMapStringsSep " " (machine: machine + flags) machines);
+      in
+        mkOptionDefault (concatMapStringsSep " " (machine: machine + flags) machines);
     };
   };
-  exportModule = { config, name, ... }: {
+  exportModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       path = mkOption {
         type = path;
@@ -60,12 +69,14 @@
       };
     };
     config = {
-      flags = mkOptionDefault (cfg.export.flagSets.common or [ ]);
+      flags = mkOptionDefault (cfg.export.flagSets.common or []);
       fileLine = let
-        parts = [ config.path ]
-          ++ optional (config.flags != [ ]) "-${concatFlags config.flags}"
+        parts =
+          [config.path]
+          ++ optional (config.flags != []) "-${concatFlags config.flags}"
           ++ mapAttrsToList (_: client: client.entry) config.clients;
-      in mkOptionDefault (concatStringsSep " " parts);
+      in
+        mkOptionDefault (concatStringsSep " " parts);
     };
   };
 in {
@@ -74,15 +85,15 @@ in {
       flagSets = mkOption {
         type = lazyAttrsOf (listOf str);
         default = {
-          common = [ "no_subtree_check" ];
+          common = ["no_subtree_check"];
         };
       };
       root = mkOption {
         type = nullOr (submodule [
           exportModule
-          ({ ... }: {
+          ({...}: {
             flags = mkMerge [
-              (cfg.export.flagSets.common or [ ])
+              (cfg.export.flagSets.common or [])
             ];
           })
         ]);
@@ -90,7 +101,7 @@ in {
       };
       paths = mkOption {
         type = attrsOf (submodule exportModule);
-        default = { };
+        default = {};
       };
     };
   };

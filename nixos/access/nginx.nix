@@ -1,4 +1,8 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf;
   cfg = config.services.nginx;
 in {

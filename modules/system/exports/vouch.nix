@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
-  config.exports.services.vouch-proxy = { config, ... }: {
+  config.exports.services.vouch-proxy = {config, ...}: {
     id = mkAlmostOptionDefault "login";
     defaults.port.listen = mkAlmostOptionDefault "localhost";
     nixos = {

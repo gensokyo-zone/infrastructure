@@ -15,7 +15,7 @@ in {
         addr = mkDefault "localhost";
         port = mkIf openwebrx.enable (mkDefault openwebrx.port);
       };
-      service = { upstream, ... }: {
+      service = {upstream, ...}: {
         enable = mkIf upstream.servers.local.enable (mkDefault false);
         accessService = {
           name = "openwebrx";

@@ -1,4 +1,8 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
   cfg = config.services.grocy;
 in {
@@ -72,13 +76,14 @@ in {
     };
     systemd.services = let
       gensokyo-zone.sharedMounts.grocy.path = mkDefault cfg.dataDir;
-    in mkIf cfg.enable {
-      grocy-setup = {
-        inherit gensokyo-zone;
+    in
+      mkIf cfg.enable {
+        grocy-setup = {
+          inherit gensokyo-zone;
+        };
+        phpfpm-grocy = {
+          inherit gensokyo-zone;
+        };
       };
-      phpfpm-grocy = {
-        inherit gensokyo-zone;
-      };
-    };
   };
 }

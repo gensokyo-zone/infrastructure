@@ -12,8 +12,15 @@
 in {
   config.services.nginx = {
     virtualHosts = let
-      url = access.proxyUrlFor { inherit system; service = motion; };
-      streamUrl = access.proxyUrlFor { inherit system; service = motion; portName = "stream"; };
+      url = access.proxyUrlFor {
+        inherit system;
+        service = motion;
+      };
+      streamUrl = access.proxyUrlFor {
+        inherit system;
+        service = motion;
+        portName = "stream";
+      };
       extraConfig = ''
         proxy_redirect off;
         proxy_buffering off;
@@ -32,7 +39,7 @@ in {
         };
       };
       listen' = {
-        http = { };
+        http = {};
         https.ssl = true;
         stream = {
           enable = mkDefault motion.ports.stream.enable;
@@ -49,9 +56,12 @@ in {
         inherit name listen';
         ssl.cert.copyFromVhost = "kitchencam";
         local.enable = true;
-        locations = mapAttrs (name: location: location // {
-          proxyPass = mkDefault nginx.virtualHosts.kitchencam.locations.${name}.proxyPass;
-        }) locations;
+        locations = mapAttrs (name: location:
+          location
+          // {
+            proxyPass = mkDefault nginx.virtualHosts.kitchencam.locations.${name}.proxyPass;
+          })
+        locations;
       };
     };
   };

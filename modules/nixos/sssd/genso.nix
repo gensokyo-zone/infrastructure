@@ -1,4 +1,10 @@
-{ gensokyo-zone, pkgs, config, lib, ... }: let
+{
+  gensokyo-zone,
+  pkgs,
+  config,
+  lib,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults mapAlmostOptionDefaults mapDefaults;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault;
@@ -6,7 +12,7 @@
   inherit (config.services) sssd;
   genso = krb5.gensokyo-zone;
   cfg = sssd.gensokyo-zone;
-  serverModule = { config, ... }: {
+  serverModule = {config, ...}: {
     options = with lib.types; {
       servers = mkOption {
         type = nullOr (listOf str);
@@ -14,14 +20,14 @@
       };
       backups = mkOption {
         type = listOf str;
-        default = [ ];
+        default = [];
       };
       serverName = mkOption {
         type = str;
         internal = true;
       };
       serverKind = mkOption {
-        type = enum [ "server" "uri" ];
+        type = enum ["server" "uri"];
         default = "server";
         internal = true;
       };
@@ -35,35 +41,42 @@
     in {
       settings = {
         ${key} = mkIf (config.servers != null) (mkOptionDefault config.servers);
-        ${keyBackups} = mkIf (config.backups != [ ]) (mkOptionDefault config.backups);
+        ${keyBackups} = mkIf (config.backups != []) (mkOptionDefault config.backups);
       };
     };
   };
-  mkServerType = { modules }: lib.types.submoduleWith {
-    modules = [ serverModule ] ++ modules;
-    specialArgs = {
-      inherit gensokyo-zone pkgs;
-      nixosConfig = config;
+  mkServerType = {modules}:
+    lib.types.submoduleWith {
+      modules = [serverModule] ++ modules;
+      specialArgs = {
+        inherit gensokyo-zone pkgs;
+        nixosConfig = config;
+      };
     };
-  };
-  mkServerOption = { name, kind ? "server" }: let
-    serverInfoModule = { ... }: {
+  mkServerOption = {
+    name,
+    kind ? "server",
+  }: let
+    serverInfoModule = {...}: {
       config = {
         serverName = mkOptionDefault name;
         serverKind = mkAlmostOptionDefault kind;
       };
     };
-  in mkOption {
-    type = mkServerType {
-      modules = [ serverInfoModule ];
+  in
+    mkOption {
+      type = mkServerType {
+        modules = [serverInfoModule];
+      };
+      default = {};
     };
-    default = { };
-  };
 in {
   options.services.sssd.gensokyo-zone = with lib.types; {
-    enable = mkEnableOption "realm" // {
-      default = genso.enable;
-    };
+    enable =
+      mkEnableOption "realm"
+      // {
+        default = genso.enable;
+      };
     ldap = {
       bind = {
         passwordFile = mkOption {
@@ -71,24 +84,29 @@ in {
           default = null;
         };
       };
-      uris = mkServerOption { name = "ldap"; kind = "uri"; };
+      uris = mkServerOption {
+        name = "ldap";
+        kind = "uri";
+      };
     };
     krb5 = {
-      servers = mkServerOption { name = "krb5"; };
+      servers = mkServerOption {name = "krb5";};
     };
     ipa = {
-      servers = mkServerOption { name = "ipa"; } // {
-        default = {
-          inherit (cfg.krb5.servers) servers backups;
+      servers =
+        mkServerOption {name = "ipa";}
+        // {
+          default = {
+            inherit (cfg.krb5.servers) servers backups;
+          };
         };
-      };
       hostName = mkOption {
         type = str;
         default = config.networking.fqdn;
       };
     };
     backend = mkOption {
-      type = enum [ "ldap" "ipa" ];
+      type = enum ["ldap" "ipa"];
       default = "ipa";
     };
   };
@@ -97,24 +115,26 @@ in {
       # or "ipaNTSecurityIdentifier" which isn't set for most groups, maybe check netgroups..?
       objectsid = "sambaSID";
       backendDomainSettings = {
-        ldap = mapDefaults {
-          id_provider = "ldap";
-          auth_provider = "krb5";
-          access_provider = "ldap";
-          ldap_tls_cacert = "/etc/ssl/certs/ca-bundle.crt";
-        } // mapOptionDefaults {
-          ldap_access_order = [ "host" ];
-          ldap_schema = "IPA";
-          ldap_default_bind_dn = genso.ldap.bind.dn;
-          ldap_search_base = genso.ldap.baseDn;
-          ldap_user_search_base = "cn=users,cn=accounts,${genso.ldap.baseDn}";
-          ldap_group_search_base = "cn=groups,cn=accounts,${genso.ldap.baseDn}";
-          ldap_user_uuid = "ipaUniqueID";
-          ldap_user_ssh_public_key = "ipaSshPubKey";
-          ldap_user_objectsid = objectsid;
-          ldap_group_uuid = "ipaUniqueID";
-          ldap_group_objectsid = objectsid;
-        };
+        ldap =
+          mapDefaults {
+            id_provider = "ldap";
+            auth_provider = "krb5";
+            access_provider = "ldap";
+            ldap_tls_cacert = "/etc/ssl/certs/ca-bundle.crt";
+          }
+          // mapOptionDefaults {
+            ldap_access_order = ["host"];
+            ldap_schema = "IPA";
+            ldap_default_bind_dn = genso.ldap.bind.dn;
+            ldap_search_base = genso.ldap.baseDn;
+            ldap_user_search_base = "cn=users,cn=accounts,${genso.ldap.baseDn}";
+            ldap_group_search_base = "cn=groups,cn=accounts,${genso.ldap.baseDn}";
+            ldap_user_uuid = "ipaUniqueID";
+            ldap_user_ssh_public_key = "ipaSshPubKey";
+            ldap_user_objectsid = objectsid;
+            ldap_group_uuid = "ipaUniqueID";
+            ldap_group_objectsid = objectsid;
+          };
         ipa = mapOptionDefaults {
           id_provider = "ipa";
           auth_provider = "ipa";
@@ -124,26 +144,28 @@ in {
           dyndns_iface = ipa.dyndns.interface;
         };
       };
-      domainSettings = mapAlmostOptionDefaults {
-        ipa_hostname = cfg.ipa.hostName;
-      } // mapOptionDefaults {
-        enumerate = true;
-        ipa_domain = genso.domain;
-        krb5_realm = genso.realm;
-        cache_credentials = ipa.cacheCredentials;
-        krb5_store_password_if_offline = ipa.offlinePasswords;
-        #min_id = 8000;
-        #max_id = 8999;
-      };
+      domainSettings =
+        mapAlmostOptionDefaults {
+          ipa_hostname = cfg.ipa.hostName;
+        }
+        // mapOptionDefaults {
+          enumerate = true;
+          ipa_domain = genso.domain;
+          krb5_realm = genso.realm;
+          cache_credentials = ipa.cacheCredentials;
+          krb5_store_password_if_offline = ipa.offlinePasswords;
+          #min_id = 8000;
+          #max_id = 8999;
+        };
     in {
       gensokyo-zone = {
         krb5.servers.servers = mkMerge [
-          [ genso.host ]
-          (mkAfter [ "_srv" genso.canonHost ])
+          [genso.host]
+          (mkAfter ["_srv" genso.canonHost])
         ];
         ldap.uris = {
           servers = mkMerge [
-            (mkAfter [ "_srv" ])
+            (mkAfter ["_srv"])
             genso.ldap.urls
           ];
         };
@@ -191,4 +213,3 @@ in {
     };
   };
 }
-

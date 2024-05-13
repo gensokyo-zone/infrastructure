@@ -1,5 +1,13 @@
 let
-  upstreamServerAccessModule = {config, nixosConfig, name, gensokyo-zone, lib, upstreamKind, ...}: let
+  upstreamServerAccessModule = {
+    config,
+    nixosConfig,
+    name,
+    gensokyo-zone,
+    lib,
+    upstreamKind,
+    ...
+  }: let
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
@@ -57,12 +65,20 @@ let
         port = mkOptionDefault port.port;
         ssl.enable = mkIf port.ssl (mkAlmostOptionDefault true);
       };
-    in mkMerge [
-      confAccess
-      (mkIf cfg.enable conf)
-    ];
+    in
+      mkMerge [
+        confAccess
+        (mkIf cfg.enable conf)
+      ];
   };
-  upstreamServerModule = {config, name, gensokyo-zone, lib, upstreamKind, ...}: let
+  upstreamServerModule = {
+    config,
+    name,
+    gensokyo-zone,
+    lib,
+    upstreamKind,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkAddress6;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault;
@@ -72,9 +88,11 @@ let
     inherit (lib.trivial) isBool;
   in {
     options = with lib.types; {
-      enable = mkEnableOption "upstream server" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "upstream server"
+        // {
+          default = true;
+        };
       addr = mkOption {
         type = str;
         default = name;
@@ -90,8 +108,8 @@ let
         example = "unix:/tmp/backend3";
       };
       settings = mkOption {
-        type = attrsOf (oneOf [ int str bool ]);
-        default = { };
+        type = attrsOf (oneOf [int str bool]);
+        default = {};
       };
       extraConfig = mkOption {
         type = str;
@@ -108,21 +126,30 @@ let
     };
     config = let
       mapSetting = key: value:
-        if isBool value then mkIf value key
+        if isBool value
+        then mkIf value key
         else "${key}=${toString value}";
       settings = mapAttrsToList mapSetting config.settings;
       port = optionalString (config.port != null) ":${toString config.port}";
     in {
       server = mkOptionDefault "${mkAddress6 config.addr}${port}";
       serverConfig = mkMerge (
-        [ (mkBefore config.server) ]
+        [(mkBefore config.server)]
         ++ settings
         ++ optional (config.extraConfig != "") config.extraConfig
       );
       serverDirective = mkOptionDefault "server ${config.serverConfig};";
     };
   };
-  upstreamModule = {config, name, nixosConfig, gensokyo-zone, lib, upstreamKind, ...}: let
+  upstreamModule = {
+    config,
+    name,
+    nixosConfig,
+    gensokyo-zone,
+    lib,
+    upstreamKind,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault unmerged;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
@@ -132,19 +159,21 @@ let
   in {
     options = with lib.types; let
       upstreamServer = submoduleWith {
-        modules = [ upstreamServerModule upstreamServerAccessModule ];
+        modules = [upstreamServerModule upstreamServerAccessModule];
         specialArgs = {
           inherit nixosConfig gensokyo-zone upstreamKind;
           upstream = config;
         };
       };
     in {
-      enable = mkEnableOption "upstream block" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "upstream block"
+        // {
+          default = true;
+        };
       name = mkOption {
         type = str;
-        default = replaceStrings [ "'" ] [ "_" ] name;
+        default = replaceStrings ["'"] ["_"] name;
       };
       servers = mkOption {
         type = attrsOf upstreamServer;
@@ -183,13 +212,13 @@ let
 
     config = let
       enabledServers = filterAttrs (_: server: server.enable) config.servers;
-      assertServers = v: assert enabledServers != { }; v;
+      assertServers = v: assert enabledServers != {}; v;
     in {
       ssl.enable = mkIf (any (server: server.ssl.enable) (attrValues enabledServers)) (mkAlmostOptionDefault true);
       defaultServerName = findSingle (_: true) null null (attrNames enabledServers);
       upstreamConfig = mkMerge (
         mapAttrsToList (_: server: mkIf server.enable server.serverDirective) config.servers
-        ++ [ config.extraConfig ]
+        ++ [config.extraConfig]
       );
       upstreamBlock = mkOptionDefault ''
         upstream ${config.name} {
@@ -199,16 +228,28 @@ let
       upstreamSettings = assertServers (mkOptionDefault {
         #extraConfig = config.upstreamConfig;
         extraConfig = config.extraConfig;
-        servers = mapAttrs' (name: server: nameValuePair (if server.enable then server.server else "disabled_${name}") (mkIf server.enable (mkMerge [
-          server.settings
-          (mkIf (server.extraConfig != "") {
-            ${config.extraConfig} = true;
-          })
-        ]))) config.servers;
+        servers = mapAttrs' (name: server:
+          nameValuePair (
+            if server.enable
+            then server.server
+            else "disabled_${name}"
+          ) (mkIf server.enable (mkMerge [
+            server.settings
+            (mkIf (server.extraConfig != "") {
+              ${config.extraConfig} = true;
+            })
+          ])))
+        config.servers;
       });
     };
   };
-  serverModule = {config, nixosConfig, gensokyo-zone, lib, ...}: let
+  serverModule = {
+    config,
+    nixosConfig,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf;
@@ -229,7 +270,8 @@ let
       dynamicUpstream = hasPrefix "$" config.proxy.upstream;
       hasUpstream = config.proxy.upstream != null && !dynamicUpstream;
       proxyPass =
-        if dynamicUpstream then config.proxy.upstream
+        if dynamicUpstream
+        then config.proxy.upstream
         else assert proxyUpstream.enable; proxyUpstream.name;
     in {
       proxy = {
@@ -242,7 +284,12 @@ let
       };
     };
   };
-  proxyUpstreamModule = {config, nixosConfig, lib, ...}: let
+  proxyUpstreamModule = {
+    config,
+    nixosConfig,
+    lib,
+    ...
+  }: let
     inherit (lib.options) mkOption;
   in {
     options = with lib.types; {
@@ -253,42 +300,63 @@ let
       };
     };
   };
-  locationModule = {config, nixosConfig, virtualHost, gensokyo-zone, lib, ...}: let
+  locationModule = {
+    config,
+    nixosConfig,
+    virtualHost,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
     inherit (lib.modules) mkIf mkOptionDefault;
     inherit (lib.strings) hasPrefix;
     inherit (nixosConfig.services) nginx;
   in {
-    imports = [ proxyUpstreamModule ];
+    imports = [proxyUpstreamModule];
 
     config = let
       proxyUpstream = nginx.upstreams'.${config.proxy.upstream};
-      proxyScheme = if config.proxy.ssl.enable then "https" else "http";
+      proxyScheme =
+        if config.proxy.ssl.enable
+        then "https"
+        else "http";
       dynamicUpstream = hasPrefix "$" config.proxy.upstream;
       hasUpstream = config.proxy.upstream != null && !dynamicUpstream;
       proxyHost =
-        if dynamicUpstream then config.proxy.upstream
+        if dynamicUpstream
+        then config.proxy.upstream
         else assert proxyUpstream.enable; proxyUpstream.name;
     in {
       proxy = {
         upstream = mkOptionDefault virtualHost.proxy.upstream;
         enable = mkIf (config.proxy.upstream != null && virtualHost.proxy.upstream == null) true;
-        url = mkIf (config.proxy.upstream != null) (mkAlmostOptionDefault
+        url = mkIf (config.proxy.upstream != null) (
+          mkAlmostOptionDefault
           "${proxyScheme}://${proxyHost}"
         );
         ssl = {
-          enable = mkAlmostOptionDefault (if hasUpstream then proxyUpstream.ssl.enable else false);
+          enable = mkAlmostOptionDefault (
+            if hasUpstream
+            then proxyUpstream.ssl.enable
+            else false
+          );
           host = mkIf hasUpstream (mkAlmostOptionDefault proxyUpstream.ssl.host);
         };
         host = mkIf (hasUpstream && proxyUpstream.host != null) (mkAlmostOptionDefault proxyUpstream.host);
       };
     };
   };
-  hostModule = {config, nixosConfig, lib, ...}: let
+  hostModule = {
+    config,
+    nixosConfig,
+    lib,
+    ...
+  }: let
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkOptionDefault;
   in {
-    imports = [ proxyUpstreamModule ];
+    imports = [proxyUpstreamModule];
 
     options = with lib.types; {
       locations = mkOption {
@@ -302,68 +370,76 @@ let
       };
     };
   };
-in {
-  config,
-  lib,
-  gensokyo-zone,
-  ...
-}: let
-  inherit (gensokyo-zone.lib) unmerged;
-  inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkMerge;
-  inherit (lib.attrsets) mapAttrsToList;
-  cfg = config.services.nginx;
-in {
-  options.services.nginx = with lib.types; {
-    upstreams' = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [upstreamModule];
-        shorthandOnlyDefinesConfig = false;
-        specialArgs = {
-          inherit gensokyo-zone;
-          nixosConfig = config;
-          upstreamKind = "virtualHost";
-        };
-      });
-      default = { };
-    };
-    virtualHosts = mkOption {
-      type = attrsOf (submodule hostModule);
-    };
-    stream = {
-      upstreams = mkOption {
+in
+  {
+    config,
+    lib,
+    gensokyo-zone,
+    ...
+  }: let
+    inherit (gensokyo-zone.lib) unmerged;
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkMerge;
+    inherit (lib.attrsets) mapAttrsToList;
+    cfg = config.services.nginx;
+  in {
+    options.services.nginx = with lib.types; {
+      upstreams' = mkOption {
         type = attrsOf (submoduleWith {
           modules = [upstreamModule];
           shorthandOnlyDefinesConfig = false;
           specialArgs = {
             inherit gensokyo-zone;
             nixosConfig = config;
-            upstreamKind = "stream";
+            upstreamKind = "virtualHost";
           };
         });
-        default = { };
+        default = {};
       };
-      servers = mkOption {
-        type = attrsOf (submoduleWith {
-          modules = [serverModule];
-          shorthandOnlyDefinesConfig = false;
-        });
+      virtualHosts = mkOption {
+        type = attrsOf (submodule hostModule);
+      };
+      stream = {
+        upstreams = mkOption {
+          type = attrsOf (submoduleWith {
+            modules = [upstreamModule];
+            shorthandOnlyDefinesConfig = false;
+            specialArgs = {
+              inherit gensokyo-zone;
+              nixosConfig = config;
+              upstreamKind = "stream";
+            };
+          });
+          default = {};
+        };
+        servers = mkOption {
+          type = attrsOf (submoduleWith {
+            modules = [serverModule];
+            shorthandOnlyDefinesConfig = false;
+          });
+        };
       };
     };
-  };
-  config.services.nginx = let
-    confStream.streamConfig = mkMerge (
-      mapAttrsToList (_: upstream: mkIf upstream.enable upstream.upstreamBlock) cfg.stream.upstreams
-    );
-    useUpstreams = true;
-    confUpstreams.upstreams = mkMerge (mapAttrsToList (_: upstream: mkIf upstream.enable {
-      ${upstream.name} = unmerged.mergeAttrs upstream.upstreamSettings;
-    }) cfg.upstreams');
-    confBlock.commonHttpConfig = mkMerge (
-      mapAttrsToList (_: upstream: mkIf upstream.enable upstream.upstreamBlock) cfg.upstreams'
-    );
-  in mkMerge [
-    confStream
-    (if useUpstreams then confUpstreams else confBlock)
-  ];
-}
+    config.services.nginx = let
+      confStream.streamConfig = mkMerge (
+        mapAttrsToList (_: upstream: mkIf upstream.enable upstream.upstreamBlock) cfg.stream.upstreams
+      );
+      useUpstreams = true;
+      confUpstreams.upstreams = mkMerge (mapAttrsToList (_: upstream:
+        mkIf upstream.enable {
+          ${upstream.name} = unmerged.mergeAttrs upstream.upstreamSettings;
+        })
+      cfg.upstreams');
+      confBlock.commonHttpConfig = mkMerge (
+        mapAttrsToList (_: upstream: mkIf upstream.enable upstream.upstreamBlock) cfg.upstreams'
+      );
+    in
+      mkMerge [
+        confStream
+        (
+          if useUpstreams
+          then confUpstreams
+          else confBlock
+        )
+      ];
+  }

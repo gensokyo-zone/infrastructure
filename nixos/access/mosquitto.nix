@@ -4,8 +4,7 @@
   access,
   gensokyo-zone,
   ...
-}:
-let
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (config.services) nginx;
@@ -42,7 +41,9 @@ in {
             };
           };
           proxy.upstream = mkAlmostOptionDefault (
-            if nginx.stream.upstreams.mqtts.enable then "mqtts" else "mqtt"
+            if nginx.stream.upstreams.mqtts.enable
+            then "mqtts"
+            else "mqtt"
           );
         };
       };

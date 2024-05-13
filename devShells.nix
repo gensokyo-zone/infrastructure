@@ -151,19 +151,23 @@
     LDAPSASL_NOCANON = "on";
   };
   arc = let
-    ldapdm = cmd: pkgs.writeShellScriptBin "dm-${cmd}" ''
-      ${cmd} -D 'cn=Directory Manager' -y <(bitw get -f password ldap-directory-manager) "$@"
-    '';
-  in default.overrideAttrs (default: {
-    nativeBuildInputs = default.nativeBuildInputs ++ [
-      (ldapdm "ldapwhoami")
-      (ldapdm "ldappasswd")
-      (ldapdm "ldapsearch")
-      (ldapdm "ldapadd")
-      (ldapdm "ldapmodify")
-      (ldapdm "ldapdelete")
-    ];
-  });
+    ldapdm = cmd:
+      pkgs.writeShellScriptBin "dm-${cmd}" ''
+        ${cmd} -D 'cn=Directory Manager' -y <(bitw get -f password ldap-directory-manager) "$@"
+      '';
+  in
+    default.overrideAttrs (default: {
+      nativeBuildInputs =
+        default.nativeBuildInputs
+        ++ [
+          (ldapdm "ldapwhoami")
+          (ldapdm "ldappasswd")
+          (ldapdm "ldapsearch")
+          (ldapdm "ldapadd")
+          (ldapdm "ldapmodify")
+          (ldapdm "ldapdelete")
+        ];
+    });
 in {
   inherit default arc;
 }

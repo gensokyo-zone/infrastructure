@@ -9,14 +9,18 @@
   inherit (lib.strings) concatStringsSep;
   inherit (config.system) nssDatabases;
   inherit (config) networking;
-  netgroupMemberModule = { config, name, ... }: {
+  netgroupMemberModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       hostname = mkOption {
         type = str;
         default = name;
       };
       user = mkOption {
-        type = either (enum [ null "-" ]) str;
+        type = either (enum [null "-"]) str;
         default = "-";
       };
       domain = mkOption {
@@ -32,7 +36,11 @@
       triple = mkOptionDefault "(${config.hostname},${toString config.user},${config.domain})";
     };
   };
-  netgroupModule = { config, name, ... }: {
+  netgroupModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       name = mkOption {
         type = str;
@@ -40,14 +48,14 @@
       };
       members = mkOption {
         type = attrsOf (submodule netgroupMemberModule);
-        default = { };
+        default = {};
       };
       fileLine = mkOption {
         type = str;
       };
     };
     config = {
-      fileLine = mkOptionDefault (concatStringsSep " " ([ config.name ] ++ mapAttrsToList (_: member: member.triple) config.members));
+      fileLine = mkOptionDefault (concatStringsSep " " ([config.name] ++ mapAttrsToList (_: member: member.triple) config.members));
     };
   };
 in {
@@ -60,7 +68,7 @@ in {
     networking = {
       netgroups = mkOption {
         type = attrsOf (submodule netgroupModule);
-        default = { };
+        default = {};
       };
       extraNetgroups = mkOption {
         type = lines;
@@ -71,17 +79,17 @@ in {
   config = {
     system.nssDatabases = {
       netgroup = mkMerge [
-        (mkBefore [ "files" ])
-        (mkAfter [ "nis" ])
+        (mkBefore ["files"])
+        (mkAfter ["nis"])
       ];
     };
-    environment.etc."nsswitch.conf".text = mkIf (nssDatabases.netgroup != [ ]) (mkAfter ''
+    environment.etc."nsswitch.conf".text = mkIf (nssDatabases.netgroup != []) (mkAfter ''
       netgroup: ${concatStringsSep " " nssDatabases.netgroup}
     '');
-    environment.etc."netgroup" = mkIf (networking.netgroups != { } || networking.extraNetgroups != "") {
+    environment.etc."netgroup" = mkIf (networking.netgroups != {} || networking.extraNetgroups != "") {
       text = mkMerge (
         mapAttrsToList (_: ng: ng.fileLine) networking.netgroups
-        ++ [ networking.extraNetgroups ]
+        ++ [networking.extraNetgroups]
       );
     };
   };

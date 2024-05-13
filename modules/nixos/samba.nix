@@ -45,28 +45,32 @@ in {
       };
       netbiosHostAddresses = mkOption {
         type = attrsOf (listOf str);
-        default = { };
+        default = {};
       };
       lmhosts = mkOption {
         type = attrsOf str;
-        default = { };
+        default = {};
       };
     };
     ldap = {
       enable = mkEnableOption "LDAP";
       passdb = {
-        enable = mkEnableOption "LDAP authentication" // {
-          default = true;
-        };
+        enable =
+          mkEnableOption "LDAP authentication"
+          // {
+            default = true;
+          };
         backend = mkOption {
-          type = enum [ "ldapsam" "ipasam" ];
+          type = enum ["ldapsam" "ipasam"];
           default = "ldapsam";
         };
       };
       idmap = {
-        enable = mkEnableOption "LDAP users" // {
-          default = true;
-        };
+        enable =
+          mkEnableOption "LDAP users"
+          // {
+            default = true;
+          };
         domain = mkOption {
           type = str;
           default = "*";
@@ -98,12 +102,16 @@ in {
       };
     };
     tls = {
-      enable = mkEnableOption "tls" // {
-        default = cfg.tls.certPath != null;
-      };
-      peer.enable = mkEnableOption "peer verification" // {
-        default = cfg.tls.caPath != null;
-      };
+      enable =
+        mkEnableOption "tls"
+        // {
+          default = cfg.tls.certPath != null;
+        };
+      peer.enable =
+        mkEnableOption "peer verification"
+        // {
+          default = cfg.tls.caPath != null;
+        };
       useACMECert = mkOption {
         type = nullOr str;
         default = null;
@@ -212,19 +220,30 @@ in {
   config = {
     services.samba = {
       package = mkIf cfg.ldap.enable (mkAlmostOptionDefault (
-        if cfg.ldap.passdb.enable && cfg.ldap.passdb.backend == "ipasam" then pkgs.samba-ipa else pkgs.samba-ldap
+        if cfg.ldap.passdb.enable && cfg.ldap.passdb.backend == "ipasam"
+        then pkgs.samba-ipa
+        else pkgs.samba-ldap
       ));
       domain = {
         isWorkgroup = mkOptionDefault (cfg.securityType != "domain" && cfg.securityType != "ads");
         netbiosName' = let
-          name = if cfg.domain.netbiosName != null then cfg.domain.netbiosName else config.networking.hostName;
-        in mkOptionDefault (if cfg.domain.isWorkgroup then toUpper name else name);
+          name =
+            if cfg.domain.netbiosName != null
+            then cfg.domain.netbiosName
+            else config.networking.hostName;
+        in
+          mkOptionDefault (
+            if cfg.domain.isWorkgroup
+            then toUpper name
+            else name
+          );
         netbiosHostAddresses = mkIf (cfg.domain.netbiosName != null) {
-          ${cfg.domain.netbiosName'} = [ "127.0.0.1" "::1" ];
+          ${cfg.domain.netbiosName'} = ["127.0.0.1" "::1"];
         };
         lmhosts = let
           addrs = mapAttrsToList (name: map (flip nameValuePair name)) cfg.domain.netbiosHostAddresses;
-        in listToAttrs (concatLists addrs);
+        in
+          listToAttrs (concatLists addrs);
       };
       ldap = {
         adminPasswordPath = mkIf (cfg.ldap.adminDn != null && hasPrefix "name=anonymous," cfg.ldap.adminDn) (mkAlmostOptionDefault (
@@ -251,58 +270,61 @@ in {
         })
       ];
       settings = mkMerge ([
-        {
-          "use sendfile" = mkOptionDefault true;
-          "mdns name" = mkOptionDefault "mdns";
-          "name resolve order" = mkOptionDefault [ "lmhosts" "host" "bcast" ];
-          workgroup = mkIf (cfg.domain.name != null) (mkOptionDefault cfg.domain.name);
-          "netbios name" = mkIf (cfg.domain.netbiosName != null) (mkOptionDefault cfg.domain.netbiosName);
-        }
-        (mkIf (cfg.passdb.smbpasswd.path != null) {
-          "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
-        })
-        (mkIf cfg.ldap.enable {
-          "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
-          "ldap admin dn" = mkIf (cfg.ldap.adminDn != null) (mkOptionDefault cfg.ldap.adminDn);
-          "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
-        })
-        (mkIf cfg.kerberos.enable {
-          "realm" = mkOptionDefault cfg.kerberos.realm;
-          "kerberos method" = mkOptionDefault (
-            if cfg.kerberos.keytabPath != null then "dedicated keytab"
-            else "system keytab"
-          );
-          "dedicated keytab file" = mkIf (cfg.kerberos.keytabPath != null) (mkOptionDefault
-            "FILE:${cfg.kerberos.keytabPath}"
-          );
-          "kerberos encryption types" = mkOptionDefault "strong";
-          "create krb5 conf" = mkOptionDefault false;
-        })
-        (mkIf cfg.enableWinbindd {
-          "winbind nss info" = mkOptionDefault "rfc2307";
-          "winbind use default domain" = mkOptionDefault true;
-        })
-        (mkIf cfg.tls.enable {
-          "tls enabled" = mkOptionDefault true;
-          "tls verify peer" = mkIf cfg.tls.peer.enable (mkOptionDefault "ca_and_name_if_available");
-          "tls certfile" = mkIf (cfg.tls.certPath != null) (mkOptionDefault cfg.tls.certPath);
-          "tls keyfile" = mkIf (cfg.tls.keyPath != null) (mkOptionDefault cfg.tls.keyPath);
-          "tls cafile" = mkIf (cfg.tls.caPath != null) (mkOptionDefault cfg.tls.caPath);
-          "tls crlfile" = mkIf (cfg.tls.crlPath != null) (mkOptionDefault cfg.tls.crlPath);
-        })
-        (mkIf cfg.usershare.enable {
-          "usershare allow guests" = mkOptionDefault true;
-          "usershare max shares" = mkOptionDefault 16;
-          "usershare owner only" = mkOptionDefault true;
-          "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
-          "usershare path" = mkOptionDefault cfg.usershare.path;
-          "usershare prefix allow list" = mkOptionDefault [ cfg.usershare.path ];
-        })
-        (mkIf cfg.guest.enable {
-          "map to guest" = mkOptionDefault "Bad User";
-          "guest account" = mkOptionDefault cfg.guest.user;
-        })
-      ] ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
+          {
+            "use sendfile" = mkOptionDefault true;
+            "mdns name" = mkOptionDefault "mdns";
+            "name resolve order" = mkOptionDefault ["lmhosts" "host" "bcast"];
+            workgroup = mkIf (cfg.domain.name != null) (mkOptionDefault cfg.domain.name);
+            "netbios name" = mkIf (cfg.domain.netbiosName != null) (mkOptionDefault cfg.domain.netbiosName);
+          }
+          (mkIf (cfg.passdb.smbpasswd.path != null) {
+            "passdb backend" = mkOptionDefault "smbpasswd:${cfg.passdb.smbpasswd.path}";
+          })
+          (mkIf cfg.ldap.enable {
+            "ldap ssl" = mkIf (hasPrefix "ldaps://" cfg.ldap.url) (mkOptionDefault "off");
+            "ldap admin dn" = mkIf (cfg.ldap.adminDn != null) (mkOptionDefault cfg.ldap.adminDn);
+            "ldap suffix" = mkOptionDefault cfg.ldap.baseDn;
+          })
+          (mkIf cfg.kerberos.enable {
+            "realm" = mkOptionDefault cfg.kerberos.realm;
+            "kerberos method" = mkOptionDefault (
+              if cfg.kerberos.keytabPath != null
+              then "dedicated keytab"
+              else "system keytab"
+            );
+            "dedicated keytab file" = mkIf (cfg.kerberos.keytabPath != null) (
+              mkOptionDefault
+              "FILE:${cfg.kerberos.keytabPath}"
+            );
+            "kerberos encryption types" = mkOptionDefault "strong";
+            "create krb5 conf" = mkOptionDefault false;
+          })
+          (mkIf cfg.enableWinbindd {
+            "winbind nss info" = mkOptionDefault "rfc2307";
+            "winbind use default domain" = mkOptionDefault true;
+          })
+          (mkIf cfg.tls.enable {
+            "tls enabled" = mkOptionDefault true;
+            "tls verify peer" = mkIf cfg.tls.peer.enable (mkOptionDefault "ca_and_name_if_available");
+            "tls certfile" = mkIf (cfg.tls.certPath != null) (mkOptionDefault cfg.tls.certPath);
+            "tls keyfile" = mkIf (cfg.tls.keyPath != null) (mkOptionDefault cfg.tls.keyPath);
+            "tls cafile" = mkIf (cfg.tls.caPath != null) (mkOptionDefault cfg.tls.caPath);
+            "tls crlfile" = mkIf (cfg.tls.crlPath != null) (mkOptionDefault cfg.tls.crlPath);
+          })
+          (mkIf cfg.usershare.enable {
+            "usershare allow guests" = mkOptionDefault true;
+            "usershare max shares" = mkOptionDefault 16;
+            "usershare owner only" = mkOptionDefault true;
+            "usershare template share" = mkOptionDefault cfg.usershare.templateShare;
+            "usershare path" = mkOptionDefault cfg.usershare.path;
+            "usershare prefix allow list" = mkOptionDefault [cfg.usershare.path];
+          })
+          (mkIf cfg.guest.enable {
+            "map to guest" = mkOptionDefault "Bad User";
+            "guest account" = mkOptionDefault cfg.guest.user;
+          })
+        ]
+        ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
       extraConfig = mkMerge (
         mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings
         ++ [
@@ -340,11 +362,11 @@ in {
     ];
 
     networking.hosts = mkIf (cfg.enable && cfg.domain.netbiosName != null) {
-      "::1" = mkAfter [ cfg.domain.netbiosName' ];
+      "::1" = mkAfter [cfg.domain.netbiosName'];
       # not a typo...
-      "127.0.0.2" = mkAfter [ cfg.domain.netbiosName' ];
+      "127.0.0.2" = mkAfter [cfg.domain.netbiosName'];
     };
-    environment.etc."samba/lmhosts" = mkIf (cfg.enable && cfg.domain.lmhosts != { }) {
+    environment.etc."samba/lmhosts" = mkIf (cfg.enable && cfg.domain.lmhosts != {}) {
       text = mkMerge (
         mapAttrsToList (address: name: "${address} ${name}") cfg.domain.lmhosts
       );

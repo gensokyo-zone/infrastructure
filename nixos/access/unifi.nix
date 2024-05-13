@@ -16,7 +16,7 @@ in {
         port = mkDefault 8443;
         ssl.enable = mkDefault true;
       };
-      access = { upstream, ... }: {
+      access = {upstream, ...}: {
         enable = mkDefault (!upstream.servers.local.enable);
         accessService = {
           name = "unifi";

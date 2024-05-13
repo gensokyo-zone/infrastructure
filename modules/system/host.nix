@@ -41,7 +41,7 @@ in {
     };
     modules = mkOption {
       type = listOf unspecified;
-      default = [ ];
+      default = [];
     };
     specialArgs = mkOption {
       type = attrs;
@@ -101,10 +101,13 @@ in {
         darwin = inputs.darwin.lib.darwinSystem;
         macos = inputs.darwin.lib.darwinSystem;
       }
-      .${string.toLower config.type} or null;
-    built = mkOptionDefault (mapNullable (builder: builder {
-      inherit (config) system modules specialArgs;
-    }) config.builder);
+      .${string.toLower config.type}
+      or null;
+    built = mkOptionDefault (mapNullable (builder:
+      builder {
+        inherit (config) system modules specialArgs;
+      })
+    config.builder);
     specialArgs = {
       inherit name inputs std Std meta;
       inherit (inputs.self.lib) gensokyo-zone;

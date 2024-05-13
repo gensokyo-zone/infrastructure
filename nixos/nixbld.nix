@@ -1,4 +1,4 @@
-{ lib, ... }: let
+{lib, ...}: let
   inherit (lib.modules) mkForce;
 in {
   config.users = {

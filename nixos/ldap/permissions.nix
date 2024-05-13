@@ -1,4 +1,8 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkDefault;
   inherit (config.users) ldap;
   inherit (ldap.management) permissions;
@@ -9,15 +13,33 @@ in {
       "Custom Anonymous User Read" = {
         bindType = "anonymous";
         targetType = "user";
-        attrs = [ "gidnumber" "homedirectory" "ipantsecurityidentifier" "loginshell" "manager" "objectclass" "title" "uid" "uidnumber" ];
+        attrs = ["gidnumber" "homedirectory" "ipantsecurityidentifier" "loginshell" "manager" "objectclass" "title" "uid" "uidnumber"];
       };
       "Custom Permission Admin" = {
         location = ldap.permissionDnSuffix;
         target = "cn=*";
         rights = "all";
         attrs = [
-          "member" "cn" "o" "ou" "owner" "description" "objectclass" "seealso" "businesscategory"
-          "ipapermtarget" "ipapermright" "ipapermincludedattr" "ipapermbindruletype" "ipapermexcludedattr" "ipapermtargetto" "ipapermissiontype" "ipapermlocation" "ipapermdefaultattr" "ipapermtargetfrom" "ipapermtargetfilter"
+          "member"
+          "cn"
+          "o"
+          "ou"
+          "owner"
+          "description"
+          "objectclass"
+          "seealso"
+          "businesscategory"
+          "ipapermtarget"
+          "ipapermright"
+          "ipapermincludedattr"
+          "ipapermbindruletype"
+          "ipapermexcludedattr"
+          "ipapermtargetto"
+          "ipapermissiontype"
+          "ipapermlocation"
+          "ipapermdefaultattr"
+          "ipapermtargetfrom"
+          "ipapermtargetfilter"
         ];
       };
       "Custom Privilege Admin" = {
@@ -25,7 +47,16 @@ in {
         target = "cn=*";
         rights = "all";
         attrs = [
-          "member" "memberof" "cn" "o" "ou" "owner" "description" "objectclass" "seealso" "businesscategory"
+          "member"
+          "memberof"
+          "cn"
+          "o"
+          "ou"
+          "owner"
+          "description"
+          "objectclass"
+          "seealso"
+          "businesscategory"
         ];
       };
       "Custom Role Admin" = {
@@ -33,17 +64,26 @@ in {
         target = "cn=*";
         rights = "all";
         attrs = [
-          "member" "memberof" "cn" "o" "ou" "owner" "description" "objectclass" "seealso" "businesscategory"
+          "member"
+          "memberof"
+          "cn"
+          "o"
+          "ou"
+          "owner"
+          "description"
+          "objectclass"
+          "seealso"
+          "businesscategory"
         ];
       };
       "Custom Role Modify" = {
         targetType = "role";
-        rights = [ "write" "add" ];
+        rights = ["write" "add"];
         attrs = permissions."Custom Role Admin".attrs;
       };
       "Custom Host Permission" = {
         targetType = "host";
-        rights = [ "write" ];
+        rights = ["write"];
         attrs = [
           "memberof"
         ];
@@ -52,21 +92,32 @@ in {
         targetType = "sysaccount";
         rights = "all";
         attrs = [
-          "member" "memberof" "uid" "o" "ou" "description" "objectclass" "seealso" "businesscategory"
-          "passwordExpirationTime" "nsIdleTimeout"
+          "member"
+          "memberof"
+          "uid"
+          "o"
+          "ou"
+          "description"
+          "objectclass"
+          "seealso"
+          "businesscategory"
+          "passwordExpirationTime"
+          "nsIdleTimeout"
         ];
       };
       "Custom SysAccount Admin" = {
         location = ldap.sysAccountDnSuffix;
         target = "uid=*";
-        rights = [ "add" "write" "delete" ];
-        attrs = permissions."Custom SysAccount Permission".attrs ++ [
-          "userPassword"
-        ];
+        rights = ["add" "write" "delete"];
+        attrs =
+          permissions."Custom SysAccount Permission".attrs
+          ++ [
+            "userPassword"
+          ];
       };
       "Custom Service Permission" = {
         targetType = "service";
-        rights = [ "write" ];
+        rights = ["write"];
         attrs = [
           "memberof"
         ];

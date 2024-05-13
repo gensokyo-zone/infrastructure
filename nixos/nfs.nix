@@ -39,11 +39,13 @@ in {
         gssd = {
           preferred-realm = mkOptionDefault realm;
         };
-        /*svcgssd = {
+        /*
+          svcgssd = {
           #principal = system
           #principal = nfs/idp.${domain}@${realm}
           #principal = nfs/${config.networking.fqdn}@${realm}
-        };*/
+        };
+        */
       }
     ];
     server = {
@@ -60,16 +62,16 @@ in {
           "anongid=${toString config.users.groups.${config.users.users.guest.group}.gid}"
         ];
         sec = [
-          "sec=${concatStringsSep ":" [ "krb5i" "krb5" "krb5p" ]}"
+          "sec=${concatStringsSep ":" ["krb5i" "krb5" "krb5p"]}"
         ];
         seclocal = [
-          "sec=${concatStringsSep ":" [ "krb5" ]}"
+          "sec=${concatStringsSep ":" ["krb5"]}"
         ];
         secip = [
-          "sec=${concatStringsSep ":" [ "krb5i" "krb5p" ]}"
+          "sec=${concatStringsSep ":" ["krb5i" "krb5p"]}"
         ];
         secanon = [
-          "sec=${concatStringsSep ":" [ "krb5i" "krb5" "krb5p" "sys" ]}"
+          "sec=${concatStringsSep ":" ["krb5i" "krb5" "krb5p" "sys"]}"
         ];
         anon_ro = [
           "sec=sys"
@@ -93,7 +95,7 @@ in {
         clients = {
           trusted = {
             machine = flagSets.trustedClients;
-            flags = flagSets.secip ++ [ "rw" ];
+            flags = flagSets.secip ++ ["rw"];
           };
         };
       };
@@ -107,9 +109,9 @@ in {
         ];
       };
       Translation.Method = mkForce (concatStringsSep "," (
-        [ "static" ]
+        ["static"]
         ++ optional enableLdap "umich_ldap"
-        ++ [ "nsswitch" ]
+        ++ ["nsswitch"]
       ));
       Static = {
       };

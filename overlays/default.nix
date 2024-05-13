@@ -1,7 +1,4 @@
-{
-  inputs,
-  ...
-}: let
+{inputs, ...}: let
   inherit (inputs.self.lib) nixlib;
 in rec {
   default = nixlib.composeManyExtensions [

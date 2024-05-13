@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.unifi = { config, ... }: {
+  config.exports.services.unifi = {config, ...}: {
     nixos.serviceAttr = "unifi";
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = mapAttrs (_: mapAlmostOptionDefaults) {

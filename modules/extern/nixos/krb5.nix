@@ -40,9 +40,11 @@
         default = toUpper config.domain;
       };
       ca = {
-        trust = mkEnableOption "trust CA" // {
-          default = true;
-        };
+        trust =
+          mkEnableOption "trust CA"
+          // {
+            default = true;
+          };
         pem = mkOption {
           type = path;
         };
@@ -59,7 +61,7 @@
         };
         urls = mkOption {
           type = listOf str;
-          default = [ "ldaps://${config.ldap.host}" ];
+          default = ["ldaps://${config.ldap.host}"];
         };
         baseDn = mkOption {
           type = str;
@@ -75,21 +77,21 @@
           };
           passwordFileKrb5 = mkOption {
             type = path;
-            example = lib.literalExpression "\${pkgs.writeText "ldap.kdb5" ''
+            example = lib.literalExpression "\${pkgs.writeText " ldap.kdb5 " ''
               ${config.bind.dn}#{HEX}616e6f6e796d6f7573
             ''}";
           };
           passwordFileSssdEnv = mkOption {
             type = path;
-            example = lib.literalExpression "\${pkgs.writeText "ldap.kdb5" ''
-              ${"SSSD_AUTHTOK_" + replaceStrings [ "." ] [ "_" ] (toUpper config.domain)}=verysecretpassword
+            example = lib.literalExpression "\${pkgs.writeText " ldap.kdb5 " ''
+              ${"SSSD_AUTHTOK_" + replaceStrings ["."] ["_"] (toUpper config.domain)}=verysecretpassword
             ''}";
           };
         };
       };
       db = {
         backend = mkOption {
-          type = enum [ "kldap" "ipa" ];
+          type = enum ["kldap" "ipa"];
           default = "kldap";
         };
       };
@@ -99,7 +101,7 @@
       };
       authToLocalNames = mkOption {
         type = attrsOf str;
-        default = { };
+        default = {};
         example = {
           "arc@${config.realm}" = "arc";
         };
@@ -108,26 +110,30 @@
         enable = mkEnableOption "sssd";
         pam.enable = mkEnableOption "PAM";
         backend = mkOption {
-          type = enum [ "ipa" "ldap" ];
-          default = {
-            ipa = "ipa";
-            kldap = "ldap";
-          }.${config.db.backend};
+          type = enum ["ipa" "ldap"];
+          default =
+            {
+              ipa = "ipa";
+              kldap = "ldap";
+            }
+            .${config.db.backend};
         };
       };
       ntp = {
-        enable = mkEnableOption "ntp" // {
-          default = true;
-        };
+        enable =
+          mkEnableOption "ntp"
+          // {
+            default = true;
+          };
         servers = mkOption {
           type = listOf str;
-          example = [ config.ipa.host ];
-          default = [ "2.fedora.pool.ntp.org" ];
+          example = [config.ipa.host];
+          default = ["2.fedora.pool.ntp.org"];
         };
       };
       nfs = {
         enable = mkEnableOption "nfs";
-        package = mkPackageOption pkgs "nfs-utils" { };
+        package = mkPackageOption pkgs "nfs-utils" {};
         idmapd = {
           localDomain = mkOption {
             type = bool;
@@ -135,11 +141,11 @@
           };
           localRealms = mkOption {
             type = listOf str;
-            default = [ config.realm ];
+            default = [config.realm];
           };
           methods = mkOption {
             type = listOf str;
-            default = [ "nsswitch" ];
+            default = ["nsswitch"];
           };
           authToLocalNames = mkOption {
             type = attrsOf str;
@@ -185,7 +191,8 @@
           url = "https://${config.ipa.httpHost}/ipa/config/ca.crt";
           sha256 = "sha256-PKjnjn1jIq9x4BX8+WGkZfj4HQtmnHqmFSALqggo91o=";
         };
-      in mkOptionDefault caPem;
+      in
+        mkOptionDefault caPem;
       ldap = {
         urls = mkMerge [
           (mkIf access.local.enable (mkOptionDefault (mkBefore [
@@ -200,22 +207,23 @@
         ];
         bind = let
           inherit (nixosConfig.sops) secrets;
-        in mkIf (nixosOptions ? sops.secrets && secrets ? gensokyo-zone-krb5-passwords) {
-          passwordFileKrb5 = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-krb5-passwords.path;
-          passwordFile = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-krb5-peep-password.path;
-          passwordFileSssdEnv = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-sssd-passwords.path;
-        };
+        in
+          mkIf (nixosOptions ? sops.secrets && secrets ? gensokyo-zone-krb5-passwords) {
+            passwordFileKrb5 = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-krb5-passwords.path;
+            passwordFile = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-krb5-peep-password.path;
+            passwordFileSssdEnv = mkOptionDefault nixosConfig.sops.secrets.gensokyo-zone-sssd-passwords.path;
+          };
       };
       db.backend = mkIf enabled.ipa (mkAlmostOptionDefault "ipa");
       nfs = {
         package = mkIf (elem "umich_ldap" config.nfs.idmapd.methods) (mkAlmostOptionDefault pkgs.nfs-utils-ldap);
         idmapd = {
           methods = mkMerge [
-            (mkIf (config.nfs.idmapd.authToLocalNames != { }) (
-              mkOptionDefault (mkBefore [ "static" ])
+            (mkIf (config.nfs.idmapd.authToLocalNames != {}) (
+              mkOptionDefault (mkBefore ["static"])
             ))
             (mkIf (!enabled.sssd) (
-              mkOptionDefault [ "umich_ldap" ]
+              mkOptionDefault ["umich_ldap"]
             ))
           ];
         };
@@ -243,55 +251,63 @@
           };
         };
         sssdSettings = let
-          servers = optional access.local.enable "idp.local.${config.domain}"
-            ++ [ "_srv" ];
+          servers =
+            optional access.local.enable "idp.local.${config.domain}"
+            ++ ["_srv"];
           backups = mkMerge [
-            (mkIf access.tail.enabled (mkAlmostOptionDefault [ "ipa.tail.${config.domain}" ]))
-            (mkIf access.local.enable (mkAlmostOptionDefault [ "ipa.local.${config.domain}" ]))
+            (mkIf access.tail.enabled (mkAlmostOptionDefault ["ipa.tail.${config.domain}"]))
+            (mkIf access.local.enable (mkAlmostOptionDefault ["ipa.local.${config.domain}"]))
           ];
-        in mkIf config.sssd.enable {
-          enable = mkAlmostOptionDefault true;
-          gensokyo-zone = {
-            backend = mkAlmostOptionDefault config.sssd.backend;
-            krb5.servers = {
-              servers = servers ++ [ config.host ];
-              inherit backups;
+        in
+          mkIf config.sssd.enable {
+            enable = mkAlmostOptionDefault true;
+            gensokyo-zone = {
+              backend = mkAlmostOptionDefault config.sssd.backend;
+              krb5.servers = {
+                servers = servers ++ [config.host];
+                inherit backups;
+              };
+              ipa.servers = {
+                servers = servers ++ [config.ipa.host];
+                inherit backups;
+              };
+              ldap = {
+                bind.passwordFile = mkAlmostOptionDefault config.ldap.bind.passwordFile;
+                uris.backups = mkIf access.tail.enabled (mkAlmostOptionDefault (mkAfter [
+                  "ldaps://ldap.tail.${config.domain}"
+                ]));
+              };
             };
-            ipa.servers = {
-              servers = servers ++ [ config.ipa.host ];
-              inherit backups;
-            };
-            ldap = {
-              bind.passwordFile = mkAlmostOptionDefault config.ldap.bind.passwordFile;
-              uris.backups = mkIf access.tail.enabled (mkAlmostOptionDefault (mkAfter [
-                "ldaps://ldap.tail.${config.domain}"
-              ]));
+            environmentFile = mkIf (config.sssd.backend == "ldap") (
+              mkAlmostOptionDefault
+              config.ldap.bind.passwordFileSssdEnv
+            );
+            services = {
+              ifp.enable = mkAlmostOptionDefault true;
+              pam.enable = mkIf (!config.sssd.pam.enable) (mkDefault false);
             };
           };
-          environmentFile = mkIf (config.sssd.backend == "ldap") (mkAlmostOptionDefault
-            config.ldap.bind.passwordFileSssdEnv
-          );
-          services = {
-            ifp.enable = mkAlmostOptionDefault true;
-            pam.enable = mkIf (!config.sssd.pam.enable) (mkDefault false);
-          };
-        };
         ipaSettings = mkIf config.ipa.enable (mapAlmostOptionDefaults {
-          enable = true;
-          certificate = config.ca.pem;
-          basedn = config.ldap.baseDn;
-          domain = config.domain;
-          realm = config.realm;
-          server = config.ipa.server;
-          # TODO: dyndns?
-        } // {
-          overrideConfigs = mapAlmostOptionDefaults {
-            sssd = false;
-            krb5 = false;
-          };
-        });
+            enable = true;
+            certificate = config.ca.pem;
+            basedn = config.ldap.baseDn;
+            domain = config.domain;
+            realm = config.realm;
+            server = config.ipa.server;
+            # TODO: dyndns?
+          }
+          // {
+            overrideConfigs = mapAlmostOptionDefaults {
+              sssd = false;
+              krb5 = false;
+            };
+          });
         nfsSettings = mkIf config.nfs.enable {
-          ${if nixosOptions ? services.nfs.settings then "settings" else null} = mkMerge [
+          ${
+            if nixosOptions ? services.nfs.settings
+            then "settings"
+            else null
+          } = mkMerge [
             {
               gssd = mapOptionDefaults {
                 #use-machine-creds = false;
@@ -314,7 +330,11 @@
               };
             })
           ];
-          ${if nixosOptions ? services.nfs.settings then null else "extraConfig"} = mkMerge [
+          ${
+            if nixosOptions ? services.nfs.settings
+            then null
+            else "extraConfig"
+          } = mkMerge [
             ''
               [gssd]
               #use-machine-creds = false
@@ -344,10 +364,10 @@
               Domain = mkForce config.domain;
               Local-Realms = concatStringsSep "," config.nfs.idmapd.localRealms;
             };
-            Translation.Method = mkIf (config.nfs.idmapd.methods != [ "nsswitch" ]) (mkForce (
+            Translation.Method = mkIf (config.nfs.idmapd.methods != ["nsswitch"]) (mkForce (
               concatStringsSep "," config.nfs.idmapd.methods
             ));
-            Static = mkIf (config.nfs.idmapd.authToLocalNames != { }) config.nfs.idmapd.authToLocalNames;
+            Static = mkIf (config.nfs.idmapd.authToLocalNames != {}) config.nfs.idmapd.authToLocalNames;
             UMICH_SCHEMA = mkIf (elem "umich_ldap" config.nfs.idmapd.methods) (mapOptionDefaults {
               LDAP_server = config.ldap.host;
               LDAP_use_ssl = true;
@@ -389,7 +409,7 @@ in {
         nixosOptions = options;
       };
     };
-    default = { };
+    default = {};
   };
 
   config = {
@@ -413,10 +433,11 @@ in {
       hosts = let
         inherit (gensokyo-zone.systems) freeipa;
         # TODO: consider hakurei instead...
-      in mkIf (cfg.enable && !config.gensokyo-zone.dns.enable or false && config.gensokyo-zone.access.local.enable) {
-        ${freeipa.config.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [ cfg.host ]);
-        ${freeipa.config.access.address4ForNetwork.local} = mkBefore [ cfg.host ];
-      };
+      in
+        mkIf (cfg.enable && !config.gensokyo-zone.dns.enable or false && config.gensokyo-zone.access.local.enable) {
+          ${freeipa.config.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [cfg.host]);
+          ${freeipa.config.access.address4ForNetwork.local} = mkBefore [cfg.host];
+        };
     };
     environment.etc = {
       "request-key.conf" = mkIf (cfg.enable && cfg.nfs.enable && cfg.sssd.enable) {
@@ -425,24 +446,30 @@ in {
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${config.system.nssModules.path}"
             exec ${cfg.nfs.package}/bin/nfsidmap "$@"
           '';
-        in mkForce (pkgs.writeText "request-key.conf" ''
-          create id_resolver * * ${nfsidmap} -t 600 %k %d
-        '');
+        in
+          mkForce (pkgs.writeText "request-key.conf" ''
+            create id_resolver * * ${nfsidmap} -t 600 %k %d
+          '');
       };
     };
-    ${if options ? sops.secrets then "sops" else null}.secrets = let
+    ${
+      if options ? sops.secrets
+      then "sops"
+      else null
+    }.secrets = let
       sopsFile = mkDefault ../secrets/krb5.yaml;
-    in mkIf cfg.enable {
-      gensokyo-zone-krb5-passwords = mkIf (cfg.db.backend == "kldap") {
-        inherit sopsFile;
+    in
+      mkIf cfg.enable {
+        gensokyo-zone-krb5-passwords = mkIf (cfg.db.backend == "kldap") {
+          inherit sopsFile;
+        };
+        gensokyo-zone-krb5-peep-password = mkIf (cfg.sssd.backend == "ldap") {
+          inherit sopsFile;
+        };
+        gensokyo-zone-sssd-passwords = mkIf (cfg.sssd.backend == "ldap") {
+          inherit sopsFile;
+        };
       };
-      gensokyo-zone-krb5-peep-password = mkIf (cfg.sssd.backend == "ldap") {
-        inherit sopsFile;
-      };
-      gensokyo-zone-sssd-passwords = mkIf (cfg.sssd.backend == "ldap") {
-        inherit sopsFile;
-      };
-    };
     lib.gensokyo-zone.krb5 = {
       inherit cfg krb5Module;
     };

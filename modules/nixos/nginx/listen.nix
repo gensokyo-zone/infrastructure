@@ -10,11 +10,18 @@
   inherit (lib.attrsets) attrValues mapAttrs;
   inherit (lib.lists) optional filter concatMap;
   inherit (config.services) nginx;
-  listenModule = { config, virtualHost, listenKind, ... }: {
+  listenModule = {
+    config,
+    virtualHost,
+    listenKind,
+    ...
+  }: {
     options = with lib.types; {
-      enable = mkEnableOption "this port" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "this port"
+        // {
+          default = true;
+        };
       addr = mkOption {
         type = nullOr str;
         default = null;
@@ -34,7 +41,7 @@
       };
       extraParameters = mkOption {
         type = listOf str;
-        default = [ ];
+        default = [];
       };
       proxyProtocol = mkOption {
         type = bool;
@@ -59,11 +66,13 @@
         (mkIf (listenKind == "streamServer" && !config.ssl && virtualHost.ssl.enable && virtualHost.ssl.force != false) (mkForce false))
       ];
       port = mkIf (listenKind == "virtualHost") (mkOptionDefault (
-        if config.ssl then nginx.defaultSSLListenPort else nginx.defaultHTTPListenPort
+        if config.ssl
+        then nginx.defaultSSLListenPort
+        else nginx.defaultHTTPListenPort
       ));
       addresses = mkMerge [
         (mkOptionDefault virtualHost.listenAddresses')
-        (mkIf (config.addr != null) (mkAlmostOptionDefault [ config.addr ]))
+        (mkIf (config.addr != null) (mkAlmostOptionDefault [config.addr]))
       ];
       listenParameters = mkOptionDefault (
         optional config.ssl "ssl"
@@ -74,26 +83,44 @@
       );
       listenConfigs = let
         # TODO: handle quic listener..?
-        mkListenHost = { addr, port }: let
+        mkListenHost = {
+          addr,
+          port,
+        }: let
           host =
-            if addr != null then "${mkAddress6 addr}:${toString port}"
+            if addr != null
+            then "${mkAddress6 addr}:${toString port}"
             else toString port;
-        in assert port != null; host;
+        in
+          assert port != null; host;
         mkDirective = addr: let
-          host = mkListenHost { inherit addr; inherit (config) port; };
-        in mkMerge (
-          [ (mkBefore host) ]
-          ++ config.listenParameters
-        );
-      in mkOptionDefault (map (mkDirective) config.addresses);
+          host = mkListenHost {
+            inherit addr;
+            inherit (config) port;
+          };
+        in
+          mkMerge (
+            [(mkBefore host)]
+            ++ config.listenParameters
+          );
+      in
+        mkOptionDefault (map mkDirective config.addresses);
       listenDirectives = mkMerge (map (conf: mkOptionDefault "listen ${conf};") config.listenConfigs);
     };
   };
-  listenType = { specialArgs, modules ? [ ] }: lib.types.submoduleWith {
-    inherit specialArgs;
-    modules = [ listenModule ] ++ modules;
-  };
-  hostModule = { nixosConfig, config, ... }: let
+  listenType = {
+    specialArgs,
+    modules ? [],
+  }:
+    lib.types.submoduleWith {
+      inherit specialArgs;
+      modules = [listenModule] ++ modules;
+    };
+  hostModule = {
+    nixosConfig,
+    config,
+    ...
+  }: let
     cfg = attrValues config.listen';
     enabledCfg = filter (port: port.enable) cfg;
     mkListen = listen: addr: let
@@ -101,7 +128,8 @@
         inherit addr;
         inherit (listen) port ssl extraParameters proxyProtocol;
       };
-    in mapAttrs (_: mkAlmostOptionDefault) listenAttrs;
+    in
+      mapAttrs (_: mkAlmostOptionDefault) listenAttrs;
     mkListens = listen: map (mkListen listen) listen.addresses;
   in {
     options = with lib.types; {
@@ -113,7 +141,7 @@
             listenKind = "virtualHost";
           };
         });
-        default = { };
+        default = {};
       };
       listenAddresses' = mkOption {
         type = listOf str;
@@ -122,16 +150,22 @@
     };
 
     config = {
-      enable = mkIf (cfg != [ ] && enabledCfg == [ ]) (mkForce false);
+      enable = mkIf (cfg != [] && enabledCfg == []) (mkForce false);
       listenAddresses' = mkOptionDefault (
-        if config.listenAddresses != [ ] then config.listenAddresses else nginx.defaultListenAddresses
+        if config.listenAddresses != []
+        then config.listenAddresses
+        else nginx.defaultListenAddresses
       );
-      listen = mkIf (cfg != { }) (mkAlmostOptionDefault (
-        concatMap (mkListens) enabledCfg
+      listen = mkIf (cfg != {}) (mkAlmostOptionDefault (
+        concatMap mkListens enabledCfg
       ));
     };
   };
-  streamServerModule = { nixosConfig, config, ... }: let
+  streamServerModule = {
+    nixosConfig,
+    config,
+    ...
+  }: let
     enabledListen = filter (port: port.enable) (attrValues config.listen);
   in {
     options = with lib.types; {
@@ -144,7 +178,7 @@
             listenKind = "streamServer";
           };
         });
-        default = { };
+        default = {};
       };
       listenAddresses = mkOption {
         type = nullOr (listOf str);
@@ -163,11 +197,13 @@
     };
 
     config = {
-      enable = mkIf (config.listen != { } && enabledListen == [ ]) (mkForce false);
+      enable = mkIf (config.listen != {} && enabledListen == []) (mkForce false);
       listenAddresses' = mkOptionDefault (
-        if config.listenAddresses != null then config.listenAddresses else nginx.defaultListenAddresses
+        if config.listenAddresses != null
+        then config.listenAddresses
+        else nginx.defaultListenAddresses
       );
-      streamConfig = mkIf (config.listen != { }) (mkMerge (
+      streamConfig = mkIf (config.listen != {}) (mkMerge (
         map (listen: mkBefore listen.listenDirectives) enabledListen
       ));
     };
@@ -176,13 +212,13 @@ in {
   options.services.nginx = with lib.types; {
     virtualHosts = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ hostModule ];
+        modules = [hostModule];
         shorthandOnlyDefinesConfig = true;
       });
     };
     stream.servers = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ streamServerModule ];
+        modules = [streamServerModule];
         shorthandOnlyDefinesConfig = false;
       });
     };

@@ -1,6 +1,11 @@
-{ stdenvNoCC, unzip, writeText }: stdenvNoCC.mkDerivation {
+{
+  stdenvNoCC,
+  unzip,
+  writeText,
+}:
+stdenvNoCC.mkDerivation {
   name = "unzip-mcpack";
-  propagatedBuildInputs = [ unzip ];
+  propagatedBuildInputs = [unzip];
   dontUnpack = true;
   setupHook = writeText "mcpack-setup-hook.sh" ''
     unpackCmdHooks+=(_tryUnzipMcpack)

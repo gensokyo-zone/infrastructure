@@ -17,8 +17,15 @@
   sortedVersions = sort (a: b: versionOlder a.version b.version) (attrValues cfg.versions);
   prevVersionFor = version: let
     olderVersions = filter (v: versionOlder v.version version) sortedVersions;
-  in if olderVersions != [] then last olderVersions else null;
-  versionModule = { config, name, ... }: {
+  in
+    if olderVersions != []
+    then last olderVersions
+    else null;
+  versionModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       version = mkOption {
         type = str;
@@ -40,14 +47,18 @@
       );
     };
   };
-  fileModule = { config, name, ... }: {
+  fileModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       relativePath = mkOption {
         type = str;
         default = name;
       };
       type = mkOption {
-        type = enum [ "file" "directory" ];
+        type = enum ["file" "directory"];
         default = "file";
       };
       versioned = mkOption {
@@ -55,13 +66,16 @@
         default = false;
       };
       target = mkOption {
-        type = enum [ "user" "shared" "game" ];
+        type = enum ["user" "shared" "game"];
         default = "user";
       };
       mode = {
         file = mkOption {
           type = str;
-          default = if hasSuffix ".exe" config.relativePath || hasSuffix ".dll" config.relativePath then "775" else "664";
+          default =
+            if hasSuffix ".exe" config.relativePath || hasSuffix ".dll" config.relativePath
+            then "775"
+            else "664";
         };
         dir = mkOption {
           type = str;
@@ -75,7 +89,7 @@
         type = functionTo path;
       };
       srcStyle = mkOption {
-        type = enum [ "empty" "copy" "symlink" "symlink-shallow" ];
+        type = enum ["empty" "copy" "symlink" "symlink-shallow"];
         default = "symlink";
       };
       workingPathFor = mkOption {
@@ -88,7 +102,7 @@
         type = functionTo (nullOr path);
       };
       initStyle = mkOption {
-        type = enum [ "none" "copy" "symlink" "symlink-shallow" ];
+        type = enum ["none" "copy" "symlink" "symlink-shallow"];
         default = "copy";
       };
       setup = {
@@ -106,32 +120,56 @@
       versionPathFor = version: optionalString config.versioned "/${version}";
     in {
       init = mkOptionDefault (
-        if config.target == "game" then null
-        else if config.type == "directory" then "${emptyDir}"
-        else if hasSuffix ".json" config.relativePath then "${emptyJson}"
-        else if hasSuffix ".dll" config.relativePath || hasSuffix ".exe" config.relativePath then "${emptyExecutable}"
+        if config.target == "game"
+        then null
+        else if config.type == "directory"
+        then "${emptyDir}"
+        else if hasSuffix ".json" config.relativePath
+        then "${emptyJson}"
+        else if hasSuffix ".dll" config.relativePath || hasSuffix ".exe" config.relativePath
+        then "${emptyExecutable}"
         else "${emptyFile}"
       );
       initFor = mkOptionDefault (
-        { user, version }: config.init
-      );
-      ownerFor = mkOptionDefault (user:
-        if config.target == "user" then user else "admin"
-      );
-      srcPathFor = mkOptionDefault ({ user, version }:
         {
-          shared = cfg.sharedDataDir + versionPathFor version;
-          user = cfg.dataDirFor user + versionPathFor version;
-          game = cfg.gameDirFor version;
-        }.${config.target} or (throw "unsupported target")
-        + "/${config.relativePath}"
+          user,
+          version,
+        }:
+          config.init
       );
-      workingPathFor = mkOptionDefault ({ user, version }:
-        cfg.workingDirFor { inherit user version; }
-        + "/${config.relativePath}"
+      ownerFor = mkOptionDefault (
+        user:
+          if config.target == "user"
+          then user
+          else "admin"
+      );
+      srcPathFor = mkOptionDefault (
+        {
+          user,
+          version,
+        }:
+          {
+            shared = cfg.sharedDataDir + versionPathFor version;
+            user = cfg.dataDirFor user + versionPathFor version;
+            game = cfg.gameDirFor version;
+          }
+          .${config.target}
+          or (throw "unsupported target")
+          + "/${config.relativePath}"
+      );
+      workingPathFor = mkOptionDefault (
+        {
+          user,
+          version,
+        }:
+          cfg.workingDirFor {inherit user version;}
+          + "/${config.relativePath}"
       );
       # TODO: setup.shared and do inits seperately!
-      setup.script = { user, version }@args: let
+      setup.script = {
+        user,
+        version,
+      } @ args: let
         owner = config.ownerFor user;
         srcPath = config.srcPathFor args;
         workingPath = config.workingPathFor args;
@@ -148,85 +186,120 @@
           fi
           chown ${owner}:${cfg.group} ${escapeShellArg dest}
         '';
-        mkStyle = { style, src }: if style != "none" && src == {
-          file = "${emptyFile}";
-          directory = "${emptyDir}";
-        }.${config.type} then "empty" else style;
-        doInit = { style, src, dest }: {
-          none = "true";
-          copy = {
-            file = ''
-              if [[ -L ${escapeShellArg dest} ]]; then
-                rm -f ${escapeShellArg dest}
-              elif [[ -e ${escapeShellArg dest} ]]; then
-                echo ERR: something is in the way of copying ${escapeShellArg dest} >&2
+        mkStyle = {
+          style,
+          src,
+        }:
+          if
+            style
+            != "none"
+            && src
+            == {
+              file = "${emptyFile}";
+              directory = "${emptyDir}";
+            }
+            .${config.type}
+          then "empty"
+          else style;
+        doInit = {
+          style,
+          src,
+          dest,
+        }:
+          {
+            none = "true";
+            copy =
+              {
+                file = ''
+                  if [[ -L ${escapeShellArg dest} ]]; then
+                    rm -f ${escapeShellArg dest}
+                  elif [[ -e ${escapeShellArg dest} ]]; then
+                    echo ERR: something is in the way of copying ${escapeShellArg dest} >&2
+                    exit 1
+                  fi
+                  cp -TP --no-preserve=all ${escapeShellArg src} ${escapeShellArg dest}
+                  chmod ${config.mode.file} ${escapeShellArg dest}
+                  chown ${owner}:${cfg.group} ${escapeShellArg dest}
+                '';
+                directory = ''
+                  ${mkdir dest}
+                  cp -rTP --no-preserve=all ${escapeShellArg src} ${escapeShellArg dest}
+                  chown -R ${owner}:${cfg.group} ${escapeShellArg dest}
+                  find ${escapeShellArg dest} -type f -exec chmod -m${config.mode.file} "{}" \;
+                '';
+              }
+              .${config.type};
+            empty =
+              {
+                directory = ''
+                  ${mkdir dest}
+                '';
+                file = ''
+                  touch ${escapeShellArg dest}
+                  chmod ${config.mode.file} ${escapeShellArg dest}
+                  chown ${owner}:${cfg.group} ${escapeShellArg dest}
+                '';
+              }
+              .${config.type};
+            symlink = ''
+              if [[ -e ${escapeShellArg dest} && ! -L ${escapeShellArg dest} ]]; then
+                echo ERR: something is in the way of linking ${escapeShellArg dest} >&2
                 exit 1
               fi
-              cp -TP --no-preserve=all ${escapeShellArg src} ${escapeShellArg dest}
-              chmod ${config.mode.file} ${escapeShellArg dest}
-              chown ${owner}:${cfg.group} ${escapeShellArg dest}
+              ln -sfT ${escapeShellArg src} ${escapeShellArg dest}
             '';
-            directory = ''
-              ${mkdir dest}
-              cp -rTP --no-preserve=all ${escapeShellArg src} ${escapeShellArg dest}
-              chown -R ${owner}:${cfg.group} ${escapeShellArg dest}
-              find ${escapeShellArg dest} -type f -exec chmod -m${config.mode.file} "{}" \;
-            '';
-          }.${config.type};
-          empty = {
-            directory = ''
-              ${mkdir dest}
-            '';
-            file = ''
-              touch ${escapeShellArg dest}
-              chmod ${config.mode.file} ${escapeShellArg dest}
-              chown ${owner}:${cfg.group} ${escapeShellArg dest}
-            '';
-          }.${config.type};
-          symlink = ''
-            if [[ -e ${escapeShellArg dest} && ! -L ${escapeShellArg dest} ]]; then
-              echo ERR: something is in the way of linking ${escapeShellArg dest} >&2
-              exit 1
-            fi
-            ln -sfT ${escapeShellArg src} ${escapeShellArg dest}
-          '';
-          symlink-shallow = {
-            directory = ''
-              ${mkdir dest}
-              ln -sf ${escapeShellArg src}/* ${escapeShellArg dest}/
-            '';
-          }.${config.type};
-        }.${mkStyle { inherit style src; }};
-        doSetup = { style, src, dest }: rec {
-          none = "true";
-          copy = {
-            file = ''
-              ${empty}
-            '';
-            directory = ''
-              ${empty}
-              if [[ ${escapeShellArg dest}/* != ${escapeShellArg dest}/\* ]]; then
-                chmod -m${config.mode.file} ${escapeShellArg dest}/*
-              fi
-            '';
-          }.${config.type};
-          empty = {
-            directory = ''
-              chmod ${config.mode.dir} ${escapeShellArg dest}
-              chown ${owner}:${cfg.group} ${escapeShellArg dest}
-            '';
-            file = ''
-              chmod ${config.mode.file} ${escapeShellArg dest}
-              chown ${owner}:${cfg.group} ${escapeShellArg dest}
-            '';
-          }.${config.type};
-          symlink = "true";
-          symlink-shallow = {
-            directory = ''
-              ${mkdir.directory}
-            '';
-          }.${config.type};
-        }.${mkStyle { inherit style src; }};
+            symlink-shallow =
+              {
+                directory = ''
+                  ${mkdir dest}
+                  ln -sf ${escapeShellArg src}/* ${escapeShellArg dest}/
+                '';
+              }
+              .${config.type};
+          }
+          .${mkStyle {inherit style src;}};
+        doSetup = {
+          style,
+          src,
+          dest,
+        }:
+          rec {
+            none = "true";
+            copy =
+              {
+                file = ''
+                  ${empty}
+                '';
+                directory = ''
+                  ${empty}
+                  if [[ ${escapeShellArg dest}/* != ${escapeShellArg dest}/\* ]]; then
+                    chmod -m${config.mode.file} ${escapeShellArg dest}/*
+                  fi
+                '';
+              }
+              .${config.type};
+            empty =
+              {
+                directory = ''
+                  chmod ${config.mode.dir} ${escapeShellArg dest}
+                  chown ${owner}:${cfg.group} ${escapeShellArg dest}
+                '';
+                file = ''
+                  chmod ${config.mode.file} ${escapeShellArg dest}
+                  chown ${owner}:${cfg.group} ${escapeShellArg dest}
+                '';
+              }
+              .${config.type};
+            symlink = "true";
+            symlink-shallow =
+              {
+                directory = ''
+                  ${mkdir.directory}
+                '';
+              }
+              .${config.type};
+          }
+          .${mkStyle {inherit style src;}};
         init = doInit {
           style = config.initStyle;
           src = initPath;
@@ -242,37 +315,46 @@
           src = srcPath;
           dest = workingPath;
         };
-        checkFlag = {
-          file = {
-            none = "e";
-            copy = "f";
-            symlink = "L";
-          }.${config.initStyle};
-          directory = {
-            none = "e";
-            copy = "d";
-            symlink-shallow = "d";
-            symlink = "L";
-          }.${config.initStyle};
-        }.${config.type};
+        checkFlag =
+          {
+            file =
+              {
+                none = "e";
+                copy = "f";
+                symlink = "L";
+              }
+              .${config.initStyle};
+            directory =
+              {
+                none = "e";
+                copy = "d";
+                symlink-shallow = "d";
+                symlink = "L";
+              }
+              .${config.initStyle};
+          }
+          .${config.type};
         checkParent = ''
           if [[ ! -d ${escapeShellArg parentWorkingPath} ]]; then
             echo ERR: parent of ${escapeShellArg workingPath} does not exist >&2
             exit 1
           fi
         '';
-        check = if initPath != null then ''
-          if [[ ! -${checkFlag} ${escapeShellArg srcPath} ]]; then
-            ${init}
-          else
-            ${setup}
-          fi
-        '' else ''
-          if [[ ! -${checkFlag} ${escapeShellArg srcPath} ]]; then
-            echo ERR: src ${escapeShellArg srcPath} for ${escapeShellArg workingPath} does not exist >&2
-            exit 1
-          fi
-        '';
+        check =
+          if initPath != null
+          then ''
+            if [[ ! -${checkFlag} ${escapeShellArg srcPath} ]]; then
+              ${init}
+            else
+              ${setup}
+            fi
+          ''
+          else ''
+            if [[ ! -${checkFlag} ${escapeShellArg srcPath} ]]; then
+              echo ERR: src ${escapeShellArg srcPath} for ${escapeShellArg workingPath} does not exist >&2
+              exit 1
+            fi
+          '';
       in ''
         ${checkParent}
         ${check}
@@ -280,7 +362,11 @@
       '';
     };
   };
-  userModule = { config, name, ... }: {
+  userModule = {
+    config,
+    name,
+    ...
+  }: {
     options = with lib.types; {
       name = mkOption {
         type = str;
@@ -294,7 +380,7 @@
   };
   emptyFile = pkgs.writeText "empty.txt" "";
   emptyJson = pkgs.writeText "empty.json" "{}";
-  emptyDir = pkgs.runCommand "empty" { } ''
+  emptyDir = pkgs.runCommand "empty" {} ''
     mkdir $out
   '';
   emptyExecutable = pkgs.writeTextFile {
@@ -347,9 +433,11 @@
     rmdir "%STEAM_BS_LIBRARY%"
     mklink /D "%STEAM_BS_LIBRARY%" "%STEAM_BS_LAUNCH%"
   '';
-  launch = ''
-    cd /d "%STEAM_BS_LIBRARY%"
-  '' + ''"%STEAM_BS_LIBRARY%\Beat Saber.exe"'';
+  launch =
+    ''
+      cd /d "%STEAM_BS_LIBRARY%"
+    ''
+    + ''"%STEAM_BS_LIBRARY%\Beat Saber.exe"'';
   setup = ''
     rmdir "%STEAM_BS_APPDATA%"
     rmdir "%STEAM_BS_LIBRARY%"
@@ -404,7 +492,10 @@
     ${launch}
     ${eof}
   '';
-  beatsaber-user = { user, version }: ''
+  beatsaber-user = {
+    user,
+    version,
+  }: ''
     set GENSO_STEAM_USER=${user}
     set GENSO_STEAM_BS_VERSION=${version}
     ${vars}
@@ -416,19 +507,25 @@
     setx GENSO_STEAM_BS_VERSION Vanilla
   '';
 
-  mksetupbeatsaber = { user, version }: let
-    setupFiles = mapAttrsToList (_: file: file.setup.script { inherit user version; }) cfg.files;
-  in pkgs.writeShellScript "setupbeatsaber-${user}-${version}" ''
-    set -eu
-    export PATH="$PATH:${makeBinPath [ pkgs.coreutils ]}"
-    ${concatStringsSep "\n" setupFiles}
-  '';
+  mksetupbeatsaber = {
+    user,
+    version,
+  }: let
+    setupFiles = mapAttrsToList (_: file: file.setup.script {inherit user version;}) cfg.files;
+  in
+    pkgs.writeShellScript "setupbeatsaber-${user}-${version}" ''
+      set -eu
+      export PATH="$PATH:${makeBinPath [pkgs.coreutils]}"
+      ${concatStringsSep "\n" setupFiles}
+    '';
 in {
   options.services.steam.beatsaber = with lib.types; {
     enable = mkEnableOption "beatsaber scripts";
-    setup = mkEnableOption "beatsaber data" // {
-      default = accountSwitch.setup;
-    };
+    setup =
+      mkEnableOption "beatsaber data"
+      // {
+        default = accountSwitch.setup;
+      };
     group = mkOption {
       type = str;
       default = "beatsaber";
@@ -438,7 +535,7 @@ in {
     };
     versions = mkOption {
       type = attrsOf (submodule versionModule);
-      default = { };
+      default = {};
     };
     setupServiceNames = mkOption {
       type = listOf str;
@@ -446,7 +543,7 @@ in {
     };
     files = mkOption {
       type = attrsOf (submodule fileModule);
-      default = { };
+      default = {};
     };
     users = mkOption {
       type = attrsOf (submodule userModule);
@@ -489,7 +586,11 @@ in {
     };
     workingDirFor = mkOption {
       type = functionTo path;
-      default = { user, version }: cfg.userWorkingDirFor user + "/${version}";
+      default = {
+        user,
+        version,
+      }:
+        cfg.userWorkingDirFor user + "/${version}";
     };
   };
 
@@ -498,9 +599,9 @@ in {
       bsUsers = filterAttrs (_: userIs cfg.group) config.users.users;
       allVersions = mapAttrsToList (_: version: version.version) cfg.versions;
       gameFiles = {
-        "Beat Saber.exe" = { };
-        "UnityCrashHandler64.exe" = { };
-        "UnityPlayer.dll" = { };
+        "Beat Saber.exe" = {};
+        "UnityCrashHandler64.exe" = {};
+        "UnityPlayer.dll" = {};
         "MonoBleedingEdge".type = "directory";
       };
       sharedFiles = {
@@ -526,7 +627,7 @@ in {
         };
         "BeatSaberVersion.txt" = {
           versioned = true;
-          initFor = { version, ... }: pkgs.writeText "BeatSaberVersion-${version}.txt" version;
+          initFor = {version, ...}: pkgs.writeText "BeatSaberVersion-${version}.txt" version;
         };
         "IPA.exe".versioned = true;
         "IPA.exe.config".versioned = true;
@@ -538,19 +639,19 @@ in {
           #initStyle = "symlink-shallow";
           #initFor = { version, ... }: cfg.gameDirFor version + "/${bsdata}";
           initStyle = "none";
-          srcPathFor = { version, ... }: cfg.gameDirFor version + "/${bsdata}";
+          srcPathFor = {version, ...}: cfg.gameDirFor version + "/${bsdata}";
           srcStyle = "symlink-shallow";
         };
         "${bsdata}/Managed" = {
           type = "directory";
           versioned = true;
-          initFor = { version, ... }: cfg.gameDirFor version + "/${bsdata}/Managed";
+          initFor = {version, ...}: cfg.gameDirFor version + "/${bsdata}/Managed";
         };
         # TODO: remove this to use multiple folders
         "${bsdata}/CustomLevels" = {
           type = "directory";
           initStyle = "none";
-          srcPathFor = { ... }: cfg.sharedDataDir + "/CustomLevels";
+          srcPathFor = {...}: cfg.sharedDataDir + "/CustomLevels";
         };
         CustomAvatars = {
           type = "directory";
@@ -579,7 +680,7 @@ in {
         "UserData/ScoreSaber/Replays" = {
           type = "directory";
           initStyle = "none";
-          srcPathFor = { ... }: cfg.sharedDataDir + "/Replays";
+          srcPathFor = {...}: cfg.sharedDataDir + "/Replays";
         };
         "UserData/Beat Saber IPA.json".versioned = true;
         "UserData/SongCore/" = {
@@ -619,8 +720,8 @@ in {
         };
         "UserData/Saber Factory/Cache".type = "directory";
         "UserData/Saber Factory/Textures".type = "directory";
-        "UserData/BeatSaverDownloader.ini" = { };
-        "UserData/BeatSaverUpdater.json" = { };
+        "UserData/BeatSaverDownloader.ini" = {};
+        "UserData/BeatSaverUpdater.json" = {};
         "UserData/SongDetailsCache.proto".versioned = true;
         "UserData/SongDetailsCache.proto.Direct.etag".versioned = true;
       };
@@ -636,7 +737,7 @@ in {
           srcStyle = "empty";
         };
         "UserData/Saber Factory/Presets".type = "directory";
-        "UserData/Saber Factory/TrailConfig.json" = { };
+        "UserData/Saber Factory/TrailConfig.json" = {};
         "UserData/SongCore" = {
           type = "directory";
           versioned = true;
@@ -658,17 +759,23 @@ in {
         "UserData/JDFixer.json".versioned = true;
       };
       userDataFiles = [
-        "modprefs.ini" "Disabled Mods.json"
+        "modprefs.ini"
+        "Disabled Mods.json"
         "AutoPauseStealth.json"
         "BeatSaberMarkupLanguage.json"
         "BeatSaviorData.ini"
         "BetterSongList.json"
         "BetterSongSearch.json"
-        "bookmarkedSongs.json" "votedSongs.json"
+        "bookmarkedSongs.json"
+        "votedSongs.json"
         "Chroma.json"
         "Cinema.json"
         "CountersPlus.json"
-        "CustomAvatars.CalibrationData.dat" "CustomAvatars.json" "CustomNotes.json" "Custom Platforms.json" "CustomWalls.json"
+        "CustomAvatars.CalibrationData.dat"
+        "CustomAvatars.json"
+        "CustomNotes.json"
+        "Custom Platforms.json"
+        "CustomWalls.json"
         "DrinkWater.json"
         "EasyOffset.json"
         "Enhancements.json"
@@ -702,20 +809,25 @@ in {
         "Tweaks55.json"
         "UITweaks.json"
       ];
-      mapSharedFile = file: file // {
-        target = "shared";
-      };
-      mapGameFile = file: file // {
-        target = "game";
-      };
-      mapUserDataFile = file: nameValuePair "UserData/${file}" {
-        target = "user";
-      };
+      mapSharedFile = file:
+        file
+        // {
+          target = "shared";
+        };
+      mapGameFile = file:
+        file
+        // {
+          target = "game";
+        };
+      mapUserDataFile = file:
+        nameValuePair "UserData/${file}" {
+          target = "user";
+        };
     in {
-      defaultVersion = mkIf (allVersions != [ ]) (mkOptionDefault (
+      defaultVersion = mkIf (allVersions != []) (mkOptionDefault (
         head allVersions
       ));
-      users = mapAttrs (_: user: { name = mkDefault user.name; }) bsUsers;
+      users = mapAttrs (_: user: {name = mkDefault user.name;}) bsUsers;
       setupServiceNames = mkOptionDefault (
         mapAttrsToList (_: user: "steam-setup-beatsaber-${user.name}.service") cfg.users
       );
@@ -736,11 +848,16 @@ in {
       serviceConfig = {
         Type = mkOptionDefault "oneshot";
         RemainAfterExit = mkOptionDefault true;
-        ExecStart = mkMerge (mapAttrsToList (_: user:
-          (mapAttrsToList (_: version:
-            "${mksetupbeatsaber { user = user.name; inherit (version) version; }}"
-          ) cfg.versions)
-        ) cfg.users);
+        ExecStart = mkMerge (mapAttrsToList (
+            _: user: (mapAttrsToList (
+                _: version: "${mksetupbeatsaber {
+                  user = user.name;
+                  inherit (version) version;
+                }}"
+              )
+              cfg.versions)
+          )
+          cfg.users);
       };
     };
     services.tmpfiles = let
@@ -774,132 +891,157 @@ in {
         "AppData"
         "UserData"
       ];
-      setupFiles = [
+      setupFiles =
+        [
+          {
+            ${cfg.sharedDataDir} = toplevel;
+            ${cfg.binDir} = shared;
+          }
+          (listToAttrs (
+            map (
+              folder:
+                nameValuePair "${cfg.sharedDataDir}/${folder}" shared
+            )
+            sharedFolders
+          ))
+        ]
+        ++ concatLists (mapAttrsToList (
+            _: user:
+              singleton {
+                ${cfg.dataDirFor user.name} = personal user.name;
+                "${cfg.dataDirFor user.name}/AppData" = personal user.name;
+                "${cfg.dataDirFor user.name}/UserData" = personal user.name;
+              }
+              ++ mapAttrsToList (_: version: {
+                "${cfg.dataDirFor user.name}/${version.version}" = personal user.name;
+                ${cfg.userWorkingDirFor user.name} = personal user.name;
+                ${
+                  cfg.workingDirFor {
+                    user = user.name;
+                    inherit (version) version;
+                  }
+                } =
+                  personal user.name;
+              })
+              cfg.versions
+          )
+          cfg.users)
+        ++ mapAttrsToList (_: version: {
+          "${cfg.sharedDataDir}/${version.version}" = shared;
+        })
+        cfg.versions;
+      versionBinFiles =
+        mapAttrs' (
+          _: version:
+            nameValuePair
+            "${cfg.binDir}/${replaceStrings ["."] ["_"] version.version}.bat"
+            {
+              inherit (bin) owner group mode type;
+              src = pkgs.writeTextFile {
+                name = "beatsaber-${version.version}.bat";
+                executable = true;
+                text = ''
+                  setx GENSO_STEAM_BS_VERSION ${version.version}
+                '';
+              };
+            }
+        )
+        cfg.versions;
+      userBinFiles =
+        mapAttrs' (
+          _: user:
+            nameValuePair
+            "${cfg.binDir}/${user.name}.bat"
+            {
+              inherit (bin) owner group mode type;
+              src = pkgs.writeTextFile {
+                name = "beatsaber-${user.name}.bat";
+                executable = true;
+                text = beatsaber-user {
+                  user = user.name;
+                  version = user.preferredVersion;
+                };
+              };
+            }
+        )
+        cfg.users;
+      binFiles =
         {
-          ${cfg.sharedDataDir} = toplevel;
-          ${cfg.binDir} = shared;
-        }
-        (listToAttrs (
-          map (folder:
-            nameValuePair "${cfg.sharedDataDir}/${folder}" shared
-          ) sharedFolders
-        ))
-      ] ++ concatLists (mapAttrsToList (_: user:
-        singleton {
-          ${cfg.dataDirFor user.name} = personal user.name;
-          "${cfg.dataDirFor user.name}/AppData" = personal user.name;
-          "${cfg.dataDirFor user.name}/UserData" = personal user.name;
-        } ++ mapAttrsToList (_: version: {
-          "${cfg.dataDirFor user.name}/${version.version}" = personal user.name;
-          ${cfg.userWorkingDirFor user.name} = personal user.name;
-          ${cfg.workingDirFor { user = user.name; inherit (version) version; }} = personal user.name;
-        }) cfg.versions
-      ) cfg.users)
-      ++ mapAttrsToList (_: version: {
-        "${cfg.sharedDataDir}/${version.version}" = shared;
-      }) cfg.versions;
-      versionBinFiles = mapAttrs' (_: version: nameValuePair
-        "${cfg.binDir}/${replaceStrings [ "." ] [ "_" ] version.version}.bat"
-        {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-${version.version}.bat";
-            executable = true;
-            text = ''
-              setx GENSO_STEAM_BS_VERSION ${version.version}
-            '';
+          "${cfg.binDir}/mount.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-mount.bat";
+              executable = true;
+              text = mountbeatsaber;
+            };
           };
-        }
-      ) cfg.versions;
-      userBinFiles = mapAttrs' (_: user: nameValuePair
-        "${cfg.binDir}/${user.name}.bat"
-        {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-${user.name}.bat";
-            executable = true;
-            text = beatsaber-user {
-              user = user.name;
-              version = user.preferredVersion;
+          "${cfg.binDir}/launch.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-launch.bat";
+              executable = true;
+              text = launchbeatsaber;
+            };
+          };
+          "${cfg.binDir}/fpfc.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-fpfc.bat";
+              executable = true;
+              text = fpfcbeatsaber;
+            };
+          };
+          "${cfg.binDir}/setup.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-setup.bat";
+              executable = true;
+              text = setupbeatsaber;
+            };
+          };
+          "${cfg.binDir}/local-launch.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-local-launch.bat";
+              executable = true;
+              text = localbeatsaber-launch;
+            };
+          };
+          "${cfg.binDir}/local-mount.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-local-mount.bat";
+              executable = true;
+              text = localbeatsaber-mount;
+            };
+          };
+          "${cfg.binDir}/local-vanilla.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-local-vanilla.bat";
+              executable = true;
+              text = localbeatsaber-vanilla;
+            };
+          };
+          "${cfg.binDir}/vanilla.bat" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.writeTextFile {
+              name = "beatsaber-version-vanilla.bat";
+              executable = true;
+              text = vanilla;
+            };
+          };
+          "${cfg.binDir}/ModAssistant.exe" = {
+            inherit (bin) owner group mode type;
+            src = pkgs.fetchurl {
+              url = "https://github.com/Assistant/ModAssistant/releases/download/v1.1.32/ModAssistant.exe";
+              hash = "sha256-ozu2gYFiz+2BjptqL80DmUopbahbyGKFO1IPd7BhVPM=";
+              executable = true;
             };
           };
         }
-      ) cfg.users;
-      binFiles = {
-        "${cfg.binDir}/mount.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-mount.bat";
-            executable = true;
-            text = mountbeatsaber;
-          };
-        };
-        "${cfg.binDir}/launch.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-launch.bat";
-            executable = true;
-            text = launchbeatsaber;
-          };
-        };
-        "${cfg.binDir}/fpfc.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-fpfc.bat";
-            executable = true;
-            text = fpfcbeatsaber;
-          };
-        };
-        "${cfg.binDir}/setup.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-setup.bat";
-            executable = true;
-            text = setupbeatsaber;
-          };
-        };
-        "${cfg.binDir}/local-launch.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-local-launch.bat";
-            executable = true;
-            text = localbeatsaber-launch;
-          };
-        };
-        "${cfg.binDir}/local-mount.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-local-mount.bat";
-            executable = true;
-            text = localbeatsaber-mount;
-          };
-        };
-        "${cfg.binDir}/local-vanilla.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-local-vanilla.bat";
-            executable = true;
-            text = localbeatsaber-vanilla;
-          };
-        };
-        "${cfg.binDir}/vanilla.bat" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.writeTextFile {
-            name = "beatsaber-version-vanilla.bat";
-            executable = true;
-            text = vanilla;
-          };
-        };
-        "${cfg.binDir}/ModAssistant.exe" = {
-          inherit (bin) owner group mode type;
-          src = pkgs.fetchurl {
-            url = "https://github.com/Assistant/ModAssistant/releases/download/v1.1.32/ModAssistant.exe";
-            hash = "sha256-ozu2gYFiz+2BjptqL80DmUopbahbyGKFO1IPd7BhVPM=";
-            executable = true;
-          };
-        };
-      } // versionBinFiles
-      // userBinFiles;
+        // versionBinFiles
+        // userBinFiles;
     in {
       enable = mkIf cfg.setup true;
       files = mkIf cfg.setup (mkMerge (

@@ -1,68 +1,72 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkDefault;
   inherit (config.users) ldap;
-  smbAccountAttrs = [ "sambasid" "sambapwdlastset" "sambaacctflags" "sambapasswordhistory" "sambantpassword" ];
-  smbGroupAttrs = [ "sambasid" "sambagrouptype" ];
-  smbDomainAttrs = [ "sambasid" "sambaRefuseMachinePwdChange" "sambaMinPwdLength" "sambaAlgorithmicRidBase" "sambaPwdHistoryLength" "sambaDomainName" "sambaMinPwdAge" "sambaMaxPwdAge" "sambaLockoutThreshold" "sambaForceLogoff" "sambaLogonToChgPwd" "sambaLockoutObservationWindow" "sambaNextUserRid" "sambaLockoutDuration" ];
+  smbAccountAttrs = ["sambasid" "sambapwdlastset" "sambaacctflags" "sambapasswordhistory" "sambantpassword"];
+  smbGroupAttrs = ["sambasid" "sambagrouptype"];
+  smbDomainAttrs = ["sambasid" "sambaRefuseMachinePwdChange" "sambaMinPwdLength" "sambaAlgorithmicRidBase" "sambaPwdHistoryLength" "sambaDomainName" "sambaMinPwdAge" "sambaMaxPwdAge" "sambaLockoutThreshold" "sambaForceLogoff" "sambaLogonToChgPwd" "sambaLockoutObservationWindow" "sambaNextUserRid" "sambaLockoutDuration"];
 in {
   config.users.ldap.management = {
     enable = mkDefault true;
     permissions = {
       "Custom Samba User Read" = {
         targetType = "user";
-        attrs = [ "ipanthash" "ipanthomedirectory" "ipanthomedirectorydrive" "ipantlogonscript" "ipantprofilepath" "ipantsecurityidentifier" ] ++ smbAccountAttrs;
+        attrs = ["ipanthash" "ipanthomedirectory" "ipanthomedirectorydrive" "ipantlogonscript" "ipantprofilepath" "ipantsecurityidentifier"] ++ smbAccountAttrs;
       };
       "Custom Samba User Modify" = {
         targetType = "user";
-        rights = [ "write" ];
+        rights = ["write"];
         attrs = smbAccountAttrs;
       };
       "Custom Samba User Admin" = {
         targetType = "user";
-        rights = [ "write" ];
-        attrs = smbAccountAttrs ++ [ "objectclass" ];
+        rights = ["write"];
+        attrs = smbAccountAttrs ++ ["objectclass"];
       };
       "Custom Samba Group Read" = {
         targetType = "user-group";
-        attrs = [ "ipantsecurityidentifier" "gidnumber" ] ++ smbGroupAttrs;
+        attrs = ["ipantsecurityidentifier" "gidnumber"] ++ smbGroupAttrs;
       };
       "Custom Samba Group Modify" = {
         targetType = "user-group";
-        rights = [ "write" ];
+        rights = ["write"];
         attrs = smbGroupAttrs;
       };
       "Custom Samba Group Admin" = {
         targetType = "user-group";
-        rights = [ "write" ];
-        attrs = smbGroupAttrs ++ [ "objectclass" ];
+        rights = ["write"];
+        attrs = smbGroupAttrs ++ ["objectclass"];
       };
       "Custom Samba Domain Read" = {
         targetType = "samba-domain";
-        attrs = [ "objectClass" ] ++ smbDomainAttrs;
+        attrs = ["objectClass"] ++ smbDomainAttrs;
       };
       "Custom Samba Domain Modify" = {
         targetType = "samba-domain";
-        rights = [ "write" "add" ];
+        rights = ["write" "add"];
         attrs = smbDomainAttrs;
       };
       "Custom Samba Domain Admin" = {
         targetType = "domain";
-        rights = [ "write" ];
-        attrs = smbDomainAttrs ++ [ "objectclass" ];
+        rights = ["write"];
+        attrs = smbDomainAttrs ++ ["objectclass"];
       };
       "Custom Samba Realm Read" = {
         targetType = "domain";
-        attrs = [ "objectClass" "ipaNTSecurityIdentifier" "ipaNTFlatName" "ipaNTDomainGUID" "ipaNTFallbackPrimaryGroup" ] ++ smbDomainAttrs;
+        attrs = ["objectClass" "ipaNTSecurityIdentifier" "ipaNTFlatName" "ipaNTDomainGUID" "ipaNTFallbackPrimaryGroup"] ++ smbDomainAttrs;
       };
       "Custom Samba Realm Modify" = {
         targetType = "domain";
-        rights = [ "write" ];
+        rights = ["write"];
         attrs = smbDomainAttrs;
       };
       "Custom Samba Realm Admin" = {
         targetType = "domain";
-        rights = [ "write" ];
-        attrs = smbDomainAttrs ++ [ "objectclass" ];
+        rights = ["write"];
+        attrs = smbDomainAttrs ++ ["objectclass"];
       };
     };
     users = {
@@ -173,7 +177,7 @@ in {
     };
     objects = {
       "cn=${config.networking.domain},${ldap.domainDnSuffix}" = {
-        objectClasses = [ "sambaDomain" ];
+        objectClasses = ["sambaDomain"];
         settings = {
           sambaSID = ldap.samba.domainSID;
           sambaDomainName = "GENSOKYO";

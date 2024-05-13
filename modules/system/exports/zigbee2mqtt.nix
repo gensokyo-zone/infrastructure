@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
-  config.exports.services.zigbee2mqtt = { config, ... }: {
+  config.exports.services.zigbee2mqtt = {config, ...}: {
     id = mkAlmostOptionDefault "z2m";
     nixos = {
       serviceAttr = "zigbee2mqtt";

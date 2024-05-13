@@ -15,20 +15,23 @@
   inherit (lib) generators;
   cfg = config.services.sssd;
   mkValuePrimitive = value:
-    if value == true then "True"
-    else if value == false then "False"
+    if value == true
+    then "True"
+    else if value == false
+    then "False"
     else toString value;
   toINI = generators.toINI {
     mkKeyValue = generators.mkKeyValueDefault {
       mkValueString = value:
-        if isList value then concatMapStringsSep ", " mkValuePrimitive value
+        if isList value
+        then concatMapStringsSep ", " mkValuePrimitive value
         else mkValuePrimitive value;
     } " = ";
   };
-  primitiveType = with lib.types; oneOf [ str int bool ];
-  valueType = with lib.types; oneOf [ primitiveType (listOf primitiveType) ];
+  primitiveType = with lib.types; oneOf [str int bool];
+  valueType = with lib.types; oneOf [primitiveType (listOf primitiveType)];
   settingsType = lib.types.attrsOf valueType;
-  serviceModule = { name, ... }: {
+  serviceModule = {name, ...}: {
     options = with lib.types; {
       enable = mkEnableOption "${name} service";
       name = mkOption {
@@ -38,22 +41,24 @@
       };
       settings = mkOption {
         type = settingsType;
-        default = { };
+        default = {};
       };
     };
   };
-  nssModule = { nixosConfig, ... }: {
+  nssModule = {nixosConfig, ...}: {
     options = {
       # TODO: passwd.enable = mkEnableOption "passwd" // { default = true; };
-      shadow.enable = mkEnableOption "shadow" // { default = nixosConfig.services.sssd.services.pam.enable; };
-      netgroup.enable = mkEnableOption "netgroup" // { default = true; };
+      shadow.enable = mkEnableOption "shadow" // {default = nixosConfig.services.sssd.services.pam.enable;};
+      netgroup.enable = mkEnableOption "netgroup" // {default = true;};
     };
   };
-  domainModule = { name, ... }: {
+  domainModule = {name, ...}: {
     options = with lib.types; {
-      enable = mkEnableOption "domain" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "domain"
+        // {
+          default = true;
+        };
       domain = mkOption {
         type = str;
         default = name;
@@ -63,17 +68,17 @@
       };
     };
   };
-  domainLdapModule = { config, ... }: let
+  domainLdapModule = {config, ...}: let
     cfg = config.ldap;
   in {
     options.ldap = with lib.types; {
       extraAttrs.user = mkOption {
         type = attrsOf str;
-        default = { };
+        default = {};
       };
       authtok = {
         type = mkOption {
-          type = enum [ "password" "obfuscated_password" ];
+          type = enum ["password" "obfuscated_password"];
           default = "password";
         };
         password = mkOption {
@@ -87,7 +92,7 @@
         passwordVar = mkOption {
           type = str;
           internal = true;
-          default = "SSSD_AUTHTOK_" + replaceStrings [ "-" "." ] [ "_" "_" ] (toUpper config.domain);
+          default = "SSSD_AUTHTOK_" + replaceStrings ["-" "."] ["_" "_"] (toUpper config.domain);
         };
       };
     };
@@ -95,14 +100,16 @@
       authtokConfig = mkIf (cfg.authtok.password != null || cfg.authtok.passwordFile != null) {
         ldap_default_authtok_type = mkOptionDefault cfg.authtok.type;
         ldap_default_authtok = mkOptionDefault (
-          if cfg.authtok.passwordFile != null then "\$${cfg.authtok.passwordVar}"
+          if cfg.authtok.passwordFile != null
+          then "\$${cfg.authtok.passwordVar}"
           else cfg.authtok.password
         );
       };
-      extraAttrsConfig = mkIf (cfg.extraAttrs.user != { }) {
+      extraAttrsConfig = mkIf (cfg.extraAttrs.user != {}) {
         ldap_user_extra_attrs = let
           mkAttr = name: attr: "${name}:${attr}";
-        in mapAttrsToList mkAttr cfg.extraAttrs.user;
+        in
+          mapAttrsToList mkAttr cfg.extraAttrs.user;
       };
     in {
       settings = mkMerge [
@@ -119,7 +126,7 @@ in {
     };
     domains = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ domainModule domainLdapModule ];
+        modules = [domainModule domainLdapModule];
         specialArgs = {
           nixosConfig = config;
         };
@@ -135,25 +142,27 @@ in {
       };
     };
     services = let
-      mkServiceOption = name: { modules ? [ ] }: mkOption {
-        type = submoduleWith {
-          modules = [ serviceModule ] ++ modules;
-          specialArgs = {
-            inherit name;
-            nixosConfig = config;
+      mkServiceOption = name: {modules ? []}:
+        mkOption {
+          type = submoduleWith {
+            modules = [serviceModule] ++ modules;
+            specialArgs = {
+              inherit name;
+              nixosConfig = config;
+            };
           };
         };
-      };
       services = {
-        nss = { modules = [ nssModule ]; };
-        pam = { };
-        ifp = { };
-        sudo = { };
-        autofs = { };
-        ssh = { };
-        pac = { };
+        nss = {modules = [nssModule];};
+        pam = {};
+        ifp = {};
+        sudo = {};
+        autofs = {};
+        ssh = {};
+        pac = {};
       };
-    in mapAttrs mkServiceOption services;
+    in
+      mapAttrs mkServiceOption services;
     settings = mkOption {
       type = attrsOf settingsType;
     };
@@ -175,11 +184,14 @@ in {
           domains = map (domain: domain.domain) enabledDomains;
         };
       };
-      domainSettings = map (domain: {
-        "domain/${domain.domain}" = mapAttrs (_: mkOptionDefault) domain.settings;
-      }) enabledDomains;
-      settings = [ defaultSettings serviceSettings ] ++ domainSettings;
-    in mkMerge settings;
+      domainSettings =
+        map (domain: {
+          "domain/${domain.domain}" = mapAttrs (_: mkOptionDefault) domain.settings;
+        })
+        enabledDomains;
+      settings = [defaultSettings serviceSettings] ++ domainSettings;
+    in
+      mkMerge settings;
     services = {
       nss.enable = mkAlmostOptionDefault true;
       pam.enable = mkAlmostOptionDefault true;
@@ -187,24 +199,30 @@ in {
         extraUserAttrs = listToAttrs (concatMap (domain: map (flip nameValuePair {}) (attrNames domain.ldap.extraAttrs.user)) enabledDomains);
         mkExtraAttr = name: _: "+${name}";
       in {
-        user_attributes = mkIf (extraUserAttrs != { }) (mkOptionDefault (
+        user_attributes = mkIf (extraUserAttrs != {}) (mkOptionDefault (
           mapAttrsToList mkExtraAttr extraUserAttrs
         ));
       };
-      sudo = { };
-      autofs = { };
-      ssh = { };
-      pac = { };
+      sudo = {};
+      autofs = {};
+      ssh = {};
+      pac = {};
     };
     configText = mkOptionDefault (toINI cfg.settings);
     config = mkIf (cfg.configText != null) (mkAlmostOptionDefault cfg.configText);
   };
   config.system.nssDatabases = let
     inherit (cfg.services) nss;
-  in mkIf cfg.enable {
-    ${if options ? system.nssDatabases.netgroup then "netgroup" else null} = mkIf (nss.enable && nss.netgroup.enable) [ "sss" ];
-    shadow = mkIf (!nss.enable || !nss.shadow.enable) (
-      mkForce [ "files" ]
-    );
-  };
+  in
+    mkIf cfg.enable {
+      ${
+        if options ? system.nssDatabases.netgroup
+        then "netgroup"
+        else null
+      } =
+        mkIf (nss.enable && nss.netgroup.enable) ["sss"];
+      shadow = mkIf (!nss.enable || !nss.shadow.enable) (
+        mkForce ["files"]
+      );
+    };
 }

@@ -1,11 +1,24 @@
-{ stdenv, lib, buildPythonPackage, buildPythonApplication, fetchFromGitHub
-, pkg-config, cmake, ninja, setuptools, python
-, libsamplerate, fftwFloat
-, rtl-sdr, soapysdr-with-plugins, pydigiham, direwolf, sox, wsjtx, codecserver
-}:
-
-let
-
+{
+  stdenv,
+  lib,
+  buildPythonPackage,
+  buildPythonApplication,
+  fetchFromGitHub,
+  pkg-config,
+  cmake,
+  ninja,
+  setuptools,
+  python,
+  libsamplerate,
+  fftwFloat,
+  rtl-sdr,
+  soapysdr-with-plugins,
+  pydigiham,
+  direwolf,
+  sox,
+  wsjtx,
+  codecserver,
+}: let
   js8py = buildPythonPackage rec {
     pname = "js8py";
     version = "0.1.1";
@@ -17,7 +30,7 @@ let
       sha256 = "1j80zclg1cl5clqd00qqa16prz7cyc32bvxqz2mh540cirygq24w";
     };
 
-    pythonImportsCheck = [ "js8py" "test" ];
+    pythonImportsCheck = ["js8py" "test"];
 
     meta = with lib; {
       homepage = "https://github.com/jketterl/js8py";
@@ -27,144 +40,143 @@ let
     };
   };
 
-csdr-eti = stdenv.mkDerivation rec {
-  pname = "csdr-eti";
-  version = "0.0.11";
+  csdr-eti = stdenv.mkDerivation rec {
+    pname = "csdr-eti";
+    version = "0.0.11";
 
-  src = fetchFromGitHub {
-    owner = "luarvique";
-    repo = pname;
-    rev = version;
-    hash = "sha256-jft4zi1mLU6zZ+2gsym/3Xu8zkKL0MeoztcyMPM0RYI=";
+    src = fetchFromGitHub {
+      owner = "luarvique";
+      repo = pname;
+      rev = version;
+      hash = "sha256-jft4zi1mLU6zZ+2gsym/3Xu8zkKL0MeoztcyMPM0RYI=";
+    };
+
+    nativeBuildInputs = [
+      cmake
+      ninja
+      pkg-config
+    ];
+
+    propagatedBuildInputs = [
+      fftwFloat
+      libsamplerate
+    ];
+    buildInputs = [
+      csdr
+    ];
+
+    hardeningDisable = lib.optional stdenv.isAarch64 "format";
+
+    meta = with lib; {
+      homepage = "https://github.com/jketterl/csdr";
+      description = "A simple DSP library and command-line tool for Software Defined Radio";
+      license = licenses.gpl3Only;
+      platforms = platforms.unix;
+      broken = stdenv.isDarwin;
+      maintainers = teams.c3d2.members;
+    };
   };
 
-  nativeBuildInputs = [
-    cmake
-    ninja
-    pkg-config
-  ];
+  csdr = stdenv.mkDerivation rec {
+    pname = "csdr";
+    version = "0.18.23";
 
-  propagatedBuildInputs = [
-    fftwFloat
-    libsamplerate
-  ];
-  buildInputs = [
-    csdr
-  ];
+    src = fetchFromGitHub {
+      owner = "luarvique";
+      repo = pname;
+      rev = version;
+      hash = "sha256-Q7g1OqfpAP6u78zyHjLP2ASGYKNKCAVv8cgGwytZ+cE=";
+    };
 
-  hardeningDisable = lib.optional stdenv.isAarch64 "format";
+    nativeBuildInputs = [
+      cmake
+      ninja
+      pkg-config
+    ];
 
-  meta = with lib; {
-    homepage = "https://github.com/jketterl/csdr";
-    description = "A simple DSP library and command-line tool for Software Defined Radio";
-    license = licenses.gpl3Only;
-    platforms = platforms.unix;
-    broken = stdenv.isDarwin;
-    maintainers = teams.c3d2.members;
-  };
-};
+    propagatedBuildInputs = [
+      fftwFloat
+      libsamplerate
+    ];
 
-csdr = stdenv.mkDerivation rec {
-  pname = "csdr";
-  version = "0.18.23";
+    hardeningDisable = lib.optional stdenv.isAarch64 "format";
 
-  src = fetchFromGitHub {
-    owner = "luarvique";
-    repo = pname;
-    rev = version;
-    hash = "sha256-Q7g1OqfpAP6u78zyHjLP2ASGYKNKCAVv8cgGwytZ+cE=";
-  };
+    postFixup = ''
+      substituteInPlace "$out"/lib/pkgconfig/csdr.pc \
+        --replace '=''${prefix}//' '=/' \
+        --replace '=''${exec_prefix}//' '=/'
+    '';
 
-  nativeBuildInputs = [
-    cmake
-    ninja
-    pkg-config
-  ];
-
-  propagatedBuildInputs = [
-    fftwFloat
-    libsamplerate
-  ];
-
-  hardeningDisable = lib.optional stdenv.isAarch64 "format";
-
-  postFixup = ''
-    substituteInPlace "$out"/lib/pkgconfig/csdr.pc \
-      --replace '=''${prefix}//' '=/' \
-      --replace '=''${exec_prefix}//' '=/'
-  '';
-
-  meta = with lib; {
-    homepage = "https://github.com/jketterl/csdr";
-    description = "A simple DSP library and command-line tool for Software Defined Radio";
-    license = licenses.gpl3Only;
-    platforms = platforms.unix;
-    broken = stdenv.isDarwin;
-    maintainers = teams.c3d2.members;
-  };
-};
-
-
-pycsdr-eti = buildPythonPackage rec {
-  pname = "pycsdr-eti";
-  version = "0.0.11";
-  format = "setuptools";
-
-  src = fetchFromGitHub {
-    owner = "luarvique";
-    repo = "pycsdr-eti";
-    rev = version;
-    hash = "sha256-pjY5sxHvuDTUDxpdhWk8U7ibwxHznyywEqj1btAyXBE=";
+    meta = with lib; {
+      homepage = "https://github.com/jketterl/csdr";
+      description = "A simple DSP library and command-line tool for Software Defined Radio";
+      license = licenses.gpl3Only;
+      platforms = platforms.unix;
+      broken = stdenv.isDarwin;
+      maintainers = teams.c3d2.members;
+    };
   };
 
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace ', "fftw3"' ""
-  '';
+  pycsdr-eti = buildPythonPackage rec {
+    pname = "pycsdr-eti";
+    version = "0.0.11";
+    format = "setuptools";
 
-  propagatedBuildInputs = [ pycsdr ];
-  buildInputs = [ csdr-eti csdr ];
-  NIX_CFLAGS_COMPILE = [
-    "-I${pycsdr}/include/${python.libPrefix}"
-  ];
+    src = fetchFromGitHub {
+      owner = "luarvique";
+      repo = "pycsdr-eti";
+      rev = version;
+      hash = "sha256-pjY5sxHvuDTUDxpdhWk8U7ibwxHznyywEqj1btAyXBE=";
+    };
 
-  # has no tests
-  doCheck = false;
-  pythonImportsCheck = [ "csdreti" ];
+    postPatch = ''
+      substituteInPlace setup.py \
+        --replace ', "fftw3"' ""
+    '';
 
-  meta = {
-    homepage = "https://github.com/jketterl/pycsdr";
-    description = "bindings for the csdr library";
-    license = lib.licenses.gpl3Only;
-    maintainers = lib.teams.c3d2.members;
+    propagatedBuildInputs = [pycsdr];
+    buildInputs = [csdr-eti csdr];
+    NIX_CFLAGS_COMPILE = [
+      "-I${pycsdr}/include/${python.libPrefix}"
+    ];
+
+    # has no tests
+    doCheck = false;
+    pythonImportsCheck = ["csdreti"];
+
+    meta = {
+      homepage = "https://github.com/jketterl/pycsdr";
+      description = "bindings for the csdr library";
+      license = lib.licenses.gpl3Only;
+      maintainers = lib.teams.c3d2.members;
+    };
   };
-};
 
-pycsdr = buildPythonPackage rec {
-  pname = "pycsdr";
-  version = "0.18.23";
-  format = "setuptools";
+  pycsdr = buildPythonPackage rec {
+    pname = "pycsdr";
+    version = "0.18.23";
+    format = "setuptools";
 
-  src = fetchFromGitHub {
-    owner = "luarvique";
-    repo = "pycsdr";
-    rev = version;
-    hash = "sha256-NjRBC7bhq2bMlRI0Q8bcGcneD/HlAO6l/0As3/lk4e8=";
+    src = fetchFromGitHub {
+      owner = "luarvique";
+      repo = "pycsdr";
+      rev = version;
+      hash = "sha256-NjRBC7bhq2bMlRI0Q8bcGcneD/HlAO6l/0As3/lk4e8=";
+    };
+
+    buildInputs = [csdr];
+
+    # has no tests
+    doCheck = false;
+    pythonImportsCheck = ["pycsdr"];
+
+    meta = {
+      homepage = "https://github.com/jketterl/pycsdr";
+      description = "bindings for the csdr library";
+      license = lib.licenses.gpl3Only;
+      maintainers = lib.teams.c3d2.members;
+    };
   };
-
-  buildInputs = [ csdr ];
-
-  # has no tests
-  doCheck = false;
-  pythonImportsCheck = [ "pycsdr" ];
-
-  meta = {
-    homepage = "https://github.com/jketterl/pycsdr";
-    description = "bindings for the csdr library";
-    license = lib.licenses.gpl3Only;
-    maintainers = lib.teams.c3d2.members;
-  };
-};
 
   owrx_connector = stdenv.mkDerivation rec {
     pname = "owrx_connector";
@@ -184,7 +196,8 @@ pycsdr = buildPythonPackage rec {
     ];
 
     buildInputs = [
-      libsamplerate fftwFloat
+      libsamplerate
+      fftwFloat
       csdr
       rtl-sdr
       soapysdr-with-plugins
@@ -198,51 +211,50 @@ pycsdr = buildPythonPackage rec {
       maintainers = teams.c3d2.members;
     };
   };
-
 in
-buildPythonApplication rec {
-  pname = "openwebrxplus";
-  version = "1.2.49";
+  buildPythonApplication rec {
+    pname = "openwebrxplus";
+    version = "1.2.49";
 
-  src = fetchFromGitHub {
-    owner = "luarvique";
-    repo = "openwebrx";
-    rev = version;
-    sha256 = "sha256-QHgt0JGV4E8vOZpY3UwxbtBV38NZBXNrc2asYbHjEqo=";
-  };
+    src = fetchFromGitHub {
+      owner = "luarvique";
+      repo = "openwebrx";
+      rev = version;
+      sha256 = "sha256-QHgt0JGV4E8vOZpY3UwxbtBV38NZBXNrc2asYbHjEqo=";
+    };
 
-  nativeBuildInputs = [
-    setuptools
-  ];
+    nativeBuildInputs = [
+      setuptools
+    ];
 
-  propagatedBuildInputs = [
-    setuptools
-    pycsdr
-    pycsdr-eti
-    pydigiham
-    js8py
-owrx_connector
-    soapysdr-with-plugins
-  ];
+    propagatedBuildInputs = [
+      setuptools
+      pycsdr
+      pycsdr-eti
+      pydigiham
+      js8py
+      owrx_connector
+      soapysdr-with-plugins
+    ];
 
-  buildInputs = [
-    direwolf
-    sox
-    wsjtx
-    codecserver
-  ];
+    buildInputs = [
+      direwolf
+      sox
+      wsjtx
+      codecserver
+    ];
 
-  pythonImportsCheck = [ "csdr" "owrx" "test" ];
+    pythonImportsCheck = ["csdr" "owrx" "test"];
 
-  passthru = {
-    inherit js8py owrx_connector pycsdr csdr;
-  };
+    passthru = {
+      inherit js8py owrx_connector pycsdr csdr;
+    };
 
-  meta = with lib; {
-    homepage = "https://github.com/luarvique/openwebrx";
-    description = "A simple DSP library and command-line tool for Software Defined Radio";
-    mainProgram = "openwebrx";
-    license = licenses.gpl3Only;
-    maintainers = teams.c3d2.members;
-  };
-}
+    meta = with lib; {
+      homepage = "https://github.com/luarvique/openwebrx";
+      description = "A simple DSP library and command-line tool for Software Defined Radio";
+      mainProgram = "openwebrx";
+      license = licenses.gpl3Only;
+      maintainers = teams.c3d2.members;
+    };
+  }

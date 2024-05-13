@@ -64,7 +64,7 @@ in {
     acme_cloudflare_token = acmeSecret;
   };
   systemd.services = let
-    after = [ "systemd-tmpfiles-resetup.service" ];
+    after = ["systemd-tmpfiles-resetup.service"];
   in {
     acme-fixperms = {
       inherit after;

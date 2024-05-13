@@ -1,4 +1,11 @@
-{ inputs, pkgs, config, access, lib, ... }: let
+{
+  inputs,
+  pkgs,
+  config,
+  access,
+  lib,
+  ...
+}: let
   inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapAlmostOptionDefaults;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.strings) replaceStrings;
@@ -17,7 +24,7 @@ in {
         };
       };
       gensokyo-zone = let
-        toLdap = replaceStrings [ "idp." ] [ "ldap." ];
+        toLdap = replaceStrings ["idp."] ["ldap."];
         system = access.systemForService "kerberos";
         lanName = access.getHostnameFor system.name "lan";
         localName = access.getHostnameFor system.name "local";
@@ -28,8 +35,8 @@ in {
         host = mkAlmostOptionDefault lanName;
         ldap = {
           urls = mkMerge [
-            (mkOptionDefault (mkBefore [ "ldaps://${ldapLan}" ]))
-            (mkIf (ldapLan != ldapLocal) (mkOptionDefault (mkBefore [ "ldaps://${ldapLan}" ])))
+            (mkOptionDefault (mkBefore ["ldaps://${ldapLan}"]))
+            (mkIf (ldapLan != ldapLocal) (mkOptionDefault (mkBefore ["ldaps://${ldapLan}"])))
           ];
           bind.passwordFile = mkIf (cfg.gensokyo-zone.db.backend == "kldap") config.sops.secrets.gensokyo-zone-krb5-passwords.path;
         };
@@ -52,7 +59,7 @@ in {
       sysAccountDnSuffix = mkDefault "cn=sysaccounts,cn=etc,";
       domainDnSuffix = mkDefault "cn=ad,cn=etc,";
     };
-    networking.timeServers = [ "2.fedora.pool.ntp.org" ];
+    networking.timeServers = ["2.fedora.pool.ntp.org"];
     security.ipa = {
       chromiumSupport = mkDefault false;
     };
@@ -68,24 +75,26 @@ in {
 
         kinit -k host/${config.networking.fqdn}
       '';
-    in mkIf enabled {
-      path = [ config.security.krb5.package ];
-      serviceConfig = {
-        Type = mkOptionDefault "oneshot";
-        ExecStart = [ "${krb5-host}" ];
+    in
+      mkIf enabled {
+        path = [config.security.krb5.package];
+        serviceConfig = {
+          Type = mkOptionDefault "oneshot";
+          ExecStart = ["${krb5-host}"];
+        };
       };
-    };
 
     sops.secrets = let
       sopsFile = mkDefault ./secrets/krb5.yaml;
-    in mkIf enabled {
-      krb5-keytab = {
-        mode = "0400";
-        path = "/etc/krb5.keytab";
+    in
+      mkIf enabled {
+        krb5-keytab = {
+          mode = "0400";
+          path = "/etc/krb5.keytab";
+        };
+        gensokyo-zone-krb5-passwords = mkIf (cfg.gensokyo-zone.db.backend == "kldap") {
+          inherit sopsFile;
+        };
       };
-      gensokyo-zone-krb5-passwords = mkIf (cfg.gensokyo-zone.db.backend == "kldap") {
-        inherit sopsFile;
-      };
-    };
   };
 }

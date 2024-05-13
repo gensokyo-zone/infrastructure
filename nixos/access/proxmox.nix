@@ -7,7 +7,7 @@
   inherit (lib.modules) mkDefault;
   inherit (lib.strings) escapeRegex;
   inherit (config.services) nginx tailscale;
-  proxyPass = access.proxyUrlFor { serviceName = "proxmox"; } + "/";
+  proxyPass = access.proxyUrlFor {serviceName = "proxmox";} + "/";
 in {
   config.services.nginx.virtualHosts = let
     locations."/" = {

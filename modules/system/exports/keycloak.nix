@@ -1,26 +1,32 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.keycloak = { config, ... }: {
+  config.exports.services.keycloak = {config, ...}: {
     id = mkAlmostOptionDefault "sso";
     nixos = {
       serviceAttr = "keycloak";
       assertions = let
         mkAssertion = f: nixosConfig: let
           cfg = nixosConfig.services.keycloak;
-        in f nixosConfig cfg;
-      in mkIf config.enable [
-        (mkAssertion (nixosConfig: cfg: {
-          assertion = config.ports.${cfg.protocol}.port == cfg.port;
-          message = "port mismatch";
-        }))
-        (mkAssertion (nixosConfig: cfg: {
-          assertion = config.ports.${cfg.protocol}.enable;
-          message = "port enable mismatch";
-        }))
-      ];
+        in
+          f nixosConfig cfg;
+      in
+        mkIf config.enable [
+          (mkAssertion (nixosConfig: cfg: {
+            assertion = config.ports.${cfg.protocol}.port == cfg.port;
+            message = "port mismatch";
+          }))
+          (mkAssertion (nixosConfig: cfg: {
+            assertion = config.ports.${cfg.protocol}.enable;
+            message = "port enable mismatch";
+          }))
+        ];
     };
     ports = mapAttrs (_: mapAlmostOptionDefaults) {
       http = {

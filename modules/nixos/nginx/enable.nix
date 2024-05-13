@@ -1,28 +1,33 @@
-{
-  lib,
-  ...
-}: let
+{lib, ...}: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOverride;
   mkExtraForce = mkOverride 25;
-  locationModule = { config, virtualHost, ... }: {
+  locationModule = {
+    config,
+    virtualHost,
+    ...
+  }: {
     options = with lib.types; {
-      enable = mkEnableOption "enable location" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "enable location"
+        // {
+          default = true;
+        };
     };
     config = mkIf (!virtualHost.enable || !config.enable) {
       extraConfig = mkExtraForce "deny all;";
     };
   };
-  hostModule = { config, ... }: {
+  hostModule = {config, ...}: {
     options = with lib.types; {
-      enable = mkEnableOption "enable server" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "enable server"
+        // {
+          default = true;
+        };
       locations = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ locationModule ];
+          modules = [locationModule];
           shorthandOnlyDefinesConfig = true;
         });
       };
@@ -39,7 +44,7 @@ in {
   options = with lib.types; {
     services.nginx.virtualHosts = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ hostModule ];
+        modules = [hostModule];
         shorthandOnlyDefinesConfig = true;
       });
     };

@@ -1,7 +1,4 @@
-{
-  extern'test'inputs,
-  ...
-}: let
+{extern'test'inputs, ...}: let
   inherit (extern'test'inputs.self) nixosModules homeModules;
 in {
   imports = [
@@ -53,7 +50,7 @@ in {
       sharedModules = [
         homeModules.default
       ];
-      users.me = { config, ... }: {
+      users.me = {config, ...}: {
         config = {
           home.stateVersion = "23.11";
           gensokyo-zone = {

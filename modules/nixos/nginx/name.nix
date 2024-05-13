@@ -46,18 +46,21 @@
     config = {
       name = {
         qualifier = mkOptionDefault (
-          if config.local.enable then "local"
+          if config.local.enable
+          then "local"
           else null
         );
         includeTailscale = mkOptionDefault (
           config.local.enable && tailscale.enable && cfg.qualifier != "tail"
         );
         localName = mkOptionDefault (
-          if cfg.includeLocal then "${cfg.shortServer}.local.${networking.domain}"
+          if cfg.includeLocal
+          then "${cfg.shortServer}.local.${networking.domain}"
           else null
         );
         tailscaleName = mkOptionDefault (
-          if cfg.includeTailscale then "${cfg.shortServer}.tail.${networking.domain}"
+          if cfg.includeTailscale
+          then "${cfg.shortServer}.tail.${networking.domain}"
           else null
         );
       };
@@ -71,7 +74,7 @@
         (mkIf (cfg.tailscaleName != null) cfg.tailscaleName)
       ]);
       allServerNames = mkOptionDefault (filter (name: ! hasPrefix "@" name) (
-        [ config.serverName ] ++ config.serverAliases
+        [config.serverName] ++ config.serverAliases
       ));
       otherServerNames = mkOptionDefault (filter (name: ! hasPrefix "@" name) (
         config.serverAliases

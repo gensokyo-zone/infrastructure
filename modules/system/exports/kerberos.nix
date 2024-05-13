@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.kerberos = { config, ... }: {
+  config.exports.services.kerberos = {config, ...}: {
     id = "krb5";
     ports = mapAttrs (_: mapAlmostOptionDefaults) {
       default = {

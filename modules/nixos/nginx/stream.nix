@@ -10,9 +10,11 @@
   cfg = config.services.nginx.stream;
   serverModule = {config, ...}: {
     options = with lib.types; {
-      enable = mkEnableOption "stream server block" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "stream server block"
+        // {
+          default = true;
+        };
       extraConfig = mkOption {
         type = lines;
         default = "";
@@ -49,7 +51,7 @@ in {
           nixosConfig = config;
         };
       });
-      default = { };
+      default = {};
     };
   };
   config.services.nginx = {

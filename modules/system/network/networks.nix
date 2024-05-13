@@ -1,9 +1,19 @@
-{config, lib, inputs, ...}: let
+{
+  config,
+  lib,
+  inputs,
+  ...
+}: let
   inherit (inputs.self.lib.lib) eui64;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.trivial) mapNullable;
-  networkModule = { config, name, system, ... }: let
+  networkModule = {
+    config,
+    name,
+    system,
+    ...
+  }: let
     knownNetworks = {
       local.slaac = {
         enable = true;
@@ -13,9 +23,11 @@
     };
   in {
     options = with lib.types; {
-      enable = mkEnableOption "network" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "network"
+        // {
+          default = true;
+        };
       slaac = {
         enable = mkOption {
           type = bool;
@@ -65,12 +77,12 @@ in {
   options.network = with lib.types; {
     networks = mkOption {
       type = attrsOf (submoduleWith {
-        modules = [ networkModule ];
+        modules = [networkModule];
         specialArgs = {
           system = config;
         };
       });
-      default = { };
+      default = {};
     };
   };
 }

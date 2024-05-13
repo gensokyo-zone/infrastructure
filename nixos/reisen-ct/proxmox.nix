@@ -26,19 +26,22 @@ in {
 
   proxmoxLXC.privileged = mkIf (proxmox.container.enable && proxmox.container.privileged) true;
 
-  systemd.network = mkIf proxmox.enabled (mkMerge (mapAttrsToList (_: interface: mkIf (interface.enable && interface.networkd.enable) {
-    networks.${interface.networkd.name} = unmerged.mergeAttrs interface.networkd.networkSettings;
-  }) proxmox.network.interfaces));
+  systemd.network = mkIf proxmox.enabled (mkMerge (mapAttrsToList (_: interface:
+    mkIf (interface.enable && interface.networkd.enable) {
+      networks.${interface.networkd.name} = unmerged.mergeAttrs interface.networkd.networkSettings;
+    })
+  proxmox.network.interfaces));
 
   networking.firewall.interfaces.lan = let
     inherit (proxmox.network) internal local;
     conditions = coalesce [
-      (mapNullable (interface: [ "iifname ${interface.name}" ]) internal.interface)
+      (mapNullable (interface: ["iifname ${interface.name}"]) internal.interface)
       (mapNullable (interface: config.networking.firewall.interfaces.local.nftables.conditions) local.interface)
     ];
-  in mkIf (conditions != null) {
-    nftables = {
-      inherit conditions;
+  in
+    mkIf (conditions != null) {
+      nftables = {
+        inherit conditions;
+      };
     };
-  };
 }

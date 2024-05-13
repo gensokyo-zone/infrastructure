@@ -1,5 +1,10 @@
 let
-  locationModule = { config, virtualHost, lib, ... }: let
+  locationModule = {
+    config,
+    virtualHost,
+    lib,
+    ...
+  }: let
     inherit (lib.options) mkEnableOption mkOption;
     inherit (lib.attrsets) mapAttrs;
     cfg = config.xvars;
@@ -8,7 +13,7 @@ let
       enable = mkEnableOption "$x_variables";
       defaults = mkOption {
         type = attrsOf (nullOr str);
-        default = { };
+        default = {};
       };
       lib = mkOption {
         type = attrs;
@@ -18,15 +23,28 @@ let
       xvars = {
         lib = let
           xvars = virtualHost.xvars.lib;
-          get = mapAttrs (name: default: if virtualHost.xvars.enable then "$x_${name}" else assert default != null; default) cfg.defaults;
-        in xvars // {
-          get = xvars.get // get;
-        };
+          get = mapAttrs (name: default:
+            if virtualHost.xvars.enable
+            then "$x_${name}"
+            else assert default != null; default)
+          cfg.defaults;
+        in
+          xvars
+          // {
+            get = xvars.get // get;
+          };
       };
       _module.args.xvars = config.xvars.lib;
     };
   };
-  hostModule = { config, nixosConfig, gensokyo-zone, xvars, lib, ... }: let
+  hostModule = {
+    config,
+    nixosConfig,
+    gensokyo-zone,
+    xvars,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkJustBefore;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
@@ -36,11 +54,16 @@ let
     inherit (lib.trivial) isInt;
     cfg = config.xvars;
     escapeString = value:
-      if value == "" then ''""''
-      else if isInt value then toString value
-      else if hasPrefix ''"'' value || hasPrefix "'" value then value # already escaped, may include trailing arguments
-      else if hasInfix ''"'' value then "'${value}'"
-      else if hasInfix " " value || hasInfix ";" value || hasInfix "'" value then ''"${value}"''
+      if value == ""
+      then ''""''
+      else if isInt value
+      then toString value
+      else if hasPrefix ''"'' value || hasPrefix "'" value
+      then value # already escaped, may include trailing arguments
+      else if hasInfix ''"'' value
+      then "'${value}'"
+      else if hasInfix " " value || hasInfix ";" value || hasInfix "'" value
+      then ''"${value}"''
       else value;
     anyLocations = f: any (loc: loc.enable && f loc) (attrValues config.locations);
   in {
@@ -66,7 +89,7 @@ let
       };
       locations = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ locationModule ];
+          modules = [locationModule];
           shorthandOnlyDefinesConfig = true;
           specialArgs = {
             inherit nixosConfig gensokyo-zone;
@@ -99,7 +122,11 @@ let
           referer_path = null;
         });
         lib = {
-          get = mapAttrs (name: default: if cfg.enable then "$x_${name}" else assert default != null; default) cfg.defaults;
+          get = mapAttrs (name: default:
+            if cfg.enable
+            then "$x_${name}"
+            else assert default != null; default)
+          cfg.defaults;
           init = name: value: assert cfg.enable && cfg.defaults ? ${name}; "set $x_${name} ${escapeString value};";
           inherit escapeString;
         };
@@ -111,24 +138,25 @@ let
       _module.args.xvars = config.xvars.lib;
     };
   };
-in {
-  config,
-  lib,
-  gensokyo-zone,
-  ...
-}: let
-  inherit (lib.options) mkOption;
-in {
-  options = with lib.types; {
-    services.nginx.virtualHosts = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [ hostModule ];
-        shorthandOnlyDefinesConfig = true;
-        specialArgs = {
-          inherit gensokyo-zone;
-          nixosConfig = config;
-        };
-      });
+in
+  {
+    config,
+    lib,
+    gensokyo-zone,
+    ...
+  }: let
+    inherit (lib.options) mkOption;
+  in {
+    options = with lib.types; {
+      services.nginx.virtualHosts = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [hostModule];
+          shorthandOnlyDefinesConfig = true;
+          specialArgs = {
+            inherit gensokyo-zone;
+            nixosConfig = config;
+          };
+        });
+      };
     };
-  };
-}
+  }

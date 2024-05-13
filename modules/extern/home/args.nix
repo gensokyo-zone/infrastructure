@@ -1,4 +1,8 @@
-{inputs, ...}: {lib, osConfig, ...}: let
+{inputs, ...}: {
+  lib,
+  osConfig,
+  ...
+}: let
   inherit (inputs.self.lib) meta;
   inherit (lib.modules) mkIf;
 in {

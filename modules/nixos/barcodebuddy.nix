@@ -1,4 +1,10 @@
-{ config, lib, gensokyo-zone, pkgs, ... }: let
+{
+  config,
+  lib,
+  gensokyo-zone,
+  pkgs,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults unmerged;
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
@@ -8,17 +14,20 @@
   cfg = config.services.barcodebuddy;
   toEnvName = key: "BBUDDY_" + key;
   toEnvValue = value:
-    if value == true then "true"
-    else if value == false then "false"
-    else if isList value then concatStringsSep ";" (imap0 (i: v: "${toString i}=${toEnvValue v}") value)
+    if value == true
+    then "true"
+    else if value == false
+    then "false"
+    else if isList value
+    then concatStringsSep ";" (imap0 (i: v: "${toString i}=${toEnvValue v}") value)
     else toString value;
   toEnvPair = key: value: nameValuePair (toEnvName key) (toEnvValue value);
   toPhpEnvPair = key: value: nameValuePair (toEnvName key) ''"${toEnvValue value}"'';
 in {
   options.services.barcodebuddy = with lib.types; {
     enable = mkEnableOption "Barcode Buddy";
-    package = mkPackageOption pkgs "barcodebuddy" { };
-    phpPackageUnwrapped = mkPackageOption pkgs "php83" { };
+    package = mkPackageOption pkgs "barcodebuddy" {};
+    phpPackageUnwrapped = mkPackageOption pkgs "php83" {};
     hostName = mkOption {
       type = str;
     };
@@ -38,7 +47,7 @@ in {
       enable = mkEnableOption "reverse proxy";
       trustedAddresses = mkOption {
         type = listOf str;
-        default = [ "127.0.0.1" "::1" ];
+        default = ["127.0.0.1" "::1"];
       };
     };
     screen = {
@@ -65,13 +74,15 @@ in {
         type = nullOr str;
         default = null;
       };
-      /* TODO: passwordFile = mkOption {
+      /*
+         TODO: passwordFile = mkOption {
         type = nullOr path;
         default = null;
-      };*/
+      };
+      */
     };
     settings = mkOption {
-      type = attrsOf (oneOf [ str bool int (listOf str) ]);
+      type = attrsOf (oneOf [str bool int (listOf str)]);
       description = "https://github.com/Forceu/barcodebuddy/blob/master/config-dist.php";
     };
     nginxConfig = mkOption {
@@ -95,9 +106,19 @@ in {
     bbuddyConfig.services.barcodebuddy = {
       settings = let
         defaults = mapOptionDefaults {
-          ${if cfg.screen.enable then "PORT_WEBSOCKET_SERVER" else null} = cfg.screen.websocketPort;
+          ${
+            if cfg.screen.enable
+            then "PORT_WEBSOCKET_SERVER"
+            else null
+          } =
+            cfg.screen.websocketPort;
           SEARCH_ENGINE = "https://google.com/search?q=";
-          ${if cfg.reverseProxy.enable then "TRUSTED_PROXIES" else null} = cfg.reverseProxy.trustedAddresses;
+          ${
+            if cfg.reverseProxy.enable
+            then "TRUSTED_PROXIES"
+            else null
+          } =
+            cfg.reverseProxy.trustedAddresses;
           DISABLE_AUTHENTICATION = false;
           DATABASE_PATH = cfg.databasePath;
           AUTHDB_PATH = cfg.authDatabasePath;
@@ -109,7 +130,8 @@ in {
           REDIS_PORT = cfg.redis.port;
           REDIS_PW = toString cfg.redis.password;
         };
-      in mkMerge [ defaults (mkIf cfg.redis.enable redis) ];
+      in
+        mkMerge [defaults (mkIf cfg.redis.enable redis)];
       nginxConfig = ''
         index index.php index.html index.htm;
       '';
@@ -125,13 +147,18 @@ in {
       };
       redis = let
         redis = config.services.redis.servers.${cfg.redis.server};
-      in mkIf (cfg.redis.server != null) {
-        enable = mkAlmostOptionDefault redis.enable;
-        ip = mkOptionDefault (if redis.bind == null then "localhost" else redis.bind);
-        port = mkIf (redis.port != 0) (mkOptionDefault redis.port);
-        password = mkAlmostOptionDefault redis.requirePass;
-        # TODO: passwordFile = mkAlmostOptionDefault redis.requirePassFile;
-      };
+      in
+        mkIf (cfg.redis.server != null) {
+          enable = mkAlmostOptionDefault redis.enable;
+          ip = mkOptionDefault (
+            if redis.bind == null
+            then "localhost"
+            else redis.bind
+          );
+          port = mkIf (redis.port != 0) (mkOptionDefault redis.port);
+          password = mkAlmostOptionDefault redis.requirePass;
+          # TODO: passwordFile = mkAlmostOptionDefault redis.requirePassFile;
+        };
     };
     conf.users.users.barcodebuddy = {
       isSystemUser = true;
@@ -146,7 +173,10 @@ in {
       user = "barcodebuddy";
       inherit (config.services.nginx) group;
 
-      phpPackage = cfg.phpPackageUnwrapped.withExtensions ({ enabled, all }: [
+      phpPackage = cfg.phpPackageUnwrapped.withExtensions ({
+        enabled,
+        all,
+      }: [
         all.curl
         all.mbstring
         all.sqlite3
@@ -190,7 +220,7 @@ in {
       };
     };
     conf.systemd.services.bbuddy-websocket = mkIf cfg.screen.enable {
-      wantedBy = [ "multi-user.target" ];
+      wantedBy = ["multi-user.target"];
       environment = mapAttrs' toEnvPair cfg.settings;
       unitConfig = {
         Description = "Run websocket server for barcodebuddy screen feature";
@@ -202,5 +232,6 @@ in {
         User = "barcodebuddy";
       };
     };
-  in mkMerge [ bbuddyConfig (mkIf cfg.enable conf) ];
+  in
+    mkMerge [bbuddyConfig (mkIf cfg.enable conf)];
 }

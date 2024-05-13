@@ -1,5 +1,5 @@
 let
-  xHeadersProxied = { xvars }: ''
+  xHeadersProxied = {xvars}: ''
     ${xvars.init "forwarded_for" "$proxy_add_x_forwarded_for"}
     if ($http_x_forwarded_proto) {
       ${xvars.init "scheme" "$http_x_forwarded_proto"}
@@ -18,7 +18,14 @@ let
       ${xvars.init "forwarded_server" "$http_x_forwarded_server"}
     }
   '';
-  locationModule = { config, virtualHost, xvars, gensokyo-zone, lib, ... }: let
+  locationModule = {
+    config,
+    virtualHost,
+    xvars,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkJustBefore mkAlmostOptionDefault;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
@@ -27,7 +34,7 @@ let
     options = with lib.types; {
       proxied = {
         enable = mkOption {
-          type = enum [ false true "cloudflared" ];
+          type = enum [false true "cloudflared"];
           default = false;
         };
         enabled = mkOption {
@@ -60,12 +67,19 @@ let
       xvars.enable = mkIf cfg.enabled true;
       extraConfig = mkMerge [
         (mkIf emitVars (
-          mkJustBefore (xHeadersProxied { inherit xvars; })
+          mkJustBefore (xHeadersProxied {inherit xvars;})
         ))
       ];
     };
   };
-  hostModule = { config, nixosConfig, xvars, gensokyo-zone, lib, ... }: let
+  hostModule = {
+    config,
+    nixosConfig,
+    xvars,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault orderJustBefore unmerged;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkOrder mkDefault;
@@ -75,7 +89,7 @@ let
     options = with lib.types; {
       proxied = {
         enable = mkOption {
-          type = enum [ false true "cloudflared" ];
+          type = enum [false true "cloudflared"];
           default = false;
         };
         enabled = mkOption {
@@ -93,7 +107,7 @@ let
       };
       locations = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ locationModule ];
+          modules = [locationModule];
           shorthandOnlyDefinesConfig = true;
         });
       };
@@ -105,14 +119,23 @@ let
       proxied = {
         cloudflared = let
           listen = config.listen'.proxied;
-          scheme = if listen.ssl then "https" else "http";
-        in mkIf (cfg.enable == "cloudflared") {
-          ingressSettings.${config.serverName} = {
-            service = "${scheme}://localhost:${toString listen.port}";
-            originRequest.${if scheme == "https" then "noTLSVerify" else null} = true;
+          scheme =
+            if listen.ssl
+            then "https"
+            else "http";
+        in
+          mkIf (cfg.enable == "cloudflared") {
+            ingressSettings.${config.serverName} = {
+              service = "${scheme}://localhost:${toString listen.port}";
+              originRequest.${
+                if scheme == "https"
+                then "noTLSVerify"
+                else null
+              } =
+                true;
+            };
+            getIngress = {}: unmerged.mergeAttrs cfg.cloudflared.ingressSettings;
           };
-          getIngress = {}: unmerged.mergeAttrs cfg.cloudflared.ingressSettings;
-        };
       };
       xvars.enable = mkIf cfg.enabled true;
       local.denyGlobal = mkIf listenProxied (mkDefault true);
@@ -123,74 +146,75 @@ let
         };
       };
       extraConfig = mkIf (cfg.enabled && config.xvars.enable) (
-        mkOrder (orderJustBefore + 25) (xHeadersProxied { inherit xvars; })
+        mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
       );
     };
   };
-in {
-  config,
-  system,
-  gensokyo-zone,
-  lib,
-  ...
-}: let
-  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkOptionDefault;
-  inherit (lib.attrsets) attrValues;
-  inherit (lib.lists) any;
-  inherit (config.services) nginx;
-  cfg = nginx.proxied;
-in {
-  options.services.nginx = with lib.types; {
-    proxied = {
-      enable = mkEnableOption "proxy";
-      listenAddr = mkOption {
-        type = str;
-        default = "[::]";
+in
+  {
+    config,
+    system,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkOptionDefault;
+    inherit (lib.attrsets) attrValues;
+    inherit (lib.lists) any;
+    inherit (config.services) nginx;
+    cfg = nginx.proxied;
+  in {
+    options.services.nginx = with lib.types; {
+      proxied = {
+        enable = mkEnableOption "proxy";
+        listenAddr = mkOption {
+          type = str;
+          default = "[::]";
+        };
+        listenPort = mkOption {
+          type = port;
+          default = 9080;
+        };
       };
-      listenPort = mkOption {
-        type = port;
-        default = 9080;
+      virtualHosts = mkOption {
+        type = attrsOf (submodule [hostModule]);
       };
     };
-    virtualHosts = mkOption {
-      type = attrsOf (submodule [hostModule]);
-    };
-  };
-  config = {
-    services.nginx = let
-      warnEnable = lib.warnIf (cfg.enable != hasProxiedHosts) "services.nginx.proxied.enable expected to be set";
-      hasProxiedHosts = any (virtualHost: virtualHost.enable && virtualHost.proxied.enabled) (attrValues nginx.virtualHosts);
-    in {
-      upstreams' = {
-        nginx'proxied = mkIf (warnEnable cfg.enable) {
-          servers.local = {
-            accessService = {
-              system = system.name;
-              name = "nginx";
-              port = "proxied";
+    config = {
+      services.nginx = let
+        warnEnable = lib.warnIf (cfg.enable != hasProxiedHosts) "services.nginx.proxied.enable expected to be set";
+        hasProxiedHosts = any (virtualHost: virtualHost.enable && virtualHost.proxied.enabled) (attrValues nginx.virtualHosts);
+      in {
+        upstreams' = {
+          nginx'proxied = mkIf (warnEnable cfg.enable) {
+            servers.local = {
+              accessService = {
+                system = system.name;
+                name = "nginx";
+                port = "proxied";
+              };
             };
           };
         };
-      };
-      virtualHosts = {
-        fallback'proxied = mkIf cfg.enable {
-          serverName = null;
-          reuseport = mkAlmostOptionDefault true;
-          default = mkAlmostOptionDefault true;
-          listen'.proxied = {
-            addr = mkAlmostOptionDefault cfg.listenAddr;
-            port = mkAlmostOptionDefault cfg.listenPort;
+        virtualHosts = {
+          fallback'proxied = mkIf cfg.enable {
+            serverName = null;
+            reuseport = mkAlmostOptionDefault true;
+            default = mkAlmostOptionDefault true;
+            listen'.proxied = {
+              addr = mkAlmostOptionDefault cfg.listenAddr;
+              port = mkAlmostOptionDefault cfg.listenPort;
+            };
+            locations."/".extraConfig = mkAlmostOptionDefault ''
+              return 502;
+            '';
           };
-          locations."/".extraConfig = mkAlmostOptionDefault ''
-            return 502;
-          '';
         };
       };
+      networking.firewall.interfaces.lan = mkIf nginx.enable {
+        allowedTCPPorts = mkIf cfg.enable [cfg.listenPort];
+      };
     };
-    networking.firewall.interfaces.lan = mkIf nginx.enable {
-      allowedTCPPorts = mkIf cfg.enable [ cfg.listenPort ];
-    };
-  };
-}
+  }

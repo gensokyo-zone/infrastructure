@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.ldap = { config, ... }: {
+  config.exports.services.ldap = {config, ...}: {
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = mapAttrs (_: mapAlmostOptionDefaults) {
       default = {

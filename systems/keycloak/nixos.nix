@@ -1,4 +1,9 @@
-{meta, config, access, ...}: {
+{
+  meta,
+  config,
+  access,
+  ...
+}: {
   imports = let
     inherit (meta) nixos;
   in [
@@ -24,13 +29,28 @@
         inherit (vouch'system.exports.services) vouch-proxy;
       in {
         "${keycloak.id}.${config.networking.domain}" = let
-          portName = if keycloak.ports.https.enable then "https" else "http";
+          portName =
+            if keycloak.ports.https.enable
+            then "https"
+            else "http";
         in {
-          service = access.proxyUrlFor { system = keycloak'system; service = keycloak; inherit portName; };
-          originRequest.${if keycloak.ports.${portName}.protocol == "https" then "noTLSVerify" else null} = true;
+          service = access.proxyUrlFor {
+            system = keycloak'system;
+            service = keycloak;
+            inherit portName;
+          };
+          originRequest.${
+            if keycloak.ports.${portName}.protocol == "https"
+            then "noTLSVerify"
+            else null
+          } =
+            true;
         };
         "${vouch-proxy.id}.${config.networking.domain}" = {
-          service = access.proxyUrlFor { system = vouch'system; service = vouch-proxy; };
+          service = access.proxyUrlFor {
+            system = vouch'system;
+            service = vouch-proxy;
+          };
         };
       };
     };

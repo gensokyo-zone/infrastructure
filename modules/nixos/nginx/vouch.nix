@@ -13,7 +13,12 @@
   inherit (config) networking;
   inherit (config.services) vouch-proxy nginx tailscale;
   inherit (nginx) vouch;
-  locationModule = {config, virtualHost, xvars, ...}: {
+  locationModule = {
+    config,
+    virtualHost,
+    xvars,
+    ...
+  }: {
     options.vouch = with lib.types; {
       requireAuth = mkEnableOption "require auth to access this location";
       setProxyHeader = mkOption {
@@ -26,29 +31,35 @@
       enableVouchLocal = virtualHost.vouch.localSso.enable;
       enableVouchTail = enableVouchLocal && tailscale.enable && false;
       allowOrigin = url: "add_header Access-Control-Allow-Origin ${url};";
-    in mkIf config.vouch.requireAuth {
-      lua = mkIf virtualHost.vouch.auth.lua.enable {
-        access.block = mkMerge [
-          (mkBefore virtualHost.vouch.auth.lua.accessRequest)
-          (mkBefore virtualHost.vouch.auth.lua.accessVariables)
-          (mkBefore virtualHost.vouch.auth.lua.accessLogic)
-        ];
+    in
+      mkIf config.vouch.requireAuth {
+        lua = mkIf virtualHost.vouch.auth.lua.enable {
+          access.block = mkMerge [
+            (mkBefore virtualHost.vouch.auth.lua.accessRequest)
+            (mkBefore virtualHost.vouch.auth.lua.accessVariables)
+            (mkBefore virtualHost.vouch.auth.lua.accessLogic)
+          ];
+        };
+        xvars.enable = mkIf (enableVouchTail || virtualHost.vouch.auth.lua.enable) true;
+        proxy.headers.set.X-Vouch-User = mkOptionDefault "$auth_resp_x_vouch_user";
+        extraConfig = assert virtualHost.vouch.enable;
+          mkMerge [
+            (mkIf (!virtualHost.vouch.requireAuth) virtualHost.vouch.auth.requestDirective)
+            (allowOrigin vouch.url)
+            (allowOrigin vouch.authUrl)
+            (mkIf enableVouchLocal (allowOrigin vouch.localUrl))
+            (mkIf enableVouchLocal (allowOrigin "sso.local.${networking.domain}"))
+            (mkIf enableVouchTail (allowOrigin "${xvars.get.scheme}://${vouch.tailDomain}"))
+          ];
       };
-      xvars.enable = mkIf (enableVouchTail || virtualHost.vouch.auth.lua.enable) true;
-      proxy.headers.set.X-Vouch-User = mkOptionDefault "$auth_resp_x_vouch_user";
-      extraConfig = assert virtualHost.vouch.enable; mkMerge [
-        (mkIf (!virtualHost.vouch.requireAuth) virtualHost.vouch.auth.requestDirective)
-        (allowOrigin vouch.url)
-        (allowOrigin vouch.authUrl)
-        (mkIf enableVouchLocal (allowOrigin vouch.localUrl))
-        (mkIf enableVouchLocal (allowOrigin "sso.local.${networking.domain}"))
-        (mkIf enableVouchTail (allowOrigin "${xvars.get.scheme}://${vouch.tailDomain}"))
-      ];
-    };
   };
-  hostModule = {config, xvars, ...}: let
+  hostModule = {
+    config,
+    xvars,
+    ...
+  }: let
     cfg = config.vouch;
-    mkHeaderVar = header: toLower (replaceStrings [ "-" ] [ "_" ] header);
+    mkHeaderVar = header: toLower (replaceStrings ["-"] ["_"] header);
     mkUpstreamVar = header: "\$upstream_http_${mkHeaderVar header}";
   in {
     options = with lib.types; {
@@ -57,12 +68,16 @@
       };
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
-        localSso.enable = mkEnableOption "lan-local vouch" // {
-          default = vouch.localSso.enable && config.local.enable;
-        };
-        requireAuth = mkEnableOption "require auth to access this host" // {
-          default = true;
-        };
+        localSso.enable =
+          mkEnableOption "lan-local vouch"
+          // {
+            default = vouch.localSso.enable && config.local.enable;
+          };
+        requireAuth =
+          mkEnableOption "require auth to access this host"
+          // {
+            default = true;
+          };
         auth = {
           lua = {
             enable = mkEnableOption "lua";
@@ -129,9 +144,12 @@
               return ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
             end
           '');
-          accessVariables = mkMerge (mapAttrsToList (authVar: header: mkOptionDefault
-            ''ngx.var["${authVar}"] = ngx.ctx.auth_res.header["${header}"] or ""''
-          ) cfg.auth.variables);
+          accessVariables = mkMerge (mapAttrsToList (
+              authVar: header:
+                mkOptionDefault
+                ''ngx.var["${authVar}"] = ngx.ctx.auth_res.header["${header}"] or ""''
+            )
+            cfg.auth.variables);
         };
         errorLocation = mkIf cfg.auth.lua.enable (mkAlmostOptionDefault null);
         requestDirective = mkIf cfg.auth.lua.enable (mkAlmostOptionDefault "");
@@ -161,15 +179,19 @@
           (mkIf cfg.localSso.enable localVouchUrl)
           (mkIf (cfg.localSso.enable && tailscale.enable) tailVouchUrl)
         ];
-      in mkIf cfg.enable (mkMerge (
-        [
-          (mkIf (cfg.requireAuth) (mkBefore cfg.auth.requestDirective))
-          (mkIf (cfg.auth.errorLocation != null) "error_page 401 = ${cfg.auth.errorLocation};")
-        ] ++ setVouchUrl
-        ++ mapAttrsToList (authVar: header: mkIf (!cfg.auth.lua.enable) (
-          mkBefore "auth_request_set \$${authVar} ${mkUpstreamVar header};"
-        )) cfg.auth.variables
-      ));
+      in
+        mkIf cfg.enable (mkMerge (
+          [
+            (mkIf (cfg.requireAuth) (mkBefore cfg.auth.requestDirective))
+            (mkIf (cfg.auth.errorLocation != null) "error_page 401 = ${cfg.auth.errorLocation};")
+          ]
+          ++ setVouchUrl
+          ++ mapAttrsToList (authVar: header:
+            mkIf (!cfg.auth.lua.enable) (
+              mkBefore "auth_request_set \$${authVar} ${mkUpstreamVar header};"
+            ))
+          cfg.auth.variables
+        ));
       xvars.enable = mkIf cfg.enable true;
       locations = mkIf cfg.enable {
         "/" = mkIf cfg.requireAuth {
@@ -181,18 +203,30 @@
             return 302 $vouch_url/login?url=${xvars.get.scheme}://${xvars.get.host}$request_uri&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
           '';
         };
-        ${cfg.auth.requestLocation} = { config, xvars, ... }: {
+        ${cfg.auth.requestLocation} = {
+          config,
+          xvars,
+          ...
+        }: {
           proxy = {
             enable = true;
             inheritServerDefaults = false;
             upstream = mkDefault (
-              if vouch.doubleProxy.enable then "vouch'proxy"
-              else if cfg.localSso.enable then "vouch'auth'local"
+              if vouch.doubleProxy.enable
+              then "vouch'proxy"
+              else if cfg.localSso.enable
+              then "vouch'auth'local"
               else "vouch'auth"
             );
             # nginx-proxied vouch must use X-Forwarded-Host, but vanilla vouch requires Host
-            host = if config.proxy.upstream == "vouch'proxy"
-              then (if cfg.localSso.enable then vouch.doubleProxy.localServerName else vouch.doubleProxy.serverName)
+            host =
+              if config.proxy.upstream == "vouch'proxy"
+              then
+                (
+                  if cfg.localSso.enable
+                  then vouch.doubleProxy.localServerName
+                  else vouch.doubleProxy.serverName
+                )
               else xvars.get.host;
             headers = {
               set.Content-Length = "";
@@ -212,9 +246,11 @@ in {
       vouch = {
         enable = mkEnableOption "vouch auth proxy";
         localSso = {
-          enable = mkEnableOption "lan-local auth" // {
-            default = true;
-          };
+          enable =
+            mkEnableOption "lan-local auth"
+            // {
+              default = true;
+            };
         };
         doubleProxy = {
           enable = mkOption {
@@ -271,7 +307,7 @@ in {
         enable = vouch.enable;
         servers = {
           local = localVouch;
-          service = { upstream, ... }: {
+          service = {upstream, ...}: {
             enable = mkIf upstream.servers.local.enable false;
             accessService = {
               name = "vouch-proxy";
@@ -283,10 +319,12 @@ in {
       vouch'auth'local = {
         enable = vouch.enable && vouch.localSso.enable;
         servers = {
-          local = localVouch // {
-            enable = mkAlmostOptionDefault false;
-          };
-          service = { upstream, ... }: {
+          local =
+            localVouch
+            // {
+              enable = mkAlmostOptionDefault false;
+            };
+          service = {upstream, ...}: {
             enable = mkIf upstream.servers.local.enable false;
             accessService = {
               name = "vouch-proxy";
@@ -299,18 +337,18 @@ in {
         enable = vouch.enable && vouch.doubleProxy.enable;
         # TODO: need exported hosts options for this to detect the correct host/port/etc
         servers = {
-          lan = { upstream, ... }: {
+          lan = {upstream, ...}: {
             enable = mkAlmostOptionDefault (!upstream.servers.int.enable);
             addr = mkAlmostOptionDefault "login.local.${networking.domain}";
             port = mkOptionDefault 9080;
             ssl.enable = mkAlmostOptionDefault true;
           };
-          int = { upstream, ... }: {
+          int = {upstream, ...}: {
             enable = mkAlmostOptionDefault system.network.networks.int.enable or false;
             addr = mkAlmostOptionDefault "login.int.${networking.domain}";
             port = mkOptionDefault 9080;
           };
-          tail = { upstream, ... }: {
+          tail = {upstream, ...}: {
             enable = mkAlmostOptionDefault (tailscale.enable && !upstream.servers.lan.enable && !upstream.servers.int.enable);
             addr = mkAlmostOptionDefault "login.tail.${networking.domain}";
             port = mkOptionDefault 9080;

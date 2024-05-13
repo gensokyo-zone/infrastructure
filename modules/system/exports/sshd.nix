@@ -1,13 +1,18 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrs filterAttrs mapAttrsToList;
   inherit (lib.lists) sort;
 in {
-  config.exports.services.sshd = { config, ... }: let
+  config.exports.services.sshd = {config, ...}: let
     mkAssertion = f: nixosConfig: let
       cfg = nixosConfig.services.openssh;
-    in f nixosConfig cfg;
+    in
+      f nixosConfig cfg;
     sorted = sort (a: b: a > b);
     assertPorts = nixosConfig: cfg: let
       nixosPorts = cfg.ports;

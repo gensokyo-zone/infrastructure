@@ -76,10 +76,12 @@ in {
         ];
       };
       allLan = {
-        v4 = cfg.cidrForNetwork.loopback.v4
+        v4 =
+          cfg.cidrForNetwork.loopback.v4
           ++ cfg.cidrForNetwork.local.v4
           ++ cfg.cidrForNetwork.int.v4;
-        v6 = cfg.cidrForNetwork.loopback.v6
+        v6 =
+          cfg.cidrForNetwork.loopback.v6
           ++ cfg.cidrForNetwork.local.v6
           ++ cfg.cidrForNetwork.int.v6;
       };

@@ -16,7 +16,7 @@ in {
         addr = mkDefault "localhost";
         port = mkDefault cfg.port;
       };
-      access = { upstream, ... }: {
+      access = {upstream, ...}: {
         enable = mkDefault (!upstream.servers.local.enable);
         accessService.name = "plex";
       };
@@ -65,12 +65,12 @@ in {
         inherit name locations extraConfig;
         proxy.upstream = mkDefault upstreamName;
         listen' = {
-          http = { };
+          http = {};
           https.ssl = true;
           external = {
             enable = mkDefault false;
             port = mkDefault 32400;
-            extraParameters = [ "default_server" ];
+            extraParameters = ["default_server"];
           };
         };
       };
@@ -88,7 +88,8 @@ in {
   };
   config.networking.firewall.allowedTCPPorts = let
     inherit (nginx.virtualHosts.plex) listen';
-  in mkIf listen'.external.enable [
-    listen'.external.port
-  ];
+  in
+    mkIf listen'.external.enable [
+      listen'.external.port
+    ];
 }

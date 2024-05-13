@@ -15,7 +15,7 @@ in {
         addr = mkDefault "localhost";
         port = mkIf zigbee2mqtt.enable (mkDefault zigbee2mqtt.settings.frontend.port);
       };
-      service = { upstream, ... }: {
+      service = {upstream, ...}: {
         enable = mkIf upstream.servers.local.enable (mkDefault false);
         accessService = {
           name = "zigbee2mqtt";

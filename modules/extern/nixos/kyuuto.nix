@@ -33,20 +33,28 @@
     options = with lib.types; {
       enable = mkEnableOption "kyuuto";
       media = {
-        enable = mkEnableOption "/mnt/kyuuto-media" // {
-          default = true;
-        };
-        krb5.enable = mkEnableOption "krb5" // {
-          default = enabled.krb5;
-        };
+        enable =
+          mkEnableOption "/mnt/kyuuto-media"
+          // {
+            default = true;
+          };
+        krb5.enable =
+          mkEnableOption "krb5"
+          // {
+            default = enabled.krb5;
+          };
       };
       transfer = {
-        enable = mkEnableOption "/mnt/kyuuto-transfer" // {
-          default = true;
-        };
-        krb5.enable = mkEnableOption "krb5" // {
-          default = enabled.krb5;
-        };
+        enable =
+          mkEnableOption "/mnt/kyuuto-transfer"
+          // {
+            default = true;
+          };
+        krb5.enable =
+          mkEnableOption "krb5"
+          // {
+            default = enabled.krb5;
+          };
       };
       shared.enable = mkEnableOption "/mnt/kyuuto-shared";
       domain = mkOption {
@@ -135,12 +143,13 @@
             (mkIf config.nfs.enable "nfs4")
             (mkIf config.smb.enable "smb3")
           ];
-          options = mkMerge (setFilesystemOptions ++ [
-            (mkIf config.media.krb5.enable [
-              "sec=krb5"
-              (mkIf config.nfs.enable "nfsvers=4")
-            ])
-          ]);
+          options = mkMerge (setFilesystemOptions
+            ++ [
+              (mkIf config.media.krb5.enable [
+                "sec=krb5"
+                (mkIf config.nfs.enable "nfsvers=4")
+              ])
+            ]);
         };
         "/mnt/kyuuto-transfer" = mkIf config.transfer.enable {
           device = mkMerge [
@@ -151,12 +160,17 @@
             (mkIf config.nfs.enable "nfs4")
             (mkIf config.smb.enable "smb3")
           ];
-          options = mkMerge (setFilesystemOptions ++ [
-            (mkIf config.media.krb5.enable [
-              (if access.local.enable || access.tail.enabled then "sec=sys:krb5" else "sec=krb5")
-              #(mkIf config.nfs.enable "nfsvers=3")
-            ])
-          ]);
+          options = mkMerge (setFilesystemOptions
+            ++ [
+              (mkIf config.media.krb5.enable [
+                (
+                  if access.local.enable || access.tail.enabled
+                  then "sec=sys:krb5"
+                  else "sec=krb5"
+                )
+                #(mkIf config.nfs.enable "nfsvers=3")
+              ])
+            ]);
         };
         "/mnt/kyuuto-shared" = mkIf (config.shared.enable && config.smb.enable) {
           device = mkIf (config.smb.user != null) ''\\smb.${config.domain}\shared'';
@@ -204,7 +218,7 @@ in {
         nixosConfig = config;
       };
     };
-    default = { };
+    default = {};
   };
 
   config = {

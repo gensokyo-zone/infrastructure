@@ -35,7 +35,7 @@ in {
         nixosConfig = config;
       };
     };
-    default = { };
+    default = {};
   };
 
   config = {

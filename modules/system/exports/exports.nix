@@ -24,7 +24,12 @@
       };
       id = mkOption {
         type = str;
-        default = cfg.services.${config.serviceName}.id/* or config.name*/;
+        default =
+          cfg.services.${config.serviceName}.id
+          /*
+          or config.name
+          */
+          ;
       };
     };
   };

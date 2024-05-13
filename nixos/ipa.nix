@@ -1,4 +1,8 @@
-{ config, lib, ... }: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkDefault;
 in {
   # NOTE: requires manual post-install setup...

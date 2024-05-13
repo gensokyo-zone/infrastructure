@@ -19,7 +19,7 @@ in {
           addr = mkDefault "localhost";
           port = mkIf cfg.enable (mkDefault cfg.port);
         };
-        service = { upstream, ... }: {
+        service = {upstream, ...}: {
           enable = mkIf upstream.servers.local.enable (mkDefault false);
           accessService = {
             name = "invidious";
@@ -40,7 +40,7 @@ in {
         proxy_redirect off;
         proxy_buffering off;
       '';
-      location = { xvars, ... }: {
+      location = {xvars, ...}: {
         proxy = {
           enable = true;
           websocket.enable = true;
@@ -61,7 +61,11 @@ in {
           upstream = "nginx'proxied";
           host = mkDefault nginx.virtualHosts.invidious'int.serverName;
         };
-        locations."/" = { xvars, virtualHost, ... }: {
+        locations."/" = {
+          xvars,
+          virtualHost,
+          ...
+        }: {
           proxy.enable = true;
           extraConfig = ''
             proxy_http_version 1.1;
@@ -72,7 +76,11 @@ in {
           '';
         };
       };
-      invidious'int = { config, xvars, ... }: {
+      invidious'int = {
+        config,
+        xvars,
+        ...
+      }: {
         serverName = "@invidious_internal";
         proxied.enable = true;
         local.denyGlobal = true;
@@ -115,7 +123,7 @@ in {
         };
         inherit extraConfig;
       };
-      invidious'local = { xvars, ... }: {
+      invidious'local = {xvars, ...}: {
         local.enable = true;
         ssl.cert.copyFromVhost = "invidious";
         proxy = {

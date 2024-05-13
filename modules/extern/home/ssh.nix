@@ -19,18 +19,25 @@ let
     system = gensokyo-zone.systems.${config.systemName}.config;
     networks = let
       fallbackNetwork =
-        if system.network.networks.local.enable or false && access.local.enable then "local"
-        else if system.access.global.enable then null
-        else if system.network.networks.int.enable or false then "int"
-        else if system.network.networks.local.enable or false then "local"
+        if system.network.networks.local.enable or false && access.local.enable
+        then "local"
+        else if system.access.global.enable
+        then null
+        else if system.network.networks.int.enable or false
+        then "int"
+        else if system.network.networks.local.enable or false
+        then "local"
         else null;
-      networks = map (name: coalesce [ name fallbackNetwork ]) config.networks;
-    in unique networks;
+      networks = map (name: coalesce [name fallbackNetwork]) config.networks;
+    in
+      unique networks;
   in {
     options = with lib.types; {
-      enable = mkEnableOption "ssh client configuration" // {
-        default = true;
-      };
+      enable =
+        mkEnableOption "ssh client configuration"
+        // {
+          default = true;
+        };
       name = mkOption {
         type = str;
         default = name;
@@ -66,38 +73,46 @@ let
         enabledNetworks = filterAttrs (_: net: net.enable) system.network.networks;
         networkNames = mapAttrsToList (_: net: net.name) enabledNetworks;
         networks = filter (name: name == null || elem name networkNames) cfg.networks;
-      in mkOptionDefault networks;
+      in
+        mkOptionDefault networks;
       set = {
         matchBlocksSettings = let
-          canonNetworkName' = intersectLists networks [ null "int" "local" ];
-          canonNetworkName = if canonNetworkName' != [ ] then head canonNetworkName' else null;
-        in mapListToAttrs (network: let
-          name = config.name + optionalString (network != canonNetworkName) "-${network}";
-          inherit (system.exports.services) sshd;
-          port = head (
-            optional (network == null && sshd.ports.global.enable or false) sshd.ports.global.port
-            ++ optional (sshd.ports.public.enable or false) sshd.ports.public.port
-            ++ [ sshd.ports.standard.port ]
-          );
-          needsProxy = network == "int" || (network == "local" && !access.local.enable);
-        in nameValuePair name {
-          hostname = mkDefault (
-            if network == null then system.access.fqdn
-            else system.network.networks.${network}.fqdn
-          );
-          user = mkIf (config.user != null) (mkDefault config.user);
-          port = mkIf (port != 22) (mkDefault port);
-          proxyJump = mkIf needsProxy (lib.warnIf (config.name == cfg.proxyJump) "proxyJump self-reference" (mkAlmostOptionDefault (
-            cfg.proxyJump
-          )));
-          identitiesOnly = mkIf (config.systemName == "u7pro") (mkAlmostOptionDefault true);
-          extraOptions = mkMerge [
-            (unmerged.mergeAttrs config.extraOptions)
-            {
-              HostKeyAlias = mkIf (config.hostName != null && network != null) (mkOptionDefault system.access.fqdn);
-            }
-          ];
-        }) networks;
+          canonNetworkName' = intersectLists networks [null "int" "local"];
+          canonNetworkName =
+            if canonNetworkName' != []
+            then head canonNetworkName'
+            else null;
+        in
+          mapListToAttrs (network: let
+            name = config.name + optionalString (network != canonNetworkName) "-${network}";
+            inherit (system.exports.services) sshd;
+            port = head (
+              optional (network == null && sshd.ports.global.enable or false) sshd.ports.global.port
+              ++ optional (sshd.ports.public.enable or false) sshd.ports.public.port
+              ++ [sshd.ports.standard.port]
+            );
+            needsProxy = network == "int" || (network == "local" && !access.local.enable);
+          in
+            nameValuePair name {
+              hostname = mkDefault (
+                if network == null
+                then system.access.fqdn
+                else system.network.networks.${network}.fqdn
+              );
+              user = mkIf (config.user != null) (mkDefault config.user);
+              port = mkIf (port != 22) (mkDefault port);
+              proxyJump = mkIf needsProxy (lib.warnIf (config.name == cfg.proxyJump) "proxyJump self-reference" (mkAlmostOptionDefault (
+                cfg.proxyJump
+              )));
+              identitiesOnly = mkIf (config.systemName == "u7pro") (mkAlmostOptionDefault true);
+              extraOptions = mkMerge [
+                (unmerged.mergeAttrs config.extraOptions)
+                {
+                  HostKeyAlias = mkIf (config.hostName != null && network != null) (mkOptionDefault system.access.fqdn);
+                }
+              ];
+            })
+          networks;
       };
     };
   };
@@ -124,7 +139,7 @@ let
       };
       hosts = mkOption {
         type = attrsOf (submoduleWith {
-          modules = [ sshHostModule ];
+          modules = [sshHostModule];
           specialArgs = {
             inherit gensokyo-zone osConfig homeConfig pkgs;
           };
@@ -132,7 +147,7 @@ let
       };
       networks = mkOption {
         type = listOf (nullOr str);
-        default = [ null ];
+        default = [null];
       };
       proxyJump = mkOption {
         type = str;
@@ -150,7 +165,8 @@ let
     };
     config = {
       proxyJump = mkOptionDefault (
-        if config.hosts.hakurei.enable then config.hosts.hakurei.name
+        if config.hosts.hakurei.enable
+        then config.hosts.hakurei.name
         else gensokyo-zone.systems.hakurei.config.access.fqdn
       );
       networks = mkOptionDefault [
@@ -159,51 +175,55 @@ let
       ];
       hosts = mapAttrs (name: system: let
         enabled = system.config.access.online.enable && system.config.exports.services.sshd.enable;
-      in mkIf enabled {
-        systemName = mkOptionDefault name;
-      }) gensokyo-zone.systems;
+      in
+        mkIf enabled {
+          systemName = mkOptionDefault name;
+        })
+      gensokyo-zone.systems;
       set = {
         matchBlocksSettings = let
           mkMatchBlocksHost = host: mkIf host.enable (unmerged.mergeAttrs host.set.matchBlocksSettings);
-        in mkMerge (
-          mapAttrsToList (_: mkMatchBlocksHost) config.hosts
-        );
+        in
+          mkMerge (
+            mapAttrsToList (_: mkMatchBlocksHost) config.hosts
+          );
       };
     };
   };
-in {
-  config,
-  osConfig,
-  lib,
-  gensokyo-zone,
-  pkgs,
-  ...
-}: let
-  inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf;
-  inherit (gensokyo-zone.lib) unmerged;
-  cfg = config.gensokyo-zone.ssh;
-in {
-  options.gensokyo-zone.ssh = mkOption {
-    type = lib.types.submoduleWith {
-      modules = [sshModule];
-      specialArgs = {
-        inherit gensokyo-zone pkgs;
-        inherit osConfig;
-        homeConfig = config;
+in
+  {
+    config,
+    osConfig,
+    lib,
+    gensokyo-zone,
+    pkgs,
+    ...
+  }: let
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf;
+    inherit (gensokyo-zone.lib) unmerged;
+    cfg = config.gensokyo-zone.ssh;
+  in {
+    options.gensokyo-zone.ssh = mkOption {
+      type = lib.types.submoduleWith {
+        modules = [sshModule];
+        specialArgs = {
+          inherit gensokyo-zone pkgs;
+          inherit osConfig;
+          homeConfig = config;
+        };
       };
+      default = {};
     };
-    default = { };
-  };
 
-  config = {
-    gensokyo-zone.ssh = {
+    config = {
+      gensokyo-zone.ssh = {
+      };
+      programs.ssh = mkIf cfg.enable {
+        matchBlocks = unmerged.mergeAttrs cfg.set.matchBlocksSettings;
+      };
+      lib.gensokyo-zone.ssh = {
+        inherit cfg sshModule sshHostModule;
+      };
     };
-    programs.ssh = mkIf cfg.enable {
-      matchBlocks = unmerged.mergeAttrs cfg.set.matchBlocksSettings;
-    };
-    lib.gensokyo-zone.ssh = {
-      inherit cfg sshModule sshHostModule;
-    };
-  };
-}
+  }

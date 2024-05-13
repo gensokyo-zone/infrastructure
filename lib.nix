@@ -23,20 +23,27 @@
     parts' = Regex.match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
     parts = parts'.value;
     port' = List.index parts 2;
-  in assert Opt.isJust parts'; rec {
-    inherit url parts;
-    scheme = List.index parts 0;
-    host = List.index parts 1;
-    port = if port' != "" then UInt.Parse (Str.removePrefix ":" port') else null;
-    hostport = host + port';
-    path = List.index parts 3;
-  };
+  in
+    assert Opt.isJust parts'; rec {
+      inherit url parts;
+      scheme = List.index parts 0;
+      host = List.index parts 1;
+      port =
+        if port' != ""
+        then UInt.Parse (Str.removePrefix ":" port')
+        else null;
+      hostport = host + port';
+      path = List.index parts 3;
+    };
 
   userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
 
   mkWinPath = Str.replace ["/"] ["\\"];
   mkBaseDn = domain: Str.concatMapSep "," (part: "dc=${part}") (Regex.splitOn "\\." domain);
-  mkAddress6 = addr: if Str.hasInfix ":" addr && ! Str.hasPrefix "[" addr then "[${addr}]" else addr;
+  mkAddress6 = addr:
+    if Str.hasInfix ":" addr && ! Str.hasPrefix "[" addr
+    then "[${addr}]"
+    else addr;
 
   coalesce = values: Opt.default null (List.find (v: v != null) values);
   mapListToAttrs = f: l: listToAttrs (map f l);
@@ -85,13 +92,43 @@ in {
   Std = inputs.std-fl.lib;
   lib = {
     domain = "gensokyo.zone";
-    inherit treeToModulesOutput userIs
-      eui64 parseUrl mkWinPath mkBaseDn mkAddress6
-      mapListToAttrs coalesce
-      mkAlmostOptionDefault mkAlmostDefault mkAlmostForce mapOverride mapOptionDefaults mapAlmostOptionDefaults mapDefaults
-      overrideOptionDefault overrideAlmostOptionDefault overrideDefault overrideAlmostDefault overrideNone overrideAlmostForce overrideForce overrideVM
-      orderJustBefore orderBefore orderAlmostBefore orderNone orderAfter orderAlmostAfter orderJustAfter
-      mkJustBefore mkAlmostBefore mkAlmostAfter mkJustAfter;
+    inherit
+      treeToModulesOutput
+      userIs
+      eui64
+      parseUrl
+      mkWinPath
+      mkBaseDn
+      mkAddress6
+      mapListToAttrs
+      coalesce
+      mkAlmostOptionDefault
+      mkAlmostDefault
+      mkAlmostForce
+      mapOverride
+      mapOptionDefaults
+      mapAlmostOptionDefaults
+      mapDefaults
+      overrideOptionDefault
+      overrideAlmostOptionDefault
+      overrideDefault
+      overrideAlmostDefault
+      overrideNone
+      overrideAlmostForce
+      overrideForce
+      overrideVM
+      orderJustBefore
+      orderBefore
+      orderAlmostBefore
+      orderNone
+      orderAfter
+      orderAlmostAfter
+      orderJustAfter
+      mkJustBefore
+      mkAlmostBefore
+      mkAlmostAfter
+      mkJustAfter
+      ;
     inherit (inputs.arcexprs.lib) unmerged json;
   };
   gensokyo-zone = {

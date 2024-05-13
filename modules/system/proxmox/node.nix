@@ -1,4 +1,9 @@
-{config, lib, gensokyo-zone, ...}: let
+{
+  config,
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf;

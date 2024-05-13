@@ -1,4 +1,4 @@
-{ gensokyo-zone, ... }: {
+{gensokyo-zone, ...}: {
   config.lib = {
     inherit gensokyo-zone;
   };

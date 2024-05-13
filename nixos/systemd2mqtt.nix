@@ -8,7 +8,7 @@
   inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.systemd2mqtt;
 in {
-  imports = [ inputs.systemd2mqtt.nixosModules.default ];
+  imports = [inputs.systemd2mqtt.nixosModules.default];
 
   services.systemd2mqtt = {
     enable = mkDefault true;
@@ -17,7 +17,11 @@ in {
       url = mkDefault (
         if config.services.mosquitto.enable
         then "tcp://localhost:1883"
-        else access.proxyUrlFor { serviceName = "mosquitto"; scheme = "tcp"; }
+        else
+          access.proxyUrlFor {
+            serviceName = "mosquitto";
+            scheme = "tcp";
+          }
       );
       username = mkDefault "systemd";
     };

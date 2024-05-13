@@ -61,59 +61,63 @@ in {
     passdb.smbpasswd.path = mkIf (!cfg.ldap.enable || !cfg.ldap.passdb.enable) (
       mkDefault config.sops.secrets.smbpasswd.path
     );
-    settings = mkMerge [ {
-      "local master" = true;
-      "preferred master" = true;
-      "winbind offline logon" = true;
-      "winbind scan trusted domains" = false;
-      "winbind use default domain" = true;
-      "domain master" = true;
-      "server role" = "classic primary domain controller";
-      "domain logons" = true;
-      "remote announce" = [
-        "10.1.1.255/${cfg.domain.name}"
-      ];
-      "additional dns hostnames" = mkMerge [
-        [
-          config.networking.fqdn
-          "smb.${domain}"
-        ]
-        (mkIf system.network.networks.local.enable or false [
-          "smb.local.${domain}"
-          access.hostnameForNetwork.local
-        ])
-        (mkIf system.network.networks.int.enable or false [
-          "smb.int.${domain}"
-          access.hostnameForNetwork.int
-        ])
-        (mkIf config.services.tailscale.enable [
-          "smb.tail.${domain}"
-          access.hostnameForNetwork.tail
-        ])
-      ];
-    } (mkIf cfg.ldap.enable {
-      "ldapsam:trusted" = true;
-      "ldapsam:editposix" = false;
-      "ldap user suffix" = removeSuffix "," ldap.userDnSuffix;
-      "ldap group suffix" = removeSuffix "," ldap.groupDnSuffix;
-      "ldap machine suffix" = removeSuffix "," ldap.hostDnSuffix;
-      "ldap idmap suffix" = removeSuffix "," ldap.idViewDnSuffix;
-      "ldap server require strong auth" = "allow_sasl_over_tls";
-      # TODO: ldap delete dn?
-      # TODO: username map script?
-    }) (mkIf debugLogging {
-      "ldap debug level" = 1;
-      #"ldap debug threshold" = 3; # 4? 5?
-      logging = "systemd";
-      "log level" = [
-        "4"
-        #"passdb:8"
-        #"auth:8"
-        #"idmap:8"
-        #"winbind:6"
-        #"dns:8"
-      ];
-    }) ];
+    settings = mkMerge [
+      {
+        "local master" = true;
+        "preferred master" = true;
+        "winbind offline logon" = true;
+        "winbind scan trusted domains" = false;
+        "winbind use default domain" = true;
+        "domain master" = true;
+        "server role" = "classic primary domain controller";
+        "domain logons" = true;
+        "remote announce" = [
+          "10.1.1.255/${cfg.domain.name}"
+        ];
+        "additional dns hostnames" = mkMerge [
+          [
+            config.networking.fqdn
+            "smb.${domain}"
+          ]
+          (mkIf system.network.networks.local.enable or false [
+            "smb.local.${domain}"
+            access.hostnameForNetwork.local
+          ])
+          (mkIf system.network.networks.int.enable or false [
+            "smb.int.${domain}"
+            access.hostnameForNetwork.int
+          ])
+          (mkIf config.services.tailscale.enable [
+            "smb.tail.${domain}"
+            access.hostnameForNetwork.tail
+          ])
+        ];
+      }
+      (mkIf cfg.ldap.enable {
+        "ldapsam:trusted" = true;
+        "ldapsam:editposix" = false;
+        "ldap user suffix" = removeSuffix "," ldap.userDnSuffix;
+        "ldap group suffix" = removeSuffix "," ldap.groupDnSuffix;
+        "ldap machine suffix" = removeSuffix "," ldap.hostDnSuffix;
+        "ldap idmap suffix" = removeSuffix "," ldap.idViewDnSuffix;
+        "ldap server require strong auth" = "allow_sasl_over_tls";
+        # TODO: ldap delete dn?
+        # TODO: username map script?
+      })
+      (mkIf debugLogging {
+        "ldap debug level" = 1;
+        #"ldap debug threshold" = 3; # 4? 5?
+        logging = "systemd";
+        "log level" = [
+          "4"
+          #"passdb:8"
+          #"auth:8"
+          #"idmap:8"
+          #"winbind:6"
+          #"dns:8"
+        ];
+      })
+    ];
     idmap.domains = {
       nss = mkIf (!cfg.ldap.enable || !cfg.ldap.idmap.enable) {
         backend = "nss";

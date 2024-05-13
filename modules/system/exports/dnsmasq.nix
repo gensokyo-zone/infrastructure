@@ -1,8 +1,12 @@
-{lib, gensokyo-zone, ...}: let
+{
+  lib,
+  gensokyo-zone,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.dnsmasq = { config, ... }: {
+  config.exports.services.dnsmasq = {config, ...}: {
     id = mkAlmostOptionDefault "dns";
     nixos = {
       serviceAttr = "dnsmasq";

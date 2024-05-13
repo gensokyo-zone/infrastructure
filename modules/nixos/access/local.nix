@@ -55,7 +55,7 @@ in {
     nftables.ruleset = mkIf cfg.enable (mkBefore cfg.nftablesInclude);
     firewall = {
       interfaces.local = {
-        nftables.conditions = mkIf (cfg.enable && networking.enableIPv6) [ "ip6 saddr $localrange6" ];
+        nftables.conditions = mkIf (cfg.enable && networking.enableIPv6) ["ip6 saddr $localrange6"];
       };
     };
   };

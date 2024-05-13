@@ -10,9 +10,11 @@
   inherit (lib.modules) mkIf mkOptionDefault;
 in {
   options.ci = with lib.types; {
-    enable = mkEnableOption "build via CI" // {
-      default = config.type == "NixOS";
-    };
+    enable =
+      mkEnableOption "build via CI"
+      // {
+        default = config.type == "NixOS";
+      };
     allowFailure = mkOption {
       type = bool;
       default = false;
