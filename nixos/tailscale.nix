@@ -12,11 +12,11 @@ in {
   };
   config = {
     networking.firewall = {
-      trustedInterfaces = [config.services.tailscale.interfaceName];
-      allowedUDPPorts = [config.services.tailscale.port];
+      trustedInterfaces = [cfg.interfaceName];
+      allowedUDPPorts = [cfg.port];
     };
     systemd.network = {
-      wait-online.ignoredInterfaces = [config.services.tailscale.interfaceName];
+      wait-online.ignoredInterfaces = [cfg.interfaceName];
       networks."50-tailscale" = {
         networkConfig = {
           DNSDefaultRoute = false;
@@ -27,8 +27,8 @@ in {
 
     services.tailscale.enable = mkDefault true;
 
-    sops.secrets.tailscale-key = mkIf config.services.tailscale.enable {};
-    systemd.services.tailscale-autoconnect = mkIf config.services.tailscale.enable rec {
+    sops.secrets.tailscale-key = mkIf cfg.enable {};
+    systemd.services.tailscale-autoconnect = mkIf cfg.enable rec {
       description = "Automatic connection to Tailscale";
 
       # make sure tailscale is running before trying to connect to tailscale
@@ -44,7 +44,7 @@ in {
       # have the job run this shell script
       script = let
         fixResolved = optionalString config.services.resolved.enable ''
-          resolvectl revert ${config.services.tailscale.interfaceName} || true
+          resolvectl revert ${cfg.interfaceName} || true
         '';
         # https://tailscale.com/kb/1320/performance-best-practices#ethtool-configuration
         exitNodeRouting = optionalString cfg.advertiseExitNode ''
