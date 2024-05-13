@@ -6,7 +6,7 @@
     nixos.base
     nixos.reisen-ct
     nixos.nixbld
-    #nixos.cross.aarch64
+    #nixos.cross.aarch64 # XXX: binfmt_misc namespaces not yet supported :<
     nixos.tailscale
     nixos.github-runner.zone
     nixos.minecraft.bedrock

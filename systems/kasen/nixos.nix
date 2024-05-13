@@ -2,18 +2,15 @@
   meta,
   config,
   lib,
-  pkgs,
   ...
-}: let
-  inherit (lib.modules) mkForce;
-  inherit (config.services) nginx;
-in {
+}: {
   imports = let
     inherit (meta) nixos;
   in [
-    #nixos.sops
+    nixos.sops
     nixos.base
     nixos.nginx
+    nixos.openwebrx
   ];
 
   boot.loader.grub.enable = false;
@@ -21,30 +18,7 @@ in {
 
   hardware.rtl-sdr.enable = true;
 
-  services.openwebrx = {
-    enable = true;
-    package = pkgs.openwebrxplus;
-  };
-  systemd.services.openwebrx.serviceConfig = {
-    DynamicUser = mkForce false;
-    User = "openwebrx";
-    Group = "openwebrx";
-  };
-
-  users.users.openwebrx = {
-        isSystemUser = true;
-        group = "openwebrx";
-        extraGroups = [
-          "plugdev"
-        ];
-  };
-  users.groups.openwebrx = {};
-
-  networking.firewall.interfaces.local.allowedTCPPorts = [
-    8073
-  ];
-
-  #sops.defaultSopsFile = ./secrets.yaml;
+  sops.defaultSopsFile = ./secrets.yaml;
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/44444444-4444-4444-8888-888888888888";

@@ -44,6 +44,7 @@ nf-sops-keyscan <hostname>
 # or on a fresh container...
 nf-sops-keyscan ct.local
 vim .sops.yaml
+for nfsecret in access nix; do sops updatekeys nixos/secrets/$nfsecret.yaml; done
 ```
 
 ## Updating

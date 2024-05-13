@@ -9,10 +9,11 @@ _: {
     ./nixos.nix
   ];
   exports = {
-      services = {
-        nginx.enable = true;
-        sshd.enable = true;
-      };
+    services = {
+      nginx.enable = true;
+      sshd.enable = true;
+      openwebrx.enable = true;
+    };
   };
   network.networks = {
     local = {

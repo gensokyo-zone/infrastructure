@@ -13,9 +13,9 @@ keys:
 - &mediabox_osh age16klpkaut5759dut8mdm3jn0rnp8w6kxyvs9n6ntqrdsayjtd7upqlvw489
 - &litterbox_osh age13qgddr326g5je0fpq2r3k940vsr3fh9nlvl9xtcxk3xg2x0k3vsq7pvzaj
 - &keycloak_osh age1ktmx2szedfnpe5xumnzs8vkk0ffqgga6ved3drtksg9pye6ndsnsnqq488
+- &kasen_osh age1fjcafp0j45sz03zq5srnxyq2mujndmn25vceg3wj2cgzymqm73ssmhdgku
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
-- &kasen_osh age1fjcafp0j45sz03zq5srnxyq2mujndmn25vceg3wj2cgzymqm73ssmhdgku
 creation_rules:
 - path_regex: 'nixos/secrets/.+\.yaml$'
   shamir_threshold: 1
@@ -32,6 +32,7 @@ creation_rules:
     - *mediabox_osh
     - *litterbox_osh
     - *keycloak_osh
+    - *kasen_osh
 - path_regex: 'modules/extern/secrets/.+\.yaml$'
   shamir_threshold: 1
   key_groups:
@@ -102,6 +103,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *keycloak_osh
+- path_regex: 'systems/kasen/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *kasen_osh
 - path_regex: 'systems/[^/]+/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
