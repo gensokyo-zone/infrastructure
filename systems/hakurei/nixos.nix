@@ -38,6 +38,7 @@ in {
     nixos.access.freepbx
     nixos.access.unifi
     nixos.access.kitchencam
+    nixos.access.openwebrx
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
@@ -207,6 +208,14 @@ in {
         virtualHosts.kitchencam'local.allServerNames
       ];
     };
+    webrx = {
+      inherit (nginx) group;
+      domain = virtualHosts.openwebrx.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.openwebrx.otherServerNames
+        virtualHosts.openwebrx'local.allServerNames
+      ];
+    };
     yt = {
       inherit (nginx) group;
       domain = virtualHosts.invidious.serverName;
@@ -295,6 +304,7 @@ in {
         };
       };
       kitchencam.ssl.cert.enable = true;
+      openwebrx.ssl.cert.enable = true;
       invidious = {
         ssl.cert.enable = true;
       };

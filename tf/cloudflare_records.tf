@@ -23,6 +23,7 @@ module "hakurei_system_records" {
     "smb",
     "mqtt",
     "kitchen",
+    "webrx",
     "home",
     "z2m",
     "grocy",
@@ -38,6 +39,7 @@ module "hakurei_system_records" {
     "smb",
     "mqtt",
     "kitchen",
+    "webrx",
     "yt",
   ]
 }
