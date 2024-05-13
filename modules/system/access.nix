@@ -46,6 +46,7 @@
         moduleArgAttrs = let
           mkGetAddressFor = nameAllowed: addressForAttr: hostName: network: let
             forSystem = access.systemFor hostName;
+            forSystemHas = network: forSystem.access ? ${addressForAttr}.${network} || forSystem.access ? address4ForNetwork.${network};
             err = throw "no interface found between ${config.networking.hostName} -> ${hostName}@${network}";
             fallback = if nameAllowed
               then lib.warn "getAddressFor hostname fallback for ${config.networking.hostName} -> ${hostName}@${network}" (access.getHostnameFor hostName network)
@@ -56,8 +57,8 @@
           in {
             lan =
               if hostName == system.name then forSystem.access.${addressForAttr}.localhost
-              else if has'Int then int
-              else if has'Local then local
+              else if has'Int && forSystemHas "int" then int
+              else if has'Local && forSystemHas "local" then local
               else fallback;
             ${if has'Local then "local" else null} = local;
             ${if has'Int then "int" else null} = int;
@@ -89,12 +90,12 @@
           getAddress6For = mkGetAddressFor false "address6ForNetwork";
           getHostnameFor = hostName: network: let
             forSystem = access.systemFor hostName;
-            err = throw "no ${network} interface found between ${config.networking.hostName} and ${hostName}";
+            err = throw "no hostname found between ${config.networking.hostName} and ${hostName}@${network}";
           in {
             lan =
               if hostName == system.name then forSystem.access.hostnameForNetwork.localhost
-              else if has'Int then forSystem.access.hostnameForNetwork.int or forSystem.access.hostnameForNetwork.local or err
-              else if has'Local then forSystem.access.hostnameForNetwork.local or err
+              else if has'Int && forSystem.access.hostnameForNetwork ? int then forSystem.access.hostnameForNetwork.int
+              else if has'Local && forSystem.access.hostnameForNetwork ? local  then forSystem.access.hostnameForNetwork.local
               else err;
             ${if has'Local then "local" else null} = forSystem.access.hostnameForNetwork.local or err;
             ${if has'Int then "int" else null} = forSystem.access.hostnameForNetwork.int or err;

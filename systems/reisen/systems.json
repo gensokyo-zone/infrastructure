@@ -45,7 +45,7 @@
       "networks": {
         "int": null,
         "local": {
-          "address4": null,
+          "address4": "10.1.1.43",
           "address6": "fd0a::be24:11ff:fe33:1904",
           "macAddress": "BC:24:11:33:19:04"
         },

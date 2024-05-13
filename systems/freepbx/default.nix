@@ -7,11 +7,17 @@ _: {
     };
     network.interfaces = {
       net0 = {
-        name = "ens18";
+        name = "eth0";
         macAddress = "BC:24:11:33:19:04";
-        address4 = "dhcp";
+        address4 = "10.1.1.43";
         address6 = "auto";
       };
+    };
+  };
+  extern.files = {
+    "/etc/sysconfig/network-scripts/ifcfg-eth0" = {
+      source = ./ifcfg-eth0;
+      mode = "0644";
     };
   };
   exports = {

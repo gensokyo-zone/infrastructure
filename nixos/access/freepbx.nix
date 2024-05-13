@@ -14,7 +14,7 @@ in {
     virtualHosts = let
       proxyScheme = "https";
       url = access.proxyUrlFor { serviceName = "freepbx"; portName = proxyScheme; };
-      ucpUrl = access.proxyUrlFor { serviceName = "freepbx"; portName = "ucp-ssl"; };
+      ucpUrl = access.proxyUrlFor { serviceName = "freepbx"; portName = "ucp-ssl"; getAddressFor = "getAddress4For"; };
       ucpPath = "/socket.io";
       # TODO: ports.asterisk/asterisk-ssl?
       extraConfig = ''
