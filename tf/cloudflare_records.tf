@@ -17,6 +17,7 @@ module "hakurei_system_records" {
     "ldap",
     "krb5",
     "ipa",
+    "ipa-cock",
     "unifi",
     "pbx",
     "smb",

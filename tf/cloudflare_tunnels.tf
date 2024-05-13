@@ -13,6 +13,7 @@ module "hakurei" {
     "@",
     "prox",
     "ipa",
+    "ipa-cock",
   ]
 }
 

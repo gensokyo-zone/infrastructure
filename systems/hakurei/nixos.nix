@@ -62,6 +62,7 @@ in {
       credentialsFile = config.sops.secrets.cloudflared-tunnel-hakurei.path;
       ingress = mkMerge [
         (virtualHosts.freeipa'web.proxied.cloudflared.getIngress {})
+        (virtualHosts.freeipa'cockpit.proxied.cloudflared.getIngress {})
         (virtualHosts.prox.proxied.cloudflared.getIngress {})
         (virtualHosts.gensokyoZone.proxied.cloudflared.getIngress {})
       ];
@@ -166,6 +167,8 @@ in {
         virtualHosts.freeipa.otherServerNames
         virtualHosts.freeipa'web.allServerNames
         virtualHosts.freeipa'web'local.allServerNames
+        virtualHosts.freeipa'cockpit.allServerNames
+        virtualHosts.freeipa'cockpit'local.allServerNames
         virtualHosts.freeipa'ldap.allServerNames
         virtualHosts.freeipa'ldap'local.allServerNames
         (mkIf virtualHosts.freeipa'ldap'tail.enable virtualHosts.freeipa'ldap'tail.allServerNames)
@@ -237,6 +240,7 @@ in {
         ssl.cert.enable = true;
       };
       freeipa'web.proxied.enable = "cloudflared";
+      freeipa'cockpit.proxied.enable = "cloudflared";
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
         local.denyGlobal = true;

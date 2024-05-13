@@ -35,7 +35,6 @@ let
           fromScheme = xvars.get.proxy_scheme;
         };
       };
-      recommendedProxySettings = false;
     };
   };
   ldapsPort = 636;
@@ -80,12 +79,22 @@ in {
   config = {
     services.nginx = {
       # TODO: ssl.preread.enable = mkDefault true;
-      upstreams'.freeipa = {config, ...}: {
-        ssl.host = mkDefault (access.systemFor config.servers.access.accessService.system).access.fqdn;
-        host = mkDefault config.ssl.host;
-        servers.access = {
-          accessService = {
-            name = "freeipa";
+      upstreams' = {
+        freeipa = {config, ...}: {
+          ssl.host = mkDefault (access.systemFor config.servers.access.accessService.system).access.fqdn;
+          host = mkDefault config.ssl.host;
+          servers.access = {
+            accessService = {
+              name = "freeipa";
+            };
+          };
+        };
+        freeipa'cockpit = {upstream, ...}: {
+          servers.access = {
+            accessService = {
+              inherit (nginx.upstreams'.freeipa.servers.access.accessService) system;
+              name = "cockpit";
+            };
           };
         };
       };
@@ -192,6 +201,7 @@ in {
       ];
       virtualHosts = let
         name.shortServer = mkDefault "ipa";
+        name'cockpit.shortServer = mkDefault "ipa-cock";
       in {
         freeipa = {
           name.shortServer = mkDefault "idp";
@@ -223,7 +233,24 @@ in {
         freeipa'web'local = {
           ssl.cert.copyFromVhost = "freeipa'web";
           local.enable = true;
-          inherit name locations;
+          inherit name locations extraConfig;
+        };
+        freeipa'cockpit = {
+          name = name'cockpit;
+          vouch.enable = mkDefault true;
+          ssl = {
+            force = mkDefault virtualHosts.freeipa'web.ssl.force;
+            cert.copyFromVhost = "freeipa'web";
+          };
+          proxy.upstream = "freeipa'cockpit";
+          locations."/".proxy.enable = true;
+        };
+        freeipa'cockpit'local = {
+          name = name'cockpit;
+          ssl.cert.copyFromVhost = "freeipa'cockpit";
+          proxy.copyFromVhost = "freeipa'cockpit";
+          local.enable = true;
+          locations."/".proxy.enable = true;
         };
         freeipa'ldap = {
           serverName = mkDefault ldap.domain;

@@ -36,6 +36,7 @@ _: {
         enable = true;
         ports.public.enable = false;
       };
+      cockpit.enable = true;
       freeipa.enable = true;
       ldap.enable = true;
       kerberos.enable = true;
