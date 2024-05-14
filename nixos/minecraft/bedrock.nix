@@ -12,7 +12,7 @@ in {
     serverProperties = {
       server-name = "Kat's Server";
       online-mode = true;
-      #allow-cheats = true;
+      allow-cheats = true;
       #level-name = "KatBedrock";
       level-name = "KatBedrockBeta";
       default-player-permission-level = "visitor";
