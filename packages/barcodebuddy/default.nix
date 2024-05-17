@@ -6,16 +6,18 @@
 }: let
   inherit (lib.strings) removePrefix;
   inherit (lib.trivial) importJSON;
-  lock = importJSON ../flake.lock;
+  lock = importJSON ../../flake.lock;
   inherit (lock.nodes) barcodebuddy;
 in
   stdenvNoCC.mkDerivation {
     pname = "barcodebuddy";
     version = removePrefix "v" barcodebuddy.original.ref;
+
     src = fetchFromGitHub {
       inherit (barcodebuddy.locked) repo owner rev;
       sha256 = barcodebuddy.locked.narHash;
     };
+
     skipConfigure = true;
     skipBuild = true;
 
@@ -27,4 +29,9 @@ in
 
       runHook postInstall
     '';
+
+    meta = {
+      homepage = "https://github.com/Forceu/barcodebuddy";
+      license = lib.licenses.agpl3Plus;
+    };
   }

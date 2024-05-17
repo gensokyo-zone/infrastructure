@@ -11,6 +11,7 @@ in {
   config.services.barcodebuddy = {
     enable = mkDefault true;
     hostName = mkDefault "barcodebuddy'php";
+    screen.enable = mkDefault true;
     reverseProxy = {
       enable = mkDefault nginx.virtualHosts.${cfg.hostName}.proxied.enable;
       trustedAddresses = access.cidrForNetwork.allLan.all;
@@ -38,12 +39,17 @@ in {
       phpfpm-barcodebuddy = {
         inherit gensokyo-zone;
       };
-      bbuddy-websocket = mkIf cfg.screen.enable {
+      barcodebuddy-websocket = mkIf cfg.screen.enable {
         inherit gensokyo-zone;
       };
     };
   config.sops.secrets.barcodebuddy-fastcgi-params = mkIf cfg.enable {
     sopsFile = mkDefault ./secrets/barcodebuddy.yaml;
     owner = mkDefault nginx.user;
+  };
+  config.networking.firewall = mkIf cfg.enable {
+    interfaces.lan.allowedTCPPorts = mkIf cfg.screen.enable [
+      cfg.screen.websocketPort
+    ];
   };
 }

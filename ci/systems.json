@@ -191,6 +191,20 @@
       }
     }
   },
+  "logistics": {
+    "network": {
+      "hostName": "logistics",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.63",
+          "address6": "fd0a::40c3:23df:e82a:b214",
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
   "mediabox": {
     "network": {
       "hostName": "mediabox",

@@ -62,7 +62,23 @@ in {
   inherit (outputs) devShells legacyPackages packages checks;
   inherit (systems) deploy nixosConfigurations;
   inherit (tree.impure) overlays;
-  nixosModules = treeToModulesOutput tree.impure.modules.extern.nixos;
+  nixosModules = with tree.impure.modules;
+    treeToModulesOutput extern.nixos
+    // {
+      inherit (nixos) barcodebuddy barcodebuddy-scanner minecraft-bedrock vouch;
+      network = {
+        __functor = network: _: {
+          imports = [network.netgroups network.namespace network.resolve];
+        };
+        inherit (nixos.network) netgroups namespace resolve;
+      };
+      sssd = {
+        __functor = sssd: _: {
+          imports = [sssd.sssd sssd.pam];
+        };
+        inherit (nixos.sssd) sssd pam genso;
+      };
+    };
   homeModules = treeToModulesOutput tree.impure.modules.extern.home;
   miscModules = treeToModulesOutput tree.impure.modules.extern.misc;
   lib = import ./lib.nix {

@@ -14,6 +14,7 @@ keys:
 - &litterbox_osh age13qgddr326g5je0fpq2r3k940vsr3fh9nlvl9xtcxk3xg2x0k3vsq7pvzaj
 - &keycloak_osh age1ktmx2szedfnpe5xumnzs8vkk0ffqgga6ved3drtksg9pye6ndsnsnqq488
 - &kasen_osh age1fjcafp0j45sz03zq5srnxyq2mujndmn25vceg3wj2cgzymqm73ssmhdgku
+- &logistics_osh age1tkkau8vk5h9dh3kemash4eghn7lk84j0hhpmvvf7j6phgcsm9vmsphv0py
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
 creation_rules:
@@ -33,6 +34,7 @@ creation_rules:
     - *litterbox_osh
     - *keycloak_osh
     - *kasen_osh
+    - *logistics_osh
 - path_regex: 'modules/extern/secrets/.+\.yaml$'
   shamir_threshold: 1
   key_groups:
@@ -109,6 +111,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *kasen_osh
+- path_regex: 'systems/logistics/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *logistics_osh
 - path_regex: 'systems/[^/]+/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:

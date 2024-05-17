@@ -1,20 +1,25 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the nixos.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, ... }:
-
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  config,
+  pkgs,
+  meta,
+  ...
+}: {
+  imports = let
+    inherit (meta) nixos;
+  in [
+    nixos.sops
+    nixos.base
+    nixos.barcodebuddy-scanner
+    ./hardware-configuration.nix
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -23,12 +28,6 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
-
-  # Set your time zone.
-  time.timeZone = "America/Vancouver";
-
-  # Select internationalisation properties.
-  i18n.defaultLocale = "en_CA.UTF-8";
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -39,8 +38,10 @@
 
   # Configure keymap in X11
   services.xserver = {
-    layout = "us";
-    xkbVariant = "";
+    xkb = {
+      layout = "us";
+      variant = "";
+    };
   };
 
   # Enable CUPS to print documents.
@@ -68,11 +69,13 @@
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.logistics = {
+    uid = 1000;
     isNormalUser = true;
     description = "Logistics";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = ["networkmanager" "wheel"];
+    hashedPasswordFile = config.sops.secrets.logistics-user-password.path;
     packages = with pkgs; [
-    #  thunderbird
+      #  thunderbird
     ];
   };
 
@@ -99,6 +102,8 @@
 
   # List services that you want to enable:
 
+  services.barcodebuddy-scanner.user = "logistics";
+
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
@@ -108,6 +113,11 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  sops = {
+    defaultSopsFile = ./secrets.yaml;
+    secrets.logistics-user-password = {};
+  };
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
@@ -115,5 +125,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man nixos.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.11"; # Did you read the comment?
-
 }

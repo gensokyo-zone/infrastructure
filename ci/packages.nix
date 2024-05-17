@@ -15,7 +15,11 @@ in {
     ];
 
     # build+cache packages customized or added via overlay
-    barcodebuddy.inputs = packages.x86_64-linux.barcodebuddy;
+    barcodebuddy.inputs = with packages.x86_64-linux; [
+      barcodebuddy
+      barcodebuddy-scanner
+      barcodebuddy-scanner-python
+    ];
     samba.inputs = with packages.x86_64-linux; [
       legacyPackages.x86_64-linux.pkgs.samba
       samba-ldap

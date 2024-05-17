@@ -3,10 +3,20 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (config.services) barcodebuddy nginx;
   name.shortServer = mkDefault "bbuddy";
   serverName = "@bbuddy_internal";
+  websocketPath = "/incl/sse/";
+  websocketLocation = {
+    proxy = {
+      enable = true;
+      websocket.enable = true;
+    };
+    extraConfig = ''
+      proxy_read_timeout 1d;
+    '';
+  };
 in {
   config.services.nginx = {
     vouch.enable = true;
@@ -39,6 +49,12 @@ in {
           proxy.enable = true;
           vouch.requireAuth = true;
         };
+        ${websocketPath} = mkMerge [
+          websocketLocation
+          {
+            vouch.requireAuth = true;
+          }
+        ];
       };
     };
     barcodebuddy'local = {
@@ -49,15 +65,17 @@ in {
         upstream = mkDefault nginx.virtualHosts.barcodebuddy.proxy.upstream;
         host = mkDefault nginx.virtualHosts.barcodebuddy.proxy.host;
       };
-      locations."/" = {config, ...}: {
-        proxy = {
-          headers.enableRecommended = true;
-          redirect = {
+      locations = {
+        "/" = {config, ...}: {
+          proxy = {
             enable = true;
-            fromHost = config.proxy.host;
+            redirect = {
+              enable = true;
+              fromHost = config.proxy.host;
+            };
           };
         };
-        proxyPass = mkDefault nginx.virtualHosts.barcodebuddy.locations."/".proxyPass;
+        ${websocketPath} = websocketLocation;
       };
     };
   };

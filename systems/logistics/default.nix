@@ -4,10 +4,15 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  deploy.hostname = "10.1.1.63";
   exports = {
     services = {
       sshd.enable = true;
+    };
+  };
+  network.networks = {
+    local = {
+      slaac.postfix = "40c3:23df:e82a:b214";
+      address4 = "10.1.1.63";
     };
   };
 }

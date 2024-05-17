@@ -50,6 +50,8 @@
       krb5-ldap
       nfs-utils-ldap
       barcodebuddy
+      barcodebuddy-scanner
+      barcodebuddy-scanner-python
       openwebrxplus
       systemd2mqtt
       ;

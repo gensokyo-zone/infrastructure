@@ -11,6 +11,7 @@
   inherit (lib.attrsets) mapAttrs' nameValuePair;
   inherit (lib.lists) isList imap0;
   inherit (lib.strings) concatStringsSep;
+  inherit (lib.meta) getExe;
   cfg = config.services.barcodebuddy;
   toEnvName = key: "BBUDDY_" + key;
   toEnvValue = value:
@@ -166,7 +167,7 @@ in {
     };
 
     conf.systemd.tmpfiles.rules = [
-      "d ${cfg.dataDir} - barcodebuddy nginx - -"
+      "d ${cfg.dataDir} - barcodebuddy ${config.services.nginx.group} - -"
     ];
 
     conf.services.phpfpm.pools.barcodebuddy = {
@@ -219,19 +220,26 @@ in {
         extraConfig = cfg.nginxConfig;
       };
     };
-    conf.systemd.services.bbuddy-websocket = mkIf cfg.screen.enable {
-      wantedBy = ["multi-user.target"];
-      environment = mapAttrs' toEnvPair cfg.settings;
-      unitConfig = {
-        Description = "Run websocket server for barcodebuddy screen feature";
+    conf.systemd.services.barcodebuddy-websocket = let
+      phpService = "phpfpm-barcodebuddy.service";
+    in
+      mkIf cfg.screen.enable {
+        wantedBy = [phpService];
+        bindsTo = [phpService];
+        after = [phpService];
+        environment = mapAttrs' toEnvPair cfg.settings;
+        unitConfig = {
+          Description = "Run websocket server for barcodebuddy screen feature";
+        };
+        serviceConfig = {
+          Type = "exec";
+          ExecStart = [
+            "${getExe config.services.phpfpm.pools.barcodebuddy.phpPackage} ${cfg.package}/wsserver.php"
+          ];
+          Restart = "on-failure";
+          User = "barcodebuddy";
+        };
       };
-      serviceConfig = {
-        ExecStart = "${config.services.phpfpm.pools.barcodebuddy.phpPackage}/bin/php ${cfg.package}/wsserver.php";
-        Restart = "on-failure";
-        StandardOutput = "null";
-        User = "barcodebuddy";
-      };
-    };
   in
     mkMerge [bbuddyConfig (mkIf cfg.enable conf)];
 }
