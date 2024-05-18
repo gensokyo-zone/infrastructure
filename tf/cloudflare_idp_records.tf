@@ -82,9 +82,8 @@ resource "cloudflare_record" "kerberos_uri_tcp" {
   type     = "URI"
   priority = 0
   data {
-    weight  = 100
-    target  = local.idp_uri_tcp
-    content = local.idp_uri_tcp
+    weight = 100
+    target = local.idp_uri_tcp
   }
   ttl = 3600
 }
@@ -95,9 +94,8 @@ resource "cloudflare_record" "kerberos_uri_udp" {
   type     = "URI"
   priority = 0
   data {
-    weight  = 100
-    target  = local.idp_uri_udp
-    content = local.idp_uri_udp
+    weight = 100
+    target = local.idp_uri_udp
   }
   ttl = 3600
 }
@@ -140,9 +138,8 @@ resource "cloudflare_record" "kpasswd_uri_tcp" {
   type     = "URI"
   priority = 0
   data {
-    weight  = 100
-    target  = local.idp_uri_tcp
-    content = local.idp_uri_tcp
+    weight = 100
+    target = local.idp_uri_tcp
   }
   ttl = 3600
 }
@@ -153,9 +150,8 @@ resource "cloudflare_record" "kpasswd_uri_udp" {
   type     = "URI"
   priority = 0
   data {
-    weight  = 100
-    target  = local.idp_uri_udp
-    content = local.idp_uri_udp
+    weight = 100
+    target = local.idp_uri_udp
   }
   ttl = 3600
 }
