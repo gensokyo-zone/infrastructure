@@ -24,6 +24,7 @@ in {
     nixos.sops
     nixos.nginx
     nixos.access.plex
+    nixos.access.deluge
     nixos.cloudflared
     ./cloudflared.nix
 
@@ -44,6 +45,14 @@ in {
     nixos.readarr
     nixos.prowlarr
   ];
+
+  services.nginx = {
+    proxied.enable = true;
+    vouch.enable = true;
+    virtualHosts = {
+      deluge.proxied.enable = "cloudflared";
+    };
+  };
 
   services.mediatomb = {
     serverName = "tewi";

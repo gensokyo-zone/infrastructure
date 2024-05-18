@@ -10,9 +10,13 @@ _: {
   exports = {
     services = {
       sshd.enable = true;
-      nginx.enable = true;
+      nginx = {
+        enable = true;
+        ports.proxied.enable = true;
+      };
       plex.enable = true;
       invidious.enable = true;
+      deluge.enable = true;
     };
   };
 }

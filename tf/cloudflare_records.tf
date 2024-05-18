@@ -24,6 +24,7 @@ module "hakurei_system_records" {
     "mqtt",
     "kitchen",
     "webrx",
+    "deluge",
     "home",
     "z2m",
     "grocy",

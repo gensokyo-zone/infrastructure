@@ -40,6 +40,10 @@ let
           type = str;
           default = "default";
         };
+        getAddressFor = mkOption {
+          type = str;
+          default = "getAddressFor";
+        };
         network = mkOption {
           type = str;
           default = "lan";
@@ -61,7 +65,7 @@ let
         enable = lib.warnIf (!port.enable) "${cfg.system}.exports.services.${cfg.name}.ports.${cfg.port} isn't enabled" (
           mkAlmostOptionDefault port.enable
         );
-        addr = mkAlmostOptionDefault (access.getAddressFor system.name cfg.network);
+        addr = mkAlmostOptionDefault (access.${cfg.getAddressFor} system.name cfg.network);
         port = mkOptionDefault port.port;
         ssl.enable = mkIf port.ssl (mkAlmostOptionDefault true);
       };

@@ -1,5 +1,11 @@
-{config, ...}: let
-  inherit (config.services) deluge tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
+{
+  config,
+  lib,
+  ...
+}: let
+  inherit (config.services) nginx tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
+  inherit (lib.modules) mkMerge;
+  inherit (lib.attrsets) mapAttrs' nameValuePair;
 in {
   sops.secrets.cloudflare_mediabox_tunnel = {
     owner = cloudflared.user;
@@ -7,22 +13,29 @@ in {
 
   services.cloudflared = let
     tunnelId = "6a3c1863-d879-462f-b5d5-7c6ddf476d0e";
-    inherit (config.networking) domain;
+    ingressPorts = {
+      tautulli = tautulli.port;
+      ombi = ombi.port;
+      sonarr = sonarr.port;
+      radarr = radarr.port;
+      bazarr = bazarr.listenPort;
+      lidarr = lidarr.port;
+      readarr = readarr.port;
+      prowlarr = prowlarr.port;
+    };
+    ingress = mapAttrs' (name: port:
+      nameValuePair "${name}.${config.networking.domain}" {
+        service = "http://localhost:${toString port}";
+      })
+    ingressPorts;
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflare_mediabox_tunnel.path;
-      ingress = {
-        "tautulli.${domain}".service = "http://localhost:${toString tautulli.port}";
-        "ombi.${domain}".service = "http://localhost:${toString ombi.port}";
-        "sonarr.${domain}".service = "http://localhost:${toString sonarr.port}";
-        "radarr.${domain}".service = "http://localhost:${toString radarr.port}";
-        "bazarr.${domain}".service = "http://localhost:${toString bazarr.listenPort}";
-        "lidarr.${domain}".service = "http://localhost:${toString lidarr.port}";
-        "readarr.${domain}".service = "http://localhost:${toString readarr.port}";
-        "prowlarr.${domain}".service = "http://localhost:${toString prowlarr.port}";
-        "deluge.${domain}".service = "http://localhost:${toString deluge.web.port}";
-      };
+      ingress = mkMerge [
+        ingress
+        (nginx.virtualHosts.deluge.proxied.cloudflared.getIngress {})
+      ];
     };
   };
 }

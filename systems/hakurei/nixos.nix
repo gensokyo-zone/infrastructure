@@ -39,6 +39,7 @@ in {
     nixos.access.unifi
     nixos.access.kitchencam
     nixos.access.openwebrx
+    nixos.access.deluge
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
@@ -219,6 +220,14 @@ in {
         virtualHosts.openwebrx'local.allServerNames
       ];
     };
+    deluge = {
+      inherit (nginx) group;
+      domain = virtualHosts.deluge.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.deluge.otherServerNames
+        virtualHosts.deluge'local.allServerNames
+      ];
+    };
     yt = {
       inherit (nginx) group;
       domain = virtualHosts.invidious.serverName;
@@ -308,6 +317,7 @@ in {
       };
       kitchencam.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
+      deluge.ssl.cert.enable = true;
       invidious = {
         ssl.cert.enable = true;
       };

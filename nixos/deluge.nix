@@ -70,4 +70,11 @@ in {
       ${mediatomb.user}.extraGroups = [cfg.group];
     })
   ]);
+
+  networking.firewall = mkIf cfg.enable {
+    interfaces.lan.allowedTCPPorts = [
+      cfg.config.daemon_port
+      (mkIf cfg.web.enable cfg.web.port)
+    ];
+  };
 }

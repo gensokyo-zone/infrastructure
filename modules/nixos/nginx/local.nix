@@ -148,10 +148,27 @@
       trusted = mkOptionDefault cfg.denyGlobal;
     };
   };
+  serverModule = {config, ...}: let
+    cfg = config.local;
+  in {
+    imports = [localModule];
+
+    config.local = {
+      enable = mkOptionDefault false;
+      denyGlobal = mkOptionDefault cfg.enable;
+      trusted = mkOptionDefault cfg.denyGlobal;
+    };
+  };
 in {
-  options = with lib.types; {
-    services.nginx.virtualHosts = mkOption {
+  options.services.nginx = with lib.types; {
+    virtualHosts = mkOption {
       type = attrsOf (submodule [hostModule]);
+    };
+    stream.servers = mkOption {
+      type = attrsOf (submoduleWith {
+        modules = [serverModule];
+        shorthandOnlyDefinesConfig = false;
+      });
     };
   };
 }
