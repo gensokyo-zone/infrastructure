@@ -14,7 +14,8 @@
       websocket.enable = true;
     };
     extraConfig = ''
-      proxy_read_timeout 1d;
+      proxy_buffering off;
+      proxy_read_timeout 1h;
     '';
   };
 in {

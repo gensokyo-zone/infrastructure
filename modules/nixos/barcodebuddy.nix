@@ -142,9 +142,6 @@ in {
           phpfpmPool = "barcodebuddy";
           passHeaders.X-Accel-Buffering = mkIf cfg.reverseProxy.enable (mkOptionDefault true);
         };
-        extraConfig = ''
-          fastcgi_read_timeout 80s;
-        '';
       };
       redis = let
         redis = config.services.redis.servers.${cfg.redis.server};
@@ -216,6 +213,15 @@ in {
             try_files $uri /api/index.php$is_args$query_string;
           '';
           ${cfg.nginxPhpLocation} = unmerged.merge cfg.nginxPhpSettings;
+          "~ /incl/sse/sse_data\\.php$" = mkMerge [
+            (unmerged.merge cfg.nginxPhpSettings)
+            {
+              extraConfig = ''
+                fastcgi_read_timeout 30m;
+                fastcgi_buffering off;
+              '';
+            }
+          ];
         };
         extraConfig = cfg.nginxConfig;
       };
