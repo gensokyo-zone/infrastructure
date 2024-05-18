@@ -41,31 +41,46 @@ in {
       name.shortServer = mkDefault "login";
     in {
       vouch = {xvars, ...}: {
+        enable = mkDefault false;
         inherit name locations;
-        serverAliases = [nginx.vouch.doubleProxy.serverName];
-        proxied.enable = true;
         proxy = {
           upstream = mkDefault "vouch'access";
+        };
+      };
+      vouch'access = {xvars, ...}: {
+        enable = mkDefault nginx.vouch.doubleProxy.enable;
+        serverName = nginx.vouch.doubleProxy.serverName;
+        proxied.enable = true;
+        #listen'.proxied.ssl = true;
+        proxy = {
+          copyFromVhost = "vouch";
           host = mkDefault xvars.get.host;
         };
-        local.denyGlobal = true;
+        ssl.cert.copyFromVhost = "vouch";
       };
       vouch'local = {xvars, ...}: {
         name = {
           inherit (name) shortServer;
           includeTailscale = mkDefault false;
         };
-        serverAliases = mkIf cfg.enable [nginx.vouch.doubleProxy.localServerName];
-        proxied.enable = true;
-        proxy = {
-          upstream = mkDefault "vouch'access'local";
-          host = mkDefault xvars.get.host;
-        };
+        proxy.upstream = mkDefault "vouch'access'local";
         local.enable = true;
         ssl = {
           force = true;
           cert.copyFromVhost = "vouch";
         };
+        inherit locations;
+      };
+      vouch'local'access = {xvars, ...}: {
+        enable = mkDefault nginx.vouch.doubleProxy.enable;
+        serverName = nginx.vouch.doubleProxy.localServerName;
+        proxied.enable = true;
+        #listen'.proxied.ssl = true;
+        proxy = {
+          copyFromVhost = "vouch'local";
+          host = mkDefault xvars.get.host;
+        };
+        ssl.cert.copyFromVhost = "vouch'local";
         inherit locations;
       };
       vouch'tail = {xvars, ...}: {

@@ -144,14 +144,17 @@ in {
         virtualHosts.barcodebuddy'local.allServerNames
       ];
     };
-    login = {
+    login = let
+      inherit (lib.lists) head tail optional optionals;
+      domains =
+        optional virtualHosts.vouch.enable virtualHosts.vouch.serverName
+        ++ virtualHosts.vouch'local.allServerNames
+        ++ optionals virtualHosts.vouch.enable virtualHosts.vouch.otherServerNames
+        ++ optionals virtualHosts.vouch'tail.enable virtualHosts.vouch'tail.allServerNames;
+    in {
       inherit (nginx) group;
-      domain = virtualHosts.vouch.serverName;
-      extraDomainNames = mkMerge [
-        virtualHosts.vouch.otherServerNames
-        virtualHosts.vouch'local.allServerNames
-        (mkIf virtualHosts.vouch'tail.enable virtualHosts.vouch'tail.allServerNames)
-      ];
+      domain = head domains;
+      extraDomainNames = tail domains;
     };
     unifi = {
       inherit (nginx) group;
