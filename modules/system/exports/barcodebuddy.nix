@@ -22,6 +22,7 @@ in {
     ports.screen = mapAlmostOptionDefaults {
       port = 47631;
       transport = "tcp";
+      listen = "localhost";
     };
   };
 }
