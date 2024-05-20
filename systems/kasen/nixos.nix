@@ -49,11 +49,6 @@
       };
     };
   };
-  networking.firewall.interfaces.lan = {
-    nftables = {
-      conditions = config.networking.firewall.interfaces.local.nftables.conditions;
-    };
-  };
 
   system.stateVersion = "24.05";
 }

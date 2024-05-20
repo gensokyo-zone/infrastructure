@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.options) mkOption;
   inherit (lib.lists) optionals;
   inherit (lib.strings) concatStringsSep;
@@ -103,15 +103,18 @@ in {
   };
 
   config.networking = {
-    firewall = {
-      interfaces.local = {
+    firewall.interfaces = {
+      local = {
         nftables.conditions = [
-          "ip saddr { ${concatStringsSep ", " (cfg.cidrForNetwork.local.v4 ++ cfg.cidrForNetwork.int.v4)} }"
+          "ip saddr { ${concatStringsSep ", " cfg.cidrForNetwork.local.v4} }"
           (
             mkIf networking.enableIPv6
-            "ip6 saddr { ${concatStringsSep ", " (cfg.cidrForNetwork.local.v6 ++ cfg.cidrForNetwork.int.v6)} }"
+            "ip6 saddr { ${concatStringsSep ", " cfg.cidrForNetwork.local.v6} }"
           )
         ];
+      };
+      lan = {
+        nftables.conditions = mkIf config.networking.firewall.interfaces.local.nftables.enable (mkDefault config.networking.firewall.interfaces.local.nftables.conditions);
       };
     };
   };
