@@ -2,7 +2,6 @@
   config,
   options,
   lib,
-  inputs,
   gensokyo-zone,
   ...
 }: let

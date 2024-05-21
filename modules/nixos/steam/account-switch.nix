@@ -1,11 +1,11 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   pkgs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkWinPath userIs;
+  inherit (gensokyo-zone.lib) mkWinPath userIs;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) filterAttrs mapAttrsToList listToAttrs nameValuePair;

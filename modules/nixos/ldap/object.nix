@@ -1,10 +1,10 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) unmerged mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) unmerged mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.attrsets) filterAttrs mapAttrsToList nameValuePair;

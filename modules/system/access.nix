@@ -1,14 +1,14 @@
 {
   name,
   config,
-  lib,
   access,
-  inputs,
+  gensokyo-zone,
+  lib,
   ...
 }: let
-  inherit (inputs.self) nixosConfigurations;
-  inherit (inputs.self.lib) systems;
-  inherit (inputs.self.lib.lib) domain mkAddress6;
+  inherit (gensokyo-zone) systems;
+  inherit (gensokyo-zone.self) nixosConfigurations;
+  inherit (gensokyo-zone.lib) domain mkAddress6;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrs attrValues;

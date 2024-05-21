@@ -1,11 +1,11 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   pkgs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mapOptionDefaults;
+  inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.options) mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   inherit (lib.attrsets) attrValues;

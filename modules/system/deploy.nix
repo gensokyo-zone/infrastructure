@@ -1,15 +1,15 @@
 {
   name,
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) domain;
+  inherit (gensokyo-zone.lib) domain;
   inherit (lib.modules) mkIf mkOptionDefault;
 in {
   options = let
-    inherit (inputs.self.lib.lib) json;
+    inherit (gensokyo-zone.lib) json;
     inherit (lib.types) nullOr;
     inherit (lib.options) mkOption;
   in {
@@ -33,7 +33,7 @@ in {
       profiles.system = {
         user = "root";
         path = let
-          inherit (inputs.self.legacyPackages.${config.system}.deploy-rs) activate;
+          inherit (gensokyo-zone.self.legacyPackages.${config.system}.deploy-rs) activate;
         in
           activate.nixos nixos;
       };

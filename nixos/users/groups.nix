@@ -1,11 +1,11 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
-  inherit (inputs.self.lib.lib) userIs;
+  inherit (gensokyo-zone.lib) userIs;
 in {
   users.groups = {
     peeps = {

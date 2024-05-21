@@ -1,12 +1,12 @@
 {
-  inputs,
   name,
   config,
+  gensokyo-zone,
   lib,
   ...
 }: let
   inherit (lib.modules) mkIf mkOrder mkDefault mkOverride;
-  inherit (inputs.self.lib.lib) domain;
+  inherit (gensokyo-zone.lib) domain;
 in {
   networking = {
     nftables.enable = true;

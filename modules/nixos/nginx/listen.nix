@@ -1,21 +1,19 @@
-{
-  config,
-  lib,
-  inputs,
-  ...
-}: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mkAddress6;
-  inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault mkForce;
-  inherit (lib.attrsets) attrValues mapAttrs;
-  inherit (lib.lists) optional filter concatMap;
-  inherit (config.services) nginx;
+let
   listenModule = {
+    nixosConfig,
     config,
     virtualHost,
     listenKind,
+    gensokyo-zone,
+    lib,
     ...
-  }: {
+  }: let
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault mkAddress6;
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault mkForce;
+    inherit (lib.lists) optional;
+    inherit (nixosConfig.services) nginx;
+  in {
     options = with lib.types; {
       enable =
         mkEnableOption "this port"
@@ -108,19 +106,19 @@
       listenDirectives = mkMerge (map (conf: mkOptionDefault "listen ${conf};") config.listenConfigs);
     };
   };
-  listenType = {
-    specialArgs,
-    modules ? [],
-  }:
-    lib.types.submoduleWith {
-      inherit specialArgs;
-      modules = [listenModule] ++ modules;
-    };
   hostModule = {
     nixosConfig,
     config,
+    gensokyo-zone,
+    lib,
     ...
   }: let
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkOptionDefault mkForce;
+    inherit (lib.attrsets) attrValues mapAttrs;
+    inherit (lib.lists) filter concatMap;
+    inherit (nixosConfig.services) nginx;
     cfg = attrValues config.listen';
     enabledCfg = filter (port: port.enable) cfg;
     mkListen = listen: addr: let
@@ -134,9 +132,10 @@
   in {
     options = with lib.types; {
       listen' = mkOption {
-        type = attrsOf (listenType {
+        type = attrsOf (submoduleWith {
+          modules = [listenModule];
           specialArgs = {
-            inherit nixosConfig;
+            inherit nixosConfig gensokyo-zone;
             virtualHost = config;
             listenKind = "virtualHost";
           };
@@ -164,15 +163,23 @@
   streamServerModule = {
     nixosConfig,
     config,
+    gensokyo-zone,
+    lib,
     ...
   }: let
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkIf mkMerge mkBefore mkOptionDefault mkForce;
+    inherit (lib.attrsets) attrValues;
+    inherit (lib.lists) filter;
+    inherit (nixosConfig.services) nginx;
     enabledListen = filter (port: port.enable) (attrValues config.listen);
   in {
     options = with lib.types; {
       listen = mkOption {
-        type = attrsOf (listenType {
+        type = attrsOf (submoduleWith {
+          modules = [listenModule];
           specialArgs = {
-            inherit nixosConfig;
+            inherit nixosConfig gensokyo-zone;
             virtualHost = config;
             streamServer = config;
             listenKind = "streamServer";
@@ -208,19 +215,22 @@
       ));
     };
   };
-in {
-  options.services.nginx = with lib.types; {
-    virtualHosts = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [hostModule];
-        shorthandOnlyDefinesConfig = true;
-      });
+in
+  {lib, ...}: let
+    inherit (lib.options) mkOption;
+  in {
+    options.services.nginx = with lib.types; {
+      virtualHosts = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [hostModule];
+          shorthandOnlyDefinesConfig = true;
+        });
+      };
+      stream.servers = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [streamServerModule];
+          shorthandOnlyDefinesConfig = false;
+        });
+      };
     };
-    stream.servers = mkOption {
-      type = attrsOf (submoduleWith {
-        modules = [streamServerModule];
-        shorthandOnlyDefinesConfig = false;
-      });
-    };
-  };
-}
+  }

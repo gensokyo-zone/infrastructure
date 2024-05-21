@@ -1,12 +1,12 @@
 {
-  inputs,
-  lib,
   config,
+  gensokyo-zone,
+  lib,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkBaseDn;
-  inherit (lib) mkIf mkMerge mkBefore mkDefault mkOptionDefault mkEnableOption mkOption;
-  inherit (lib.strings) splitString concatMapStringsSep;
+  inherit (gensokyo-zone.lib) mkBaseDn;
+  inherit (lib.options) mkOption mkEnableOption;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (config.lib.access) mkSnakeOil;
   cfg = config.services.kanidm;
 in {

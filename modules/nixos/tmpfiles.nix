@@ -1,11 +1,11 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   pkgs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.strings) match concatStringsSep escapeShellArg optionalString;

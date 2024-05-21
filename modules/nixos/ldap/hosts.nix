@@ -1,10 +1,10 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapListToAttrs;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapListToAttrs;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkOptionDefault;
   inherit (lib.attrsets) mapAttrsToList;

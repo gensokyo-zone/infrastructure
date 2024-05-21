@@ -1,23 +1,21 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   pkgs,
   ...
-}: let
-  inherit (lib.modules) mkDefault;
-in {
+}: {
   services.nginx.virtualHosts.gensokyoZone = {
     serverName = config.networking.domain;
     locations = {
       "/" = {
-        root = inputs.website.packages.${pkgs.system}.gensokyoZone;
+        root = gensokyo-zone.inputs.website.packages.${pkgs.system}.gensokyoZone;
       };
       "/docs" = {
         root = pkgs.linkFarm "genso-docs-wwwroot" [
           {
             name = "docs";
-            path = inputs.self.packages.${pkgs.system}.docs;
+            path = gensokyo-zone.self.packages.${pkgs.system}.docs;
           }
         ];
       };

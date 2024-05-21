@@ -1,10 +1,10 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) userIs mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) userIs mkAlmostOptionDefault;
   inherit (lib.modules) mkMerge mkDefault;
   inherit (lib.attrsets) mapAttrs filterAttrs;
   ldapUsers = filterAttrs (_: userIs "peeps") config.users.users;

@@ -1,16 +1,16 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   pkgs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault;
   inherit (lib.attrsets) mapAttrs' mapAttrsToList listToAttrs nameValuePair;
   inherit (lib.lists) concatLists;
-  inherit (lib.strings) toUpper hasPrefix concatMapStringsSep concatStringsSep;
+  inherit (lib.strings) toUpper hasPrefix concatMapStringsSep;
   inherit (lib.trivial) flip;
   inherit (config.services) samba-wsdd;
   cfg = config.services.samba;

@@ -1,11 +1,11 @@
 {
   config,
   pkgs,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) userIs;
+  inherit (gensokyo-zone.lib) userIs;
   inherit (config.lib.steam) mkSharePath;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;

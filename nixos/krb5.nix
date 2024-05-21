@@ -1,12 +1,12 @@
 {
-  inputs,
   pkgs,
   config,
   access,
+  gensokyo-zone,
   lib,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkAlmostOptionDefault mapAlmostOptionDefaults;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapAlmostOptionDefaults;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
   inherit (lib.strings) replaceStrings;
   inherit (config.security) ipa;

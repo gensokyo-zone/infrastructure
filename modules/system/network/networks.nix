@@ -1,10 +1,10 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
-  inherit (inputs.self.lib.lib) eui64;
+  inherit (gensokyo-zone.lib) eui64;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.trivial) mapNullable;

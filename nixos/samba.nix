@@ -1,12 +1,12 @@
 {
-  inputs,
   config,
-  access,
   system,
+  access,
+  gensokyo-zone,
   lib,
   ...
 }: let
-  inherit (inputs.self.lib.lib) mkBaseDn;
+  inherit (gensokyo-zone.lib) mkBaseDn;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.strings) toUpper removeSuffix;
   cfg = config.services.samba;

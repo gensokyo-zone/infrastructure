@@ -1,14 +1,14 @@
 {
   config,
+  gensokyo-zone,
   lib,
-  inputs,
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (lib.lists) genList;
-  inherit (inputs.self.lib.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged;
   cfg = config.services.github-runner-zone;
   genZone = f: genList f cfg.count;
   genZoneAttrs = prefix: f: listToAttrs (genZone (i: nameValuePair "${prefix}${toString i}" (f i)));

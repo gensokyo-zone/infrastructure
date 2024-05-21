@@ -1,9 +1,9 @@
-{inputs, ...}: let
-  inherit (inputs.self) overlays;
+{gensokyo-zone, ...}: let
+  inherit (gensokyo-zone.self) overlays;
 in {
   nixpkgs = {
     overlays = [
-      inputs.arcexprs.overlays.default
+      gensokyo-zone.inputs.arcexprs.overlays.default
       overlays.default
     ];
     config = {

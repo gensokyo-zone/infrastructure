@@ -1,13 +1,13 @@
 {
-  inputs,
   config,
+  gensokyo-zone,
   lib,
   ...
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkDefault mkForce;
   inherit (lib.attrsets) attrNames attrValues filterAttrs mapAttrs' nameValuePair;
-  inherit (inputs.self.lib.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged;
   cfg = config.services.github-runners;
   nixosConfig = config;
   enabledRunners = filterAttrs (_: runner: runner.enable) cfg;

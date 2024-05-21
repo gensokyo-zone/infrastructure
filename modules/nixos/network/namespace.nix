@@ -1,7 +1,7 @@
 {
-  inputs,
   config,
   pkgs,
+  gensokyo-zone,
   lib,
   utils,
   ...
@@ -12,7 +12,7 @@
   inherit (lib.lists) singleton optional filter concatMap;
   inherit (lib.strings) concatStringsSep escapeShellArg;
   inherit (utils) escapeSystemdExecArg;
-  inherit (inputs.self.lib.lib) unmerged;
+  inherit (gensokyo-zone.lib) unmerged;
   inherit (config) networking;
   inherit (networking) access;
   enabledNamespaces = filter (ns: ns.enable) (attrValues networking.namespaces);
