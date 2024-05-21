@@ -10,28 +10,6 @@ in {
   services.unifi = {
     enable = mkDefault true;
     unifiPackage = mkDefault pkgs.unifi8;
-    mongodbPackage = let
-      mongodb-5_0_26 = pkgs.mongodb-5_0.overrideAttrs (old: rec {
-        version = "5.0.26";
-        name = "${old.pname}-${version}";
-        src = pkgs.fetchFromGitHub {
-          owner = "mongodb";
-          repo = "mongo";
-          rev = "r${version}";
-          sha256 = "sha256-lVRTrEnwuyKETFL1C8bVqBfrDaYrbQIdmHN42CF8ZIw=";
-        };
-        sconsFlags =
-          old.sconsFlags
-          ++ [
-            "MONGO_VERSION=${version}"
-          ];
-      });
-      isUpdated = lib.versionAtLeast pkgs.mongodb-5_0.version mongodb-5_0_26.version;
-      message = "mongodb 5.0 updated in upstream nixpkgs, override no longer needed";
-    in
-      if !isUpdated
-      then mongodb-5_0_26
-      else lib.warn message pkgs.mongodb-5_0;
   };
 
   networking.firewall = mkIf cfg.enable {
