@@ -177,3 +177,10 @@ module "chen_system_records" {
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
   net_data  = local.systems.chen.network
 }
+
+module "koishi_system_records" {
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.koishi.network
+}

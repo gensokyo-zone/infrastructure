@@ -38,6 +38,7 @@ satorin:: `10.1.1.64`
 fire10:: `10.1.1.65`
 chromecast:: `10.1.1.66`
 bedroom_tv:: `10.1.1.67`
+koishi:: `10.1.1.68`
 
 outdoor-friend:: `10.1.1.81`
 bedroom-friend:: `10.1.1.82`
