@@ -5,8 +5,11 @@
   config,
   pkgs,
   meta,
+  lib,
   ...
-}: {
+}: let
+  inherit (lib.modules) mkIf;
+in {
   imports = let
     inherit (meta) nixos;
   in [
@@ -115,7 +118,13 @@
 
   sops = {
     defaultSopsFile = ./secrets.yaml;
-    secrets.logistics-user-password = {};
+    secrets = {
+      logistics-user-password = {};
+      networkmanager-wifi-connection = mkIf config.networking.networkmanager.enable {
+        path = "/etc/NetworkManager/system-connections/wifi.nmconnection";
+        mode = "0400";
+      };
+    };
   };
 
   # This value determines the NixOS release from which the default
