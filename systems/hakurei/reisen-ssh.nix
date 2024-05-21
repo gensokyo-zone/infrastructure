@@ -40,7 +40,9 @@ in {
   networking.firewall.allowedTCPPorts = [sshPort];
 
   sops.secrets = {
-    tf-proxmox-passwd = {};
+    tf-proxmox-passwd = {
+      neededForUsers = true;
+    };
     tf-proxmox-identity = {
       owner = username;
     };

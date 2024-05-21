@@ -119,7 +119,9 @@ in {
   sops = {
     defaultSopsFile = ./secrets.yaml;
     secrets = {
-      logistics-user-password = {};
+      logistics-user-password = {
+        neededForUsers = true;
+      };
       networkmanager-wifi-connection = mkIf config.networking.networkmanager.enable {
         path = "/etc/NetworkManager/system-connections/wifi.nmconnection";
         mode = "0400";
