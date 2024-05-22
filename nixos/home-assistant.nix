@@ -114,6 +114,7 @@ in {
       prometheus = {};
       wake_on_lan = {};
     };
+    grocy.enable = true;
     extraComponents = [
       "zha"
       "esphome"

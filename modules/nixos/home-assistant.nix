@@ -42,6 +42,7 @@ in {
       // {
         default = elem "androidtv" cfg.extraComponents;
       };
+    grocy.enable = mkEnableOption "Grocy custom component";
     brother.enable =
       mkEnableOption "brother"
       // {
@@ -250,6 +251,9 @@ in {
           (mkIf cfg.androidTv.enable [
             adb-shell
             androidtvremote2
+          ])
+          (mkIf cfg.grocy.enable [
+            (python3Packages.callPackage ../../packages/grocy/pygrocy.nix { })
           ])
         ];
     extraComponents = mkMerge [
