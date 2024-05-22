@@ -123,6 +123,7 @@ in {
       "ipp"
       "androidtv"
       "cast"
+      "nfandroidtv"
       "plex"
       "shopping_list"
       "tile"
