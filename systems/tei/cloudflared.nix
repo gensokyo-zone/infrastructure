@@ -19,11 +19,14 @@ in {
           (nginx.virtualHosts.zigbee2mqtt.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.grocy.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.barcodebuddy.proxied.cloudflared.getIngress {})
-          {
-            ${home-assistant.domain} = assert home-assistant.enable; {
-              service = access.proxyUrlFor {serviceName = "home-assistant";};
-            };
-          }
+          (if home-assistant.reverseProxy.auth.enable
+            then (nginx.virtualHosts.home-assistant.proxied.cloudflared.getIngress {})
+            else {
+              ${home-assistant.domain} = assert home-assistant.enable && home-assistant.reverseProxy.enable; {
+                service = access.proxyUrlFor {serviceName = "home-assistant";};
+              };
+            }
+          )
         ];
       };
     };

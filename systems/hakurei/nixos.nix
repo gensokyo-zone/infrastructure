@@ -3,13 +3,12 @@
   meta,
   lib,
   access,
-  gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mkAddress6;
   inherit (lib.modules) mkIf mkMerge;
   inherit (config.services) nginx;
   inherit (nginx) virtualHosts;
+  hassVouch = false;
 in {
   imports = let
     inherit (meta) nixos;
@@ -283,6 +282,7 @@ in {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
+        vouch.enable = mkIf hassVouch true;
       };
       zigbee2mqtt = {
         # not the real z2m record-holder, so don't respond globally..

@@ -1,10 +1,12 @@
 {
   config,
+  access,
+  gensokyo-zone,
   lib,
   ...
 }: let
   cfg = config.services.home-assistant;
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   sopsFile = mkDefault ./secrets/home-assistant.yaml;
 in {
   sops.secrets = mkIf cfg.enable {
@@ -22,7 +24,15 @@ in {
     enable = mkDefault true;
     mutableUiConfig = mkDefault true;
     domain = mkDefault "home.${config.networking.domain}";
+    localDomain = mkDefault "home.local.${config.networking.domain}";
     secretsFile = mkDefault config.sops.secrets.ha-secrets.path;
+    reverseProxy = {
+      enable = mkDefault true;
+      trustedAddresses = mkMerge [
+        access.cidrForNetwork.int.all
+        # [ "200::/7" ]
+      ];
+    };
     config = {
       homeassistant = {
         name = "Gensokyo";
@@ -33,9 +43,50 @@ in {
         currency = "CAD";
         country = "CA";
         time_zone = "America/Vancouver";
+        # media_dirs, allowlist_external_urls, allowlist_external_dirs?
         packages = {
           manual = "!include manual.yaml";
         };
+        auth_providers = let
+          inherit (lib.attrsets) genAttrs;
+          shanghai = with gensokyo-zone.systems.shanghai.config.network.networks.local; [
+            address4
+            address6
+          ];
+          nue = with gensokyo-zone.systems.nue.config.network.networks.local; [
+            address4
+            address6
+          ];
+          logistics = with gensokyo-zone.systems.logistics.config.network.networks.local; [
+            address4
+            address6
+          ];
+          koishi = with gensokyo-zone.systems.koishi.config.network.networks.local; [
+            address4
+            #address6
+          ];
+          guest = logistics ++ [
+            # bedroom tv
+            "10.1.1.67"
+          ];
+          kat = koishi;
+          arc = shanghai ++ nue;
+          enableTrustedAuth = false;
+        in mkIf enableTrustedAuth [
+          {
+            type = "trusted_networks";
+            #allow_bypass_login = true;
+            trusted_networks = guest;
+            trusted_users =
+              genAttrs guest (_: "4051fcce77564010a836fd6b108bbb4b")
+              #genAttrs arc (_: "0c9c9382890746c2b246b76557f22953")
+              #genAttrs kat (_: "a6e96c523d334aabaea71743839ef584")
+            ;
+          }
+          {
+            type = "homeassistant";
+          }
+        ];
       };
       frontend = {
         themes = "!include_dir_merge_named themes";

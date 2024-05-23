@@ -1,11 +1,12 @@
 {
   pkgs,
   config,
+  access,
   lib,
   ...
 }: let
   cfg = config.services.home-assistant;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkDefault mkOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.lists) optional elem unique;
   inherit (lib.strings) toLower;
@@ -16,9 +17,26 @@ in {
       type = str;
       default = config.networking.domain;
     };
+    localDomain = mkOption {
+      type = nullOr str;
+      default = null;
+    };
     secretsFile = mkOption {
       type = nullOr path;
       default = null;
+    };
+    reverseProxy = {
+      enable = mkEnableOption "use_x_forwarded_for";
+      trustedAddresses = mkOption {
+        type = listOf str;
+      };
+      auth = {
+        enable = mkEnableOption "auth-header";
+        debug = mkEnableOption "debug logging";
+        userHeader = mkOption {
+          type = str;
+        };
+      };
     };
     homekit = {
       enable =
@@ -114,27 +132,34 @@ in {
   };
 
   config.services.home-assistant = {
+    reverseProxy = {
+      trustedAddresses = access.cidrForNetwork.loopback.all;
+    };
     config = mkMerge [
       {
         homeassistant = {
           external_url = "https://${cfg.domain}";
+          internal_url = mkIf (cfg.localDomain != null) "https://${cfg.localDomain}";
         };
         logger = {
           default = mkDefault "info";
+          logs = {
+            "custom_components.auth_header" = mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable && cfg.reverseProxy.auth.debug) "debug";
+          };
         };
         http = {
+          use_x_forwarded_for = cfg.reverseProxy.enable;
+          trusted_proxies = mkIf cfg.reverseProxy.enable cfg.reverseProxy.trustedAddresses;
           cors_allowed_origins = [
-            "https://google.com"
+            (mkIf cfg.googleAssistant.enable "https://google.com")
+            (mkIf (cfg.localDomain != null) "https://${cfg.localDomain}")
+            # TODO: (mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable) vouch cors idk)
             "https://www.home-assistant.io"
           ];
-          use_x_forwarded_for = "true";
-          trusted_proxies = let
-            inherit (config.networking.access) cidrForNetwork;
-          in
-            cidrForNetwork.allLocal.all
-            ++ [
-              "200::/7"
-            ];
+        };
+        auth_header = mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable) {
+          username_header = cfg.reverseProxy.auth.userHeader;
+          debug = mkIf cfg.reverseProxy.auth.debug true;
         };
         recorder = {
           db_url = mkIf config.services.postgresql.enable (mkDefault "postgresql://@/hass");
@@ -279,6 +304,11 @@ in {
       ])
       (map ({platform, ...}: platform) cfg.config.media_player or [])
       (map ({platform, ...}: platform) cfg.config.tts or [])
+    ];
+    customComponents = [
+      (mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable)
+        pkgs.home-assistant-custom-components.auth-header
+      )
     ];
   };
 }

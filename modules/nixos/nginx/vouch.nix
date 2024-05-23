@@ -18,7 +18,9 @@
     virtualHost,
     xvars,
     ...
-  }: {
+  }: let
+    cfg = config.vouch;
+  in {
     options.vouch = with lib.types; {
       requireAuth = mkEnableOption "require auth to access this location";
       setProxyHeader = mkOption {
@@ -32,7 +34,7 @@
       enableVouchTail = enableVouchLocal && tailscale.enable && false;
       allowOrigin = url: "add_header Access-Control-Allow-Origin ${url};";
     in
-      mkIf config.vouch.requireAuth {
+      mkIf cfg.requireAuth {
         lua = mkIf virtualHost.vouch.auth.lua.enable {
           access.block = mkMerge [
             (mkBefore virtualHost.vouch.auth.lua.accessRequest)
@@ -41,7 +43,9 @@
           ];
         };
         xvars.enable = mkIf (enableVouchTail || virtualHost.vouch.auth.lua.enable) true;
-        proxy.headers.set.X-Vouch-User = mkOptionDefault "$auth_resp_x_vouch_user";
+        proxy.headers.set = mkIf cfg.setProxyHeader {
+          X-Vouch-User = mkOptionDefault "$auth_resp_x_vouch_user";
+        };
         extraConfig = assert virtualHost.vouch.enable;
           mkMerge [
             (mkIf (!virtualHost.vouch.requireAuth) virtualHost.vouch.auth.requestDirective)

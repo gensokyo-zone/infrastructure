@@ -12,6 +12,7 @@
     mkDefault
     mkOptionDefault
     mkOption
+    mkPackageOption
     mkEnableOption
     types
     getExe
@@ -22,6 +23,7 @@
 in {
   options.services.vouch-proxy = with types; {
     enable = mkEnableOption "vouch";
+    package = mkPackageOption pkgs "vouch-proxy" { };
     user = mkOption {
       type = str;
       default = "vouch-proxy";
@@ -157,7 +159,7 @@ in {
                 "${preprocess}"
               ];
             ExecStart = [
-              "${getExe pkgs.vouch-proxy} -config ${cfg.settingsPath}"
+              "${getExe cfg.package} -config ${cfg.settingsPath}"
             ];
             Restart = "on-failure";
             RestartSec = mkDefault 5;
