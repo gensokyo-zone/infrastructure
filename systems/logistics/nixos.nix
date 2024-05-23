@@ -42,7 +42,10 @@ in {
     uid = 1000;
     isNormalUser = true;
     description = "Logistics";
-    extraGroups = ["networkmanager"];
+    extraGroups = [
+      "nixbuilder"
+      (mkIf config.networking.networkmanager.enable "networkmanager")
+    ];
     hashedPasswordFile = config.sops.secrets.logistics-user-password.path;
   };
   services.barcodebuddy-scanner.user = "logistics";
