@@ -23,7 +23,7 @@
 in {
   options.services.vouch-proxy = with types; {
     enable = mkEnableOption "vouch";
-    package = mkPackageOption pkgs "vouch-proxy" { };
+    package = mkPackageOption pkgs "vouch-proxy" {};
     user = mkOption {
       type = str;
       default = "vouch-proxy";

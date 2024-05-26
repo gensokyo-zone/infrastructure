@@ -278,7 +278,7 @@ in {
             androidtvremote2
           ])
           (mkIf cfg.grocy.enable [
-            (python3Packages.callPackage ../../packages/grocy/pygrocy.nix { })
+            (python3Packages.callPackage ../../packages/grocy/pygrocy.nix {})
           ])
         ];
     extraComponents = mkMerge [
@@ -306,7 +306,8 @@ in {
       (map ({platform, ...}: platform) cfg.config.tts or [])
     ];
     customComponents = [
-      (mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable)
+      (
+        mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable)
         pkgs.home-assistant-custom-components.auth-header
       )
     ];

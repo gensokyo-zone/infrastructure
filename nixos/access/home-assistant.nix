@@ -32,7 +32,7 @@ in {
       };
     };
     virtualHosts = let
-      vouchHost = { config, ... }: {
+      vouchHost = {config, ...}: {
         vouch = {
           requireAuth = mkDefault false;
           auth.lua = {
@@ -60,7 +60,11 @@ in {
           };
         };
         # TODO: restrict to "/auth/authorize" and "/auth/login_flow" only..?
-        "/auth/" = { virtualHost, config, ... }: {
+        "/auth/" = {
+          virtualHost,
+          config,
+          ...
+        }: {
           proxy = {
             inherit headers;
             enable = true;
@@ -78,13 +82,13 @@ in {
         };
       };
     in {
-      home-assistant = { ... }: {
-        imports = [ vouchHost ];
+      home-assistant = {...}: {
+        imports = [vouchHost];
         inherit name locations;
         proxy.upstream = mkDefault upstreamName;
       };
-      home-assistant'local = { ... }: {
-        imports = [ vouchHost ];
+      home-assistant'local = {...}: {
+        imports = [vouchHost];
         vouch.enable = mkDefault nginx.virtualHosts.home-assistant.vouch.enable;
         inherit name listen' locations;
         ssl.cert = {

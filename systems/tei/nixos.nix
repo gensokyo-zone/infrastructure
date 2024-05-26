@@ -11,23 +11,25 @@
 in {
   imports = let
     inherit (meta) nixos;
-  in [
-    nixos.reisen-ct
-    nixos.sops
-    nixos.tailscale
-    nixos.cloudflared
-    nixos.postgres
-    nixos.nginx
-    nixos.access.zigbee2mqtt
-    nixos.access.grocy
-    nixos.access.barcodebuddy
-    nixos.home-assistant
-    nixos.zigbee2mqtt
-    nixos.syncplay
-    nixos.grocy
-    nixos.barcodebuddy
-    ./cloudflared.nix
-  ] ++ optional hassVouchAuth nixos.access.home-assistant;
+  in
+    [
+      nixos.reisen-ct
+      nixos.sops
+      nixos.tailscale
+      nixos.cloudflared
+      nixos.postgres
+      nixos.nginx
+      nixos.access.zigbee2mqtt
+      nixos.access.grocy
+      nixos.access.barcodebuddy
+      nixos.home-assistant
+      nixos.zigbee2mqtt
+      nixos.syncplay
+      nixos.grocy
+      nixos.barcodebuddy
+      ./cloudflared.nix
+    ]
+    ++ optional hassVouchAuth nixos.access.home-assistant;
 
   services.nginx = {
     proxied.enable = true;

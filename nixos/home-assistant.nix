@@ -65,28 +65,31 @@ in {
             address4
             #address6
           ];
-          guest = logistics ++ [
-            # bedroom tv
-            "10.1.1.67"
-          ];
+          guest =
+            logistics
+            ++ [
+              # bedroom tv
+              "10.1.1.67"
+            ];
           kat = koishi;
           arc = shanghai ++ nue;
           enableTrustedAuth = false;
-        in mkIf enableTrustedAuth [
-          {
-            type = "trusted_networks";
-            #allow_bypass_login = true;
-            trusted_networks = guest;
-            trusted_users =
-              genAttrs guest (_: "4051fcce77564010a836fd6b108bbb4b")
-              #genAttrs arc (_: "0c9c9382890746c2b246b76557f22953")
-              #genAttrs kat (_: "a6e96c523d334aabaea71743839ef584")
-            ;
-          }
-          {
-            type = "homeassistant";
-          }
-        ];
+        in
+          mkIf enableTrustedAuth [
+            {
+              type = "trusted_networks";
+              #allow_bypass_login = true;
+              trusted_networks = guest;
+              trusted_users =
+                genAttrs guest (_: "4051fcce77564010a836fd6b108bbb4b")
+                #genAttrs arc (_: "0c9c9382890746c2b246b76557f22953")
+                #genAttrs kat (_: "a6e96c523d334aabaea71743839ef584")
+                ;
+            }
+            {
+              type = "homeassistant";
+            }
+          ];
       };
       frontend = {
         themes = "!include_dir_merge_named themes";

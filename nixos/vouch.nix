@@ -13,10 +13,12 @@ in {
   services.vouch-proxy = {
     enable = mkDefault true;
     package = mkIf hassVouch (pkgs.vouch-proxy.overrideAttrs (old: {
-      postPatch = ''
-        sed -i handlers/login.go \
-          -e 's/badStrings *=.*$/badStrings = []string{}/'
-      '' + old.postPatch or "";
+      postPatch =
+        ''
+          sed -i handlers/login.go \
+            -e 's/badStrings *=.*$/badStrings = []string{}/'
+        ''
+        + old.postPatch or "";
       doCheck = false;
     }));
     domain = mkDefault "login.${config.networking.domain}";

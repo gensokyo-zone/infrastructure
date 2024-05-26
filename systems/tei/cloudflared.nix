@@ -19,7 +19,8 @@ in {
           (nginx.virtualHosts.zigbee2mqtt.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.grocy.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.barcodebuddy.proxied.cloudflared.getIngress {})
-          (if home-assistant.reverseProxy.auth.enable
+          (
+            if home-assistant.reverseProxy.auth.enable
             then (nginx.virtualHosts.home-assistant.proxied.cloudflared.getIngress {})
             else {
               ${home-assistant.domain} = assert home-assistant.enable && home-assistant.reverseProxy.enable; {
