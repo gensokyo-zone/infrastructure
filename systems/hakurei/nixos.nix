@@ -32,6 +32,7 @@ in {
     nixos.access.mosquitto
     nixos.access.gensokyo
     nixos.access.keycloak
+    nixos.access.vaultwarden
     nixos.access.vouch
     nixos.access.freeipa
     nixos.access.freepbx
@@ -110,6 +111,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.keycloak.otherServerNames
         virtualHosts.keycloak'local.allServerNames
+      ];
+    };
+    bw = {
+      inherit (nginx) group;
+      domain = virtualHosts.vaultwarden.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.vaultwarden.otherServerNames
+        virtualHosts.vaultwarden'local.allServerNames
       ];
     };
     home = {
@@ -263,6 +272,11 @@ in {
       freeipa'cockpit.proxied.enable = "cloudflared";
       keycloak = {
         # we're not the real sso record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      vaultwarden = {
+        # we're not the real bw record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };

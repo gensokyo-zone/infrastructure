@@ -92,7 +92,10 @@ in {
       prepKeyEnvironment = pkgs.writeShellScript "barcodebuddy-scanner-apikey.sh" ''
         set -eu
 
-        printf "API_KEY=$(cat $API_KEY_PATH)\\n" > $RUNTIME_DIRECTORY/${apiKeyFile}
+        printf "" > $RUNTIME_DIRECTORY/${apiKeyFile}
+        chmod 0640 $RUNTIME_DIRECTORY/${apiKeyFile}
+
+        printf "API_KEY=$(cat $API_KEY_PATH)\\n" >> $RUNTIME_DIRECTORY/${apiKeyFile}
       '';
     in {
       wantedBy = [

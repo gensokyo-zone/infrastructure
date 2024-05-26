@@ -12,6 +12,7 @@
     nixos.reisen-ct
     nixos.ipa
     nixos.keycloak
+    nixos.vaultwarden
     nixos.cloudflared
     nixos.vouch
   ];
@@ -27,6 +28,8 @@
         inherit (keycloak'system.exports.services) keycloak;
         vouch'system = access.systemForServiceId "login";
         inherit (vouch'system.exports.services) vouch-proxy;
+        vaultwarden'system = access.systemForServiceId "bw";
+        inherit (vaultwarden'system.exports.services) vaultwarden;
       in {
         "${keycloak.id}.${config.networking.domain}" = let
           portName =
@@ -50,6 +53,12 @@
           service = access.proxyUrlFor {
             system = vouch'system;
             service = vouch-proxy;
+          };
+        };
+        "${vaultwarden.id}.${config.networking.domain}" = {
+          service = access.proxyUrlFor {
+            system = vaultwarden'system;
+            service = vaultwarden;
           };
         };
       };

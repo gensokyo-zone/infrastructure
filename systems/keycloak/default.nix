@@ -12,6 +12,7 @@ _: {
       sshd.enable = true;
       keycloak.enable = true;
       vouch-proxy.enable = true;
+      vaultwarden.enable = true;
     };
   };
 }

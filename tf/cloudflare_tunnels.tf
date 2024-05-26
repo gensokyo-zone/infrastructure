@@ -44,6 +44,7 @@ module "keycloak" {
   subdomains = [
     "sso",
     "login",
+    "bw",
   ]
 }
 

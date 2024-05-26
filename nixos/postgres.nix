@@ -9,7 +9,7 @@
 in {
   services.postgresql = {
     enable = mkDefault true;
-    ensureDatabases = ["hass" "invidious" "dex" "keycloak"];
+    ensureDatabases = ["hass" "invidious" "dex" "keycloak" "vaultwarden"];
     ensureUsers = [
       {
         name = "hass";
@@ -19,7 +19,7 @@ in {
       {
         name = "invidious";
         ensureDBOwnership = true;
-        authentication.int.allow = true;
+        authentication.int.allow = !config.services.invidious.enable;
       }
       {
         name = "dex";
@@ -29,7 +29,12 @@ in {
       {
         name = "keycloak";
         ensureDBOwnership = true;
-        authentication.int.allow = true;
+        authentication.int.allow = !config.services.keycloak.enable;
+      }
+      {
+        name = "vaultwarden";
+        ensureDBOwnership = true;
+        authentication.int.allow = !config.services.vaultwarden.enable;
       }
     ];
   };

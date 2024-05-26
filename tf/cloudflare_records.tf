@@ -18,6 +18,7 @@ module "hakurei_system_records" {
     "krb5",
     "ipa",
     "ipa-cock",
+    "bw",
     "unifi",
     "pbx",
     "smb",
