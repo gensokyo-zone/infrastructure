@@ -19,6 +19,7 @@ in {
     nixos.unifi
     nixos.dnsmasq
     nixos.mosquitto
+    nixos.monitoring
   ];
 
   services.cloudflared = let

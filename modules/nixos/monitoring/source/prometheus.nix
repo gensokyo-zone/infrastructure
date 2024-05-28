@@ -29,7 +29,6 @@ in {
         {
           enabledCollectors = [
             "arp"
-            "boottime"
             "cpu"
             "cpufreq"
             "diskstats"

@@ -17,6 +17,11 @@ _: {
       unifi.enable = true;
       mosquitto.enable = true;
       dnsmasq.enable = true;
+      grafana.enable = true;
+      loki.enable = true;
+      prometheus.enable = true;
+      prometheus-exporters-node.enable = true;
+      promtail.enable = true;
     };
   };
 }

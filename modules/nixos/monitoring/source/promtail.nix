@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (builtins) toJSON;
+  inherit (builtins) toJSON toString;
   inherit (lib.options) mkOption;
   inherit (lib.types) port;
   cfg = config.services.promtail;
@@ -17,7 +17,7 @@ in {
   };
   config.services.promtail = {
     extraFlags = [
-      "--server.http-listen-port=${cfg.settings.httpListenPort}"
+      "--server.http-listen-port=${toString cfg.settings.httpListenPort}"
     ];
   };
 }
