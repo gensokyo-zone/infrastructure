@@ -1,6 +1,6 @@
 _: {
-    services = {
-        prometheus.exporters.node.enable = true;
-        promtail.enable = true;
-    };
+  services = {
+    prometheus.exporters.node.enable = true;
+    promtail.enable = true;
+  };
 }

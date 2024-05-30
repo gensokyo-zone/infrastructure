@@ -11,18 +11,24 @@
   nodeExporterSystems =
     filter (
       system:
-        system.config.access.online.enable &&
-        system.config.exports.prometheus.exporter.services != [ ]
+        system.config.access.online.enable
+        && system.config.exports.prometheus.exporter.services != []
     )
     (attrValues systems);
-  mkPortTarget = { system, service, portName }: let
+  mkPortTarget = {
+    system,
+    service,
+    portName,
+  }: let
     port = service.ports.${portName};
   in "${access.getAddressFor system.config.name "lan"}:${toString port.port}";
   mkServiceConfig = system: serviceName: let
     service = system.config.exports.services.${serviceName};
-    targets = map (portName: mkPortTarget {
-      inherit system service portName;
-    }) service.prometheus.exporter.ports;
+    targets = map (portName:
+      mkPortTarget {
+        inherit system service portName;
+      })
+    service.prometheus.exporter.ports;
   in {
     job_name = "${system.config.name}-${service.id}";
     static_configs = [

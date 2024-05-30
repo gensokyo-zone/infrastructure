@@ -146,9 +146,11 @@
   };
 in {
   options.exports = with lib.types; {
-    defaultServices = mkEnableOption "common base services" // {
-      default = config.type == "NixOS";
-    };
+    defaultServices =
+      mkEnableOption "common base services"
+      // {
+        default = config.type == "NixOS";
+      };
     services = mkOption {
       type = attrsOf (submoduleWith {
         modules = [serviceModule];
@@ -170,7 +172,7 @@ in {
         "sshd"
         "prometheus-exporters-node"
         "promtail"
-      ] (_: { enable = mkAlmostOptionDefault true; });
+      ] (_: {enable = mkAlmostOptionDefault true;});
     in {
       services = mkIf cfg.defaultServices defaultServices;
     };
