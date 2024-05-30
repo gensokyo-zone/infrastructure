@@ -139,11 +139,33 @@ in
                 assertion = config.ports.default.port == nixosConfig.services.loki.settings.httpListenPort;
                 message = "port mismatch";
               })
+              (nixosConfig: let
+                inherit (nixosConfig.services.loki.settings) grpcListenPort;
+              in {
+                assertion = !config.ports.grpc.enable || config.ports.grpc.port == grpcListenPort;
+                message = "gRPC port mismatch";
+              })
+              (nixosConfig: let
+                inherit (nixosConfig.services.loki.settings) grpcListenPort;
+              in {
+                assertion = if config.ports.grpc.enable
+                  then grpcListenPort != 0
+                  else grpcListenPort == 0;
+                message = "gRPC enable mismatch";
+              })
             ];
           };
-          ports.default = mapAlmostOptionDefaults {
-            port = 9093;
-            protocol = "http";
+          ports = {
+            default = mapAlmostOptionDefaults {
+              port = 9093;
+              protocol = "http";
+            };
+            grpc = mapAlmostOptionDefaults {
+              enable = false;
+              port = 9095;
+              protocol = "http";
+            };
+            #grpclb.port = 9096;
           };
         };
         promtail = {config, ...}: {
