@@ -9,7 +9,6 @@ _: {
   ];
   exports = {
     services = {
-      sshd.enable = true;
       nginx = {
         enable = true;
         ports.proxied.enable = true;
@@ -20,8 +19,6 @@ _: {
       grafana.enable = true;
       loki.enable = true;
       prometheus.enable = true;
-      prometheus-exporters-node.enable = true;
-      promtail.enable = true;
     };
   };
 }

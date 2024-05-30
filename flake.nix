@@ -74,29 +74,4 @@
   };
 
   outputs = inputs: import ./outputs.nix {inherit inputs;};
-  /*
-    outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-    ...
-  } @ inputs: let
-    providedSystems =
-      flake-utils.lib.eachDefaultSystem
-      (system: rec {
-        devShells.default = import ./devShell.nix {inherit system inputs;};
-        legacyPackages = import ./meta.nix {inherit system inputs;};
-        inherit (legacyPackages.outputs) packages;
-      });
-  in
-    providedSystems
-    // {
-      nixosConfigurations = builtins.mapAttrs (_: config:
-        config
-        // {
-          inherit config;
-        })
-      self.legacyPackages.x86_64-linux.network.nodes;
-    };
-  */
 }

@@ -8,10 +8,10 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-  inherit (lib.attrsets) mapAttrsToList getAttrFromPath;
+  inherit (lib.attrsets) mapAttrsToList getAttrFromPath genAttrs;
   inherit (lib.trivial) mapNullable;
   inherit (lib.strings) concatStringsSep;
-  systemConfig = config;
+  cfg = config.exports;
   portModule = {
     config,
     service,
@@ -146,12 +146,15 @@
   };
 in {
   options.exports = with lib.types; {
+    defaultServices = mkEnableOption "common base services" // {
+      default = config.type == "NixOS";
+    };
     services = mkOption {
       type = attrsOf (submoduleWith {
         modules = [serviceModule];
         specialArgs = {
           machine = name;
-          inherit systemConfig;
+          systemConfig = config;
         };
       });
       default = {};
@@ -162,5 +165,14 @@ in {
     modules = mkIf (config.type == "NixOS") [
       nixosModule
     ];
+    exports = let
+      defaultServices = genAttrs [
+        "sshd"
+        "prometheus-exporters-node"
+        "promtail"
+      ] (_: { enable = mkAlmostOptionDefault true; });
+    in {
+      services = mkIf cfg.defaultServices defaultServices;
+    };
   };
 }

@@ -11,7 +11,6 @@ _: {
   exports = {
     services = {
       nginx.enable = true;
-      sshd.enable = true;
       openwebrx.enable = true;
     };
   };

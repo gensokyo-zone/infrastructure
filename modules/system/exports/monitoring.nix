@@ -3,8 +3,27 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mapListToAttrs mapAlmostOptionDefaults mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
+  inherit (lib.attrsets) nameValuePair;
+  mkExporter = { name, port }: nameValuePair "prometheus-exporters-${name}" ({config, ...}: {
+    nixos = {
+      serviceAttrPath = ["services" "prometheus" "exporters" name];
+      assertions = mkIf config.enable [
+        (nixosConfig: {
+          assertion = config.ports.default.port == nixosConfig.services.prometheus.exporters.${name}.port;
+          message = "port mismatch";
+        })
+      ];
+    };
+    ports.default = mapAlmostOptionDefaults {
+      inherit port;
+      protocol = "http";
+    };
+  });
+  exporters = mapListToAttrs mkExporter [
+    { name = "node"; port = 9091; }
+  ];
 in {
   config.exports.services = {
     prometheus = {config, ...}: {
@@ -20,22 +39,6 @@ in {
       };
       ports.default = mapAlmostOptionDefaults {
         port = 9090;
-        protocol = "http";
-      };
-    };
-    prometheus-exporters-node = {config, ...}: {
-      id = mkAlmostOptionDefault "prometheus-exporters-node";
-      nixos = {
-        serviceAttrPath = ["services" "prometheus" "exporters" "node"];
-        assertions = mkIf config.enable [
-          (nixosConfig: {
-            assertion = config.ports.default.port == nixosConfig.services.prometheus.exporters.node.port;
-            message = "port mismatch";
-          })
-        ];
-      };
-      ports.default = mapAlmostOptionDefaults {
-        port = 9091;
         protocol = "http";
       };
     };
@@ -87,5 +90,5 @@ in {
         protocol = "http";
       };
     };
-  };
+  } // exporters;
 }

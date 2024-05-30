@@ -4,11 +4,6 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  exports = {
-    services = {
-      sshd.enable = true;
-    };
-  };
   network.networks = {
     local = {
       slaac.postfix = "40c3:23df:e82a:b214";

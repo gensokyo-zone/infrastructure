@@ -9,7 +9,6 @@ _: {
   ];
   exports = {
     services = {
-      sshd.enable = true;
       tailscale.enable = true;
       minecraft-bedrock-server.enable = true;
     };
