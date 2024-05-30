@@ -5,26 +5,37 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (lib.attrsets) filterAttrs mapAttrsToList;
+  inherit (lib.modules) mkDefault;
+  inherit (lib.attrsets) attrValues;
+  inherit (lib.lists) filter concatMap;
   nodeExporterSystems =
-    filterAttrs (
-      _: system:
+    filter (
+      system:
         system.config.access.online.enable &&
-        system.config.exports.services.prometheus-exporters-node.enable
+        system.config.exports.prometheus.exporter.services != [ ]
     )
-    systems;
+    (attrValues systems);
+  mkPortTarget = { system, service, portName }: let
+    port = service.ports.${portName};
+  in "${access.getAddressFor system.config.name "lan"}:${toString port.port}";
+  mkServiceConfig = system: serviceName: let
+    service = system.config.exports.services.${serviceName};
+    targets = map (portName: mkPortTarget {
+      inherit system service portName;
+    }) service.prometheus.exporter.ports;
+  in {
+    job_name = "${system.config.name}-${service.id}";
+    static_configs = [
+      {
+        inherit targets;
+        labels = mkDefault service.prometheus.exporter.labels;
+      }
+    ];
+  };
+  mapSystem = system: map (mkServiceConfig system) system.config.exports.prometheus.exporter.services;
 in {
   services.prometheus = {
-    port = 9090;
-    scrapeConfigs =
-      mapAttrsToList (_: system: {
-        job_name = "${system.config.name}-node-exporter";
-        static_configs = [ {
-          targets = [
-            "${access.getAddressFor system.config.name "local"}:${toString system.config.exports.services.prometheus-exporters-node.ports.default.port}"
-          ];
-        } ];
-      })
-      nodeExporterSystems;
+    port = mkDefault 9090;
+    scrapeConfigs = concatMap mapSystem nodeExporterSystems;
   };
 }

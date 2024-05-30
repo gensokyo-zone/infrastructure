@@ -1,11 +1,56 @@
-{
-  lib,
+let
+  portModule = {
+    lib,
+    ...
+  }: let
+    inherit (lib.options) mkEnableOption;
+  in {
+    options.prometheus = with lib.types; {
+      exporter.enable = mkEnableOption "prometheus metrics endpoint";
+    };
+  };
+  serviceModule = {
+    config,
+    lib,
+    ...
+  }: let
+    inherit (lib.options) mkOption;
+    inherit (lib.modules) mkOptionDefault;
+    inherit (lib.attrsets) attrNames filterAttrs;
+    exporterPorts = filterAttrs (_: port: port.enable && port.prometheus.exporter.enable) config.ports;
+  in {
+    options = with lib.types; {
+      prometheus = {
+        exporter = {
+          ports = mkOption {
+            type = listOf str;
+          };
+          labels = mkOption {
+            type = attrsOf str;
+            default = { };
+          };
+        };
+      };
+      ports = mkOption {
+        type = attrsOf (submoduleWith {
+          modules = [portModule];
+        });
+      };
+    };
+    config.prometheus = {
+      exporter.ports = mkOptionDefault (attrNames exporterPorts);
+    };
+  };
+in {
+  config,
   gensokyo-zone,
+  lib,
   ...
 }: let
   inherit (gensokyo-zone.lib) mapListToAttrs mapAlmostOptionDefaults mkAlmostOptionDefault;
-  inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) nameValuePair;
+  inherit (lib.options) mkOption;
+  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.attrsets) attrNames filterAttrs nameValuePair;
   mkExporter = { name, port }: nameValuePair "prometheus-exporters-${name}" ({config, ...}: {
     nixos = {
       serviceAttrPath = ["services" "prometheus" "exporters" name];
@@ -19,12 +64,31 @@
     ports.default = mapAlmostOptionDefaults {
       inherit port;
       protocol = "http";
+    } // {
+      prometheus.exporter.enable = true;
     };
   });
   exporters = mapListToAttrs mkExporter [
     { name = "node"; port = 9091; }
   ];
 in {
+  options.exports = with lib.types; {
+    prometheus = {
+      exporter.services = mkOption {
+        type = listOf str;
+      };
+    };
+    services = mkOption {
+      type = attrsOf (submoduleWith {
+        modules = [serviceModule];
+      });
+    };
+  };
+  config.exports.prometheus = let
+    exporterServices = filterAttrs (_: service: service.enable && service.prometheus.exporter.ports != [ ]) config.exports.services;
+  in {
+    exporter.services = mkOptionDefault (attrNames exporterServices);
+  };
   config.exports.services = {
     prometheus = {config, ...}: {
       id = mkAlmostOptionDefault "prometheus";
@@ -88,6 +152,8 @@ in {
       ports.default = mapAlmostOptionDefaults {
         port = 9094;
         protocol = "http";
+      } // {
+        prometheus.exporter.enable = true;
       };
     };
   } // exporters;
