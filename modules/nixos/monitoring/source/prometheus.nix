@@ -4,6 +4,11 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
+  inherit (lib.attrsets) attrValues;
+  inherit (lib.lists) concatMap toList;
+  allExporters = let
+    exporters = removeAttrs config.services.prometheus.exporters [ "unifi-poller" ];
+  in concatMap toList (attrValues exporters);
 in {
   config = {
     services.prometheus.exporters = {
@@ -52,5 +57,8 @@ in {
         }
       ];
     };
+    networking.firewall.interfaces.lan.allowedTCPPorts = map (exporter:
+      mkIf (exporter.enable && !exporter.openFirewall) 999
+    ) allExporters;
   };
 }
