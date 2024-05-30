@@ -7,7 +7,21 @@
   inherit (config.services) grafana loki prometheus;
 in {
   services = {
-    grafana.enable = true;
+    grafana = {
+      enable = true;
+      settings = {
+        "auth.anonymous" = {
+          enabled = true;
+          # org_name = domain;
+          # org_role = "Viewer"? "Editor"?
+          org_role = "Admin";
+        };
+        metrics = {
+          enabled = true;
+          disable_total_stats = true;
+        };
+      };
+    };
     loki.enable = true;
     prometheus.enable = true;
   };

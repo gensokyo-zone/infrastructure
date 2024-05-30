@@ -127,6 +127,8 @@ in
           ports.default = mapAlmostOptionDefaults {
             port = 9092;
             protocol = "http";
+          } // {
+            prometheus.exporter.enable = true;
           };
         };
         loki = {config, ...}: {
