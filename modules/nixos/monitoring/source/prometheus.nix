@@ -42,7 +42,6 @@ in {
             "entropy"
             "filesystem"
             "netdev"
-            "systemd"
             "sysctl"
             "systemd"
             "loadavg"
