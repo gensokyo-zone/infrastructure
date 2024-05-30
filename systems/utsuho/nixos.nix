@@ -1,8 +1,10 @@
 {
   meta,
   config,
+  lib,
   ...
 }: let
+  inherit (lib.modules) mkMerge;
   inherit (config.services) nginx;
 in {
   imports = let
@@ -16,6 +18,9 @@ in {
     nixos.cloudflared
     nixos.nginx
     nixos.access.unifi
+    nixos.access.prometheus
+    nixos.access.grafana
+    nixos.access.loki
     nixos.unifi
     nixos.dnsmasq
     nixos.mosquitto
@@ -29,7 +34,12 @@ in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
-      ingress = virtualHosts.unifi.proxied.cloudflared.getIngress {};
+      ingress = mkMerge [
+        (virtualHosts.unifi.proxied.cloudflared.getIngress {})
+        (virtualHosts.prometheus.proxied.cloudflared.getIngress {})
+        (virtualHosts.grafana.proxied.cloudflared.getIngress {})
+        (virtualHosts.loki.proxied.cloudflared.getIngress {})
+      ];
     };
   };
 
@@ -37,6 +47,9 @@ in {
     proxied.enable = true;
     virtualHosts = {
       unifi.proxied.enable = "cloudflared";
+      prometheus.proxied.enable = "cloudflared";
+      grafana.proxied.enable = "cloudflared";
+      loki.proxied.enable = "cloudflared";
     };
   };
 

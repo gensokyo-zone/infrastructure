@@ -99,7 +99,6 @@ in
     config.exports.services =
       {
         prometheus = {config, ...}: {
-          id = mkAlmostOptionDefault "prometheus";
           nixos = {
             serviceAttr = "prometheus";
             assertions = mkIf config.enable [
@@ -115,7 +114,7 @@ in
           };
         };
         grafana = {config, ...}: {
-          id = mkAlmostOptionDefault "grafana";
+          id = mkAlmostOptionDefault "mon";
           nixos = {
             serviceAttr = "grafana";
             assertions = mkIf config.enable [
@@ -131,26 +130,29 @@ in
           };
         };
         loki = {config, ...}: {
-          id = mkAlmostOptionDefault "loki";
+          id = mkAlmostOptionDefault "logs";
           nixos = {
             serviceAttr = "loki";
             assertions = mkIf config.enable [
-              (nixosConfig: {
-                assertion = config.ports.default.port == nixosConfig.services.loki.settings.httpListenPort;
+              (nixosConfig: let
+                inherit (nixosConfig.services.loki.configuration.server) http_listen_port;
+              in {
+                assertion = config.ports.default.port == http_listen_port;
                 message = "port mismatch";
               })
               (nixosConfig: let
-                inherit (nixosConfig.services.loki.settings) grpcListenPort;
+                inherit (nixosConfig.services.loki.configuration.server) grpc_listen_port;
               in {
-                assertion = !config.ports.grpc.enable || config.ports.grpc.port == grpcListenPort;
+                assertion = !config.ports.grpc.enable || config.ports.grpc.port == grpc_listen_port;
                 message = "gRPC port mismatch";
               })
               (nixosConfig: let
-                inherit (nixosConfig.services.loki.settings) grpcListenPort;
+                inherit (nixosConfig.services.loki.configuration.server) grpc_listen_port;
               in {
-                assertion = if config.ports.grpc.enable
-                  then grpcListenPort != 0
-                  else grpcListenPort == 0;
+                assertion =
+                  if config.ports.grpc.enable
+                  then grpc_listen_port != 0
+                  else grpc_listen_port == 0;
                 message = "gRPC enable mismatch";
               })
             ];
@@ -174,7 +176,7 @@ in
             serviceAttr = "promtail";
             assertions = mkIf config.enable [
               (nixosConfig: {
-                assertion = config.ports.default.port == nixosConfig.services.promtail.settings.httpListenPort;
+                assertion = config.ports.default.port == nixosConfig.services.promtail.configuration.server.http_listen_port;
                 message = "port mismatch";
               })
             ];
@@ -187,6 +189,7 @@ in
             // {
               prometheus.exporter.enable = true;
             };
+          #ports.grpc = ...
         };
       }
       // exporters;

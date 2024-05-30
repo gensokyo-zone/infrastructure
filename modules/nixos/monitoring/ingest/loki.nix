@@ -1,5 +1,4 @@
 {
-  pkgs,
   config,
   lib,
   access,
@@ -7,6 +6,7 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
+  inherit (lib.modules) mkIf mkOptionDefault;
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
   promtailSystems =
     filterAttrs (
@@ -15,61 +15,38 @@
         && system.config.exports.services.promtail.enable
     )
     systems;
-  inherit (builtins) toJSON;
-  inherit (lib.options) mkOption;
-  inherit (lib.types) port;
   cfg = config.services.loki;
 in {
-  options.services.loki.settings = {
-    httpListenPort = mkOption {
-      type = port;
-      description = "Port to listen on over HTTP";
-      default = 9093;
-    };
-    grpcListenPort = mkOption {
-      type = port;
-      description = "Port to listen on over gRPC";
-      default = 0;
-    };
-  };
   config = {
     services.loki = {
-      #enable = true;
-      configFile = pkgs.writeTextFile {
-        name = "config.yaml";
-        executable = false;
-        text = toJSON {
-          server = {
-            http_listen_port = cfg.settings.httpListenPort;
-            grpc_listen_port = cfg.settings.grpcListenPort;
-          };
-          positions = {
-            filename = "/tmp/positions.yaml";
-          };
-          clients =
-            mapAttrsToList (_: system: {
-              url = "${access.getAddressFor system.config.name "lan"}:${toString system.config.exports.services.promtail.ports.default.port}";
-            })
-            promtailSystems;
-          scrape_configs =
-            mapAttrsToList (_: system: {
-              job_name = "${system.config.name}-journal";
-              journal = {
-                max_age = "${toString (24 * 7)}h";
-                labels = {
-                  job = "systemd-journal";
-                  host = system.config.name;
-                };
-              };
-              relabel_configs = [
-                {
-                  source_labels = ["__journal__systemd_unit"];
-                  target_label = "unit";
-                }
-              ];
-            })
-            promtailSystems;
+      configuration = {
+        server = {
+          http_listen_port = mkOptionDefault 9093;
+          grpc_listen_port = mkOptionDefault 0;
         };
+        # https://grafana.com/docs/loki/latest/configure/examples/configuration-examples/#1-local-configuration-exampleyaml
+        auth_enabled = mkOptionDefault false;
+        common = {
+          ring = {
+            instance_addr = mkOptionDefault "127.0.0.1";
+            kvstore.store = mkOptionDefault "inmemory";
+          };
+          replication_factor = 1;
+          path_prefix = mkOptionDefault cfg.dataDir;
+        };
+        schema_config.configs = [
+          {
+            from = "2020-05-15";
+            store = "tsdb";
+            object_store = "filesystem";
+            schema = "v13";
+            index = {
+              prefix = "index_";
+              period = "24h";
+            };
+          }
+        ];
+        storage_config.filesystem.directory = mkOptionDefault "${cfg.dataDir}/chunks";
       };
     };
   };

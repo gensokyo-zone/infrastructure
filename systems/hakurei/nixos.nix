@@ -37,6 +37,9 @@ in {
     nixos.access.freeipa
     nixos.access.freepbx
     nixos.access.unifi
+    nixos.access.prometheus
+    nixos.access.grafana
+    nixos.access.loki
     nixos.access.kitchencam
     nixos.access.openwebrx
     nixos.access.deluge
@@ -173,6 +176,30 @@ in {
         virtualHosts.unifi'local.allServerNames
       ];
     };
+    prometheus = {
+      inherit (nginx) group;
+      domain = virtualHosts.prometheus.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.prometheus.otherServerNames
+        virtualHosts.prometheus'local.allServerNames
+      ];
+    };
+    mon = {
+      inherit (nginx) group;
+      domain = virtualHosts.grafana.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.grafana.otherServerNames
+        virtualHosts.grafana'local.allServerNames
+      ];
+    };
+    logs = {
+      inherit (nginx) group;
+      domain = virtualHosts.loki.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.loki.otherServerNames
+        virtualHosts.loki'local.allServerNames
+      ];
+    };
     idp = {
       inherit (nginx) group;
       domain = virtualHosts.freeipa.serverName;
@@ -289,6 +316,21 @@ in {
       };
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      prometheus = {
+        # we're not the real prometheus record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      grafana = {
+        # we're not the real mon record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      loki = {
+        # we're not the real logs record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };

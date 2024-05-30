@@ -1,11 +1,19 @@
-_: {
+{
+  config,
+  system,
+  lib,
+  ...
+}: let
+  inherit (lib.modules) mkDefault;
+  cfg = config.services.grafana;
+  service = system.exports.services.grafana;
+in {
   services.grafana = {
-    #enable = true;
     settings.server = {
-      domain = "gensokyo.zone";
-      http_port = 9092;
-      http_addr = "0.0.0.0";
-      root_url = "https://mon.gensokyo.zone";
+      domain = mkDefault config.networking.domain;
+      http_port = mkDefault 9092;
+      http_addr = mkDefault "::";
+      root_url = mkDefault "https://${service.id}.${cfg.settings.server.domain}";
     };
   };
 }

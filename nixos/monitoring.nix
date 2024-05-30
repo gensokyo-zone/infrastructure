@@ -12,11 +12,11 @@ in {
     prometheus.enable = true;
   };
   networking.firewall.interfaces.lan.allowedTCPPorts = mkMerge [
-    (mkIf grafana.enable [ grafana.port ])
+    (mkIf grafana.enable [grafana.settings.server.http_port])
     (mkIf loki.enable [
-      loki.settings.httpListenPort
-      (mkIf (loki.settings.grpcListenPort != 0) loki.settings.grpcListenPort)
+      loki.configuration.server.http_listen_port
+      (mkIf (loki.configuration.server.grpc_listen_port != 0) loki.configuration.server.grpc_listen_port)
     ])
-    (mkIf prometheus.enable [ prometheus.port ])
+    (mkIf prometheus.enable [prometheus.port])
   ];
 }
