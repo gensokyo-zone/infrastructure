@@ -7,6 +7,8 @@
 in {
   arch = "x86_64";
   type = "NixOS";
+  access.online.enable = false;
+  exports.defaultServices = false;
   modules = mkForce [
     ./nixos.nix
   ];

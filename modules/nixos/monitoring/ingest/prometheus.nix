@@ -5,25 +5,25 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (lib.attrsets) filterAttrs mapAttrsToList attrNames;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList;
   nodeExporterSystems =
     filterAttrs (
       _: system:
-        system.config.exporters.prometheus-exporters-node.enable or false
+        system.config.access.online.enable &&
+        system.config.exports.services.prometheus-exporters-node.enable
     )
     systems;
 in {
   services.prometheus = {
-    #enable = true;
     port = 9090;
     scrapeConfigs =
-      mapAttrsToList (system: systemConfig: {
+      mapAttrsToList (_: system: {
         job_name = "${system.config.name}-node-exporter";
-        static_configs = {
+        static_configs = [ {
           targets = [
-            "${access.getAddressFor system.config.name "local"}:${system.config.exporters.prometheus-exporters-node.port}"
+            "${access.getAddressFor system.config.name "local"}:${toString system.config.exports.services.prometheus-exporters-node.ports.default.port}"
           ];
-        };
+        } ];
       })
       nodeExporterSystems;
   };
