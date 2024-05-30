@@ -29,6 +29,10 @@ in {
       dns = {
         # TODO: enable = true;
       };
+      monitoring = {
+        enable = true;
+        promtail.enable = true;
+      };
       # TODO: users?
     };
 

@@ -24,4 +24,7 @@ in {
       address6 = "fd7a:115c:a1e0:ab12:4843:cd96:6268:9b7a";
     };
   };
+  exports.services = {
+    prometheus-exporters-node.enable = true;
+  };
 }
