@@ -7,11 +7,12 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (lib.attrsets) filterAttrs mapAttrsToList attrNames;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList;
   promtailSystems =
     filterAttrs (
       _: system:
-        system.config.exporters.promtail.enable or false
+        system.config.access.online.enable
+        && system.config.exports.services.promtail.enable
     )
     systems;
   inherit (builtins) toJSON;
@@ -46,15 +47,15 @@ in {
             filename = "/tmp/positions.yaml";
           };
           clients =
-            mapAttrsToList (system: systemConfig: {
-              url = "${access.getAddressFor system.config.name "local"}:${system.config.exporters.promtail.port}";
+            mapAttrsToList (_: system: {
+              url = "${access.getAddressFor system.config.name "lan"}:${toString system.config.exports.services.promtail.ports.default.port}";
             })
             promtailSystems;
           scrape_configs =
-            mapAttrsToList (system: systemConfig: {
+            mapAttrsToList (_: system: {
               job_name = "${system.config.name}-journal";
               journal = {
-                max_age = "${24 * 7}h";
+                max_age = "${toString (24 * 7)}h";
                 labels = {
                   job = "systemd-journal";
                   host = system.config.name;
