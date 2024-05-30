@@ -5,6 +5,7 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
+  inherit (gensokyo-zone.lib) mkAddress6;
   inherit (lib.modules) mkDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) filter concatMap;
@@ -21,7 +22,7 @@
     portName,
   }: let
     port = service.ports.${portName};
-  in "${access.getAddressFor system.config.name "lan"}:${toString port.port}";
+  in "${mkAddress6 (access.getAddressFor system.config.name "lan")}:${toString port.port}";
   mkServiceConfig = system: serviceName: let
     service = system.config.exports.services.${serviceName};
     targets = map (portName:
