@@ -5,8 +5,8 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (gensokyo-zone.lib) mkAddress6;
-  inherit (lib.modules) mkDefault;
+  inherit (gensokyo-zone.lib) mkAddress6 mapOptionDefaults;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) filter concatMap;
   nodeExporterSystems =
@@ -35,7 +35,12 @@
     static_configs = [
       {
         inherit targets;
-        labels = mkDefault service.prometheus.exporter.labels;
+        labels = mkMerge [
+          (mapOptionDefaults service.prometheus.exporter.labels)
+          (mkIf (service.prometheus.exporter.metricsPath != "/metrics") {
+            __metrics_path__ = mkOptionDefault service.prometheus.exporter.metricsPath;
+          })
+        ];
       }
     ];
   };

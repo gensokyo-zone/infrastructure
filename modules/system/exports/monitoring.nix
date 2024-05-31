@@ -28,6 +28,10 @@ let
           labels = mkOption {
             type = attrsOf str;
           };
+          metricsPath = mkOption {
+            type = str;
+            default = "/metrics";
+          };
         };
       };
       ports = mkOption {
@@ -183,7 +187,6 @@ in
           };
         };
         promtail = {config, ...}: {
-          id = mkAlmostOptionDefault "promtail";
           nixos = {
             serviceAttr = "promtail";
             assertions = mkIf config.enable [
