@@ -203,6 +203,24 @@ in
             };
           #ports.grpc = ...
         };
+        gatus = {config, ...}: {
+          id = mkAlmostOptionDefault "gatus";
+          nixos = {
+            serviceAttr = "gatus";
+            assertions = mkIf config.enable [
+              (nixosConfig: {
+                assertion = config.ports.default.port == nixosConfig.services.gatus.settings.web.port;
+                message = "port mismatch";
+              })
+            ];
+          };
+          ports.default =
+            mapAlmostOptionDefaults {
+              port = 9095;
+              protocol = "http";
+            };
+          #ports.grpc = ...
+        };
       }
       // exporters;
   }

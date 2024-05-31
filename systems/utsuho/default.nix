@@ -19,6 +19,7 @@ _: {
       grafana.enable = true;
       loki.enable = true;
       prometheus.enable = true;
+      gatus.enable = true;
     };
   };
 }
