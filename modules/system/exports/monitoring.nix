@@ -7,10 +7,13 @@ let
     };
   };
   serviceModule = {
+    system,
     config,
+    gensokyo-zone,
     lib,
     ...
   }: let
+    inherit (gensokyo-zone.lib) mapOptionDefaults;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkOptionDefault;
     inherit (lib.attrsets) attrNames filterAttrs;
@@ -24,7 +27,6 @@ let
           };
           labels = mkOption {
             type = attrsOf str;
-            default = {};
           };
         };
       };
@@ -35,7 +37,15 @@ let
       };
     };
     config.prometheus = {
-      exporter.ports = mkOptionDefault (attrNames exporterPorts);
+      exporter = {
+        ports = mkOptionDefault (attrNames exporterPorts);
+        labels = mapOptionDefaults {
+          gensokyo_exports_service = config.name;
+          gensokyo_exports_id = config.id;
+          gensokyo_system = system.name;
+          gensokyo_host = system.access.fqdn;
+        };
+      };
     };
   };
 in

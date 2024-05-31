@@ -58,8 +58,11 @@
     };
   };
   serviceModule = {
+    system,
     config,
     name,
+    machine,
+    gensokyo-zone,
     ...
   }: {
     options = with lib.types; {
@@ -76,6 +79,7 @@
         type = attrsOf (submoduleWith {
           modules = [portModule];
           specialArgs = {
+            inherit gensokyo-zone machine system;
             service = config;
           };
         });
@@ -155,7 +159,9 @@ in {
       type = attrsOf (submoduleWith {
         modules = [serviceModule];
         specialArgs = {
+          inherit gensokyo-zone;
           machine = name;
+          system = config;
           systemConfig = config;
         };
       });
