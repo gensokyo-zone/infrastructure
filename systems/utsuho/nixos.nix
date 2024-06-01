@@ -1,5 +1,6 @@
 {
   meta,
+  access,
   config,
   lib,
   ...
@@ -18,7 +19,6 @@ in {
     nixos.cloudflared
     nixos.nginx
     nixos.access.unifi
-    nixos.access.gatus
     nixos.access.prometheus
     nixos.access.grafana
     nixos.access.loki
@@ -30,14 +30,23 @@ in {
 
   services.cloudflared = let
     inherit (nginx) virtualHosts;
+    inherit (config.networking) domain;
     tunnelId = "28bcd3fc-3467-4997-806b-546ba9995028";
+    gatus'system = access.systemForService "gatus";
+    inherit (gatus'system.exports.services) gatus;
+    ingress = {
+      "${gatus.id}.${domain}".service = access.proxyUrlFor {
+        system = gatus'system;
+        service = gatus;
+      };
+    };
   in {
     tunnels.${tunnelId} = {
       default = "http_status:404";
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
       ingress = mkMerge [
+        ingress
         (virtualHosts.unifi.proxied.cloudflared.getIngress {})
-        (virtualHosts.gatus.proxied.cloudflared.getIngress {})
         (virtualHosts.prometheus.proxied.cloudflared.getIngress {})
         (virtualHosts.grafana.proxied.cloudflared.getIngress {})
         (virtualHosts.loki.proxied.cloudflared.getIngress {})
@@ -49,7 +58,6 @@ in {
     proxied.enable = true;
     virtualHosts = {
       unifi.proxied.enable = "cloudflared";
-      gatus.proxied.enable = "cloudflared";
       prometheus.proxied.enable = "cloudflared";
       grafana.proxied.enable = "cloudflared";
       loki.proxied.enable = "cloudflared";
