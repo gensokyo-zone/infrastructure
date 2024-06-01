@@ -23,6 +23,9 @@ let
           // {
             default = true;
           };
+        defaultCollectors = mkEnableOption "standard node info" // {
+          default = true;
+        };
         settings = mkOption {
           type = unmerged.types.attrs;
           internal = true;
@@ -51,9 +54,42 @@ let
       };
     };
     config = {
-      node.settings = {
+      node.settings = let
+        cfg = config.node;
+      in {
         enable = mkDefault true;
         port = mkDefault 9091;
+        enabledCollectors = mkIf cfg.defaultCollectors (mkMerge [
+          [
+            "systemd"
+            "arp"
+            "cpu"
+            "entropy"
+            "filesystem"
+            "netdev"
+            "sysctl"
+            "loadavg"
+            "meminfo"
+            "os"
+            "stat"
+            "time"
+            "uname"
+            "vmstat"
+          ]
+          (mkIf nixosConfig.boot.supportedFilesystems.zfs or false [
+            "zfs"
+          ])
+          (mkIf nixosConfig.boot.supportedFilesystems.nfs or nixosConfig.boot.supportedFilesystems.nfs4 or false [
+            "nfs"
+          ])
+          (mkIf (!nixosConfig.boot.isContainer) [
+            "cpufreq"
+            "diskstats"
+            "dmi"
+            "nvme"
+            "hwmon"
+          ])
+        ]);
       };
       promtail = let
         cfg = config.promtail;
