@@ -3,11 +3,11 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.deluge = {config, ...}: {
+    displayName = mkAlmostOptionDefault "Deluge";
     nixos = {
       serviceAttr = "deluge";
       assertions = let
@@ -32,14 +32,23 @@ in {
         ];
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = let
+      gatus.client.network = mkAlmostOptionDefault "ip4";
+    in {
       default = {
-        port = 58846;
+        port = mkAlmostOptionDefault 58846;
         transport = "tcp";
+        status = {
+          inherit gatus;
+        };
       };
       web = {
-        port = 8112;
+        port = mkAlmostOptionDefault 8112;
         protocol = "http";
+        status = {
+          inherit gatus;
+          enable = mkAlmostOptionDefault true;
+        };
       };
     };
   };

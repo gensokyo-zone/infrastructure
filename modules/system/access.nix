@@ -162,20 +162,22 @@
             service ? system.exports.services.${serviceName},
             portName ? "default",
             port ? service.ports.${portName},
+            host ? access.${getAddressFor} system.name network,
+            defaultPort ? null,
             network ? "lan",
             scheme ? null,
             getAddressFor ? "getAddressFor",
           }: let
             scheme' =
-              if scheme == null
-              then port.protocol
-              else scheme;
+              if scheme == null then "${port.protocol}://"
+              else if scheme == "" then ""
+              else "${scheme}://";
             port' =
               if !port.enable
               then throw "${system.name}.exports.services.${service.name}.ports.${portName} isn't enabled"
+              else if port.port == defaultPort then ""
               else ":${toString port.port}";
-            host = access.${getAddressFor} system.name network;
-            url = "${scheme'}://${mkAddress6 host}${port'}";
+            url = "${scheme'}${mkAddress6 host}${port'}";
           in
             assert service.enable; url;
         };

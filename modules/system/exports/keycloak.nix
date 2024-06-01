@@ -3,11 +3,11 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.keycloak = {config, ...}: {
+    displayName = mkAlmostOptionDefault "Keycloak";
     id = mkAlmostOptionDefault "sso";
     nixos = {
       serviceAttr = "keycloak";
@@ -28,15 +28,17 @@ in {
           }))
         ];
     };
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       http = {
-        enable = !config.ports.https.enable;
-        port = 8080;
+        enable = mkAlmostOptionDefault (!config.ports.https.enable);
+        port = mkAlmostOptionDefault 8080;
         protocol = "http";
+        status.enable = mkAlmostOptionDefault true;
       };
       https = {
-        port = 8443;
+        port = mkAlmostOptionDefault 8443;
         protocol = "https";
+        status.enable = mkAlmostOptionDefault config.ports.http.status.enable;
       };
     };
   };

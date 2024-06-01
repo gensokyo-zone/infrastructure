@@ -1,5 +1,5 @@
 let
-  portModule = {config, gensokyo-zone, lib, ...}: let
+  portModule = {system, config, gensokyo-zone, lib, ...}: let
     inherit (gensokyo-zone.lib) unmerged;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
@@ -12,24 +12,40 @@ let
         enable = mkEnableOption "status checks";
         alert = {
           enable = mkEnableOption "health check alerts" // {
-            default = true;
+            default = system.exports.status.alert.enable;
           };
         };
         gatus = {
           enable = mkEnableOption "gatus" // {
             default = true;
           };
-          settings = mkOption {
-            type = unmerged.types.attrs;
+          client = {
+            network = mkOption {
+              type = enum [ "ip" "ip4" "ip6" ];
+              default = "ip";
+            };
+          };
+          http = {
+            path = mkOption {
+              type = str;
+              default = "/";
+            };
+            statusCondition = mkOption {
+              type = nullOr str;
+            };
           };
           protocol = mkOption {
             type = str;
+          };
+          settings = mkOption {
+            type = unmerged.types.attrs;
           };
         };
       };
     };
     config = {
       status.gatus = let
+        cfg = config.status.gatus;
         defaultProtocol =
           if config.protocol != null then mkOptionDefault config.protocol
           else if config.starttls then mkOptionDefault "starttls"
@@ -38,20 +54,26 @@ let
           else mkIf false (throw "unreachable");
       in {
         protocol = defaultProtocol;
+        http.statusCondition = mkOptionDefault (
+          if cfg.protocol == "http" || cfg.protocol == "https" then "[STATUS] == 200"
+          else null
+        );
         settings = mkMerge [
           {
             conditions = mkMerge [
               (mkIf (config.ssl || config.starttls) (mkOptionDefault [
                 "[CERTIFICATE_EXPIRATION] > 72h"
               ]))
-              (mkOptionDefault [
-                "[CONNECTED] == true"
-              ])
             ];
           }
-          (mkIf (config.protocol == "http" || config.protocol == "https") {
+          (mkIf (cfg.http.statusCondition != null) {
             conditions = mkOptionDefault [
-              "[STATUS] == 200"
+              cfg.http.statusCondition
+            ];
+          })
+          (mkIf (cfg.protocol == "dns") {
+            conditions = mkOptionDefault [
+              "[DNS_RCODE] == NOERROR"
             ];
           })
         ];
@@ -121,7 +143,7 @@ in
     ...
   }: let
     inherit (gensokyo-zone.lib) mapListToAttrs mapAlmostOptionDefaults mkAlmostOptionDefault;
-    inherit (lib.options) mkOption;
+    inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkOptionDefault;
     inherit (lib.attrsets) attrNames filterAttrs nameValuePair;
     mkExporter = {
@@ -156,11 +178,24 @@ in
   in {
     options.exports = with lib.types; {
       prometheus = {
-        exporter.services = mkOption {
-          type = listOf str;
+        exporter = {
+          enable = mkEnableOption "prometheus ingress" // {
+            default = config.access.online.enable;
+          };
+          services = mkOption {
+            type = listOf str;
+          };
         };
       };
       status = {
+        enable = mkEnableOption "status checks" // {
+          default = config.access.online.enable;
+        };
+        alert = {
+          enable = mkEnableOption "health check alerts" // {
+            default = config.access.online.enable && config.type == "NixOS";
+          };
+        };
         services = mkOption {
           type = listOf str;
         };
@@ -184,6 +219,7 @@ in
     config.exports.services =
       {
         prometheus = {config, ...}: {
+          displayName = mkAlmostOptionDefault "Prometheus";
           nixos = {
             serviceAttr = "prometheus";
             assertions = mkIf config.enable [

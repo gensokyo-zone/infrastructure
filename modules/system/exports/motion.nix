@@ -3,19 +3,22 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
-  inherit (lib.attrsets) mapAttrs;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
 in {
   config.exports.services.motion = {config, ...}: {
+    displayName = mkAlmostOptionDefault "Motion";
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 8080;
+        port = mkAlmostOptionDefault 8080;
         protocol = "http";
+        status.enable = mkAlmostOptionDefault true;
       };
       stream = {
-        port = 8081;
+        port = mkAlmostOptionDefault 8081;
         protocol = "http";
+        displayName = mkAlmostOptionDefault "Stream";
+        status.enable = mkAlmostOptionDefault true;
       };
     };
   };

@@ -3,7 +3,7 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
   config.exports.services.zigbee2mqtt = {config, ...}: {

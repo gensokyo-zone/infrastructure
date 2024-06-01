@@ -6,31 +6,58 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (gensokyo-zone.lib) mkAlmostOptionDefault unmerged;
-  inherit (lib.modules) mkMerge mkOptionDefault;
+  inherit (gensokyo-zone.lib) mkAddress6 mkAlmostOptionDefault unmerged;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues nameValuePair listToAttrs;
   inherit (lib.lists) filter length optional concatMap;
+  inherit (lib.strings) hasPrefix hasInfix optionalString concatStringsSep match;
   cfg = config.services.gatus;
-  statusSystems = filter (system: system.config.access.online.enable) (attrValues systems);
+  statusSystems = filter (system: system.config.exports.status.enable) (attrValues systems);
   mapSystem = system: let
     statusServices = map (serviceName: system.config.exports.services.${serviceName}) system.config.exports.status.services;
-  in concatMap (mkServiceEndpoint system) statusServices;
+    serviceEndpoints = concatMap (mkServiceEndpoint system) statusServices;
+    systemEndpoint = mkSystemEndpoint system;
+  in serviceEndpoints ++ [ systemEndpoint ];
   mkPortEndpoint = { system, service, port, unique }: let
     inherit (port.status) gatus;
-    name = if unique
-      then service.displayName
-      else "${service.displayName}: ${port.name}";
-    conf = {
-      url = mkOptionDefault (access.proxyUrlFor {
-        inherit service port;
-        system = system.config;
-        scheme = gatus.protocol;
-        #network = port.listen;
-      });
+    hasId = service.id != service.name;
+    displayName = service.displayName + optionalString (!unique && port.displayName != null) "/${port.displayName}";
+    name = concatStringsSep "-" ([
+      service.name
+    ] ++ optional hasId service.id ++ [
+      port.name
+      system.config.name
+    ]);
+    #network = port.listen;
+    network = "lan";
+    protocolOverrides = {
+      dns = {
+        # XXX: they're lying when they say "You may optionally prefix said DNS IPs with dns://"
+        scheme = "";
+      };
+      starttls.host = system.config.access.fqdn;
     };
-  in nameValuePair name ({ ... }: {
-    imports =
-      optional port.status.alert.enable alertingConfigAlerts
+    urlConf = {
+      inherit service port network;
+      system = system.config;
+      scheme = gatus.protocol;
+      ${if gatus.client.network != "ip" then "getAddressFor" else null} = {
+        ip = "getAddressFor";
+        ip4 = "getAddress4For";
+        ip6 = "getAddress6For";
+      }.${gatus.client.network};
+    } // protocolOverrides.${gatus.protocol} or { };
+    url = access.proxyUrlFor urlConf + optionalString (gatus.http.path != "/") gatus.http.path;
+    conf = {
+      enabled = mkIf (gatus.protocol == "starttls") (mkAlmostOptionDefault false);
+      name = mkAlmostOptionDefault displayName;
+      group = mkAlmostOptionDefault groups.services;
+      url = mkOptionDefault url;
+      client.network = mkAlmostOptionDefault gatus.client.network;
+    };
+  in nameValuePair name (_: {
+    imports = [ alertingConfig ]
+      ++ optional port.status.alert.enable alertingConfigAlerts
       ++ optional (gatus.protocol == "http" || gatus.protocol == "https") alertingConfigHttp;
 
     config = mkMerge [
@@ -45,13 +72,31 @@
   in map (port: mkPortEndpoint {
     inherit system service port unique;
   }) gatusPorts;
+  mkSystemEndpoint = system: let
+    inherit (system.config.exports) status;
+    network = "lan";
+    getAddressFor = if system.config.network.networks.local.address4 or null != null then "getAddress4For" else "getAddressFor";
+    addr = access.${getAddressFor} system.config.name network;
+    addrIs6 = hasInfix ":" addr;
+  in nameValuePair "ping-${system.config.name}" (_: {
+    imports = [ alertingConfig ]
+      ++ optional status.alert.enable alertingConfigAlerts;
+    config = {
+      name = mkAlmostOptionDefault system.config.name;
+      # XXX: it can't seem to ping ipv6 for some reason..? :<
+      enabled = mkIf addrIs6 (mkAlmostOptionDefault false);
+      client.network = mkIf addrIs6 (mkAlmostOptionDefault "ip6");
+      group = mkAlmostOptionDefault (groups.forSystem system);
+      url = mkOptionDefault "icmp://${mkAddress6 addr}";
+    };
+  });
   alertingConfigAlerts = {
     alerts = [
       {
         type = "discord";
         send-on-resolved = true;
         description = "Healthcheck failed.";
-        failure-threshold = 1;
+        failure-threshold = 10;
         success-threshold = 3;
       }
     ];
@@ -60,9 +105,39 @@
     # Common interval for refreshing all basic HTTP endpoints
     interval = mkAlmostOptionDefault "30s";
   };
+  alertingConfig = { config, ... }: let
+    isLan = match ''.*(::|10\.|127\.|\.(local|int|tail)\.).*'' config.url != null;
+    isDns = hasPrefix "dns://" config.url || config.dns.query-name or null != null;
+  in {
+    conditions = mkOptionDefault [
+      "[CONNECTED] == true"
+    ];
+    ui = mkMerge [
+      (mkIf isDns {
+        hide-conditions = mkAlmostOptionDefault true;
+      })
+      (mkIf isLan {
+        hide-hostname = mkAlmostOptionDefault true;
+        hide-url = mkAlmostOptionDefault true;
+      })
+    ];
+    client = {
+      # XXX: no way to specify SSL hostname/SNI separately from the url :<
+      insecure = mkAlmostOptionDefault true;
+    };
+  };
+  groups = {
+    services = "Services";
+    systems = "Systems";
+    forSystem = system: let
+      node = systems.${system.config.proxmox.node.name}.config;
+    in if system.config.proxmox.enabled then "${groups.systems}/${node.name}"
+      else groups.systems;
+  };
 in {
-  sops.secrets.gatus_environment_file = {
-    sopsFile = ../secrets/gatus.yaml;
+  sops.secrets.gatus_environment_file = mkIf cfg.enable {
+    sopsFile = mkDefault ../secrets/gatus.yaml;
+    owner = cfg.user;
   };
   services.gatus = {
     enable = true;
@@ -101,7 +176,7 @@ in {
     };
   };
 
-  networking.firewall.interfaces.lan.allowedTCPPorts = [
+  networking.firewall.interfaces.lan.allowedTCPPorts = mkIf cfg.enable [
     cfg.settings.web.port
   ];
 }

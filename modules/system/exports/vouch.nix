@@ -3,10 +3,11 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
   config.exports.services.vouch-proxy = {config, ...}: {
+    displayName = mkAlmostOptionDefault "Vouch Proxy";
     id = mkAlmostOptionDefault "login";
     defaults.port.listen = mkAlmostOptionDefault "localhost";
     nixos = {
@@ -18,9 +19,16 @@ in {
         })
       ];
     };
-    ports.default = mapAlmostOptionDefaults {
-      port = 30746;
+    ports.default = {
+      port = mkAlmostOptionDefault 30746;
       protocol = "http";
+      status = {
+        enable = mkAlmostOptionDefault true;
+        gatus.http = {
+          #path = "/validate";
+          statusCondition = mkAlmostOptionDefault "[STATUS] == 404";
+        };
+      };
     };
   };
 }

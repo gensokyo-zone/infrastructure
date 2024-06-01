@@ -3,13 +3,13 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
   inherit (lib.lists) all imap0;
   inherit (lib.trivial) id;
 in {
   config.exports.services.mosquitto = {config, ...}: {
+    displayName = mkAlmostOptionDefault "Mosquitto";
     id = mkAlmostOptionDefault "mqtt";
     nixos = {
       serviceAttr = "mosquitto";
@@ -28,15 +28,17 @@ in {
       ];
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 1883;
+        port = mkAlmostOptionDefault 1883;
         transport = "tcp";
+        status.enable = mkAlmostOptionDefault true;
       };
       ssl = {
-        enable = false;
-        port = 8883;
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 8883;
         ssl = true;
+        status.enable = mkAlmostOptionDefault config.ports.default.status.enable;
       };
     };
   };

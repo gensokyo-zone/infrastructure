@@ -5,6 +5,7 @@ _: {
     ./nixos.nix
   ];
   ci.allowFailure = true;
+  access.online.enable = false;
   proxmox = {
     vm = {
       id = 201;

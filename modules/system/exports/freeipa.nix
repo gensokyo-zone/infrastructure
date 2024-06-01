@@ -3,18 +3,19 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
-  inherit (lib.attrsets) mapAttrs;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
 in {
   config.exports.services.freeipa = {
+    displayName = mkAlmostOptionDefault "FreeIPA";
     id = mkAlmostOptionDefault "ipa";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 443;
+        port = mkAlmostOptionDefault 443;
         protocol = "https";
+        status.enable = mkAlmostOptionDefault true;
       };
       redirect = {
-        port = 80;
+        port = mkAlmostOptionDefault 80;
         protocol = "http";
       };
     };

@@ -3,34 +3,41 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
-  inherit (lib.attrsets) mapAttrs;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
 in {
-  config.exports.services.freepbx = {
+  config.exports.services.freepbx = {config, ...}: {
+    displayName = mkAlmostOptionDefault "FreePBX";
     id = mkAlmostOptionDefault "pbx";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       http = {
-        port = 80;
+        displayName = mkAlmostOptionDefault null;
+        port = mkAlmostOptionDefault 80;
         protocol = "http";
+        status.enable = mkAlmostOptionDefault true;
       };
       https = {
-        port = 443;
+        port = mkAlmostOptionDefault 443;
         protocol = "https";
       };
       ucp = {
-        port = 8001;
+        port = mkAlmostOptionDefault 8001;
         protocol = "http";
+        displayName = mkAlmostOptionDefault "UCP";
+        status = {
+          enable = mkAlmostOptionDefault config.ports.http.status.enable;
+          gatus.client.network = mkAlmostOptionDefault "ip4";
+        };
       };
       ucp-ssl = {
-        port = 8003;
+        port = mkAlmostOptionDefault 8003;
         protocol = "https";
       };
       asterisk = {
-        port = 8088;
+        port = mkAlmostOptionDefault 8088;
         protocol = "http";
       };
       asterisk-ssl = {
-        port = 8089;
+        port = mkAlmostOptionDefault 8089;
         protocol = "https";
       };
     };

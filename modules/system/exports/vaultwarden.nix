@@ -3,9 +3,8 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.vaultwarden = {config, ...}: {
     id = mkAlmostOptionDefault "bw";
@@ -27,14 +26,20 @@ in {
         })
       ];
     };
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 8222;
+        port = mkAlmostOptionDefault 8222;
         protocol = "http";
+        status.enable = mkAlmostOptionDefault true;
       };
       websocket = {
-        port = 8223;
+        port = mkAlmostOptionDefault 8223;
         protocol = "http";
+        displayName = mkAlmostOptionDefault "WebSocket";
+        status = {
+          enable = mkAlmostOptionDefault true;
+          gatus.protocol = "ws";
+        };
       };
     };
   };

@@ -3,43 +3,47 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
-  inherit (lib.attrsets) mapAttrs;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
 in {
   config.exports.services.plex = {
+    displayName = mkAlmostOptionDefault "Plex";
     nixos.serviceAttr = "plex";
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 32400;
+        port = mkAlmostOptionDefault 32400;
         protocol = "http";
+        status = {
+          enable = mkAlmostOptionDefault true;
+          gatus.http.statusCondition = mkAlmostOptionDefault "[STATUS] == 401";
+        };
       };
       roku = {
-        port = 8324;
+        port = mkAlmostOptionDefault 8324;
         transport = "tcp";
       };
       dlna-tcp = {
-        port = 32469;
+        port = mkAlmostOptionDefault 32469;
         transport = "tcp";
       };
       dlna-udp = {
-        port = 1900;
+        port = mkAlmostOptionDefault 1900;
         transport = "udp";
       };
       gdm0 = {
-        port = 32410;
+        port = mkAlmostOptionDefault 32410;
         transport = "udp";
       };
       gdm1 = {
-        port = 32412;
+        port = mkAlmostOptionDefault 32412;
         transport = "udp";
       };
       gdm2 = {
-        port = 32413;
+        port = mkAlmostOptionDefault 32413;
         transport = "udp";
       };
       gdm3 = {
-        port = 32414;
+        port = mkAlmostOptionDefault 32414;
         transport = "udp";
       };
     };

@@ -7,7 +7,7 @@
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.nginx = {config, ...}: let
+  config.exports.services.nginx = {config, system, ...}: let
     mkAssertion = f: nixosConfig: let
       cfg = nixosConfig.services.nginx;
     in
@@ -25,6 +25,7 @@ in {
       message = "proxied.port mismatch";
     };
   in {
+    displayName = mkAlmostOptionDefault "NGINX/${system.name}";
     nixos = {
       serviceAttr = "nginx";
       assertions = mkIf config.enable (map mkAssertion [
@@ -34,19 +35,27 @@ in {
       ]);
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       http = {
-        port = 80;
+        port = mkAlmostOptionDefault 80;
         protocol = "http";
+        status = {
+          enable = mkAlmostOptionDefault true;
+          gatus.http.statusCondition = mkAlmostOptionDefault "[STATUS] == any(200, 404)";
+        };
       };
       https = {
-        enable = false;
-        port = 443;
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 443;
         protocol = "https";
+        status = {
+          enable = mkAlmostOptionDefault config.ports.http.status.enable;
+          gatus.http.statusCondition = mkAlmostOptionDefault config.ports.http.status.gatus.http.statusCondition;
+        };
       };
       proxied = {
-        enable = false;
-        port = 9080;
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 9080;
         protocol = "http";
         listen = "lan";
       };

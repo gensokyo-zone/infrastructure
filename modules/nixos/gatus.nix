@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  inherit (lib) types mkIf mkOption mkEnableOption mkPackageOption mkDefault;
+  inherit (lib) types mkIf mkOption mkEnableOption mkPackageOption mkOptionDefault;
 
   cfg = config.services.gatus;
 
@@ -206,6 +206,8 @@ in {
               '';
             };
             ui = {
+              hide-conditions =
+                mkEnableOption "hiding the condition results on the UI";
               hide-hostname =
                 mkEnableOption "hiding the hostname in the result";
               hide-url = mkEnableOption "hiding the URL in the results";
@@ -221,7 +223,7 @@ in {
               };
             };
           };
-          config = { name = mkDefault name; };
+          config = { name = mkOptionDefault name; };
         }));
         default = { };
       };
@@ -316,9 +318,9 @@ in {
         StateDirectory = "gatus";
         LogsDirectory = "gatus";
         EnvironmentFile =
-          mkIf (cfg.environmentFile != null) cfg.environmentFile;
+          mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
 
-        AmbientCapabilities = "CAP_NET_RAW"; # needed for ICMP probes
+        AmbientCapabilities = [ "CAP_NET_RAW" ]; # needed for ICMP probes
         DevicePolicy = "closed";
         LockPersonality = true;
         MemoryDenyWriteExecute = true;
@@ -337,13 +339,15 @@ in {
         ProtectProc = "invisible";
         ProtectSystem = "strict";
         RemoveIPC = true;
-        RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6";
+        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
         RestrictNamespaces = true;
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
         UMask = "0077";
 
-        ExecStart = "${cfg.package}/bin/gatus";
+        ExecStart = [
+          (lib.getExe cfg.package)
+        ];
       };
     };
 

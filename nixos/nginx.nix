@@ -44,7 +44,7 @@ in {
       serverName = null;
       default = mkDefault true;
       reuseport = mkDefault true;
-      locations."/".extraConfig = mkDefault ''
+      locations."/".extraConfig = ''
         return 404;
       '';
     };

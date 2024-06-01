@@ -8,6 +8,7 @@
   inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.openwebrx = {config, ...}: {
+    displayName = mkAlmostOptionDefault "OpenWebRX";
     id = mkAlmostOptionDefault "webrx";
     nixos = {
       serviceAttr = "openwebrx";
@@ -25,10 +26,11 @@ in {
         ];
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 8073;
+        port = mkAlmostOptionDefault 8073;
         protocol = "http";
+        status.enable = mkAlmostOptionDefault true;
       };
     };
   };

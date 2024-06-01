@@ -22,6 +22,7 @@
       samba.enable = true;
       vouch-proxy = {
         enable = true;
+        displayName = "Vouch Proxy/local";
         id = "login.local";
       };
       nginx = let

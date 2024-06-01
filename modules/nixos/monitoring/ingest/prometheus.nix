@@ -12,7 +12,7 @@
   nodeExporterSystems =
     filter (
       system:
-        system.config.access.online.enable
+        system.config.exports.prometheus.exporter.enable
         && system.config.exports.prometheus.exporter.services != []
     )
     (attrValues systems);

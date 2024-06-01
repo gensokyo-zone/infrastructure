@@ -28,4 +28,6 @@ _: {
       };
     };
   };
+  # XXX: currently unplugged :<
+  access.online.enable = false;
 }
