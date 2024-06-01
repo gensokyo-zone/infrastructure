@@ -12,6 +12,7 @@
   cfg = lua;
   enabled = cfg.http.enable || cfg.upstream.enable;
   luaPkgPath = pkg: "${pkg.lib or pkg}/lib/lua/${pkgs.luajit_openresty.luaversion}/?.lua";
+  luaCPkgPath = pkg: "${pkg.lib or pkg}/lib/lua/${pkgs.luajit_openresty.luaversion}/?.so";
   luaModule = {config, ...}: let
     cfg = config.lua;
     mkSetBy = var: value:
@@ -89,6 +90,9 @@ in {
       luaPath = mkOption {
         type = separatedString ";";
       };
+      luaCPath = mkOption {
+        type = separatedString ";";
+      };
     };
     virtualHosts = mkOption {
       type = attrsOf (submoduleWith {
@@ -109,6 +113,10 @@ in {
           map luaPkgPath cfg.modules
           ++ [(mkAfter ";")]
         );
+        luaCPath = mkMerge (
+          map luaCPkgPath cfg.modules
+          ++ [(mkAfter ";")]
+        );
       };
       additionalModules = mkMerge [
         (mkIf cfg.ndk.enable [pkgs.nginxModules.develkit])
@@ -117,7 +125,10 @@ in {
       ];
     };
     systemd.services.nginx = mkIf config.services.nginx.enable {
-      environment.LUA_PATH = mkIf enabled (mkOptionDefault cfg.luaPath);
+      environment = mkIf enabled {
+        LUA_PATH = mkOptionDefault cfg.luaPath;
+        LUA_CPATH = mkOptionDefault cfg.luaCPath;
+      };
     };
   };
 }
