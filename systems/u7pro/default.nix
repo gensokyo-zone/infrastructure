@@ -1,6 +1,9 @@
 _: {
   type = "Linux";
-  access.hostName = "u7-pro";
+  access = {
+    hostName = "u7-pro";
+    online.available = true;
+  };
   network.networks = {
     local = {
       address4 = "10.1.1.3";

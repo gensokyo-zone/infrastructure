@@ -206,11 +206,20 @@ in {
       default = domain;
     };
     global.enable = mkEnableOption "globally routeable";
-    online.enable =
-      mkEnableOption "a deployed machine"
-      // {
-        default = true;
-      };
+    online = let
+      proxmoxNodeAccess = systems.${config.proxmox.node.name}.config.access;
+    in {
+      enable =
+        mkEnableOption "a deployed machine"
+        // {
+          default = true;
+        };
+      available =
+        mkEnableOption "always on machine"
+        // {
+          default = cfg.online.enable && (config.type == "NixOS" || config.proxmox.node.enable || (config.proxmox.vm.enable && proxmoxNodeAccess.online.available));
+        };
+    };
     hostnameForNetwork = mkOption {
       type = attrsOf str;
       default = {};

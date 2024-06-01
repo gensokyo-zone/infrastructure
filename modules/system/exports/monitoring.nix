@@ -249,7 +249,7 @@ in
           enable =
             mkEnableOption "health check alerts"
             // {
-              default = config.access.online.enable && config.type == "NixOS";
+              default = config.access.online.enable && config.access.online.available;
             };
         };
         services = mkOption {

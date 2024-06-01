@@ -157,12 +157,15 @@
   };
   groups = {
     services = "Services";
+    servers = "${groups.systems}/Servers";
     systems = "Systems";
     forSystem = system: let
       node = systems.${system.config.proxmox.node.name}.config;
     in
       if system.config.proxmox.enabled
-      then "${groups.systems}/${node.name}"
+      then "${groups.servers}/${node.name}"
+      else if system.config.access.online.available
+      then groups.servers
       else groups.systems;
   };
 in {
