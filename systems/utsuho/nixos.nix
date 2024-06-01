@@ -18,6 +18,7 @@ in {
     nixos.cloudflared
     nixos.nginx
     nixos.access.unifi
+    nixos.access.gatus
     nixos.access.prometheus
     nixos.access.grafana
     nixos.access.loki
@@ -36,6 +37,7 @@ in {
       credentialsFile = config.sops.secrets.cloudflared-tunnel-utsuho.path;
       ingress = mkMerge [
         (virtualHosts.unifi.proxied.cloudflared.getIngress {})
+        (virtualHosts.gatus.proxied.cloudflared.getIngress {})
         (virtualHosts.prometheus.proxied.cloudflared.getIngress {})
         (virtualHosts.grafana.proxied.cloudflared.getIngress {})
         (virtualHosts.loki.proxied.cloudflared.getIngress {})
@@ -47,6 +49,7 @@ in {
     proxied.enable = true;
     virtualHosts = {
       unifi.proxied.enable = "cloudflared";
+      gatus.proxied.enable = "cloudflared";
       prometheus.proxied.enable = "cloudflared";
       grafana.proxied.enable = "cloudflared";
       loki.proxied.enable = "cloudflared";

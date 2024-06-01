@@ -161,11 +161,11 @@
             serviceId ? null,
             service ? system.exports.services.${serviceName},
             portName ? "default",
+            port ? service.ports.${portName},
             network ? "lan",
             scheme ? null,
             getAddressFor ? "getAddressFor",
           }: let
-            port = service.ports.${portName};
             scheme' =
               if scheme == null
               then port.protocol

@@ -42,6 +42,10 @@
         type = bool;
         default = false;
       };
+      starttls = mkOption {
+        type = bool;
+        default = false;
+      };
       port = mkOption {
         type = nullOr int;
       };
@@ -68,6 +72,10 @@
     options = with lib.types; {
       enable = mkEnableOption "hosted service";
       name = mkOption {
+        type = str;
+        default = name;
+      };
+      displayName = mkOption {
         type = str;
         default = name;
       };

@@ -12,6 +12,7 @@ in {
       default = {
         port = 389;
         transport = "tcp";
+        starttls = true;
       };
       ssl = {
         port = 636;

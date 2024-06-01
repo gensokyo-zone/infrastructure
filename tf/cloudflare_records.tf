@@ -20,6 +20,7 @@ module "hakurei_system_records" {
     "ipa-cock",
     "bw",
     "unifi",
+    "status",
     "prometheus",
     "mon",
     "logs",

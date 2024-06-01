@@ -1,9 +1,61 @@
 let
-  portModule = {lib, ...}: let
-    inherit (lib.options) mkEnableOption;
+  portModule = {config, gensokyo-zone, lib, ...}: let
+    inherit (gensokyo-zone.lib) unmerged;
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   in {
-    options.prometheus = with lib.types; {
-      exporter.enable = mkEnableOption "prometheus metrics endpoint";
+    options = with lib.types; {
+      prometheus = {
+        exporter.enable = mkEnableOption "prometheus metrics endpoint";
+      };
+      status = {
+        enable = mkEnableOption "status checks";
+        alert = {
+          enable = mkEnableOption "health check alerts" // {
+            default = true;
+          };
+        };
+        gatus = {
+          enable = mkEnableOption "gatus" // {
+            default = true;
+          };
+          settings = mkOption {
+            type = unmerged.types.attrs;
+          };
+          protocol = mkOption {
+            type = str;
+          };
+        };
+      };
+    };
+    config = {
+      status.gatus = let
+        defaultProtocol =
+          if config.protocol != null then mkOptionDefault config.protocol
+          else if config.starttls then mkOptionDefault "starttls"
+          else if config.ssl then mkOptionDefault "tls"
+          else if config.transport != "unix" then mkOptionDefault config.transport
+          else mkIf false (throw "unreachable");
+      in {
+        protocol = defaultProtocol;
+        settings = mkMerge [
+          {
+            conditions = mkMerge [
+              (mkIf (config.ssl || config.starttls) (mkOptionDefault [
+                "[CERTIFICATE_EXPIRATION] > 72h"
+              ]))
+              (mkOptionDefault [
+                "[CONNECTED] == true"
+              ])
+            ];
+          }
+          (mkIf (config.protocol == "http" || config.protocol == "https") {
+            conditions = mkOptionDefault [
+              "[STATUS] == 200"
+            ];
+          })
+        ];
+      };
     };
   };
   serviceModule = {
@@ -18,6 +70,7 @@ let
     inherit (lib.modules) mkOptionDefault;
     inherit (lib.attrsets) attrNames filterAttrs;
     exporterPorts = filterAttrs (_: port: port.enable && port.prometheus.exporter.enable) config.ports;
+    statusPorts = filterAttrs (_: port: port.enable && port.status.enable) config.ports;
   in {
     options = with lib.types; {
       prometheus = {
@@ -34,14 +87,19 @@ let
           };
         };
       };
+      status = {
+        ports = mkOption {
+          type = listOf str;
+        };
+      };
       ports = mkOption {
         type = attrsOf (submoduleWith {
           modules = [portModule];
         });
       };
     };
-    config.prometheus = {
-      exporter = {
+    config = {
+      prometheus.exporter = {
         ports = mkOptionDefault (attrNames exporterPorts);
         labels = mapOptionDefaults {
           gensokyo_exports_service = config.name;
@@ -49,6 +107,9 @@ let
           gensokyo_system = system.name;
           gensokyo_host = system.access.fqdn;
         };
+      };
+      status = {
+        ports = mkOptionDefault (attrNames statusPorts);
       };
     };
   };
@@ -83,7 +144,7 @@ in
             protocol = "http";
           }
           // {
-            prometheus.exporter.enable = true;
+            prometheus.exporter.enable = mkAlmostOptionDefault true;
           };
       });
     exporters = mapListToAttrs mkExporter [
@@ -99,6 +160,11 @@ in
           type = listOf str;
         };
       };
+      status = {
+        services = mkOption {
+          type = listOf str;
+        };
+      };
       services = mkOption {
         type = attrsOf (submoduleWith {
           modules = [serviceModule];
@@ -109,6 +175,11 @@ in
       exporterServices = filterAttrs (_: service: service.enable && service.prometheus.exporter.ports != []) config.exports.services;
     in {
       exporter.services = mkOptionDefault (attrNames exporterServices);
+    };
+    config.exports.status = let
+      statusServices = filterAttrs (_: service: service.enable && service.status.ports != []) config.exports.services;
+    in {
+      services = mkOptionDefault (attrNames statusServices);
     };
     config.exports.services =
       {
@@ -122,9 +193,10 @@ in
               })
             ];
           };
-          ports.default = mapAlmostOptionDefaults {
-            port = 9090;
+          ports.default = {
+            port = mkAlmostOptionDefault 9090;
             protocol = "http";
+            status.enable = mkAlmostOptionDefault true;
           };
         };
         grafana = {config, ...}: {
@@ -138,11 +210,10 @@ in
               })
             ];
           };
-          ports.default = mapAlmostOptionDefaults {
-            port = 9092;
+          ports.default = {
+            port = mkAlmostOptionDefault 9092;
             protocol = "http";
-          } // {
-            prometheus.exporter.enable = true;
+            prometheus.exporter.enable = mkAlmostOptionDefault true;
           };
         };
         loki = {config, ...}: {
@@ -196,18 +267,15 @@ in
               })
             ];
           };
-          ports.default =
-            mapAlmostOptionDefaults {
-              port = 9094;
-              protocol = "http";
-            }
-            // {
-              prometheus.exporter.enable = true;
-            };
+          ports.default = {
+            port = mkAlmostOptionDefault 9094;
+            protocol = "http";
+            prometheus.exporter.enable = mkAlmostOptionDefault true;
+          };
           #ports.grpc = ...
         };
         gatus = {config, ...}: {
-          id = mkAlmostOptionDefault "gatus";
+          id = mkAlmostOptionDefault "status";
           nixos = {
             serviceAttr = "gatus";
             assertions = mkIf config.enable [
@@ -217,11 +285,11 @@ in
               })
             ];
           };
-          ports.default =
-            mapAlmostOptionDefaults {
-              port = 9095;
-              protocol = "http";
-            };
+          ports.default = {
+            port = mkAlmostOptionDefault 9095;
+            protocol = "http";
+            prometheus.exporter.enable = mkAlmostOptionDefault true;
+          };
           #ports.grpc = ...
         };
       }

@@ -74,6 +74,7 @@ module "utsuho" {
   zone_id    = cloudflare_zone.gensokyo-zone_zone.id
   subdomains = [
     "unifi",
+    "status",
     "prometheus",
     "mon",
     "logs",

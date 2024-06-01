@@ -8,6 +8,7 @@
 in {
   config.exports.services.zigbee2mqtt = {config, ...}: {
     id = mkAlmostOptionDefault "z2m";
+    displayName = mkAlmostOptionDefault "Zigbee2MQTT";
     nixos = {
       serviceAttr = "zigbee2mqtt";
       assertions = mkIf config.enable [
@@ -17,9 +18,10 @@ in {
         })
       ];
     };
-    ports.default = mapAlmostOptionDefaults {
-      port = 8072;
+    ports.default = {
+      port = mkAlmostOptionDefault 8072;
       protocol = "http";
+      status.enable = true;
     };
   };
 }

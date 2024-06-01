@@ -28,6 +28,7 @@ in {
       };
   in {
     id = mkAlmostOptionDefault "home";
+    displayName = mkAlmostOptionDefault "Home Assistant";
     nixos = {
       serviceAttr = "home-assistant";
       assertions = mkIf config.enable [
@@ -36,13 +37,14 @@ in {
       ];
     };
     defaults.port.listen = mkAlmostOptionDefault "lan";
-    ports = mapAttrs (_: mapAlmostOptionDefaults) {
+    ports = {
       default = {
-        port = 8123;
+        port = mkAlmostOptionDefault 8123;
         protocol = "http";
+        status.enable = true;
       };
       homekit0 = {
-        port = 21063;
+        port = mkAlmostOptionDefault 21063;
         transport = "tcp";
       };
       # TODO: cast udp port range 32768 to 60999

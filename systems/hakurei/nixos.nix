@@ -37,6 +37,7 @@ in {
     nixos.access.freeipa
     nixos.access.freepbx
     nixos.access.unifi
+    nixos.access.gatus
     nixos.access.prometheus
     nixos.access.grafana
     nixos.access.loki
@@ -174,6 +175,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.unifi.otherServerNames
         virtualHosts.unifi'local.allServerNames
+      ];
+    };
+    status = {
+      inherit (nginx) group;
+      domain = virtualHosts.gatus.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.gatus.otherServerNames
+        virtualHosts.gatus'local.allServerNames
       ];
     };
     prometheus = {
@@ -316,6 +325,11 @@ in {
       };
       unifi = {
         # we're not the real unifi record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      gatus = {
+        # we're not the real gatus record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
