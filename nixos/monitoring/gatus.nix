@@ -17,17 +17,25 @@
     statusServices = map (serviceName: system.config.exports.services.${serviceName}) system.config.exports.status.services;
     serviceEndpoints = concatMap (mkServiceEndpoint system) statusServices;
     systemEndpoint = mkSystemEndpoint system;
-  in serviceEndpoints ++ [ systemEndpoint ];
-  mkPortEndpoint = { system, service, port, unique }: let
+  in
+    serviceEndpoints ++ [systemEndpoint];
+  mkPortEndpoint = {
+    system,
+    service,
+    port,
+    unique,
+  }: let
     inherit (port.status) gatus;
     hasId = service.id != service.name;
     displayName = service.displayName + optionalString (!unique && port.displayName != null) "/${port.displayName}";
     name = concatStringsSep "-" ([
-      service.name
-    ] ++ optional hasId service.id ++ [
-      port.name
-      system.config.name
-    ]);
+        service.name
+      ]
+      ++ optional hasId service.id
+      ++ [
+        port.name
+        system.config.name
+      ]);
     #network = port.listen;
     network = "lan";
     protocolOverrides = {
@@ -37,16 +45,24 @@
       };
       starttls.host = system.config.access.fqdn;
     };
-    urlConf = {
-      inherit service port network;
-      system = system.config;
-      scheme = gatus.protocol;
-      ${if gatus.client.network != "ip" then "getAddressFor" else null} = {
-        ip = "getAddressFor";
-        ip4 = "getAddress4For";
-        ip6 = "getAddress6For";
-      }.${gatus.client.network};
-    } // protocolOverrides.${gatus.protocol} or { };
+    urlConf =
+      {
+        inherit service port network;
+        system = system.config;
+        scheme = gatus.protocol;
+        ${
+          if gatus.client.network != "ip"
+          then "getAddressFor"
+          else null
+        } =
+          {
+            ip = "getAddressFor";
+            ip4 = "getAddress4For";
+            ip6 = "getAddress6For";
+          }
+          .${gatus.client.network};
+      }
+      // protocolOverrides.${gatus.protocol} or {};
     url = access.proxyUrlFor urlConf + optionalString (gatus.http.path != "/") gatus.http.path;
     conf = {
       enabled = mkIf (gatus.protocol == "starttls") (mkAlmostOptionDefault false);
@@ -55,41 +71,54 @@
       url = mkOptionDefault url;
       client.network = mkAlmostOptionDefault gatus.client.network;
     };
-  in nameValuePair name (_: {
-    imports = [ alertingConfig ]
-      ++ optional port.status.alert.enable alertingConfigAlerts
-      ++ optional (gatus.protocol == "http" || gatus.protocol == "https") alertingConfigHttp;
+  in
+    nameValuePair name (_: {
+      imports =
+        [alertingConfig]
+        ++ optional port.status.alert.enable alertingConfigAlerts
+        ++ optional (gatus.protocol == "http" || gatus.protocol == "https") alertingConfigHttp;
 
-    config = mkMerge [
-      (unmerged.mergeAttrs gatus.settings)
-      conf
-    ];
-  });
+      config = mkMerge [
+        (unmerged.mergeAttrs gatus.settings)
+        conf
+      ];
+    });
   mkServiceEndpoint = system: service: let
-    statusPorts = map /*lib.attrsets.getAttr*/(portName: service.ports.${portName}) service.status.ports;
+    statusPorts =
+      map
+      (portName: service.ports.${portName})
+      service.status.ports;
     gatusPorts = filter (port: port.status.gatus.enable) statusPorts;
     unique = length gatusPorts == 1;
-  in map (port: mkPortEndpoint {
-    inherit system service port unique;
-  }) gatusPorts;
+  in
+    map (port:
+      mkPortEndpoint {
+        inherit system service port unique;
+      })
+    gatusPorts;
   mkSystemEndpoint = system: let
     inherit (system.config.exports) status;
     network = "lan";
-    getAddressFor = if system.config.network.networks.local.address4 or null != null then "getAddress4For" else "getAddressFor";
+    getAddressFor =
+      if system.config.network.networks.local.address4 or null != null
+      then "getAddress4For"
+      else "getAddressFor";
     addr = access.${getAddressFor} system.config.name network;
     addrIs6 = hasInfix ":" addr;
-  in nameValuePair "ping-${system.config.name}" (_: {
-    imports = [ alertingConfig ]
-      ++ optional status.alert.enable alertingConfigAlerts;
-    config = {
-      name = mkAlmostOptionDefault system.config.name;
-      # XXX: it can't seem to ping ipv6 for some reason..? :<
-      enabled = mkIf addrIs6 (mkAlmostOptionDefault false);
-      client.network = mkIf addrIs6 (mkAlmostOptionDefault "ip6");
-      group = mkAlmostOptionDefault (groups.forSystem system);
-      url = mkOptionDefault "icmp://${mkAddress6 addr}";
-    };
-  });
+  in
+    nameValuePair "ping-${system.config.name}" (_: {
+      imports =
+        [alertingConfig]
+        ++ optional status.alert.enable alertingConfigAlerts;
+      config = {
+        name = mkAlmostOptionDefault system.config.name;
+        # XXX: it can't seem to ping ipv6 for some reason..? :<
+        enabled = mkIf addrIs6 (mkAlmostOptionDefault false);
+        client.network = mkIf addrIs6 (mkAlmostOptionDefault "ip6");
+        group = mkAlmostOptionDefault (groups.forSystem system);
+        url = mkOptionDefault "icmp://${mkAddress6 addr}";
+      };
+    });
   alertingConfigAlerts = {
     alerts = [
       {
@@ -105,7 +134,7 @@
     # Common interval for refreshing all basic HTTP endpoints
     interval = mkAlmostOptionDefault "30s";
   };
-  alertingConfig = { config, ... }: let
+  alertingConfig = {config, ...}: let
     isLan = match ''.*(::|10\.|127\.|\.(local|int|tail)\.).*'' config.url != null;
     isDns = hasPrefix "dns://" config.url || config.dns.query-name or null != null;
   in {
@@ -131,7 +160,9 @@
     systems = "Systems";
     forSystem = system: let
       node = systems.${system.config.proxmox.node.name}.config;
-    in if system.config.proxmox.enabled then "${groups.systems}/${node.name}"
+    in
+      if system.config.proxmox.enabled
+      then "${groups.systems}/${node.name}"
       else groups.systems;
   };
 in {

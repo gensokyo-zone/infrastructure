@@ -15,7 +15,7 @@ in {
         grpc_listen_port = mkOptionDefault 0;
       };
       clients = let
-        baseUrl = access.proxyUrlFor { serviceName = "loki"; };
+        baseUrl = access.proxyUrlFor {serviceName = "loki";};
       in [
         {
           url = "${baseUrl}/loki/api/v1/push";

@@ -88,7 +88,7 @@ let
                 url = "${cfg.lokiUrl}/loki/api/v1/push";
               }
             ];
-            scrape_configs = mkIf cfg.journald.enable [ (unmerged.mergeAttrs cfg.journald.settings) ];
+            scrape_configs = mkIf cfg.journald.enable [(unmerged.mergeAttrs cfg.journald.settings)];
           };
         };
       };

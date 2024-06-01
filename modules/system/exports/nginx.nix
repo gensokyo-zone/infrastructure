@@ -7,7 +7,11 @@
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) mapAttrs;
 in {
-  config.exports.services.nginx = {config, system, ...}: let
+  config.exports.services.nginx = {
+    config,
+    system,
+    ...
+  }: let
     mkAssertion = f: nixosConfig: let
       cfg = nixosConfig.services.nginx;
     in

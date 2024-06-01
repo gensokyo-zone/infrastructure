@@ -1,6 +1,9 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   inherit (lib) types mkIf mkOption mkEnableOption mkPackageOption mkOptionDefault;
 
   cfg = config.services.gatus;
@@ -13,7 +16,7 @@ in {
   options.services.gatus = {
     enable = mkEnableOption "a developer-oriented service status page";
 
-    package = mkPackageOption pkgs "gatus" { };
+    package = mkPackageOption pkgs "gatus" {};
 
     user = mkOption {
       type = types.str;
@@ -38,13 +41,13 @@ in {
       metrics = mkEnableOption "expose metrics at /metrics";
 
       storage = {
-        path = mkOption { type = types.path; };
-        type = mkOption { type = types.enum [ "memory" "sqlite" "postgres" ]; };
+        path = mkOption {type = types.path;};
+        type = mkOption {type = types.enum ["memory" "sqlite" "postgres"];};
         caching = mkEnableOption "write-through caching";
       };
 
       endpoints = mkOption {
-        type = types.attrsOf (types.submodule ({ name, ... }: {
+        type = types.attrsOf (types.submodule ({name, ...}: {
           options = {
             enabled = mkOption {
               type = types.bool;
@@ -68,7 +71,7 @@ in {
                 See [https://github.com/TwiN/gatus#endpoint-groups](Endpoint groups).
               '';
             };
-            url = mkOption { type = types.str; };
+            url = mkOption {type = types.str;};
             method = mkOption {
               type = types.enum [
                 "GET"
@@ -111,9 +114,9 @@ in {
             };
             headers = mkOption {
               type = types.submodule {
-                freeformType = (pkgs.formats.yaml { }).type;
+                freeformType = (pkgs.formats.yaml {}).type;
               };
-              default = { };
+              default = {};
               description = ''
                 Request headers.
               '';
@@ -122,7 +125,7 @@ in {
               type = types.nullOr (types.submodule {
                 options = {
                   query-type = mkOption {
-                    type = types.enum [ "A" "AAAA" "CNAME" "MX" "NS" ];
+                    type = types.enum ["A" "AAAA" "CNAME" "MX" "NS"];
                     description = ''
                       Query type (e.g. MX)
                     '';
@@ -187,20 +190,21 @@ in {
                     type = types.bool;
                     default = true;
                   };
-                  failure-threshold = mkOption { type = types.ints.positive; };
-                  success-threshold = mkOption { type = types.ints.positive; };
-                  send-on-resolved = mkEnableOption
+                  failure-threshold = mkOption {type = types.ints.positive;};
+                  success-threshold = mkOption {type = types.ints.positive;};
+                  send-on-resolved =
+                    mkEnableOption
                     "sending a notification once a triggered alert is marked as solved";
-                  description = mkOption { type = types.str; };
+                  description = mkOption {type = types.str;};
                 };
               });
-              default = [ ];
+              default = [];
             };
             client = mkOption {
               type = types.submodule {
-                freeformType = (pkgs.formats.yaml { }).type;
+                freeformType = (pkgs.formats.yaml {}).type;
               };
-              default = { };
+              default = {};
               description = ''
                 [https://github.com/TwiN/gatus#client-configuration](Client configuration).
               '';
@@ -215,7 +219,7 @@ in {
                 mkEnableOption "resolving failed conditions for the UI";
               badge.response-time.thresholds = mkOption {
                 type = types.listOf types.ints.positive;
-                default = [ 50 200 300 500 750 ];
+                default = [50 200 300 500 750];
                 description = ''
                   List of response time thresholds. Each time a threshold is reached,
                   the badge has a different color.
@@ -223,20 +227,21 @@ in {
               };
             };
           };
-          config = { name = mkOptionDefault name; };
+          config = {name = mkOptionDefault name;};
         }));
-        default = { };
+        default = {};
       };
       alerting = mkOption {
-        type = types.submodule { freeformType = (pkgs.formats.yaml { }).type; };
-        default = { };
+        type = types.submodule {freeformType = (pkgs.formats.yaml {}).type;};
+        default = {};
         description = ''
           [https://github.com/TwiN/gatus#alerting](Alerting configuration).
         '';
       };
       security = mkOption {
-        type = types.nullOr
-          (types.submodule { freeformType = (pkgs.formats.yaml { }).type; });
+        type =
+          types.nullOr
+          (types.submodule {freeformType = (pkgs.formats.yaml {}).type;});
         default = null;
         description = ''
           [https://github.com/TwiN/gatus#security](Security configuration).
@@ -269,8 +274,7 @@ in {
               certificate-file = mkOption {
                 type = types.nullOr types.path;
                 default = null;
-                description =
-                  "Optional public certificate file for TLS in PEM format";
+                description = "Optional public certificate file for TLS in PEM format";
               };
               private-key-file = mkOption {
                 type = types.nullOr types.path;
@@ -305,8 +309,8 @@ in {
   config = mkIf cfg.enable {
     systemd.services.gatus = {
       description = "Automated developer-oriented status page";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+      after = ["network.target"];
+      wantedBy = ["multi-user.target"];
 
       environment.GATUS_CONFIG_PATH = "${configFile}";
 
@@ -318,9 +322,9 @@ in {
         StateDirectory = "gatus";
         LogsDirectory = "gatus";
         EnvironmentFile =
-          mkIf (cfg.environmentFile != null) [ cfg.environmentFile ];
+          mkIf (cfg.environmentFile != null) [cfg.environmentFile];
 
-        AmbientCapabilities = [ "CAP_NET_RAW" ]; # needed for ICMP probes
+        AmbientCapabilities = ["CAP_NET_RAW"]; # needed for ICMP probes
         DevicePolicy = "closed";
         LockPersonality = true;
         MemoryDenyWriteExecute = true;
@@ -339,7 +343,7 @@ in {
         ProtectProc = "invisible";
         ProtectSystem = "strict";
         RemoveIPC = true;
-        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+        RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
         RestrictNamespaces = true;
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
@@ -351,7 +355,7 @@ in {
       };
     };
 
-    users.groups = mkIf (cfg.group == "gatus") { ${cfg.group} = { }; };
+    users.groups = mkIf (cfg.group == "gatus") {${cfg.group} = {};};
 
     users.users = mkIf (cfg.user == "gatus") {
       ${cfg.user} = {
@@ -362,5 +366,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ christoph-heiss ];
+  meta.maintainers = with lib.maintainers; [christoph-heiss];
 }

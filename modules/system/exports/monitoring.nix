@@ -1,5 +1,11 @@
 let
-  portModule = {system, config, gensokyo-zone, lib, ...}: let
+  portModule = {
+    system,
+    config,
+    gensokyo-zone,
+    lib,
+    ...
+  }: let
     inherit (gensokyo-zone.lib) unmerged;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
@@ -11,17 +17,21 @@ let
       status = {
         enable = mkEnableOption "status checks";
         alert = {
-          enable = mkEnableOption "health check alerts" // {
-            default = system.exports.status.alert.enable;
-          };
+          enable =
+            mkEnableOption "health check alerts"
+            // {
+              default = system.exports.status.alert.enable;
+            };
         };
         gatus = {
-          enable = mkEnableOption "gatus" // {
-            default = true;
-          };
+          enable =
+            mkEnableOption "gatus"
+            // {
+              default = true;
+            };
           client = {
             network = mkOption {
-              type = enum [ "ip" "ip4" "ip6" ];
+              type = enum ["ip" "ip4" "ip6"];
               default = "ip";
             };
           };
@@ -47,15 +57,20 @@ let
       status.gatus = let
         cfg = config.status.gatus;
         defaultProtocol =
-          if config.protocol != null then mkOptionDefault config.protocol
-          else if config.starttls then mkOptionDefault "starttls"
-          else if config.ssl then mkOptionDefault "tls"
-          else if config.transport != "unix" then mkOptionDefault config.transport
+          if config.protocol != null
+          then mkOptionDefault config.protocol
+          else if config.starttls
+          then mkOptionDefault "starttls"
+          else if config.ssl
+          then mkOptionDefault "tls"
+          else if config.transport != "unix"
+          then mkOptionDefault config.transport
           else mkIf false (throw "unreachable");
       in {
         protocol = defaultProtocol;
         http.statusCondition = mkOptionDefault (
-          if cfg.protocol == "http" || cfg.protocol == "https" then "[STATUS] == 200"
+          if cfg.protocol == "http" || cfg.protocol == "https"
+          then "[STATUS] == 200"
           else null
         );
         settings = mkMerge [
@@ -174,27 +189,37 @@ in
         name = "node";
         port = 9091;
       }
+      {
+        name = "unifi";
+        port = 9130;
+      }
     ];
   in {
     options.exports = with lib.types; {
       prometheus = {
         exporter = {
-          enable = mkEnableOption "prometheus ingress" // {
-            default = config.access.online.enable;
-          };
+          enable =
+            mkEnableOption "prometheus ingress"
+            // {
+              default = config.access.online.enable;
+            };
           services = mkOption {
             type = listOf str;
           };
         };
       };
       status = {
-        enable = mkEnableOption "status checks" // {
-          default = config.access.online.enable;
-        };
-        alert = {
-          enable = mkEnableOption "health check alerts" // {
-            default = config.access.online.enable && config.type == "NixOS";
+        enable =
+          mkEnableOption "status checks"
+          // {
+            default = config.access.online.enable;
           };
+        alert = {
+          enable =
+            mkEnableOption "health check alerts"
+            // {
+              default = config.access.online.enable && config.type == "NixOS";
+            };
         };
         services = mkOption {
           type = listOf str;

@@ -6,7 +6,11 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkOptionDefault;
 in {
-  config.exports.services.dnsmasq = {system, config, ...}: {
+  config.exports.services.dnsmasq = {
+    system,
+    config,
+    ...
+  }: {
     displayName = mkAlmostOptionDefault "Dnsmasq";
     id = mkAlmostOptionDefault "dns";
     nixos = {

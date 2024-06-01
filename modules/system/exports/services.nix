@@ -31,8 +31,10 @@
       displayName = mkOption {
         type = nullOr str;
         default =
-          if config.name == "default" then null
-          else if config.ssl && (config.name == "ssl" || config.name == "https") then "SSL"
+          if config.name == "default"
+          then null
+          else if config.ssl && (config.name == "ssl" || config.name == "https")
+          then "SSL"
           else config.name;
       };
       listen = mkOption {

@@ -169,13 +169,16 @@
             getAddressFor ? "getAddressFor",
           }: let
             scheme' =
-              if scheme == null then "${port.protocol}://"
-              else if scheme == "" then ""
+              if scheme == null
+              then "${port.protocol}://"
+              else if scheme == ""
+              then ""
               else "${scheme}://";
             port' =
               if !port.enable
               then throw "${system.name}.exports.services.${service.name}.ports.${portName} isn't enabled"
-              else if port.port == defaultPort then ""
+              else if port.port == defaultPort
+              then ""
               else ":${toString port.port}";
             url = "${scheme'}${mkAddress6 host}${port'}";
           in
