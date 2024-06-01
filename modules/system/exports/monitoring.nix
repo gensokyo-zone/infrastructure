@@ -6,7 +6,7 @@ let
     lib,
     ...
   }: let
-    inherit (gensokyo-zone.lib) unmerged;
+    inherit (gensokyo-zone.lib) mapOptionDefaults unmerged;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
   in {
@@ -43,6 +43,13 @@ let
             statusCondition = mkOption {
               type = nullOr str;
             };
+            websocket = {
+              enable = mkEnableOption "ws://";
+              status = mkOption {
+                type = int;
+                default = 200;
+              };
+            };
           };
           protocol = mkOption {
             type = str;
@@ -56,8 +63,22 @@ let
     config = {
       status.gatus = let
         cfg = config.status.gatus;
+        useWebsocket = cfg.http.websocket.enable && cfg.http.websocket.status == 200;
+        mockWebsocket = cfg.http.websocket.enable && cfg.http.websocket.status != 200;
+        protocolWs =
+          if config.ssl || config.protocol == "https"
+          then "wss"
+          else "ws";
+        protocolHttp =
+          if config.ssl || config.protocol == "https"
+          then "https"
+          else "http";
         defaultProtocol =
-          if config.protocol != null
+          if useWebsocket
+          then mkOptionDefault protocolWs
+          else if cfg.http.websocket.enable
+          then mkOptionDefault protocolHttp
+          else if config.protocol != null
           then mkOptionDefault config.protocol
           else if config.starttls
           then mkOptionDefault "starttls"
@@ -69,7 +90,9 @@ let
       in {
         protocol = defaultProtocol;
         http.statusCondition = mkOptionDefault (
-          if cfg.protocol == "http" || cfg.protocol == "https"
+          if mockWebsocket
+          then "[STATUS] == ${toString cfg.http.websocket.status}"
+          else if cfg.protocol == "http" || cfg.protocol == "https"
           then "[STATUS] == 200"
           else null
         );
@@ -90,6 +113,14 @@ let
             conditions = mkOptionDefault [
               "[DNS_RCODE] == NOERROR"
             ];
+          })
+          (mkIf mockWebsocket {
+            headers = mapOptionDefaults {
+              Connection = "Upgrade";
+              Upgrade = "websocket";
+              Sec-WebSocket-Version = "13";
+              Sec-WebSocket-Key = "SGVsbG8sIHdvcmxkIQ==";
+            };
           })
         ];
       };

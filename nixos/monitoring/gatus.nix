@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (gensokyo-zone.lib) mkAddress6 mkAlmostOptionDefault unmerged;
+  inherit (gensokyo-zone.lib) mkAddress6 mkAlmostOptionDefault mapOptionDefaults unmerged;
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues nameValuePair listToAttrs;
   inherit (lib.lists) filter length optional concatMap;

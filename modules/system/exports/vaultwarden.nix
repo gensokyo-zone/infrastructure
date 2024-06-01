@@ -38,7 +38,10 @@ in {
         displayName = mkAlmostOptionDefault "WebSocket";
         status = {
           enable = mkAlmostOptionDefault true;
-          gatus.protocol = "ws";
+          gatus.http.websocket = {
+            enable = mkAlmostOptionDefault true;
+            status = mkAlmostOptionDefault 401;
+          };
         };
       };
     };

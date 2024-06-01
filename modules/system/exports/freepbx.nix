@@ -8,7 +8,16 @@ in {
   config.exports.services.freepbx = {config, ...}: {
     displayName = mkAlmostOptionDefault "FreePBX";
     id = mkAlmostOptionDefault "pbx";
-    ports = {
+    ports = let
+      ucpGtatus = {
+        client.network = mkAlmostOptionDefault "ip4";
+        http = {
+          websocket.enable = mkAlmostOptionDefault true;
+          path = mkAlmostOptionDefault "/socket.io/?transport=websocket";
+          statusCondition = mkAlmostOptionDefault "[BODY] == pat(*\"sid\":*)";
+        };
+      };
+    in {
       http = {
         displayName = mkAlmostOptionDefault null;
         port = mkAlmostOptionDefault 80;
@@ -25,12 +34,13 @@ in {
         displayName = mkAlmostOptionDefault "UCP";
         status = {
           enable = mkAlmostOptionDefault config.ports.http.status.enable;
-          gatus.client.network = mkAlmostOptionDefault "ip4";
+          gatus = ucpGtatus;
         };
       };
       ucp-ssl = {
         port = mkAlmostOptionDefault 8003;
         protocol = "https";
+        status.gatus = ucpGtatus;
       };
       asterisk = {
         port = mkAlmostOptionDefault 8088;
