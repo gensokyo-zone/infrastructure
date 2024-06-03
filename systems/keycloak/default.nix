@@ -12,6 +12,10 @@ _: {
       keycloak.enable = true;
       vouch-proxy.enable = true;
       vaultwarden.enable = true;
+      nginx = {
+        enable = true;
+        ports.proxied.enable = true;
+      };
     };
   };
 }

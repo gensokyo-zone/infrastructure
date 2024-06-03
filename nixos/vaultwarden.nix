@@ -15,6 +15,7 @@ in {
     databaseUrlPath = mkIf (!postgresql.enable) (mkDefault config.sops.secrets.vaultwarden-database-url.path);
     adminTokenPath = mkIf enableAdmin (mkDefault config.sops.secrets.vaultwarden-admin-token.path);
     config = {
+      DOMAIN = mkDefault "https://bw.${config.networking.domain}";
       SIGNUPS_ALLOWED = mkDefault false;
       ROCKET_ADDRESS = mkDefault "::";
       WEBSOCKET_ADDRESS = mkDefault "::";
