@@ -58,7 +58,7 @@
       };
     };
     barcodebuddy = {
-      url = "github:Forceu/barcodebuddy/v1.8.1.7";
+      url = "github:Forceu/barcodebuddy/v1.8.1.8";
       flake = false;
     };
   };

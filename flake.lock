@@ -24,16 +24,16 @@
     "barcodebuddy": {
       "flake": false,
       "locked": {
-        "lastModified": 1694536720,
-        "narHash": "sha256-98trW1WFtQOZX/mMNc3wQL5sxU6fupI6ukCp5zZsw+Q=",
+        "lastModified": 1717358230,
+        "narHash": "sha256-zHprV5mCFciq5XgJD7fmEgb/vHlwAWOY1TcdBoCA8Eo=",
         "owner": "Forceu",
         "repo": "barcodebuddy",
-        "rev": "55bbc03d873d637b0aa8282468c0fc3f9da39776",
+        "rev": "369798d05395ed055ea4b9b03d96471b784ed106",
         "type": "github"
       },
       "original": {
         "owner": "Forceu",
-        "ref": "v1.8.1.7",
+        "ref": "v1.8.1.8",
         "repo": "barcodebuddy",
         "type": "github"
       }
