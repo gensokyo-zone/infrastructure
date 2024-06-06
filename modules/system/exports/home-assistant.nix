@@ -29,6 +29,7 @@ in {
   in {
     id = mkAlmostOptionDefault "home";
     displayName = mkAlmostOptionDefault "Home Assistant";
+    prometheus.exporter.metricsPath = "/api/prometheus";
     nixos = {
       serviceAttr = "home-assistant";
       assertions = mkIf config.enable [
@@ -42,6 +43,7 @@ in {
         port = mkAlmostOptionDefault 8123;
         protocol = "http";
         status.enable = true;
+        prometheus.exporter.enable = mkAlmostOptionDefault true;
       };
       homekit0 = {
         port = mkAlmostOptionDefault 21063;

@@ -80,6 +80,10 @@ in {
             websocket.enable = true;
           };
         };
+        "/api/prometheus" = {
+          local.denyGlobal = true;
+          proxy.enable = true;
+        };
       };
     in {
       home-assistant = {...}: {
