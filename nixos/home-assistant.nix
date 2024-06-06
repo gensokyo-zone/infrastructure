@@ -165,9 +165,7 @@ in {
           password = "!secret mpd-shanghai-password";
         }
       ];
-      prometheus = {
-        requires_auth = mkDefault false;
-      };
+      prometheus = {};
       wake_on_lan = {};
     };
     grocy.enable = true;

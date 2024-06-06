@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkForce mkDefault;
   inherit (config.services) nginx home-assistant;
   name.shortServer = mkDefault "home";
   listen' = {
@@ -81,8 +81,9 @@ in {
           };
         };
         "/api/prometheus" = {
-          local.denyGlobal = true;
-          proxy.enable = true;
+          #proxy.enable = true;
+          #local.denyGlobal = true;
+          extraConfig = mkForce "deny all;";
         };
       };
     in {
@@ -109,10 +110,11 @@ in {
     reverseProxy = {
       enable = mkDefault true;
       auth = {
-        enable = mkIf (nginx.virtualHosts.home-assistant.enable && nginx.virtualHosts.home-assistant.vouch.enable) true;
+        enable = mkIf (nginx.virtualHosts.home-assistant.enable && nginx.virtualHosts.home-assistant.vouch.enable) (mkDefault true);
         userHeader = "X-Hass-User";
       };
     };
+    config.prometheus.requires_auth = mkDefault false;
   };
   config.networking.firewall.allowedTCPPorts = let
     inherit (nginx.virtualHosts.home-assistant'local) listen';

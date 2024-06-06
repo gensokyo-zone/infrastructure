@@ -101,9 +101,14 @@ in {
         interfaces.local = {
           allowedTCPPorts = mkMerge [
             (mkIf (!cfg.homekit.openFirewall) homekitTcp)
-            (mkIf (!cfg.openFirewall) [cfg.config.http.server_port])
+            (mkIf (!cfg.openFirewall && !cfg.reverseProxy.enable) [cfg.config.http.server_port])
           ];
           allowedUDPPortRanges = mkIf (!cfg.cast.openFirewall) castUdpRanges;
+        };
+        interfaces.lan = {
+          allowedTCPPorts = mkIf (!cfg.openFirewall && cfg.reverseProxy.enable) [
+            cfg.config.http.server_port
+          ];
         };
         allowedTCPPorts = mkIf cfg.homekit.openFirewall homekitTcp;
         allowedUDPPortRanges = mkIf cfg.cast.openFirewall castUdpRanges;
