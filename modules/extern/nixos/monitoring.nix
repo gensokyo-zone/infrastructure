@@ -23,9 +23,11 @@ let
           // {
             default = true;
           };
-        defaultCollectors = mkEnableOption "standard node info" // {
-          default = true;
-        };
+        defaultCollectors =
+          mkEnableOption "standard node info"
+          // {
+            default = true;
+          };
         settings = mkOption {
           type = unmerged.types.attrs;
           internal = true;

@@ -61,10 +61,11 @@ in {
             };
           };
         };
-      in mkMerge [
-        ingress
-        (nginx.virtualHosts.vaultwarden.proxied.cloudflared.getIngress {})
-      ];
+      in
+        mkMerge [
+          ingress
+          (nginx.virtualHosts.vaultwarden.proxied.cloudflared.getIngress {})
+        ];
     };
   };
 
