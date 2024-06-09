@@ -21,11 +21,6 @@ _: {
         enable = true;
         ports.public.enable = false;
       };
-      motion = {
-        id = "kitchen";
-        enable = true;
-        ports.stream.port = 41081;
-      };
     };
   };
   # XXX: currently unplugged :<

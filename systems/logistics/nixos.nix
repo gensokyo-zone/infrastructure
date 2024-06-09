@@ -12,6 +12,7 @@ in {
     nixos.sops
     nixos.base
     nixos.barcodebuddy-scanner
+    nixos.kitchencam
     ./hardware-configuration.nix
   ];
 

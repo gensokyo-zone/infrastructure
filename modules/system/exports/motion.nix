@@ -7,6 +7,9 @@
 in {
   config.exports.services.motion = {config, ...}: {
     displayName = mkAlmostOptionDefault "Motion";
+    nixos = {
+      serviceAttr = "motion";
+    };
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = {
       default = {
@@ -15,10 +18,10 @@ in {
         status.enable = mkAlmostOptionDefault true;
       };
       stream = {
-        port = mkAlmostOptionDefault 8081;
+        port = mkAlmostOptionDefault 41081;
         protocol = "http";
         displayName = mkAlmostOptionDefault "Stream";
-        status.enable = mkAlmostOptionDefault true;
+        #status.enable = mkAlmostOptionDefault true;
       };
     };
   };
