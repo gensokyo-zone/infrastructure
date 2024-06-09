@@ -39,6 +39,15 @@ in {
     #jack.enable = true;
   };
 
+  services.motion.cameras.webcam = {
+    #enable = false;
+    settings = {
+      videodevice = "/dev/video0";
+      camera_id = 2;
+      text_left = "logistics";
+    };
+  };
+
   users.users.logistics = {
     uid = 1000;
     isNormalUser = true;
