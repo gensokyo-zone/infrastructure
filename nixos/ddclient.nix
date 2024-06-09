@@ -14,16 +14,12 @@ in {
     protocol = mkDefault "cloudflare";
     zone = mkDefault config.networking.domain;
     use = "no";
+    usev6 = mkIf config.networking.enableIPv6 (mkDefault "webv6, webv6=https://ipv6.nsupdate.info/myip");
+    usev4 = mkDefault "webv4, webv6=https://ipv6.nsupdate.info/myip";
     domains = [];
-    extraConfig = mkMerge [
-      (mkIf config.networking.enableIPv6 ''
-        usev6=webv6, webv6=https://ipv6.nsupdate.info/myip
-      '')
-      ''
-        usev4=webv4, webv4=https://ipv4.nsupdate.info/myip
-        max-interval=1d
-      ''
-    ];
+    extraConfig = ''
+      max-interval=1d
+    '';
     passwordFile = config.sops.secrets.dyndns_cloudflare_token.path;
   };
   systemd.services.ddclient = mkIf cfg.enable rec {
