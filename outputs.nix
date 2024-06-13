@@ -14,18 +14,22 @@
       devShells = import ./devShells.nix {inherit system inputs;};
       packages = import ./packages {inherit system inputs;};
       legacyPackages = {
-        pkgs = import inputs.nixpkgs {
-          inherit system;
-          overlays = [
-            inputs.self.overlays.default
-            inputs.self.overlays.deploy-rs
-            inputs.self.overlays.systemd2mqtt
-            inputs.self.overlays.arc
-          ];
-          config = {
-            allowUnfree = true;
+        pkgs = let
+          pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [
+              inputs.self.overlays.default
+              inputs.self.overlays.deploy-rs
+              inputs.self.overlays.systemd2mqtt
+              inputs.self.overlays.arc
+            ];
+            config = {
+              allowUnfree = true;
+            };
           };
-        };
+          # see overlays/builders.nix
+        in
+          pkgs.__withSubBuilders;
         patchedNixpkgs = pkgs.applyPatches {
           name = "nixpkgs";
           src = inputs.nixpkgs;
