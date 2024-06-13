@@ -21,11 +21,9 @@ in {
       };
       ipv6Prefixes = [
         {
-          ipv6PrefixConfig = {
-            Prefix = "fd0c::/64";
-            Assign = true;
-            Token = config.ipv6AcceptRAConfig.Token;
-          };
+          Prefix = "fd0c::/64";
+          Assign = true;
+          Token = config.ipv6AcceptRAConfig.Token;
         }
       ];
     };
