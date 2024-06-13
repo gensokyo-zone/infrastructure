@@ -45,10 +45,19 @@ in {
       asterisk = {
         port = mkAlmostOptionDefault 8088;
         protocol = "http";
+        prometheus.exporter.enable = let
+          sslPort = config.ports.asterisk-ssl;
+        in mkAlmostOptionDefault (!sslPort.enable || !sslPort.prometheus.exporter.enable);
       };
       asterisk-ssl = {
         port = mkAlmostOptionDefault 8089;
         protocol = "https";
+        prometheus.exporter.enable = mkAlmostOptionDefault true;
+      };
+      operator = {
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 58080;
+        protocol = "http";
       };
     };
   };

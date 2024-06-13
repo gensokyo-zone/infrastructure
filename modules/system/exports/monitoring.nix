@@ -134,9 +134,10 @@ let
     ...
   }: let
     inherit (gensokyo-zone.lib) mapOptionDefaults;
-    inherit (lib.options) mkOption;
+    inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkOptionDefault;
-    inherit (lib.attrsets) attrNames filterAttrs;
+    inherit (lib.attrsets) attrNames attrValues filterAttrs;
+    inherit (lib.lists) any;
     exporterPorts = filterAttrs (_: port: port.enable && port.prometheus.exporter.enable) config.ports;
     statusPorts = filterAttrs (_: port: port.enable && port.status.enable) config.ports;
   in {
@@ -152,6 +153,14 @@ let
           metricsPath = mkOption {
             type = str;
             default = "/metrics";
+          };
+          ssl = {
+            enable = mkEnableOption "HTTPS" // {
+              default = any (port: port.ssl) (attrValues exporterPorts);
+            };
+            insecure = mkEnableOption "self-signed SSL" // {
+              default = true;
+            };
           };
         };
       };

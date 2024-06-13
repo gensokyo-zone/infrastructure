@@ -24,25 +24,30 @@
     port = service.ports.${portName};
   in "${mkAddress6 (access.getAddressFor system.config.name "lan")}:${toString port.port}";
   mkServiceConfig = system: serviceName: let
+    inherit (service.prometheus) exporter;
     service = system.config.exports.services.${serviceName};
     targets = map (portName:
       mkPortTarget {
         inherit system service portName;
       })
-    service.prometheus.exporter.ports;
+    exporter.ports;
   in {
     job_name = "${system.config.name}-${service.id}";
     static_configs = [
       {
         inherit targets;
         labels = mkMerge [
-          (mapOptionDefaults service.prometheus.exporter.labels)
-          (mkIf (service.prometheus.exporter.metricsPath != "/metrics") {
-            __metrics_path__ = mkOptionDefault service.prometheus.exporter.metricsPath;
+          (mapOptionDefaults exporter.labels)
+          (mkIf (exporter.metricsPath != "/metrics") {
+            __metrics_path__ = mkOptionDefault exporter.metricsPath;
           })
         ];
       }
     ];
+    scheme = mkIf exporter.ssl.enable (mkDefault "https");
+    tls_config = mkIf (exporter.ssl.enable && exporter.ssl.insecure) {
+      insecure_skip_verify = mkDefault true;
+    };
   };
   mapSystem = system: map (mkServiceConfig system) system.config.exports.prometheus.exporter.services;
 in {
