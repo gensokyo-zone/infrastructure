@@ -13,9 +13,8 @@ in {
     username = mkDefault "token";
     protocol = mkDefault "cloudflare";
     zone = mkDefault config.networking.domain;
-    use = "no";
     usev6 = mkIf config.networking.enableIPv6 (mkDefault "webv6, webv6=https://ipv6.nsupdate.info/myip");
-    usev4 = mkDefault "webv4, webv6=https://ipv6.nsupdate.info/myip";
+    usev4 = mkDefault "webv4, webv4=https://ipv4.nsupdate.info/myip";
     domains = [];
     extraConfig = ''
       max-interval=1d
