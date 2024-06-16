@@ -30,7 +30,6 @@ in {
           url = access.proxyUrlFor {
             serviceName = "mosquitto";
             scheme = "mqtt";
-            getAddressFor = "getAddress4For";
           };
         in
           mkIf (!config.services.mosquitto.enable) (
