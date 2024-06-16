@@ -59,6 +59,7 @@ in {
         inherit serverName;
         proxied.enable = true;
         local.denyGlobal = true;
+        accessLog.enable = false;
       };
       grocy = mkMerge [
         luaAuthHost
@@ -101,6 +102,7 @@ in {
             enable = true;
             localSso.enable = true;
           };
+          accessLog.enable = false;
         }
       ];
     };

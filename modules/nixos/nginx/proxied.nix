@@ -82,7 +82,7 @@ let
   }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault orderJustBefore unmerged;
     inherit (lib.options) mkOption;
-    inherit (lib.modules) mkIf mkOrder mkDefault;
+    inherit (lib.modules) mkIf mkMerge mkOrder mkDefault;
     inherit (nixosConfig.services) nginx;
     cfg = config.proxied;
   in {
@@ -145,9 +145,14 @@ let
           port = mkAlmostOptionDefault nginx.proxied.listenPort;
         };
       };
-      extraConfig = mkIf (cfg.enabled && config.xvars.enable) (
-        mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
-      );
+      accessLog = mkIf cfg.enabled {
+        format = mkDefault "combined_proxied";
+      };
+      extraConfig = mkMerge [
+        (mkIf (cfg.enabled && config.xvars.enable) (
+          mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
+        ))
+      ];
     };
   };
 in
@@ -160,7 +165,7 @@ in
   }: let
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
     inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf mkOptionDefault;
+    inherit (lib.modules) mkIf;
     inherit (lib.attrsets) attrValues;
     inherit (lib.lists) any;
     inherit (config.services) nginx;
@@ -212,6 +217,12 @@ in
             '';
           };
         };
+        commonHttpConfig = mkIf cfg.enable ''
+          log_format combined_proxied '$x_remote_addr proxied $remote_user@$x_host [$time_local] '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
+
+        '';
       };
       networking.firewall.interfaces.lan = mkIf nginx.enable {
         allowedTCPPorts = mkIf cfg.enable [cfg.listenPort];

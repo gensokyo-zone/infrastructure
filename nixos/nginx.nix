@@ -33,11 +33,14 @@ in {
       #X-Content-Type-Options = "nosniff";
       #X-XSS-Protection = "1; mode=block";
     };
+    accessLog.format = mkDefault "combined_host";
     commonHttpConfig = ''
       map $scheme $hsts_header {
           https   "max-age=31536000; includeSubdomains; preload";
       }
-      #proxy_cookie_path / "/; secure; HttpOnly; SameSite=strict";
+      log_format combined_host '$remote_addr - $remote_user@$host [$time_local] '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
     '';
     clientMaxBodySize = mkDefault "512m";
     virtualHosts.fallback = {

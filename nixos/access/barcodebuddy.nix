@@ -28,6 +28,7 @@ in {
       inherit serverName;
       proxied.enable = mkDefault true;
       local.denyGlobal = true;
+      accessLog.enable = false;
     };
     barcodebuddy = {
       inherit name;
