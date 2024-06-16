@@ -21,9 +21,17 @@ in {
 
   networking.networkmanager.enable = true;
 
-  services.xserver.enable = true;
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
+  services.xserver = {
+    enable = true;
+    displayManager.lightdm.enable = true;
+    desktopManager.xfce.enable = true;
+  };
+  services.libinput = {
+    touchpad = {
+      naturalScrolling = true;
+    };
+    mouse.naturalScrolling = config.services.libinput.touchpad.naturalScrolling;
+  };
   programs.firefox.enable = true;
 
   services.printing.enable = true;
