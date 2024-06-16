@@ -155,12 +155,16 @@ let
             default = "/metrics";
           };
           ssl = {
-            enable = mkEnableOption "HTTPS" // {
-              default = any (port: port.ssl) (attrValues exporterPorts);
-            };
-            insecure = mkEnableOption "self-signed SSL" // {
-              default = true;
-            };
+            enable =
+              mkEnableOption "HTTPS"
+              // {
+                default = any (port: port.ssl) (attrValues exporterPorts);
+              };
+            insecure =
+              mkEnableOption "self-signed SSL"
+              // {
+                default = true;
+              };
           };
         };
       };

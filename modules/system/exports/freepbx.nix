@@ -47,7 +47,8 @@ in {
         protocol = "http";
         prometheus.exporter.enable = let
           sslPort = config.ports.asterisk-ssl;
-        in mkAlmostOptionDefault (!sslPort.enable || !sslPort.prometheus.exporter.enable);
+        in
+          mkAlmostOptionDefault (!sslPort.enable || !sslPort.prometheus.exporter.enable);
       };
       asterisk-ssl = {
         port = mkAlmostOptionDefault 8089;
