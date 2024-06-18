@@ -19,6 +19,7 @@ in {
     nixos.access.zigbee2mqtt
     nixos.access.grocy
     nixos.access.barcodebuddy
+    nixos.access.nfandroidtv
     nixos.home-assistant
     nixos.zigbee2mqtt
     nixos.syncplay

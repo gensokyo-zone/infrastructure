@@ -113,7 +113,7 @@ let
     lib,
     ...
   }: let
-    inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault mkAddress6;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkOptionDefault mkForce;
     inherit (lib.attrsets) attrValues mapAttrs;
@@ -123,7 +123,7 @@ let
     enabledCfg = filter (port: port.enable) cfg;
     mkListen = listen: addr: let
       listenAttrs = {
-        inherit addr;
+        addr = mkAddress6 addr;
         inherit (listen) port ssl extraParameters proxyProtocol;
       };
     in

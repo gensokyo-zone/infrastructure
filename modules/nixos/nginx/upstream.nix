@@ -216,10 +216,11 @@ let
 
     config = let
       enabledServers = filterAttrs (_: server: server.enable) config.servers;
+      activeServers = filterAttrs (_: server: server.settings.backup or false == false) enabledServers;
       assertServers = v: assert enabledServers != {}; v;
     in {
       ssl.enable = mkIf (any (server: server.ssl.enable) (attrValues enabledServers)) (mkAlmostOptionDefault true);
-      defaultServerName = findSingle (_: true) null null (attrNames enabledServers);
+      defaultServerName = findSingle (_: true) null null (attrNames activeServers);
       upstreamConfig = mkMerge (
         mapAttrsToList (_: server: mkIf server.enable server.serverDirective) config.servers
         ++ [config.extraConfig]
