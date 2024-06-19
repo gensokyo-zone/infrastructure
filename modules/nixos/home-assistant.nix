@@ -317,4 +317,9 @@ in {
       )
     ];
   };
+  config.users.users.hass = mkIf cfg.enable {
+    extraGroups = mkIf (elem "androidtv" cfg.extraComponents && (config.programs.adb.enable || config.services.adb.enable)) [
+      "adbusers"
+    ];
+  };
 }

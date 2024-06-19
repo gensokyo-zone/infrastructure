@@ -15,6 +15,7 @@ in {
     nixos.cloudflared
     nixos.postgres
     nixos.nginx
+    nixos.adb
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy

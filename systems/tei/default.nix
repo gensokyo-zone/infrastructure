@@ -18,6 +18,7 @@ _: {
       zigbee2mqtt.enable = true;
       barcodebuddy.enable = true;
       postgresql.enable = true;
+      adb.enable = true;
     };
   };
 }
