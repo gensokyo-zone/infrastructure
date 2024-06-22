@@ -31,7 +31,7 @@ in {
   hardware = {
     enableRedistributableFirmware = true;
     cpu.intel.updateMicrocode = true;
-    opengl = {
+    graphics = {
       extraPackages = [
         pkgs.intel-media-driver
         (mkIf opencl pkgs.intel-compute-runtime)
