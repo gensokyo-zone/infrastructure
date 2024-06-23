@@ -6,6 +6,8 @@
   nixlib = inputs.nixpkgs.lib;
   inherit (nixlib.modules) mkOrder mkOverride defaultOverridePriority;
   inherit (nixlib.attrsets) mapAttrs listToAttrs;
+  inherit (nixlib.lists) elem elemAt;
+  inherit (nixlib.strings) match;
   inherit (inputs.self.lib.Std) List Str Regex UInt Opt;
 
   eui64 = mac: let
@@ -17,7 +19,16 @@
       nibble0 = Str.index part 0;
     in
       nibble0 + UInt.toHexLower nibble1;
-  in "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
+  in trimAddress6 "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
+
+  trimAddress6 = let
+    matcher = match ''(^|.*:)(0+)([0-9a-fA-F].*)'';
+  in addr: let
+    matched = matcher addr;
+    prefix = elemAt matched 0;
+    postfix = elemAt matched 2;
+    addrReplaced = prefix + postfix;
+  in if matched == null then addr else trimAddress6 addrReplaced;
 
   parseUrl = url: let
     parts' = Regex.match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
@@ -36,7 +47,7 @@
       path = List.index parts 3;
     };
 
-  userIs = group: user: builtins.elem group (user.extraGroups ++ [user.group]);
+  userIs = group: user: elem group (user.extraGroups ++ [user.group]);
 
   mkWinPath = Str.replace ["/"] ["\\"];
   mkBaseDn = domain: Str.concatMapSep "," (part: "dc=${part}") (Regex.splitOn "\\." domain);
@@ -100,6 +111,7 @@ in {
       mkWinPath
       mkBaseDn
       mkAddress6
+      trimAddress6
       mapListToAttrs
       coalesce
       mkAlmostOptionDefault

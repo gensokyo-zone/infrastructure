@@ -28,7 +28,7 @@
         "int": null,
         "local": {
           "address4": null,
-          "address6": "fd0a::9e6b:00ff:fe21:1ce2",
+          "address6": "fd0a::9e6b:ff:fe21:1ce2",
           "macAddress": "9c:6b:00:21:1c:e2"
         },
         "tail": null
