@@ -10,7 +10,7 @@ let
     inherit (gensokyo-zone.lib) mapOptionDefaults;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
-    inherit (lib.attrsets) mapAttrsToList;
+    inherit (lib.attrsets) mapAttrsToList mapAttrs;
     inherit (lib.lists) isList;
     cfg = config.headers;
   in {
@@ -36,6 +36,7 @@ let
           (mkIf cfg.inheritServerDefaults (mapOptionDefaults virtualHost.headers.set))
         ];
       };
+      proxy.headers.hide = mkIf (cfg.set != {}) (mapAttrs (_: value: mkOptionDefault (value != null)) cfg.set);
       extraConfig = mkMerge setHeaders;
     };
   };
