@@ -9,6 +9,10 @@
   locations."/".proxy.enable = true;
   name.shortServer = mkDefault "sso";
   copyFromVhost = mkDefault "keycloak";
+  extraConfig = ''
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+  '';
 in {
   config.services.nginx = {
     upstreams'.${upstreamName}.servers = {
@@ -28,12 +32,12 @@ in {
     };
     virtualHosts = {
       keycloak = {
-        inherit name locations;
+        inherit name locations extraConfig;
         ssl.force = mkDefault true;
         proxy.upstream = mkDefault upstreamName;
       };
       keycloak'local = {
-        inherit name locations;
+        inherit name locations extraConfig;
         ssl = {
           force = mkDefault true;
           cert = {
