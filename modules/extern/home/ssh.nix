@@ -16,7 +16,7 @@ let
     inherit (lib.strings) optionalString;
     inherit (osConfig.gensokyo-zone) access;
     cfg = gensokyo-zone.ssh.cfg;
-    system = gensokyo-zone.systems.${config.systemName}.config;
+    system = gensokyo-zone.systems.${config.systemName};
     networks = let
       fallbackNetwork =
         if system.network.networks.local.enable or false && access.local.enable
@@ -167,14 +167,14 @@ let
       proxyJump = mkOptionDefault (
         if config.hosts.hakurei.enable
         then config.hosts.hakurei.name
-        else gensokyo-zone.systems.hakurei.config.access.fqdn
+        else gensokyo-zone.systems.hakurei.access.fqdn
       );
       networks = mkOptionDefault [
         (mkIf access.local.enable "local")
         (mkIf access.tail.enabled "tail")
       ];
       hosts = mapAttrs (name: system: let
-        enabled = system.config.access.online.enable && system.config.exports.services.sshd.enable;
+        enabled = system.access.online.enable && system.exports.services.sshd.enable;
       in
         mkIf enabled {
           systemName = mkOptionDefault name;

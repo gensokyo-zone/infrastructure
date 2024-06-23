@@ -1,6 +1,6 @@
 {
   config,
-  system,
+  systemConfig,
   gensokyo-zone,
   lib,
   ...
@@ -12,7 +12,7 @@
   inherit (gensokyo-zone.self) overlays;
   cfg = config.nixpkgs;
   hostPlatform = lib.systems.elaborate {
-    inherit (system) system;
+    inherit (systemConfig) system;
   };
 in {
   options.nixpkgs = with lib.types; {

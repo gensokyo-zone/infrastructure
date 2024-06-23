@@ -12,8 +12,8 @@
   nodeExporterSystems =
     filter (
       system:
-        system.config.exports.prometheus.exporter.enable
-        && system.config.exports.prometheus.exporter.services != []
+        system.exports.prometheus.exporter.enable
+        && system.exports.prometheus.exporter.services != []
     )
     (attrValues systems);
   mkPortTarget = {
@@ -22,17 +22,17 @@
     portName,
   }: let
     port = service.ports.${portName};
-  in "${mkAddress6 (access.getAddressFor system.config.name "lan")}:${toString port.port}";
+  in "${mkAddress6 (access.getAddressFor system.name "lan")}:${toString port.port}";
   mkServiceConfig = system: serviceName: let
     inherit (service.prometheus) exporter;
-    service = system.config.exports.services.${serviceName};
+    service = system.exports.services.${serviceName};
     targets = map (portName:
       mkPortTarget {
         inherit system service portName;
       })
     exporter.ports;
   in {
-    job_name = "${system.config.name}-${service.id}";
+    job_name = "${system.name}-${service.id}";
     static_configs = [
       {
         inherit targets;
@@ -49,7 +49,7 @@
       insecure_skip_verify = mkDefault true;
     };
   };
-  mapSystem = system: map (mkServiceConfig system) system.config.exports.prometheus.exporter.services;
+  mapSystem = system: map (mkServiceConfig system) system.exports.prometheus.exporter.services;
 in {
   services.prometheus = {
     port = mkDefault 9090;

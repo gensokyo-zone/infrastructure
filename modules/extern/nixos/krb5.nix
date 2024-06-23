@@ -435,8 +435,8 @@ in {
         # TODO: consider hakurei instead...
       in
         mkIf (cfg.enable && !config.gensokyo-zone.dns.enable or false && config.gensokyo-zone.access.local.enable) {
-          ${freeipa.config.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [cfg.host]);
-          ${freeipa.config.access.address4ForNetwork.local} = mkBefore [cfg.host];
+          ${freeipa.access.address6ForNetwork.local} = mkIf config.networking.enableIPv6 (mkBefore [cfg.host]);
+          ${freeipa.access.address4ForNetwork.local} = mkBefore [cfg.host];
         };
     };
     environment.etc = {

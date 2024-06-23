@@ -1,6 +1,6 @@
 {
   config,
-  system,
+  systemConfig,
   access,
   lib,
   ...
@@ -23,12 +23,12 @@ in {
       ];
       scrape_configs = [
         {
-          job_name = "${system.name}-journald";
+          job_name = "${systemConfig.name}-journald";
           journal = {
             max_age = "${toString (24 * 7)}h";
             labels = {
               job = "systemd-journald";
-              system = system.name;
+              system = systemConfig.name;
               host = config.networking.fqdn;
             };
           };

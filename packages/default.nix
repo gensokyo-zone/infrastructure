@@ -21,9 +21,9 @@
     NF_NIX_WHITELIST_FILES=(${string.concatMapSep " " string.escapeShellArg fmt.nix.whitelist})
   '';
   exportsSystems = let
-    inherit (inputs.self.lib) systems;
-    nixosSystems = set.filter (_: system: system.config.ci.enable) systems;
-    warnSystems = set.filter (_: system: system.config.ci.allowFailure) nixosSystems;
+    inherit (inputs.self.lib.gensokyo-zone) systems;
+    nixosSystems = set.filter (_: system: system.ci.enable) systems;
+    warnSystems = set.filter (_: system: system.ci.allowFailure) nixosSystems;
     toSystems = systems: string.concatMapSep " " string.escapeShellArg (set.keys systems);
   in ''
     NF_NIX_SYSTEMS=(${toSystems nixosSystems})

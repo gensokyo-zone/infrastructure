@@ -12,9 +12,9 @@
   inherit (lib.lists) filter length optional concatMap;
   inherit (lib.strings) hasPrefix hasInfix optionalString concatStringsSep match;
   cfg = config.services.gatus;
-  statusSystems = filter (system: system.config.exports.status.enable) (attrValues systems);
+  statusSystems = filter (system: system.exports.status.enable) (attrValues systems);
   mapSystem = system: let
-    statusServices = map (serviceName: system.config.exports.services.${serviceName}) system.config.exports.status.services;
+    statusServices = map (serviceName: system.exports.services.${serviceName}) system.exports.status.services;
     serviceEndpoints = concatMap (mkServiceEndpoint system) statusServices;
     systemEndpoint = mkSystemEndpoint system;
   in
@@ -34,7 +34,7 @@
       ++ optional hasId service.id
       ++ [
         port.name
-        system.config.name
+        system.name
       ]);
     #network = port.listen;
     network = "lan";
@@ -43,12 +43,11 @@
         # XXX: they're lying when they say "You may optionally prefix said DNS IPs with dns://"
         scheme = "";
       };
-      starttls.host = system.config.access.fqdn;
+      starttls.host = system.access.fqdn;
     };
     urlConf =
       {
-        inherit service port network;
-        system = system.config;
+        inherit service port network system;
         scheme = gatus.protocol;
         ${
           if gatus.client.network != "ip"
@@ -97,21 +96,21 @@
       })
     gatusPorts;
   mkSystemEndpoint = system: let
-    inherit (system.config.exports) status;
+    inherit (system.exports) status;
     network = "lan";
     getAddressFor =
-      if system.config.network.networks.local.address4 or null != null
+      if system.network.networks.local.address4 or null != null
       then "getAddress4For"
       else "getAddressFor";
-    addr = access.${getAddressFor} system.config.name network;
+    addr = access.${getAddressFor} system.name network;
     addrIs6 = hasInfix ":" addr;
   in
-    nameValuePair "ping-${system.config.name}" (_: {
+    nameValuePair "ping-${system.name}" (_: {
       imports =
         [alertingConfig]
         ++ optional status.alert.enable alertingConfigAlerts;
       config = {
-        name = mkAlmostOptionDefault system.config.name;
+        name = mkAlmostOptionDefault system.name;
         # XXX: it can't seem to ping ipv6 for some reason..? :<
         enabled = mkIf addrIs6 (mkAlmostOptionDefault false);
         client.network = mkIf addrIs6 (mkAlmostOptionDefault "ip6");
@@ -160,11 +159,11 @@
     servers = "${groups.systems}/Servers";
     systems = "Systems";
     forSystem = system: let
-      node = systems.${system.config.proxmox.node.name}.config;
+      node = systems.${system.proxmox.node.name};
     in
-      if system.config.proxmox.enabled
+      if system.proxmox.enabled
       then "${groups.servers}/${node.name}"
-      else if system.config.access.online.available
+      else if system.access.online.available
       then groups.servers
       else groups.systems;
   };

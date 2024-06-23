@@ -1,5 +1,5 @@
 {
-  system,
+  systemConfig,
   access,
   config,
   gensokyo-zone,
@@ -15,7 +15,7 @@
   };
   hostname = "sso.${config.networking.domain}";
   hostname-strict = false;
-  inherit (gensokyo-zone.self.legacyPackages.${system.system}) patchedNixpkgs;
+  inherit (gensokyo-zone.self.legacyPackages.${systemConfig.system}) patchedNixpkgs;
   keycloakModulePath = "services/web-apps/keycloak.nix";
 in {
   # upstream keycloak makes an incorrect assumption in its assertions, so we patch it

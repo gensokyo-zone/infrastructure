@@ -111,8 +111,7 @@ in {
     specialArgs = {
       inherit name inputs std Std meta;
       inherit (inputs.self.lib) gensokyo-zone;
-      systemType = config.folder;
-      system = config;
+      systemConfig = config;
     };
   };
 }

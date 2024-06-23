@@ -1,5 +1,5 @@
 {
-  system,
+  systemConfig,
   gensokyo-zone,
   lib,
   modulesPath,
@@ -8,7 +8,7 @@
   inherit (gensokyo-zone.lib) unmerged;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) mapAttrsToList;
-  inherit (system) proxmox;
+  inherit (systemConfig) proxmox;
 in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")

@@ -11,11 +11,11 @@ with lib; {
     name = "nodes";
 
     jobs = let
-      enabledSystems = filterAttrs (_: system: system.config.ci.enable) channels.nixfiles.lib.systems;
+      enabledSystems = filterAttrs (_: system: system.ci.enable) channels.nixfiles.lib.gensokyo-zone.systems;
       mkSystemJob = name: system: nameValuePair "${name}" {
         tasks.system = {
           inputs = channels.nixfiles.nixosConfigurations.${name}.config.system.build.toplevel;
-          warn = system.config.ci.allowFailure;
+          warn = system.ci.allowFailure;
         };
       };
       systemJobs = mapAttrs' mkSystemJob enabledSystems;

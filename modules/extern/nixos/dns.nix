@@ -71,13 +71,13 @@
         mkMerge [
           (mkOptionDefault [])
           (mkIf access.local.enable [
-            (mkIf enableIPv6 utsuho.config.access.address6ForNetwork.local)
-            utsuho.config.access.address4ForNetwork.local
+            (mkIf enableIPv6 utsuho.access.address6ForNetwork.local)
+            utsuho.access.address4ForNetwork.local
           ])
           # TODO: mirror or tunnel on hakurei or something .-.
           (mkIf (access.tail.enabled && false) [
-            (mkIf enableIPv6 hakurei.config.access.address6ForNetwork.tail)
-            hakurei.config.access.address4ForNetwork.tail
+            (mkIf enableIPv6 hakurei.access.address6ForNetwork.tail)
+            hakurei.access.address4ForNetwork.tail
           ])
         ];
       fallbackNameservers =

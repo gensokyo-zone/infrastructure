@@ -7,7 +7,7 @@
 }: let
   inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.meta) getExe;
-  chen = gensokyo-zone.systems.chen.config;
+  inherit (gensokyo-zone.systems) chen;
   service = "wake-chen";
 in {
   systemd.services.${service} = {

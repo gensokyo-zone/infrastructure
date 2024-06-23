@@ -1,6 +1,6 @@
 {
   config,
-  system,
+  systemConfig,
   access,
   gensokyo-zone,
   lib,
@@ -25,9 +25,9 @@ in {
       name = "GENSOKYO";
       netbiosName = "reisen";
       netbiosHostAddresses = {
-        ${cfg.domain.netbiosName'} = mkIf system.network.networks.local.enable or false [
-          system.network.networks.local.address4
-          system.network.networks.local.address6
+        ${cfg.domain.netbiosName'} = mkIf systemConfig.network.networks.local.enable or false [
+          systemConfig.network.networks.local.address4
+          systemConfig.network.networks.local.address6
         ];
       };
     };
@@ -79,11 +79,11 @@ in {
             config.networking.fqdn
             "smb.${domain}"
           ]
-          (mkIf system.network.networks.local.enable or false [
+          (mkIf systemConfig.network.networks.local.enable or false [
             "smb.local.${domain}"
             access.hostnameForNetwork.local
           ])
-          (mkIf system.network.networks.int.enable or false [
+          (mkIf systemConfig.network.networks.int.enable or false [
             "smb.int.${domain}"
             access.hostnameForNetwork.int
           ])

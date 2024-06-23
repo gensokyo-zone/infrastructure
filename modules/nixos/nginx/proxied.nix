@@ -158,7 +158,7 @@ let
 in
   {
     config,
-    system,
+    systemConfig,
     gensokyo-zone,
     lib,
     ...
@@ -196,7 +196,7 @@ in
           nginx'proxied = mkIf (warnEnable cfg.enable) {
             servers.local = {
               accessService = {
-                system = system.name;
+                system = systemConfig.name;
                 name = "nginx";
                 port = "proxied";
               };

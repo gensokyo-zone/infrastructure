@@ -1,6 +1,6 @@
 let
   portModule = {
-    system,
+    systemConfig,
     config,
     gensokyo-zone,
     lib,
@@ -20,7 +20,7 @@ let
           enable =
             mkEnableOption "health check alerts"
             // {
-              default = system.exports.status.alert.enable;
+              default = systemConfig.exports.status.alert.enable;
             };
         };
         gatus = {
@@ -127,7 +127,7 @@ let
     };
   };
   serviceModule = {
-    system,
+    systemConfig,
     config,
     gensokyo-zone,
     lib,
@@ -185,8 +185,8 @@ let
         labels = mapOptionDefaults {
           gensokyo_exports_service = config.name;
           gensokyo_exports_id = config.id;
-          gensokyo_system = system.name;
-          gensokyo_host = system.access.fqdn;
+          gensokyo_system = systemConfig.name;
+          gensokyo_host = systemConfig.access.fqdn;
         };
       };
       status = {

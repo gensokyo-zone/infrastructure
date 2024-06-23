@@ -11,7 +11,7 @@
   networkModule = {
     config,
     name,
-    system,
+    systemConfig,
     ...
   }: let
     knownNetworks = {
@@ -68,8 +68,8 @@
         );
         postfix = mkIf (config.macAddress != null) (mkOptionDefault (eui64 config.macAddress));
       };
-      domain = mkOptionDefault "${config.name}.${system.access.domain}";
-      fqdn = mkOptionDefault (mapNullable (domain: "${system.access.hostName}.${domain}") config.domain);
+      domain = mkOptionDefault "${config.name}.${systemConfig.access.domain}";
+      fqdn = mkOptionDefault (mapNullable (domain: "${systemConfig.access.hostName}.${domain}") config.domain);
       address6 = mkIf config.slaac.enable (mkOptionDefault "${config.slaac.prefix}:${config.slaac.postfix}");
     };
   };
@@ -79,7 +79,7 @@ in {
       type = attrsOf (submoduleWith {
         modules = [networkModule];
         specialArgs = {
-          system = config;
+          systemConfig = config;
         };
       });
       default = {};

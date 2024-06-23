@@ -9,7 +9,7 @@
 in {
   config.exports.services.nginx = {
     config,
-    system,
+    systemConfig,
     ...
   }: let
     mkAssertion = f: nixosConfig: let
@@ -29,7 +29,7 @@ in {
       message = "proxied.port mismatch";
     };
   in {
-    displayName = mkAlmostOptionDefault "NGINX/${system.name}";
+    displayName = mkAlmostOptionDefault "NGINX/${systemConfig.name}";
     nixos = {
       serviceAttr = "nginx";
       assertions = mkIf config.enable (map mkAssertion [

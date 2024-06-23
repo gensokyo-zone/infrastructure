@@ -15,11 +15,10 @@
   inherit (lib.lists) findSingle;
   inherit (lib.trivial) mapNullable;
   cfg = config.access;
-  systemConfig = config;
   systemAccess = access;
   nixosModule = {
     config,
-    system,
+    systemConfig,
     access,
     ...
   }: let
@@ -28,16 +27,16 @@
       if config.networking.enableIPv6
       then "address6ForNetwork"
       else "address4ForNetwork";
-    has'Int = system.network.networks.int.enable or false;
-    has'Local = system.network.networks.local.enable or false;
-    has'Tail' = system.network.networks.tail.enable or false;
+    has'Int = systemConfig.network.networks.int.enable or false;
+    has'Local = systemConfig.network.networks.local.enable or false;
+    has'Tail' = systemConfig.network.networks.tail.enable or false;
     has'Tail = lib.warnIf (has'Tail' != config.services.tailscale.enable) "tailscale set incorrectly in system.access for ${config.networking.hostName}" has'Tail';
   in {
     options.networking.access = with lib.types; {
       global.enable =
         mkEnableOption "global access"
         // {
-          default = system.access.global.enable;
+          default = systemConfig.access.global.enable;
         };
       moduleArgAttrs = mkOption {
         type = lazyAttrsOf unspecified;
@@ -61,7 +60,7 @@
           in
             {
               lan =
-                if hostName == system.name
+                if hostName == systemConfig.name
                 then forSystem.access.${addressForAttr}.localhost
                 else if has'Int && forSystemHas "int"
                 then int
@@ -124,7 +123,7 @@
           in
             {
               lan =
-                if hostName == system.name
+                if hostName == systemConfig.name
                 then forSystem.access.hostnameForNetwork.localhost
                 else if has'Int && forSystem.access.hostnameForNetwork ? int
                 then forSystem.access.hostnameForNetwork.int
@@ -207,7 +206,7 @@ in {
     };
     global.enable = mkEnableOption "globally routeable";
     online = let
-      proxmoxNodeAccess = systems.${config.proxmox.node.name}.config.access;
+      proxmoxNodeAccess = systems.${config.proxmox.node.name}.access;
     in {
       enable =
         mkEnableOption "a deployed machine"
@@ -288,22 +287,22 @@ in {
 
     _module.args.access = {
       inherit (cfg) hostnameForNetwork address4ForNetwork address6ForNetwork;
-      systemFor = hostName: systems.${hostName}.config;
-      systemForOrNull = hostName: systems.${hostName}.config or null;
+      systemFor = hostName: systems.${hostName};
+      systemForOrNull = hostName: systems.${hostName} or null;
       nixosFor = hostName: nixosConfigurations.${hostName}.config or (access.systemFor hostName).built.config;
       nixosForOrNull = hostName: nixosConfigurations.${hostName}.config or (access.systemForOrNull hostName).built.config or null;
       systemForService = service: let
-        hasService = system: system.config.exports.services.${service}.enable;
+        hasService = system: system.exports.services.${service}.enable;
         notFound = throw "no system found serving ${service}";
         multiple = throw "multiple systems found serving ${service}";
       in
-        (findSingle hasService notFound multiple (attrValues systems)).config;
+        (findSingle hasService notFound multiple (attrValues systems));
       systemForServiceId = serviceId: let
-        hasService = system: findSingle (service: service.id == serviceId && service.enable) null multiple (attrValues system.config.exports.services) != null;
+        hasService = system: findSingle (service: service.id == serviceId && service.enable) null multiple (attrValues system.exports.services) != null;
         notFound = throw "no system found serving ${serviceId}";
         multiple = throw "multiple systems found serving ${serviceId}";
       in
-        (findSingle hasService notFound multiple (attrValues systems)).config;
+        (findSingle hasService notFound multiple (attrValues systems));
     };
   };
 }

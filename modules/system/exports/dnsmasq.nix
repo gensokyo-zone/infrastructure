@@ -7,7 +7,7 @@
   inherit (lib.modules) mkOptionDefault;
 in {
   config.exports.services.dnsmasq = {
-    system,
+    systemConfig,
     config,
     ...
   }: {
@@ -28,10 +28,10 @@ in {
             settings = {
               dns = {
                 query-type = mkOptionDefault "A";
-                query-name = mkOptionDefault system.access.fqdn;
+                query-name = mkOptionDefault systemConfig.access.fqdn;
               };
               conditions = mkOptionDefault [
-                "[BODY] == ${system.network.networks.local.address4}"
+                "[BODY] == ${systemConfig.network.networks.local.address4}"
               ];
             };
           };

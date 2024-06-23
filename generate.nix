@@ -6,9 +6,9 @@
   inherit (nixlib.attrsets) mapAttrs mapAttrs' nameValuePair filterAttrs mapAttrsToList;
   inherit (nixlib.lists) sortOn;
   inherit (inputs.self.lib.lib) userIs;
-  inherit (inputs.self.lib) systems;
-  templateSystem = inputs.self.nixosConfigurations.reimu;
-  templateUsers = filterAttrs (_: userIs "peeps") templateSystem.config.users.users;
+  inherit (inputs.self.lib.gensokyo-zone) systems;
+  templateSystem = inputs.self.nixosConfigurations.reimu.config;
+  templateUsers = filterAttrs (_: userIs "peeps") templateSystem.users.users;
   mkNodeUsers = users: let
     nodeUsers = mapAttrsToList (_: mkNodeUser) templateUsers;
   in
@@ -18,13 +18,13 @@
     authorizedKeys = user.openssh.authorizedKeys.keys;
   };
   nodeSystems = let
-    matchesNode = nodeName: system: system.config.proxmox.enabled && system.config.proxmox.node.name == nodeName;
+    matchesNode = nodeName: system: system.proxmox.enabled && system.proxmox.node.name == nodeName;
   in
     nodeName: filterAttrs (_: matchesNode nodeName) systems;
   mkNodeSystem = system: {
-    inherit (system.config.access) hostName;
+    inherit (system.access) hostName;
     network = let
-      inherit (system.config.network) networks;
+      inherit (system.network) networks;
     in {
       networks = {
         int =
@@ -62,14 +62,14 @@
   };
   mkNode = system: {
     users = mkNodeUsers templateUsers;
-    systems = mkNodeSystems (nodeSystems system.config.name);
-    extern = mkExtern system.config;
+    systems = mkNodeSystems (nodeSystems system.name);
+    extern = mkExtern system;
     ssh.root.authorizedKeys = {
-      inherit (templateSystem.config.environment.etc."ssh/authorized_keys.d/root".source) text;
+      inherit (templateSystem.environment.etc."ssh/authorized_keys.d/root".source) text;
     };
   };
   mkNetwork = system: {
-    inherit (system.config.access) hostName;
+    inherit (system.access) hostName;
     networks =
       {
         int = null;
@@ -80,14 +80,14 @@
         nameValuePair network.name {
           inherit (network) macAddress address4 address6;
         })
-      system.config.network.networks;
+      system.network.networks;
   };
   mkSystem = name: system: {
     network = mkNetwork system;
   };
 in {
   nodes = let
-    nodes = filterAttrs (_: node: node.config.proxmox.node.enable) systems;
+    nodes = filterAttrs (_: node: node.proxmox.node.enable) systems;
   in
     mapAttrs (_: mkNode) nodes;
   systems = mapAttrs mkSystem systems;

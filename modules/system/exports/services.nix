@@ -76,7 +76,7 @@
     };
   };
   serviceModule = {
-    system,
+    systemConfig,
     config,
     name,
     machine,
@@ -101,7 +101,7 @@
         type = attrsOf (submoduleWith {
           modules = [portModule];
           specialArgs = {
-            inherit gensokyo-zone machine system;
+            inherit gensokyo-zone machine systemConfig;
             service = config;
           };
         });
@@ -153,7 +153,7 @@
   };
   nixosModule = {
     config,
-    system,
+    systemConfig,
     ...
   }: let
     mapAssertion = service: a: let
@@ -163,7 +163,7 @@
       // {
         message = "system.exports.${service.name}: " + res.message or "assertion failed";
       };
-    assertions = mapAttrsToList (_: service: map (mapAssertion service) service.nixos.assertions) system.exports.services;
+    assertions = mapAttrsToList (_: service: map (mapAssertion service) service.nixos.assertions) systemConfig.exports.services;
   in {
     config = {
       assertions = mkMerge assertions;
@@ -183,7 +183,6 @@ in {
         specialArgs = {
           inherit gensokyo-zone;
           machine = name;
-          system = config;
           systemConfig = config;
         };
       });

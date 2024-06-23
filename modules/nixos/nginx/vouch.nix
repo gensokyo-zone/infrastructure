@@ -1,6 +1,6 @@
 {
   config,
-  system,
+  systemConfig,
   lib,
   gensokyo-zone,
   ...
@@ -348,7 +348,7 @@ in {
             ssl.enable = mkAlmostOptionDefault true;
           };
           int = {upstream, ...}: {
-            enable = mkAlmostOptionDefault system.network.networks.int.enable or false;
+            enable = mkAlmostOptionDefault systemConfig.network.networks.int.enable or false;
             addr = mkAlmostOptionDefault "login.int.${networking.domain}";
             port = mkOptionDefault 9080;
           };

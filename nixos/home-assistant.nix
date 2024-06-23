@@ -49,19 +49,19 @@ in {
         };
         auth_providers = let
           inherit (lib.attrsets) genAttrs;
-          shanghai = with gensokyo-zone.systems.shanghai.config.network.networks.local; [
+          shanghai = with gensokyo-zone.systems.shanghai.network.networks.local; [
             address4
             address6
           ];
-          nue = with gensokyo-zone.systems.nue.config.network.networks.local; [
+          nue = with gensokyo-zone.systems.nue.network.networks.local; [
             address4
             address6
           ];
-          logistics = with gensokyo-zone.systems.logistics.config.network.networks.local; [
+          logistics = with gensokyo-zone.systems.logistics.network.networks.local; [
             address4
             address6
           ];
-          koishi = with gensokyo-zone.systems.koishi.config.network.networks.local; [
+          koishi = with gensokyo-zone.systems.koishi.network.networks.local; [
             address4
             #address6
           ];

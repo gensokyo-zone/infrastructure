@@ -147,7 +147,8 @@ in {
     inherit inputs;
     inherit (inputs) self;
     inherit (inputs.self) overlays;
-    inherit (inputs.self.lib) tree meta lib systems std Std;
+    inherit (inputs.self.lib) tree meta lib std Std;
+    systems = builtins.mapAttrs (_: system: system.config) systems;
   };
   generate = import ./generate.nix {inherit inputs tree;};
 }

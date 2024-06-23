@@ -11,8 +11,8 @@
   promtailSystems =
     filterAttrs (
       _: system:
-        system.config.access.online.enable
-        && system.config.exports.services.promtail.enable
+        system.access.online.enable
+        && system.exports.services.promtail.enable
     )
     systems;
   cfg = config.services.loki;

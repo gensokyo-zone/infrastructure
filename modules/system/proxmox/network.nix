@@ -18,7 +18,7 @@
   networkInterfaceModule = {
     config,
     name,
-    system,
+    systemConfig,
     ...
   }: {
     options = with lib.types; {
@@ -81,7 +81,7 @@
       local = {
         enable = mkOption {
           type = bool;
-          default = system.proxmox.node.name == "reisen" && config.id == "net0" && config.bridge == "vmbr0";
+          default = systemConfig.proxmox.node.name == "reisen" && config.id == "net0" && config.bridge == "vmbr0";
         };
         address4 = mkOption {
           type = nullOr str;
@@ -125,12 +125,12 @@
           );
         };
         name = mkMerge [
-          (mkIf (hasPrefix "net" config.id && system.proxmox.container.enable) (mkOptionDefault ("eth" + removePrefix "net" config.id)))
+          (mkIf (hasPrefix "net" config.id && systemConfig.proxmox.container.enable) (mkOptionDefault ("eth" + removePrefix "net" config.id)))
           # VMs have names like `ens18` for net0...
         ];
         slaac.postfix = mkOptionDefault (mapNullable eui64 config.macAddress);
         gateway4 = mkMerge [
-          (mkIf (system.proxmox.node.name == "reisen" && config.bridge == "vmbr0" && config.address4 != null && config.address4 != "dhcp") (mkAlmostOptionDefault "10.1.1.1"))
+          (mkIf (systemConfig.proxmox.node.name == "reisen" && config.bridge == "vmbr0" && config.address4 != null && config.address4 != "dhcp") (mkAlmostOptionDefault "10.1.1.1"))
         ];
         networkd.name = mkIf config.local.enable (
           mkDefault "_00-local"
@@ -176,14 +176,14 @@
         };
       };
       confInternal = let
-        index = system.proxmox.vm.id - internalOffset;
+        index = systemConfig.proxmox.vm.id - internalOffset;
       in {
-        name = mkIf system.proxmox.container.enable (mkAlmostOptionDefault "eth9");
+        name = mkIf systemConfig.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
         address4 = mkAlmostOptionDefault "10.9.1.${toString index}/24";
         address6 = mkAlmostOptionDefault "fd0c::${UInt.toHexLower index}/64";
-        macAddress = mkIf (system.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" system.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
-          replaceStrings ["BC:24:11:"] ["BC:24:19:"] system.proxmox.network.interfaces.net0.macAddress
+        macAddress = mkIf (systemConfig.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" systemConfig.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
+          replaceStrings ["BC:24:11:"] ["BC:24:19:"] systemConfig.proxmox.network.interfaces.net0.macAddress
         ));
         networkd.name = mkDefault "_00-int";
         networkd.networkSettings = {
@@ -210,7 +210,7 @@ in {
       type = attrsOf (submoduleWith {
         modules = [networkInterfaceModule];
         specialArgs = {
-          system = config;
+          systemConfig = config;
         };
       });
       default = {};

@@ -1,12 +1,12 @@
 {
   config,
-  system,
+  systemConfig,
   lib,
   ...
 }: let
   inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) nginx;
-  inherit (system.exports.services) nfandroidtv;
+  inherit (systemConfig.exports.services) nfandroidtv;
   upstreamName = "nfandroidtv'bedroom";
 in {
   config.services.nginx = {

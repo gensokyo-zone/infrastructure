@@ -1,12 +1,12 @@
 {
   config,
-  system,
+  systemConfig,
   lib,
   ...
 }: let
   inherit (lib.modules) mkDefault;
   cfg = config.services.grafana;
-  service = system.exports.services.grafana;
+  service = systemConfig.exports.services.grafana;
 in {
   services.grafana = {
     settings.server = {

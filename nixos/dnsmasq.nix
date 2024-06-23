@@ -16,7 +16,7 @@
   localSystems =
     filterAttrs (
       _: system:
-        system.config.access.online.enable && system.config.network.networks.local.enable or false
+        system.access.online.enable && system.network.networks.local.enable or false
     )
     systems;
   mkHostRecordPairs = _: system: [
@@ -27,12 +27,12 @@
   mapDynamic4 = replaceStrings ["10.1.1."] ["0.0.0."];
   mapDynamic6 = replaceStrings ["fd0a::"] ["2001::"];
   mkDynamicHostRecord = _: system: let
-    address4 = system.config.network.networks.local.address4 or null;
-    address6 = system.config.network.networks.local.address6 or null;
+    address4 = system.network.networks.local.address4 or null;
+    address6 = system.network.networks.local.address6 or null;
   in
     concatStringsSep "," (
       [
-        system.config.access.fqdn
+        system.access.fqdn
       ]
       ++ optional (address4 != null)
       (toString (mapNullable mapDynamic4 address4))
@@ -42,15 +42,15 @@
       cfg.dynamic.interface
     );
   mkHostRecordPair = network: system: let
-    address4 = system.config.network.networks.${network}.address4 or null;
-    address6 = system.config.network.networks.${network}.address6 or null;
-    fqdn = system.config.network.networks.${network}.fqdn or null;
+    address4 = system.network.networks.${network}.address4 or null;
+    address6 = system.network.networks.${network}.address6 or null;
+    fqdn = system.network.networks.${network}.fqdn or null;
   in
     nameValuePair
     (
       if fqdn != null
       then fqdn
-      else "${network}.${system.config.access.fqdn}"
+      else "${network}.${system.access.fqdn}"
     )
     (concatStringsSep "," (
       optional (address4 != null)
