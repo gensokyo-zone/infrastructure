@@ -4,16 +4,18 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkAfter mkDefault;
   inherit (config.services) nginx;
   inherit (systemConfig.exports.services) nfandroidtv;
   upstreamName = "nfandroidtv'bedroom";
+  name.shortServer = mkDefault nfandroidtv.id;
+  timeout = "5s";
 in {
   config.services.nginx = {
     vouch.enable = true;
     upstreams'.${upstreamName}.servers = {
       android = {
-        settings.fail_timeout = mkDefault "5s";
+        settings.fail_timeout = mkDefault timeout;
         addr = mkDefault "10.1.1.67";
         port = mkDefault nfandroidtv.ports.default.port;
         /*accessService = {
@@ -34,9 +36,11 @@ in {
       locations = {
         "/" = {
           proxy.enable = true;
+          extraConfig = ''
+            proxy_connect_timeout ${timeout};
+          '';
         };
       };
-      name.shortServer = mkDefault nfandroidtv.id;
       listen'.nfandroidtv = {
         port = nfandroidtv.ports.default.port;
         extraParameters = ["default_server"];
@@ -50,7 +54,7 @@ in {
       nfandroidtv'fallback = {
         serverName = "@nfandroidtv_fallback";
         locations."/" = {
-          extraConfig = ''
+          extraConfig = mkAfter ''
             add_header Content-Type 'text/html';
             return 200 'OK';
           '';
