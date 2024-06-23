@@ -5,7 +5,7 @@
 }: let
   inherit (lib.modules) mkIf mkMerge;
   inherit (lib.attrsets) attrValues;
-  inherit (lib.lists) concatMap toList;
+  inherit (lib.lists) concatMap toList elem;
   allExporters = let
     exporters = removeAttrs config.services.prometheus.exporters ["unifi-poller"];
   in
@@ -13,27 +13,38 @@
 in {
   config = {
     services.prometheus.exporters = {
-      node = mkMerge [
-        {
-          #enable = true;
-          port = 9091;
-          enabledCollectors = [
+      node = {
+        port = 9091;
+        extraFlags = [ "--collector.disable-defaults" ];
+        enabledCollectors = mkMerge [
+          (mkIf config.boot.supportedFilesystems.xfs or false [
+            "xfs"
+          ])
+          (mkIf config.boot.supportedFilesystems.zfs or false [
+            "zfs"
+          ])
+          (mkIf config.boot.supportedFilesystems.nfs or config.boot.supportedFilesystems.nfs4 or false [
             "nfs"
-          ];
-        }
-        (mkIf config.services.nfs.server.enable {
-          enabledCollectors = [
+          ])
+          (mkIf config.services.nfs.server.enable [
             "nfsd"
-          ];
-        })
-        (mkIf (!config.boot.isContainer) {
-          enabledCollectors = [
+          ])
+          (mkIf (!config.boot.isContainer) [
             "nvme"
             "hwmon"
-          ];
-        })
-        {
-          enabledCollectors = [
+            "thermal_zone"
+          ])
+          (mkIf config.powerManagement.enable [
+            "powersupplyclass"
+            "rapl"
+          ])
+          (mkIf (config.services.xserver.enable && elem "amdgpu" config.services.xserver.videoDrivers) [
+            "drm"
+          ])
+          (mkIf (config.networking.wireless.enable || config.networking.wireless.iwd.enable || config.networking.networkmanager.enable) [
+            "wifi"
+          ])
+          [
             "arp"
             "cpu"
             "cpufreq"
@@ -44,6 +55,9 @@ in {
             "netdev"
             "sysctl"
             "systemd"
+            "ethtool"
+            "logind"
+            "cgroups"
             "loadavg"
             "meminfo"
             "netstat"
@@ -52,10 +66,9 @@ in {
             "time"
             "uname"
             "vmstat"
-            "zfs"
-          ];
-        }
-      ];
+          ]
+        ];
+      };
     };
     networking.firewall.interfaces.lan.allowedTCPPorts =
       map (

@@ -8,6 +8,7 @@ let
   }: let
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+    inherit (lib.lists) elem;
     inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapOptionDefaults unmerged domain;
     inherit (nixosConfig.gensokyo-zone) access;
   in {
@@ -61,14 +62,17 @@ let
       in {
         enable = mkDefault true;
         port = mkDefault 9091;
+        extraFlags = [ "--collector.disable-defaults" ];
         enabledCollectors = mkIf cfg.defaultCollectors (mkMerge [
           [
             "systemd"
+            "logind"
             "arp"
             "cpu"
             "entropy"
             "filesystem"
             "netdev"
+            "ethtool"
             "sysctl"
             "loadavg"
             "meminfo"
@@ -78,6 +82,12 @@ let
             "uname"
             "vmstat"
           ]
+          (mkIf nixosConfig.boot.supportedFilesystems.btrfs or false [
+            "btrfs"
+          ])
+          (mkIf nixosConfig.boot.supportedFilesystems.xfs or false [
+            "xfs"
+          ])
           (mkIf nixosConfig.boot.supportedFilesystems.zfs or false [
             "zfs"
           ])
@@ -90,6 +100,17 @@ let
             "dmi"
             "nvme"
             "hwmon"
+          ])
+          (mkIf (nixosConfig.services.xserver.enable && elem "amdgpu" nixosConfig.services.xserver.videoDrivers) [
+            "drm"
+          ])
+          (mkIf (nixosConfig.networking.wireless.enable || nixosConfig.networking.wireless.iwd.enable || nixosConfig.networking.networkmanager.enable) [
+            "wifi"
+          ])
+          (mkIf nixosConfig.powerManagement.enable [
+            "thermal_zone"
+            "powersupplyclass"
+            "rapl"
           ])
         ]);
       };
