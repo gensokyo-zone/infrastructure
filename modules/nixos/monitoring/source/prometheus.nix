@@ -15,7 +15,7 @@ in {
     services.prometheus.exporters = {
       node = {
         port = 9091;
-        extraFlags = [ "--collector.disable-defaults" ];
+        extraFlags = ["--collector.disable-defaults"];
         enabledCollectors = mkMerge [
           (mkIf config.boot.supportedFilesystems.xfs or false [
             "xfs"

@@ -62,7 +62,7 @@ let
       in {
         enable = mkDefault true;
         port = mkDefault 9091;
-        extraFlags = [ "--collector.disable-defaults" ];
+        extraFlags = ["--collector.disable-defaults"];
         enabledCollectors = mkIf cfg.defaultCollectors (mkMerge [
           [
             "systemd"

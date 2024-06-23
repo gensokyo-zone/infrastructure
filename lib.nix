@@ -19,16 +19,21 @@
       nibble0 = Str.index part 0;
     in
       nibble0 + UInt.toHexLower nibble1;
-  in trimAddress6 "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
+  in
+    trimAddress6 "${part0 (part 0)}${part 1}:${part 2}ff:fe${part 3}:${part 4}${part 5}";
 
   trimAddress6 = let
     matcher = match ''(^|.*:)(0+)([0-9a-fA-F].*)'';
-  in addr: let
-    matched = matcher addr;
-    prefix = elemAt matched 0;
-    postfix = elemAt matched 2;
-    addrReplaced = prefix + postfix;
-  in if matched == null then addr else trimAddress6 addrReplaced;
+  in
+    addr: let
+      matched = matcher addr;
+      prefix = elemAt matched 0;
+      postfix = elemAt matched 2;
+      addrReplaced = prefix + postfix;
+    in
+      if matched == null
+      then addr
+      else trimAddress6 addrReplaced;
 
   parseUrl = url: let
     parts' = Regex.match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;

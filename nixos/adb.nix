@@ -17,10 +17,10 @@ in {
   };
   systemd.services = mkIf cfg.enable {
     adb = {
-      environment.ADB_TRACE = mkDefault (toString [ "adb" ]);
+      environment.ADB_TRACE = mkDefault (toString ["adb"]);
     };
   };
   networking.firewall.interfaces.lan = mkIf (cfg.enable && cfg.settings.a or false == true) {
-    allowedTCPPorts = [ cfg.port ];
+    allowedTCPPorts = [cfg.port];
   };
 }

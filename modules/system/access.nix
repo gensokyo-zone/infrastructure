@@ -295,14 +295,12 @@ in {
         hasService = system: system.exports.services.${service}.enable;
         notFound = throw "no system found serving ${service}";
         multiple = throw "multiple systems found serving ${service}";
-      in
-        (findSingle hasService notFound multiple (attrValues systems));
+      in (findSingle hasService notFound multiple (attrValues systems));
       systemForServiceId = serviceId: let
         hasService = system: findSingle (service: service.id == serviceId && service.enable) null multiple (attrValues system.exports.services) != null;
         notFound = throw "no system found serving ${serviceId}";
         multiple = throw "multiple systems found serving ${serviceId}";
-      in
-        (findSingle hasService notFound multiple (attrValues systems));
+      in (findSingle hasService notFound multiple (attrValues systems));
     };
   };
 }

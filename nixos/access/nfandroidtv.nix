@@ -18,10 +18,12 @@ in {
         settings.fail_timeout = mkDefault timeout;
         addr = mkDefault "10.1.1.67";
         port = mkDefault nfandroidtv.ports.default.port;
-        /*accessService = {
+        /*
+        accessService = {
           system = "bedroomtv";
           name = "nfandroidtv";
-        };*/
+        };
+        */
       };
       fallback = let
         virtualHost = nginx.virtualHosts.nfandroidtv'fallback;
@@ -70,7 +72,8 @@ in {
   config.networking.firewall.interfaces.lan = let
     virtualHost = nginx.virtualHosts.nfandroidtv'local;
     listen = virtualHost.listen'.nfandroidtv;
-  in mkIf (virtualHost.enable && listen.enable) {
-    allowedTCPPorts = [ listen.port ];
-  };
+  in
+    mkIf (virtualHost.enable && listen.enable) {
+      allowedTCPPorts = [listen.port];
+    };
 }
