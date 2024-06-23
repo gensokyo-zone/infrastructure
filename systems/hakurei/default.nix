@@ -20,6 +20,7 @@
     services = {
       tailscale.enable = true;
       samba.enable = true;
+      syncplay.enable = true;
       vouch-proxy = {
         enable = true;
         displayName = "Vouch Proxy/local";

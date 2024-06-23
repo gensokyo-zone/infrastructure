@@ -23,7 +23,6 @@ in {
     nixos.access.nfandroidtv
     nixos.home-assistant
     nixos.zigbee2mqtt
-    nixos.syncplay
     nixos.grocy
     nixos.barcodebuddy
     ./cloudflared.nix

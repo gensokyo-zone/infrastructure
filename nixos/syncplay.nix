@@ -1,45 +1,36 @@
 {
   config,
   lib,
-  pkgs,
-  utils,
   ...
-}:
-with lib; let
+}: let
+  inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.syncplay;
-  args =
-    [
-      "--disable-ready"
-      "--port"
-      cfg.port
-    ]
-    ++ optionals (cfg.certDir != null) ["--tls" cfg.certDir];
 in {
-  sops.secrets.syncplay-env = {
+  sops.secrets = let
     sopsFile = mkDefault ./secrets/syncplay.yaml;
     owner = cfg.user;
-  };
-
-  users.users.${cfg.user} = {
-    inherit (cfg) group;
-    isSystemUser = true;
-    home = "/var/lib/syncplay";
-  };
-  users.groups.${cfg.group} = {};
-
-  networking.firewall.interfaces.local.allowedTCPPorts = [cfg.port];
+  in
+    mkIf cfg.enable {
+      syncplay-password = {
+        inherit sopsFile owner;
+      };
+      syncplay-salt = {
+        inherit sopsFile owner;
+      };
+    };
 
   services.syncplay = {
-    enable = true;
-    user = "syncplay";
+    enable = mkDefault true;
+    extraArgs = [
+      "--disable-ready"
+    ];
+    user = mkDefault "syncplay";
+    group = mkDefault "syncplay";
+    saltFile = mkDefault config.sops.secrets.syncplay-salt.path;
+    passwordFile = mkDefault config.sops.secrets.syncplay-password.path;
   };
-  systemd.services.syncplay = mkIf cfg.enable {
-    serviceConfig = {
-      StateDirectory = "syncplay";
-      EnvironmentFile = singleton config.sops.secrets.syncplay-env.path;
-      ExecStart = mkForce [
-        "${pkgs.syncplay-nogui}/bin/syncplay-server ${utils.escapeSystemdExecArgs args}"
-      ];
-    };
+
+  networking.firewall = mkIf (cfg.enable && !cfg.openFirewall) {
+    interfaces.local.allowedTCPPorts = [cfg.port];
   };
 }

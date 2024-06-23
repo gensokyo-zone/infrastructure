@@ -34,6 +34,7 @@ module "hakurei_system_records" {
     "z2m",
     "grocy",
     "bbuddy",
+    "syncplay",
     "yt",
   ]
   global_subdomains = [
@@ -46,6 +47,7 @@ module "hakurei_system_records" {
     "mqtt",
     "kitchen",
     "webrx",
+    "syncplay",
     "yt",
   ]
 }

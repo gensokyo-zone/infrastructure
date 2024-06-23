@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
-  inherit (config.services) nginx;
+  inherit (config.services) nginx syncplay;
   inherit (nginx) virtualHosts;
   hassVouch = false;
 in {
@@ -53,6 +53,7 @@ in {
     nixos.access.invidious
     nixos.wake-chen
     nixos.samba
+    nixos.syncplay
     ./reisen-ssh.nix
   ];
 
@@ -107,6 +108,15 @@ in {
         "smb.local.${config.networking.domain}"
         "smb.int.${config.networking.domain}"
         (mkIf config.services.tailscale.enable "smb.tail.${config.networking.domain}")
+      ];
+    };
+    syncplay = {
+      inherit (syncplay) group;
+      domain = "syncplay.${config.networking.domain}";
+      extraDomainNames = [
+        "syncplay.local.${config.networking.domain}"
+        "syncplay.int.${config.networking.domain}"
+        (mkIf config.services.tailscale.enable "syncplay.tail.${config.networking.domain}")
       ];
     };
     sso = {
@@ -399,6 +409,10 @@ in {
   };
   services.samba.tls = {
     useACMECert = "samba";
+  };
+  services.syncplay = {
+    openFirewall = true;
+    useACMECert = "syncplay";
   };
 
   services.tailscale.advertiseExitNode = true;
