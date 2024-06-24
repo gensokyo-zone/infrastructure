@@ -1,4 +1,12 @@
 let
+  xCloudflared = {virtualHost}: let
+    host = if virtualHost.proxied.cloudflared.host == virtualHost.serverName
+      then "$server_name"
+      else "'${virtualHost.proxied.cloudflared.host}'";
+  in ''
+    set $proxied_cf on;
+    set $proxied_host_cf ${host};
+  '';
   xHeadersProxied = {xvars}: ''
     ${xvars.init "forwarded_for" "$proxy_add_x_forwarded_for"}
     if ($http_x_forwarded_proto) {
@@ -10,6 +18,9 @@ let
     }
     if ($http_x_real_ip) {
       ${xvars.init "remote_addr" "$http_x_real_ip"}
+    }
+    if ($http_cf_connecting_ip) {
+      ${xvars.init "remote_addr" "$http_cf_connecting_ip"}
     }
     if ($http_x_forwarded_host) {
       ${xvars.init "host" "$http_x_forwarded_host"}
@@ -66,6 +77,9 @@ let
       };
       xvars.enable = mkIf cfg.enabled true;
       extraConfig = mkMerge [
+        (mkIf (cfg.enable == "cloudflared" && virtualHost.proxied.enable != "cloudflared") (
+          mkJustBefore (xCloudflared {inherit virtualHost;})
+        ))
         (mkIf emitVars (
           mkJustBefore (xHeadersProxied {inherit xvars;})
         ))
@@ -97,6 +111,10 @@ let
           default = cfg.enable != false;
         };
         cloudflared = {
+          host = mkOption {
+            type = str;
+            default = config.serverName;
+          };
           ingressSettings = mkOption {
             type = unmerged.types.attrs;
           };
@@ -127,12 +145,19 @@ let
           mkIf (cfg.enable == "cloudflared") {
             ingressSettings.${config.serverName} = {
               service = "${scheme}://localhost:${toString listen.port}";
-              originRequest.${
-                if scheme == "https"
-                then "noTLSVerify"
-                else null
-              } =
-                true;
+              originRequest = let
+                noTLSVerify =
+                  if scheme == "https"
+                  then "noTLSVerify"
+                  else null;
+                httpHostHeader =
+                  if cfg.cloudflared.host != config.serverName
+                  then "httpHostHeader"
+                  else null;
+              in {
+                ${noTLSVerify} = true;
+                ${httpHostHeader} = cfg.cloudflared.host;
+              };
             };
             getIngress = {}: unmerged.mergeAttrs cfg.cloudflared.ingressSettings;
           };
@@ -146,9 +171,16 @@ let
         };
       };
       accessLog = mkIf cfg.enabled {
-        format = mkDefault "combined_proxied";
+        format = mkDefault (
+          if cfg.enable == "cloudflared"
+          then "combined_cloudflared"
+          else "combined_proxied"
+        );
       };
       extraConfig = mkMerge [
+        (mkIf (cfg.enable == "cloudflared") (
+          mkOrder orderJustBefore (xCloudflared {virtualHost = config;})
+        ))
         (mkIf (cfg.enabled && config.xvars.enable) (
           mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
         ))
@@ -218,10 +250,46 @@ in
           };
         };
         commonHttpConfig = mkIf cfg.enable ''
-          log_format combined_proxied '$x_remote_addr proxied $remote_user@$x_host [$time_local] '
-                    '"$request" $status $body_bytes_sent '
-                    '"$http_referer" "$http_user_agent"';
+          map "$http_cf_connecting_ip" $proxied_remote_addr_cf {
+            "" $remote_addr;
+            default $http_cf_connecting_ip;
+          }
+          map "$http_x_real_ip" $proxied_remote_addr_x {
+            "" $remote_addr;
+            default $http_x_real_ip;
+          }
+          map "$http_x_forwarded_host" $proxied_host_x {
+            "" $host;
+            default $http_x_forwarded_host;
+          }
+          map "$http_x_forwarded_server" $proxied_forwarded_server_x {
+            "" $proxied_host_x;
+            default $http_x_forwarded_server;
+          }
+          map "$http_x_forwarded_proto" $proxied_scheme {
+            "" $scheme;
+            default $http_x_forwarded_proto;
+          }
+          map "$proxied_scheme" $proxied_https {
+            "https" on;
+            default "";
+          }
 
+          map "$proxied_cf" $proxied_remote_addr {
+            "on" $proxied_remote_addr_cf;
+            default $proxied_remote_addr_x;
+          }
+          map "$proxied_cf" $proxied_host {
+            "on" $proxied_host_cf;
+            default $proxied_host_x;
+          }
+
+          log_format combined_proxied '$proxied_remote_addr@$proxied_scheme proxied $remote_user@$proxied_host [$time_local]'
+            ' "$request" $status $body_bytes_sent'
+            ' "$http_referer" "$http_user_agent"';
+          log_format combined_cloudflared '$proxied_remote_addr_cf@$proxied_scheme cloudflared@$http_cf_ray $remote_user@$proxied_host_cf [$time_local]'
+            ' "$request" $status $body_bytes_sent'
+            ' "$http_referer" "$http_user_agent"';
         '';
       };
       networking.firewall.interfaces.lan = mkIf nginx.enable {

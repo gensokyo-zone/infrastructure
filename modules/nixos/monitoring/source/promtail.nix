@@ -75,21 +75,23 @@ in {
                 stages = [
                   {
                     regex.expression = concatStringsSep " " [
-                      ''(?P<remote_addr>.*?)''
-                      ''(?P<remote_log_name>.*?)''
-                      ''(?P<userid>.*?)(@(?P<virtual_host>.*?))?''
+                      ''(?P<remote_addr>.*?)(@-|@(?P<request_scheme>.*?)|)''
+                      ''(-|(?P<remote_log_name>.*?))(@-|@(?P<request_id>.*?)|)''
+                      ''(-|(?P<userid>.*?))(@(?P<virtual_host>.*?))?''
                       ''\[(?P<timestamp>.*?)\]''
                       ''\"(?P<request_method>.*?) (?P<path>.*?)( (?P<request_version>HTTP/.*))?\"''
                       ''(?P<status>.*?)''
                       ''(?P<length>.*?)''
-                      ''\"(?P<referrer>.*?)\"''
-                      ''\"(?P<user_agent>.*?)\"''
+                      ''\"(-|(?P<referrer>.*?))\"''
+                      ''\"(-|(?P<user_agent>.*?))\"''
                     ];
                   }
                   {
                     labels = {
                       remote_addr = null;
                       remote_log_name = null;
+                      request_scheme = null;
+                      request_id = null;
                       userid = null;
                       virtual_host = null;
                       request_method = null;

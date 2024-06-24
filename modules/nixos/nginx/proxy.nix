@@ -160,6 +160,7 @@ let
           then xvars.get.proxy_hostport
           else cfg.host;
         Referer = xvars.get.referer;
+        CF-Connecting-IP = xvars.get.remote_addr;
         X-Real-IP = xvars.get.remote_addr;
         X-Forwarded-For = xvars.get.forwarded_for;
         X-Forwarded-Proto = xvars.get.scheme;
