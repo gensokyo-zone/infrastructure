@@ -30,13 +30,16 @@
           # see overlays/builders.nix
         in
           pkgs.__withSubBuilders;
-        patchedNixpkgs = pkgs.applyPatches {
-          name = "nixpkgs";
-          src = inputs.nixpkgs;
+        patchedNixpkgs = let
           patches = [
             ./packages/nixpkgs-keycloak-nullhostname.patch
           ];
-        };
+          patchedNixpkgs = pkgs.applyPatches {
+            name = "nixpkgs";
+            src = inputs.nixpkgs;
+            inherit patches;
+          };
+        in if patches != [] then patchedNixpkgs else pkgs;
         deploy-rs = let
           deployLib =
             inputs.deploy-rs.lib.${system}
