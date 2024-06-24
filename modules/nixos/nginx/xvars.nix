@@ -2,12 +2,20 @@ let
   locationModule = {
     config,
     virtualHost,
+    gensokyo-zone,
     lib,
     ...
   }: let
+    inherit (gensokyo-zone.lib) mkJustBefore;
     inherit (lib.options) mkEnableOption mkOption;
-    inherit (lib.attrsets) mapAttrs;
+    inherit (lib.modules) mkIf;
+    inherit (lib.attrsets) mapAttrs mapAttrsToList filterAttrs;
+    inherit (lib.strings) concatStringsSep;
     cfg = config.xvars;
+    defaultValues = filterAttrs (name: value: value != null && value != virtualHost.xvars.defaults.${name} or null) cfg.defaults;
+    defaults = concatStringsSep "\n" (mapAttrsToList (
+      name: value: "set $x_${name} ${virtualHost.xvars.lib.escapeString value};"
+    ) defaultValues);
   in {
     options.xvars = with lib.types; {
       enable = mkEnableOption "$x_variables";
@@ -34,6 +42,7 @@ let
             get = xvars.get // get;
           };
       };
+      extraConfig = mkIf (cfg.enable && defaultValues != {}) (mkJustBefore defaults);
       _module.args.xvars = config.xvars.lib;
     };
   };
@@ -45,9 +54,9 @@ let
     lib,
     ...
   }: let
-    inherit (gensokyo-zone.lib) mkJustBefore;
+    inherit (gensokyo-zone.lib) mkJustBefore mapOptionDefaults;
     inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+    inherit (lib.modules) mkIf mkMerge;
     inherit (lib.attrsets) attrValues filterAttrs mapAttrs mapAttrsToList;
     inherit (lib.lists) any;
     inherit (lib.strings) concatStringsSep hasPrefix hasInfix;
@@ -73,15 +82,6 @@ let
         parseReferer = mkEnableOption "$x_referer_{scheme,host,path}";
         defaults = mkOption {
           type = attrsOf (nullOr str);
-          default = rec {
-            scheme = "$scheme";
-            forwarded_for = remote_addr;
-            remote_addr = "$remote_addr";
-            forwarded_server = host;
-            host = "$host";
-            referer = "$http_referer";
-            https = "$https";
-          };
         };
         lib = mkOption {
           type = attrs;
@@ -99,9 +99,10 @@ let
       };
     };
     config = let
+      defaultValues = filterAttrs (_: value: value != null) cfg.defaults;
       defaults = concatStringsSep "\n" (mapAttrsToList (
         name: value: "set $x_${name} ${escapeString value};"
-      ) (filterAttrs (_: value: value != null) cfg.defaults));
+      ) defaultValues);
       parseReferer = ''
         set $hack_referer $http_referer;
         if ($hack_referer ~ "^(https?)://([^/]+)(/.*)$") {
@@ -116,11 +117,22 @@ let
           (mkIf (anyLocations (loc: loc.xvars.enable)) true)
           (mkIf cfg.parseReferer true)
         ];
-        defaults = mkIf cfg.parseReferer (mkOptionDefault {
-          referer_scheme = null;
-          referer_host = null;
-          referer_path = null;
-        });
+        defaults = mkMerge [
+          (mapOptionDefaults rec {
+            scheme = "$scheme";
+            forwarded_for = remote_addr;
+            remote_addr = "$remote_addr";
+            forwarded_server = host;
+            host = "$host";
+            referer = "$http_referer";
+            https = "$https";
+          })
+          (mkIf cfg.parseReferer (mapOptionDefaults {
+            referer_scheme = null;
+            referer_host = null;
+            referer_path = null;
+          }))
+        ];
         lib = {
           get = mapAttrs (name: default:
             if cfg.enable
@@ -132,7 +144,7 @@ let
         };
       };
       extraConfig = mkMerge [
-        (mkIf cfg.enable (mkJustBefore defaults))
+        (mkIf (cfg.enable && defaultValues != {}) (mkJustBefore defaults))
         (mkIf (cfg.enable && cfg.parseReferer) (mkJustBefore parseReferer))
       ];
       _module.args.xvars = config.xvars.lib;

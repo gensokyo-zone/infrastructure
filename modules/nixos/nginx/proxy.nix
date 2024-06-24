@@ -374,12 +374,12 @@ let
     in {
       xvars = {
         parseReferer = mkIf (anyLocations needsReferer) true;
-        defaults = mkIf (anyLocations (loc: loc.proxy.enabled)) (mkOptionDefault (mapOptionDefaults rec {
+        defaults = mkIf (anyLocations (loc: loc.proxy.enabled)) (mapOptionDefaults rec {
           proxy_scheme = null;
           proxy_host = "$proxy_host";
           proxy_port = "$proxy_port";
           proxy_hostport = "${proxy_host}:${proxy_port}";
-        }));
+        });
       };
       proxy = mkIf (cfg.copyFromVhost != null) confCopy;
     };

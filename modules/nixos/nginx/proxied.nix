@@ -1,4 +1,5 @@
 let
+  xInit = true;
   xCloudflared = {virtualHost}: let
     host = if virtualHost.proxied.cloudflared.host == virtualHost.serverName
       then "$server_name"
@@ -29,6 +30,23 @@ let
       ${xvars.init "forwarded_server" "$http_x_forwarded_server"}
     }
   '';
+  xDefaults = {cfg}: let
+    defaults = {
+      ${toString true} = {
+        remote_addr = "$proxied_remote_addr_x";
+        host = "$proxied_host_x";
+        forwarded_server = "$proxied_forwarded_server_x";
+      };
+      "cloudflared" = {
+        remote_addr = "$proxied_remote_addr_cf";
+        host = "$proxied_host_cf";
+      };
+    };
+  in {
+    forwarded_for = "$proxy_add_x_forwarded_for";
+    scheme = "$proxied_scheme";
+    https = "$proxied_https";
+  } // defaults.${cfg.enable};
   locationModule = {
     config,
     virtualHost,
@@ -37,7 +55,7 @@ let
     lib,
     ...
   }: let
-    inherit (gensokyo-zone.lib) mkJustBefore mkAlmostOptionDefault;
+    inherit (gensokyo-zone.lib) mkJustBefore mkAlmostOptionDefault mapAlmostOptionDefaults;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
     cfg = config.proxied;
@@ -75,12 +93,15 @@ let
           X-Accel-Buffering = mkOptionDefault true;
         };
       };
-      xvars.enable = mkIf cfg.enabled true;
+      xvars = mkIf cfg.enabled {
+        enable = mkIf xInit true;
+        defaults = mkIf (!xInit && cfg.enable != virtualHost.proxied.enable) (mapAlmostOptionDefaults (xDefaults {inherit cfg;}));
+      };
       extraConfig = mkMerge [
         (mkIf (cfg.enable == "cloudflared" && virtualHost.proxied.enable != "cloudflared") (
           mkJustBefore (xCloudflared {inherit virtualHost;})
         ))
-        (mkIf emitVars (
+        (mkIf (xInit && emitVars) (
           mkJustBefore (xHeadersProxied {inherit xvars;})
         ))
       ];
@@ -94,7 +115,7 @@ let
     lib,
     ...
   }: let
-    inherit (gensokyo-zone.lib) mkAlmostOptionDefault orderJustBefore unmerged;
+    inherit (gensokyo-zone.lib) mkAlmostOptionDefault mapAlmostOptionDefaults orderJustBefore unmerged;
     inherit (lib.options) mkOption;
     inherit (lib.modules) mkIf mkMerge mkOrder mkDefault;
     inherit (nixosConfig.services) nginx;
@@ -112,6 +133,10 @@ let
         };
         cloudflared = {
           host = mkOption {
+            type = str;
+            default = config.serverName;
+          };
+          originHost = mkOption {
             type = str;
             default = config.serverName;
           };
@@ -143,7 +168,7 @@ let
             else "http";
         in
           mkIf (cfg.enable == "cloudflared") {
-            ingressSettings.${config.serverName} = {
+            ingressSettings.${cfg.cloudflared.host} = {
               service = "${scheme}://localhost:${toString listen.port}";
               originRequest = let
                 noTLSVerify =
@@ -151,18 +176,21 @@ let
                   then "noTLSVerify"
                   else null;
                 httpHostHeader =
-                  if cfg.cloudflared.host != config.serverName
+                  if cfg.cloudflared.host != cfg.cloudflared.originHost
                   then "httpHostHeader"
                   else null;
               in {
                 ${noTLSVerify} = true;
-                ${httpHostHeader} = cfg.cloudflared.host;
+                ${httpHostHeader} = cfg.cloudflared.originHost;
               };
             };
             getIngress = {}: unmerged.mergeAttrs cfg.cloudflared.ingressSettings;
           };
       };
-      xvars.enable = mkIf cfg.enabled true;
+      xvars = mkIf cfg.enabled {
+        enable = mkIf xInit true;
+        defaults = mkIf (!xInit) (mapAlmostOptionDefaults (xDefaults {inherit cfg;}));
+      };
       local.denyGlobal = mkIf listenProxied (mkDefault true);
       listen' = mkIf listenProxied {
         proxied = {
@@ -181,7 +209,7 @@ let
         (mkIf (cfg.enable == "cloudflared") (
           mkOrder orderJustBefore (xCloudflared {virtualHost = config;})
         ))
-        (mkIf (cfg.enabled && config.xvars.enable) (
+        (mkIf (xInit && cfg.enabled && config.xvars.enable) (
           mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
         ))
       ];
