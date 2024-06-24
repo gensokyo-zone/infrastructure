@@ -19,7 +19,11 @@ in {
     };
     ports.default = {
       port = mkAlmostOptionDefault 8999;
-      protocol = "tcp";
+      transport = "tcp";
+      status = {
+        enable = mkAlmostOptionDefault true;
+        gatus.client.network = mkAlmostOptionDefault "ip4";
+      };
     };
   };
 }
