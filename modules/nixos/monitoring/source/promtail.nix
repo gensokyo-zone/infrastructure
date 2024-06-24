@@ -5,7 +5,9 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
+  inherit (lib.strings) concatStringsSep;
+  inherit (config.services) nginx;
   cfg = config.services.promtail;
 in {
   config.services.promtail = {
@@ -21,26 +23,101 @@ in {
           url = "${baseUrl}/loki/api/v1/push";
         }
       ];
-      scrape_configs = [
+      scrape_configs = let
+        labels = {
+          system = systemConfig.name;
+          host = config.networking.fqdn;
+        };
+      in [
         {
           job_name = "${systemConfig.name}-journald";
           journal = {
+            json = true;
             max_age = "${toString (24 * 7)}h";
-            labels = {
-              job = "systemd-journald";
-              system = systemConfig.name;
-              host = config.networking.fqdn;
-            };
+            labels = mkMerge [
+              {
+                job = "systemd-journald";
+              }
+              labels
+            ];
           };
           relabel_configs = [
             {
               source_labels = ["__journal__systemd_unit"];
               target_label = "unit";
             }
+            {
+              source_labels = ["__journal_syslog_identifier"];
+              target_label = "syslog_identifier";
+            }
           ];
         }
+        (mkIf nginx.enable {
+          job_name = "${systemConfig.name}-nginx-access";
+          static_configs = [
+            {
+              labels = mkMerge [
+                {
+                  job = "nginx-access";
+                  __path__ = "${nginx.accessLog.path}";
+                }
+                labels
+              ];
+            }
+          ];
+          # see https://grafana.com/docs/loki/latest/send-data/promtail/pipelines/
+          # and https://grafana.com/docs/loki/latest/send-data/promtail/stages/
+          pipeline_stages = [
+            {
+              match = {
+                selector = ''{job="nginx-access"}'';
+                pipeline_name = "access";
+                stages = [
+                  {
+                    regex.expression = concatStringsSep " " [
+                      ''(?P<remote_addr>.*?)''
+                      ''(?P<remote_log_name>.*?)''
+                      ''(?P<userid>.*?)(@(?P<virtual_host>.*?))?''
+                      ''\[(?P<timestamp>.*?)\]''
+                      ''\"(?P<request_method>.*?) (?P<path>.*?)( (?P<request_version>HTTP/.*))?\"''
+                      ''(?P<status>.*?)''
+                      ''(?P<length>.*?)''
+                      ''\"(?P<referrer>.*?)\"''
+                      ''\"(?P<user_agent>.*?)\"''
+                    ];
+                  }
+                  {
+                    labels = {
+                      remote_addr = null;
+                      remote_log_name = null;
+                      userid = null;
+                      virtual_host = null;
+                      request_method = null;
+                      path = null;
+                      request_version = null;
+                      status = null;
+                      length = null;
+                      referrer = null;
+                      user_agent = null;
+                    };
+                  }
+                  {
+                    timestamp = {
+                      source = "timestamp";
+                      format = "2/Jan/2006:15:04:05 -0700";
+                    };
+                  }
+                ];
+              };
+            }
+          ];
+        })
       ];
     };
+  };
+  config.systemd.services.promtail = mkIf cfg.enable {
+    # TODO: there must be a better way to provide promtail access to these logs!
+    serviceConfig.Group = mkIf nginx.enable (lib.mkForce nginx.group);
   };
   config.networking.firewall.interfaces.lan = let
     inherit (cfg.configuration) server;
