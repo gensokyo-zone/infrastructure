@@ -19,6 +19,7 @@
   exports = {
     services = {
       tailscale.enable = true;
+      cloudflared.enable = true;
       samba.enable = true;
       syncplay.enable = true;
       vouch-proxy = {

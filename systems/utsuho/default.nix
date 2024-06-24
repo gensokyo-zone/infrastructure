@@ -13,6 +13,7 @@ _: {
         enable = true;
         ports.proxied.enable = true;
       };
+      cloudflared.enable = true;
       unifi.enable = true;
       mosquitto.enable = true;
       dnsmasq.enable = true;

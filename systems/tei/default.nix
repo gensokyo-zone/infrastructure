@@ -13,6 +13,7 @@ _: {
         enable = true;
         ports.proxied.enable = true;
       };
+      cloudflared.enable = true;
       tailscale.enable = true;
       home-assistant.enable = true;
       zigbee2mqtt.enable = true;

@@ -23,6 +23,7 @@ _: {
   };
   exports = {
     services = {
+      cloudflared.enable = true;
     };
   };
 }

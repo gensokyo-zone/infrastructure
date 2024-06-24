@@ -3,9 +3,8 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
   inherit (lib.lists) all imap0;
   inherit (lib.trivial) id;
 in {

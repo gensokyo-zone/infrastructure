@@ -13,6 +13,7 @@ _: {
         enable = true;
         ports.proxied.enable = true;
       };
+      cloudflared.enable = true;
       plex.enable = true;
       invidious.enable = true;
       deluge.enable = true;
