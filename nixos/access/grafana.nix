@@ -29,6 +29,12 @@ in {
         "/" = {
           proxy.enable = true;
         };
+        "/api/live/ws" = {
+          proxy = {
+            enable = true;
+            websocket.enable = true;
+          };
+        };
       };
     in {
       grafana = {

@@ -43,6 +43,13 @@ in {
         X-Plex-Device-Vendor = "$http_x_plex_device_vendor";
         X-Plex-Model = "$http_x_plex_model";
       };
+      websocketLocation = {
+        proxy = {
+          enable = true;
+          websocket.enable = true;
+          inherit headers;
+        };
+      };
       locations = {
         "/" = {
           proxy = {
@@ -50,13 +57,8 @@ in {
             inherit headers;
           };
         };
-        "/websockets/" = {
-          proxy = {
-            enable = true;
-            websocket.enable = true;
-            inherit headers;
-          };
-        };
+        "/websockets/" = websocketLocation;
+        "/:/websockets/" = websocketLocation;
       };
       name.shortServer = mkDefault "plex";
       copyFromVhost = mkDefault "plex";
