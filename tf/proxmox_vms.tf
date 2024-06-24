@@ -1,6 +1,6 @@
 variable "proxmox_container_template" {
   type    = string
-  default = "local:vztmpl/ct-20240502-nixos-system-x86_64-linux.tar.xz"
+  default = "local:vztmpl/ct-20240622-nixos-system-x86_64-linux.tar.xz"
 }
 
 locals {
