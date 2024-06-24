@@ -32,7 +32,7 @@ in {
         {
           job_name = "${systemConfig.name}-journald";
           journal = {
-            json = true;
+            #json = true;
             max_age = "${toString (24 * 7)}h";
             labels = mkMerge [
               {
@@ -49,6 +49,14 @@ in {
             {
               source_labels = ["__journal_syslog_identifier"];
               target_label = "syslog_identifier";
+            }
+            {
+              source_labels = ["__journal_priority_keyword"];
+              target_label = "priority_keyword";
+            }
+            {
+              source_labels = ["__journal_priority"];
+              target_label = "priority";
             }
           ];
         }
