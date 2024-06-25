@@ -38,7 +38,9 @@ in {
       map $scheme $hsts_header {
           https   "max-age=31536000; includeSubdomains; preload";
       }
-      log_format combined_host '$remote_addr@$scheme - $remote_user@$host [$time_local]'
+      log_format combined_host '$remote_addr@$scheme'
+        ' - $remote_user@$host@$server_name:$server_port'
+        ' [$time_local]'
         ' "$request" $status $body_bytes_sent'
         ' "$http_referer" "$http_user_agent"';
     '';

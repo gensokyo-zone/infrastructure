@@ -315,10 +315,16 @@ in
             default $proxied_host_x;
           }
 
-          log_format combined_proxied '$proxied_remote_addr@$proxied_scheme proxied $remote_user@$proxied_host [$time_local]'
+          log_format combined_proxied '$proxied_remote_addr@$proxied_scheme'
+            ' proxied'
+            ' $remote_user@$proxied_host@$server_name:$server_port'
+            ' [$time_local]'
             ' "$request" $status $body_bytes_sent'
             ' "$http_referer" "$http_user_agent"';
-          log_format combined_cloudflared '$proxied_remote_addr_cf@$proxied_scheme cloudflared@$http_cf_ray $remote_user@$proxied_host_cf [$time_local]'
+          log_format combined_cloudflared '$proxied_remote_addr_cf@$proxied_scheme'
+            ' cloudflared@$http_cf_ray'
+            ' $remote_user@$proxied_host_cf@$server_name:$server_port'
+            ' [$time_local]'
             ' "$request" $status $body_bytes_sent'
             ' "$http_referer" "$http_user_agent"';
         '';

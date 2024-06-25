@@ -85,7 +85,7 @@ in {
                     regex.expression = concatStringsSep " " [
                       ''(?P<remote_addr>.*?)(@-|@(?P<request_scheme>.*?)|)''
                       ''(-|(?P<remote_log_name>.*?))(@-|@(?P<request_id>.*?)|)''
-                      ''(-|(?P<userid>.*?))(@(?P<virtual_host>.*?))?''
+                      ''(-|(?P<userid>.*?))(@(-|(?P<virtual_host>.*?))(@(-|(?P<server_name>.*?))(:-|:80|:443|:(?P<server_port>.*?)|)|)|)''
                       ''\[(?P<timestamp>.*?)\]''
                       ''\"(?P<request_method>.*?) (?P<path>.*?)( (?P<request_version>HTTP/.*))?\"''
                       ''(?P<status>.*?)''
@@ -102,6 +102,8 @@ in {
                       request_id = null;
                       userid = null;
                       virtual_host = null;
+                      server_port = null;
+                      server_name = null;
                       request_method = null;
                       path = null;
                       request_version = null;
