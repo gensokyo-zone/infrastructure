@@ -1,7 +1,8 @@
 let
   xInit = true;
   xCloudflared = {virtualHost}: let
-    host = if virtualHost.proxied.cloudflared.host == virtualHost.serverName
+    host =
+      if virtualHost.proxied.cloudflared.host == virtualHost.serverName
       then "$server_name"
       else "'${virtualHost.proxied.cloudflared.host}'";
   in ''
@@ -42,11 +43,13 @@ let
         host = "$proxied_host_cf";
       };
     };
-  in {
-    forwarded_for = "$proxy_add_x_forwarded_for";
-    scheme = "$proxied_scheme";
-    https = "$proxied_https";
-  } // defaults.${cfg.enable};
+  in
+    {
+      forwarded_for = "$proxy_add_x_forwarded_for";
+      scheme = "$proxied_scheme";
+      https = "$proxied_https";
+    }
+    // defaults.${cfg.enable};
   locationModule = {
     config,
     virtualHost,

@@ -6,7 +6,11 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
-  config.exports.services.cloudflared = {config, systemConfig, ...}: let
+  config.exports.services.cloudflared = {
+    config,
+    systemConfig,
+    ...
+  }: let
     assertMetrics = nixosConfig: let
       cfg = nixosConfig.services.cloudflared;
       metricsPort =

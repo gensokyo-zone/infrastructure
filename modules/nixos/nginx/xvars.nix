@@ -14,8 +14,9 @@ let
     cfg = config.xvars;
     defaultValues = filterAttrs (name: value: value != null && value != virtualHost.xvars.defaults.${name} or null) cfg.defaults;
     defaults = concatStringsSep "\n" (mapAttrsToList (
-      name: value: "set $x_${name} ${virtualHost.xvars.lib.escapeString value};"
-    ) defaultValues);
+        name: value: "set $x_${name} ${virtualHost.xvars.lib.escapeString value};"
+      )
+      defaultValues);
   in {
     options.xvars = with lib.types; {
       enable = mkEnableOption "$x_variables";
@@ -101,8 +102,9 @@ let
     config = let
       defaultValues = filterAttrs (_: value: value != null) cfg.defaults;
       defaults = concatStringsSep "\n" (mapAttrsToList (
-        name: value: "set $x_${name} ${escapeString value};"
-      ) defaultValues);
+          name: value: "set $x_${name} ${escapeString value};"
+        )
+        defaultValues);
       parseReferer = ''
         set $hack_referer $http_referer;
         if ($hack_referer ~ "^(https?)://([^/]+)(/.*)$") {

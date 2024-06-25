@@ -39,7 +39,10 @@
             src = inputs.nixpkgs;
             inherit patches;
           };
-        in if patches != [] then patchedNixpkgs else pkgs;
+        in
+          if patches != []
+          then patchedNixpkgs
+          else pkgs;
         deploy-rs = let
           deployLib =
             inputs.deploy-rs.lib.${system}
