@@ -76,6 +76,15 @@ in {
           "${cfg.certDir}"
         ])
       ];
+      NoNewPrivileges = true;
+      PrivateDevices = true;
+      PrivateMounts = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      ProtectControlGroups = true;
+      ProtectProc = "invisible";
+      RemoveIPC = true;
     };
   };
 }
