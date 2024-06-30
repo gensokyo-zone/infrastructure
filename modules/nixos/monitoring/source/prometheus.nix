@@ -4,12 +4,8 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
-  inherit (lib.attrsets) attrValues;
-  inherit (lib.lists) concatMap toList elem;
-  allExporters = let
-    exporters = removeAttrs config.services.prometheus.exporters ["unifi-poller"];
-  in
-    concatMap toList (attrValues exporters);
+  inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.lists) any toList elem;
 in {
   config = {
     services.prometheus.exporters = {
@@ -70,11 +66,17 @@ in {
         ];
       };
     };
-    networking.firewall.interfaces.lan.allowedTCPPorts =
-      map (
-        exporter:
-          mkIf (exporter.enable && !exporter.openFirewall) exporter.port
-      )
-      allExporters;
+    networking.firewall.interfaces.lan.allowedTCPPorts = let
+      # blacklist broken/deprecated exporters
+      allExporters = removeAttrs config.services.prometheus.exporters ["unifi-poller" "minio"];
+      enablePort = fallback: exporter: exporter.enable or fallback && !exporter.openFirewall or (!fallback);
+      mkExporterPorts = name: exporters': let
+        exporters = toList exporters';
+        allowedTCPPorts = map mkExporterPort exporters;
+        res = builtins.tryEval (any (enablePort true) exporters);
+        cond = lib.warnIf (!res.success) "broken prometheus exporter: ${name}" res.value;
+      in mkIf cond allowedTCPPorts;
+      mkExporterPort = exporter: mkIf (enablePort false exporter) exporter.port;
+    in mkMerge (mapAttrsToList mkExporterPorts allExporters);
   };
 }
