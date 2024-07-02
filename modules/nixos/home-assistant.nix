@@ -295,6 +295,7 @@ in {
         "environment_canada"
         "met"
         "generic_thermostat"
+        "ios"
         "map"
         "mqtt"
         "zeroconf"
