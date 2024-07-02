@@ -20,4 +20,10 @@ in {
       address6 = "fd7a:115c:a1e0:ab12:4843:cd96:6256:4d36";
     };
   };
+  exports.services = {
+    sshd = {
+      enable = true;
+      ports.public.port = 62022;
+    };
+  };
 }

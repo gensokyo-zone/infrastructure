@@ -25,6 +25,11 @@ in {
     };
   };
   exports.services = {
+    #tailscale.enable = true;
+    sshd = {
+      enable = true;
+      ports.public.port = 32022;
+    };
     prometheus-exporters-node.enable = true;
   };
 }
