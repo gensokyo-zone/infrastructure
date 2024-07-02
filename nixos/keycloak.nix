@@ -1,27 +1,17 @@
 {
-  systemConfig,
   access,
   config,
-  gensokyo-zone,
   lib,
   ...
 }: let
   inherit (lib.modules) mkIf mkForce mkDefault;
-  inherit (lib.lists) optional;
   cfg = config.services.keycloak;
   cert = access.mkSnakeOil {
     name = "keycloak-selfsigned";
     domain = hostname;
   };
   hostname = "sso.${config.networking.domain}";
-  hostname-strict = false;
-  inherit (gensokyo-zone.self.legacyPackages.${systemConfig.system}) patchedNixpkgs;
-  keycloakModulePath = "services/web-apps/keycloak.nix";
 in {
-  # upstream keycloak makes an incorrect assumption in its assertions, so we patch it
-  disabledModules = optional (!hostname-strict) keycloakModulePath;
-  imports = optional (!hostname-strict) (patchedNixpkgs + "/nixos/modules/${keycloakModulePath}");
-
   sops.secrets = let
     commonSecret = {
       sopsFile = ./secrets/keycloak.yaml;
@@ -61,9 +51,11 @@ in {
       useSSL = postgresql.ports.default.ssl;
     };
 
-    settings = {
+    settings = let
+      hostname-strict = false;
+    in {
       hostname = mkDefault (
-        if hostname-strict
+        if cfg.settings.hostname-strict
         then hostname
         else null
       );

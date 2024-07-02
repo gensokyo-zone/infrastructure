@@ -32,7 +32,7 @@
           pkgs.__withSubBuilders;
         patchedNixpkgs = let
           patches = [
-            ./packages/nixpkgs-keycloak-nullhostname.patch
+            # XXX: no pending nixpkgs patches atm
           ];
           patchedNixpkgs = pkgs.applyPatches {
             name = "nixpkgs";
