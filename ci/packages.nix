@@ -30,7 +30,8 @@ in {
     ];
     krb5.inputs = [
       packages.x86_64-linux.krb5-ldap
-      legacyPackages.x86_64-linux.pkgs._389-ds-base
+      legacyPackages.x86_64-linux.pkgs.sssd
+      legacyPackages.x86_64-linux.pkgs.freeipa
     ];
     openwebrx.inputs = [
       packages.x86_64-linux.openwebrxplus
