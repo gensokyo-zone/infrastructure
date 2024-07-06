@@ -306,6 +306,7 @@ in
         };
         grafana = {config, ...}: {
           id = mkAlmostOptionDefault "mon";
+          displayName = mkAlmostOptionDefault "Grafana";
           nixos = {
             serviceAttr = "grafana";
             assertions = mkIf config.enable [
@@ -319,6 +320,7 @@ in
             port = mkAlmostOptionDefault 9092;
             protocol = "http";
             prometheus.exporter.enable = mkAlmostOptionDefault true;
+            status.enable = mkAlmostOptionDefault true;
           };
         };
         loki = {config, ...}: {
