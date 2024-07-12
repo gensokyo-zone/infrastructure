@@ -4,6 +4,7 @@ in rec {
   default = nixlib.composeManyExtensions [
     barcodebuddy
     builders
+    cura
     krb5
     minecraft
     nfs
@@ -12,6 +13,7 @@ in rec {
     samba
   ];
   barcodebuddy = import ./barcodebuddy.nix;
+  cura = import ./cura.nix;
   krb5 = import ./krb5.nix;
   minecraft = import ./minecraft.nix;
   nfs = import ./nfs.nix;

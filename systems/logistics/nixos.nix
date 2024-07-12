@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   meta,
   lib,
@@ -56,12 +57,15 @@ in {
     };
   };
 
+  environment.systemPackages = [ pkgs.cura-octoprint ];
+
   users.users.logistics = {
     uid = 1000;
     isNormalUser = true;
     description = "Logistics";
     extraGroups = [
       "nixbuilder"
+      (mkIf (!config.services.octoprint.enable) "dialout")
       (mkIf config.networking.networkmanager.enable "networkmanager")
     ];
     hashedPasswordFile = config.sops.secrets.logistics-user-password.path;
