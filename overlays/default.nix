@@ -4,22 +4,22 @@ in rec {
   default = nixlib.composeManyExtensions [
     barcodebuddy
     builders
-    cura
     krb5
     minecraft
     nfs
     nginx
     openwebrx
+    print
     samba
   ];
   barcodebuddy = import ./barcodebuddy.nix;
-  cura = import ./cura.nix;
   krb5 = import ./krb5.nix;
   minecraft = import ./minecraft.nix;
   nfs = import ./nfs.nix;
   nginx = import ./nginx.nix;
   samba = import ./samba.nix;
   openwebrx = import ./openwebrxplus.nix;
+  print = import ./print.nix;
   builders = import ./builders.nix;
   deploy-rs = inputs.deploy-rs.overlays.default or inputs.deploy-rs.overlay;
   systemd2mqtt = inputs.systemd2mqtt.overlays.default;

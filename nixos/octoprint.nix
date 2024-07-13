@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   access,
   lib,
@@ -12,6 +13,18 @@ in {
   services.octoprint = {
     enable = mkDefault true;
     # host = mkIf config.networking.enableIPv6 "::";
+    plugins = python3Packages: with python3Packages; [
+      prometheus-exporter
+      abl-expert
+      bedlevelvisualizer
+      #displayprogress / displaylayerprogress?
+      marlingcodedocumentation
+      printtimegenius
+      stlviewer
+      #octoklipper?
+      #octolapse?
+      #dashboard?
+    ];
     extraConfig = mkMerge [
       # https://docs.octoprint.org/en/master/configuration/config_yaml.html
       {

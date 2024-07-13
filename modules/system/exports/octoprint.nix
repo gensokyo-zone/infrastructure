@@ -9,6 +9,7 @@ in {
   config.exports.services.octoprint = {config, ...}: {
     displayName = mkAlmostOptionDefault "OctoPrint";
     id = mkAlmostOptionDefault "print";
+    prometheus.exporter.metricsPath = "/plugin/prometheus_exporter/metrics";
     nixos = {
       serviceAttr = "octoprint";
       assertions = let
@@ -33,6 +34,7 @@ in {
           enable = mkAlmostOptionDefault true;
           gatus.client.network = mkAlmostOptionDefault "ip4";
         };
+        prometheus.exporter.enable = mkAlmostOptionDefault true;
       };
     };
   };
