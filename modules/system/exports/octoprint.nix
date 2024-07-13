@@ -6,14 +6,14 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
 in {
-  config.exports.services.openwebrx = {config, ...}: {
-    displayName = mkAlmostOptionDefault "OpenWebRX";
-    id = mkAlmostOptionDefault "webrx";
+  config.exports.services.octoprint = {config, ...}: {
+    displayName = mkAlmostOptionDefault "OctoPrint";
+    id = mkAlmostOptionDefault "print";
     nixos = {
-      serviceAttr = "openwebrx";
+      serviceAttr = "octoprint";
       assertions = let
         mkAssertion = f: nixosConfig: let
-          cfg = nixosConfig.services.openwebrx;
+          cfg = nixosConfig.services.octoprint;
         in
           f nixosConfig cfg;
       in
@@ -27,7 +27,7 @@ in {
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = {
       default = {
-        port = mkAlmostOptionDefault 8073;
+        port = mkAlmostOptionDefault 5000;
         protocol = "http";
         status.enable = mkAlmostOptionDefault true;
       };

@@ -14,6 +14,7 @@ in {
     nixos.base
     nixos.barcodebuddy-scanner
     nixos.kitchencam
+    nixos.octoprint
     ./hardware-configuration.nix
   ];
 

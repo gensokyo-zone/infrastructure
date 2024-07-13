@@ -11,6 +11,7 @@ _: {
         enable = true;
         ports.stream.port = 41081;
       };
+      octoprint.enable = true;
     };
   };
   network.networks = {

@@ -42,6 +42,7 @@ in {
     nixos.access.grafana
     nixos.access.loki
     nixos.access.kitchencam
+    nixos.access.octoprint
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.home-assistant
@@ -266,6 +267,14 @@ in {
         virtualHosts.kitchencam'local.allServerNames
       ];
     };
+    print = {
+      inherit (nginx) group;
+      domain = virtualHosts.octoprint.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.octoprint.otherServerNames
+        virtualHosts.octoprint'local.allServerNames
+      ];
+    };
     webrx = {
       inherit (nginx) group;
       domain = virtualHosts.openwebrx.serverName;
@@ -396,6 +405,7 @@ in {
         };
       };
       kitchencam.ssl.cert.enable = true;
+      octoprint.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
       deluge.ssl.cert.enable = true;
       invidious = {
