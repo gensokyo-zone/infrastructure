@@ -17,30 +17,63 @@ in {
       {
         # TODO: api.key = sops?
         server = {
+          firstRun = false;
+          onlineCheck.enabled = true;
+          pluginBlacklist.enabled = true;
+
           # TODO: secretKey = sops?
           reverseProxy = {
+            hostHeader = "X-Forwarded-Host";
             schemeHeader = "X-Forwarded-Proto";
             trustedDownstream = access.cidrForNetwork.allLan.all;
           };
-        };
-        webcam = mkIf motion.enable {
-          # TODO
         };
         plugins = {
           _disabled = [
             "softwareupdate"
           ];
         };
+        temperature = {
+          profiles = [
+            {
+              name = "ABS";
+              bed = 100;
+              extruder = 210;
+              chamber = null;
+            }
+            {
+              name = "PLA";
+              bed = 60;
+              extruder = 180;
+              chamber = null;
+            }
+          ];
+        };
+        serial = {
+          port = "/dev/ttyUSB0";
+          baudrate = 115200;
+          #autoconnect = true;
+        };
       }
+      (mkIf motion.enable {
+        webcam = {
+          # TODO
+        };
+      })
       (mkIf (!behindVouch) {
-        autologinLocal = true;
-        autologinAs = "guest";
-        localNetworks = access.cidrForNetwork.allLocal.all;
+        accessControl = {
+          autologinLocal = true;
+          #autologinAs = "guest";
+          autologinAs = "admin";
+          localNetworks = access.cidrForNetwork.allLocal.all;
+        };
       })
       (mkIf behindVouch {
-        trustRemoteUser = true;
-        addRemoteUsers = true;
-        remoteUserHeader = "X-Vouch-User";
+        accessControl = {
+          trustRemoteUser = true;
+          addRemoteUsers = true;
+          remoteUserHeader = "X-Vouch-User";
+        };
       })
     ];
   };

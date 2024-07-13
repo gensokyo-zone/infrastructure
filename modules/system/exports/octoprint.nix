@@ -29,7 +29,10 @@ in {
       default = {
         port = mkAlmostOptionDefault 5000;
         protocol = "http";
-        status.enable = mkAlmostOptionDefault true;
+        status = {
+          enable = mkAlmostOptionDefault true;
+          gatus.client.network = mkAlmostOptionDefault "ip4";
+        };
       };
     };
   };
