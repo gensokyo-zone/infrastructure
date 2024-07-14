@@ -11,7 +11,7 @@ in {
       inherit (python3Packages) buildPlugin;
     };
     packageOverrides = python3Packages: python3Packages'prev: lib.mapAttrs (mapPlugin python3Packages) {
-      inherit (final.octoprintPlugins) prometheus-exporter;
+      inherit (final.octoprintPlugins) prometheus-exporter octorant;
     };
     octoprint = prev.octoprint.override (old: {
       packageOverrides = lib.composeExtensions old.packageOverrides or (_: _: {}) packageOverrides;
@@ -30,6 +30,7 @@ in {
     callPackage = prev.octoprintPlugins.callPackage or callPackage;
 
     prometheus-exporter = callPackage ../packages/octoprint/prometheus-exporter.nix { };
+    octorant = callPackage ../packages/octoprint/octorant.nix { };
   };
 
   curaengine = prev.curaengine.override {

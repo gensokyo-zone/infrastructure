@@ -15,6 +15,7 @@ in {
     # host = mkIf config.networking.enableIPv6 "::";
     plugins = python3Packages: with python3Packages; [
       prometheus-exporter
+      octorant
       abl-expert
       bedlevelvisualizer
       #displayprogress / displaylayerprogress?
