@@ -5,25 +5,17 @@ in {
     withLdap = true;
   };
 
-  sssd = let
-    inherit (prev) sssd;
-    sssd'py311 = sssd.override {
-      python3 = final.python311;
-    };
-    isBroken = !(builtins.tryEval sssd.outPath).success;
-    warnFixed = lib.warnIf (lib.versionAtLeast final.python3.version "3.12") "python-ldap overlay fix no longer needed";
-  in if isBroken then sssd'py311 else warnFixed sssd;
-
   freeipa = let
     inherit (prev) freeipa;
+    python3 = final.python311;
     freeipa'py311 = (freeipa.override {
-      python3 = final.python311;
+      inherit python3;
     }).overrideAttrs (old: {
       nativeBuildInputs = [
-        final.python311
+        python3
       ] ++ old.nativeBuildInputs;
     });
     isBroken = !(builtins.tryEval freeipa.outPath).success;
-    warnFixed = lib.warnIf (lib.versionAtLeast final.python3.version "3.12") "python-ldap overlay fix no longer needed";
+    warnFixed = lib.warnIf (lib.versionAtLeast final.python3.version "3.12") "freeipa python overlay fix no longer needed";
   in if isBroken then freeipa'py311 else warnFixed freeipa;
 }
