@@ -17,10 +17,6 @@ in {
       type = port;
       default = 8222;
     };
-    websocketPort = mkOption {
-      type = nullOr port;
-      default = null;
-    };
     databaseUrlPath = mkOption {
       type = nullOr str;
       default = null;
@@ -41,9 +37,6 @@ in {
       ROCKET_ENV = mkOptionDefault "production";
       ROCKET_ADDRESS = mkOptionDefault "::1";
       ROCKET_PORT = mkOptionDefault cfg.port;
-      WEBSOCKET_ENABLED = mkOptionDefault (cfg.websocketPort != null);
-      WEBSOCKET_ADDRESS = mkOptionDefault "::1";
-      WEBSOCKET_PORT = mkIf (cfg.websocketPort != null) cfg.websocketPort;
     };
   };
   config.systemd.services.vaultwarden = let

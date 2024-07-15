@@ -6,17 +6,9 @@
   inherit (lib.modules) mkIf mkDefault;
   cfg = config.services.vaultwarden;
   upstreamName = "vaultwarden'access";
-  upstreamName'websocket = "vaultwarden'websocket'access";
   locations = {
     "/".proxy.enable = true;
     "/notifications/hub" = {
-      proxy = {
-        enable = true;
-        upstream = mkDefault upstreamName'websocket;
-        websocket.enable = true;
-      };
-    };
-    "/notifications/hub/negotiate" = {
       proxy = {
         enable = true;
         websocket.enable = true;
@@ -38,20 +30,6 @@ in {
           enable = mkDefault (!upstream.servers.local.enable or false);
           accessService = {
             name = "vaultwarden";
-          };
-        };
-      };
-      ${upstreamName'websocket}.servers = {
-        local = mkIf cfg.enable {
-          enable = mkDefault (cfg.websocketPort != null);
-          addr = mkDefault "localhost";
-          port = mkIf (cfg.websocketPort != null) (mkDefault cfg.websocketPort);
-        };
-        access = {upstream, ...}: {
-          enable = mkDefault (!cfg.enable && !upstream.servers.local.enable or false);
-          accessService = {
-            name = "vaultwarden";
-            port = "websocket";
           };
         };
       };

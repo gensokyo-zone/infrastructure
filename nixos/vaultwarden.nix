@@ -11,7 +11,6 @@ in {
   config.services.vaultwarden = {
     enable = mkDefault true;
     dbBackend = mkDefault "postgresql";
-    websocketPort = mkDefault 8223;
     databaseUrlPath = mkIf (!postgresql.enable) (mkDefault config.sops.secrets.vaultwarden-database-url.path);
     adminTokenPath = mkIf enableAdmin (mkDefault config.sops.secrets.vaultwarden-admin-token.path);
     config = {
@@ -32,7 +31,6 @@ in {
   config.networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = [
       cfg.port
-      (mkIf (cfg.websocketPort != null) cfg.websocketPort)
     ];
   };
   config.sops.secrets = let
