@@ -13,7 +13,10 @@ in {
     nixos.sops
     nixos.base
     nixos.barcodebuddy-scanner
-    nixos.kitchencam
+    nixos.motion
+    nixos.cameras.kitchen
+    nixos.cameras.printer
+    nixos.cameras.logistics-webcam
     nixos.octoprint
     ./hardware-configuration.nix
   ];
@@ -47,15 +50,6 @@ in {
     alsa.support32Bit = true;
     pulse.enable = true;
     #jack.enable = true;
-  };
-
-  services.motion.cameras.webcam = {
-    #enable = false;
-    settings = {
-      videodevice = "/dev/video0";
-      camera_id = 2;
-      text_left = "logistics";
-    };
   };
 
   environment.systemPackages = [ pkgs.cura-octoprint ];

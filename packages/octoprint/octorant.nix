@@ -2,14 +2,14 @@
 , python3Packages
 , fetchFromGitHub
 }: let
+  pname = "OctoPrint-Octorant";
   version = "1.3.4";
 in buildPlugin {
-  pname = "OctoPrint-Octorant";
-  inherit version;
+  inherit pname version;
 
   src = fetchFromGitHub {
     owner = "bchanudet";
-    repo = "OctoPrint-Octorant";
+    repo = pname;
     rev = version;
     sha256 = "sha256-gP79zlJ8gdtpddXOJIMhouSbwXnrSf+c1bURkN/7jvw=";
   };

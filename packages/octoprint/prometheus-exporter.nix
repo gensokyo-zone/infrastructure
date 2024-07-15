@@ -18,6 +18,10 @@ in buildPlugin {
     prometheus-client
   ];
 
+  patches = [
+    ./prometheus-exporter-deregister.patch
+  ];
+
   meta = {
     homepage = "https://github.com/tg44/OctoPrint-Prometheus-Exporter";
   };

@@ -33,32 +33,7 @@ in {
       webcontrol_port = webPort;
       stream_port = streamPort;
     };
-    cameras.kitchencam.settings = mapDefaults {
-      videodevice = "/dev/kitchencam";
-      v4l2_palette = 8;
-      width = 640;
-      height = 480;
-      framerate = 5;
-      camera_id = 1;
-      text_left = "kitchen";
-    };
   };
-  services.udev.extraRules = let
-    inherit (lib.strings) concatStringsSep;
-    rules = [
-      ''SUBSYSTEM=="video4linux"''
-      ''ACTION=="add"''
-      ''ATTR{index}=="0"''
-      ''ATTRS{idProduct}=="2a25"''
-      ''ATTRS{idVendor}=="1224"''
-      ''SYMLINK+="kitchencam"''
-      ''OWNER="${cfg.user}"''
-      ''TAG+="systemd"''
-      ''ENV{SYSTEMD_WANTS}="motion.service"''
-    ];
-    rulesLine = concatStringsSep ", " rules;
-  in
-    mkIf cfg.enable rulesLine;
   networking.firewall.interfaces.local = mkIf cfg.enable {
     allowedTCPPorts = [cfg.settings.stream_port cfg.settings.webcontrol_port];
   };
