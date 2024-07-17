@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   gensokyo-zone,
   lib,
@@ -37,4 +38,7 @@ in {
   networking.firewall.interfaces.local = mkIf cfg.enable {
     allowedTCPPorts = [cfg.settings.stream_port cfg.settings.webcontrol_port];
   };
+  environment.systemPackages = [
+    pkgs.v4l-utils
+  ];
 }

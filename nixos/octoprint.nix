@@ -49,6 +49,7 @@ in {
           _disabled = [
             "softwareupdate"
           ];
+          PrintTimeGenius.showStars = false;
         };
         temperature = {
           profiles = [
@@ -93,6 +94,9 @@ in {
             };
             printing_cancelled = {
               message = "Print cancelled after {time_formatted}";
+            };
+            printing_done = {
+              message = "Print complete after {time_formatted}";
             };
             printing_paused = {
               message = "Print paused";
@@ -140,7 +144,7 @@ in {
           ffmpegThreads = 2;
           timelapse = {
             fps = 25;
-            options.interval = 3;
+            options.interval = 4;
             postRoll = 0;
             type = "timed";
           };
@@ -153,7 +157,7 @@ in {
             _config_version = 1;
             snapshot = "https://kitchen.local.${domain}/${toString camera_id}/current";
             stream = "https://kitchen.local.${domain}/${toString camera_id}/stream";
-            streamRatio = "4:3";
+            streamRatio = "16:9";
           };
         };
       })
@@ -185,5 +189,9 @@ in {
     interfaces.lan.allowedTCPPorts = [
       cfg.port
     ];
+  };
+
+  systemd.services.octoprint = mkIf cfg.enable {
+    restartIfChanged = false;
   };
 }
