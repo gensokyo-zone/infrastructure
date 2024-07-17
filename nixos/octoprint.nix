@@ -115,7 +115,7 @@ in {
             timelapse_done = {
               enabled = true;
               # TODO: movie_basename needs uri encoding if it contains spaces .-.
-              message = "Timelapse for {gcode}: https://print.${domain}/downloads/timelapse/{movie_basename}";
+              message = "Timelapse for {gcode}: [{movie_basename}](https://print.${domain}/downloads/timelapse/{movie_basename_uri})";
               media = media.none;
             };
             timelapse_failed.media = media.none;

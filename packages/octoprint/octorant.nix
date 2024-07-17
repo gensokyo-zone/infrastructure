@@ -14,6 +14,10 @@ in buildPlugin {
     sha256 = "sha256-gP79zlJ8gdtpddXOJIMhouSbwXnrSf+c1bURkN/7jvw=";
   };
 
+  patches = [
+    ./octorant-timelapse-uri.patch
+  ];
+
   propagatedBuildInputs = with python3Packages; [
     pillow
   ];

@@ -1,0 +1,33 @@
+diff --git a/octoprint_octorant/__init__.py b/octoprint_octorant/__init__.py
+--- a/octoprint_octorant/__init__.py
++++ b/octoprint_octorant/__init__.py
+@@ -4,6 +4,7 @@ from __future__ import absolute_import
+ import octoprint.plugin
+ import octoprint.settings
+ import octoprint.util
++import urllib.parse
+ import subprocess
+ import datetime
+ import time
+@@ -453,6 +454,8 @@ class OctorantPlugin(
+         # Alter a bit the payload to offer more variables
+         if "time" in data:
+             data["time_formatted"] = str(datetime.timedelta(seconds=int(data["time"])))
++        if "movie_basename" in data:
++            data["movie_basename_uri"] = urllib.parse.quote(data["movie_basename"])
+ 
+         self._logger.debug(
+             "Available variables for event " + eventID + ": " + ", ".join(list(data))
+diff --git a/octoprint_octorant/events.py b/octoprint_octorant/events.py
+index 0c53f88..9e7b19c 100644
+--- a/octoprint_octorant/events.py
++++ b/octoprint_octorant/events.py
+@@ -135,7 +135,7 @@ EVENTS = {
+         "enabled": False,
+         "media": "timelapse",
+         "message": "🎥 Timelapse has been created: {movie_basename}",
+-        "variables": ["gcode", "movie", "movie_basename", "movie_prefix"],
++        "variables": ["gcode", "movie", "movie_basename", "movie_basename_uri", "movie_prefix"],
+     },
+     "timelapse_failed": {
+         "enabled": False,
