@@ -15,6 +15,9 @@ resource "cloudflare_record" "kerberos_master_tcp" {
     port     = 88
     target   = local.idp_fqdn
   }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
+  }
 }
 
 resource "cloudflare_record" "kerberos_master_udp" {
@@ -27,6 +30,9 @@ resource "cloudflare_record" "kerberos_master_udp" {
     weight   = 100
     port     = 88
     target   = local.idp_fqdn
+  }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
   }
 }
 
@@ -41,6 +47,9 @@ resource "cloudflare_record" "kerberos_tcp" {
     port     = 88
     target   = local.idp_fqdn
   }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
+  }
 }
 
 resource "cloudflare_record" "kerberos_udp" {
@@ -53,6 +62,9 @@ resource "cloudflare_record" "kerberos_udp" {
     weight   = 100
     port     = 88
     target   = local.idp_fqdn
+  }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
   }
 }
 
@@ -99,6 +111,9 @@ resource "cloudflare_record" "kpasswd_tcp" {
     port     = 464
     target   = local.idp_fqdn
   }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
+  }
 }
 
 resource "cloudflare_record" "kpasswd_udp" {
@@ -111,6 +126,9 @@ resource "cloudflare_record" "kpasswd_udp" {
     weight   = 100
     port     = 464
     target   = local.idp_fqdn
+  }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
   }
 }
 
@@ -148,6 +166,9 @@ resource "cloudflare_record" "ldap" {
     weight   = 100
     port     = 389
     target   = local.idp_fqdn
+  }
+  lifecycle {
+    ignore_changes = [data[0].name, data[0].proto, data[0].service]
   }
 }
 
