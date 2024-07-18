@@ -31,6 +31,10 @@ resource "cloudflare_pages_domain" "wiki" {
   account_id = var.cloudflare_account_id
   project_name = "wiki"
   domain = "wiki.gensokyo.zone"
+
+  depends_on = [
+    cloudflare_pages_project.wiki
+  ]
 }
 
 resource "cloudflare_record" "wiki" {
