@@ -179,6 +179,7 @@ in {
       "androidtv"
       "cast"
       "nfandroidtv"
+      "octoprint"
       "plex"
       "shopping_list"
       "tile"
