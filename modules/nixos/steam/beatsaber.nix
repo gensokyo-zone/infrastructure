@@ -682,6 +682,29 @@ in {
           initStyle = "none";
           srcPathFor = {...}: cfg.sharedDataDir + "/Replays";
         };
+        "UserData/BeatLeader/" = {
+          versioned = true;
+          relativePath = "UserData/BeatLeader";
+          type = "directory";
+          srcStyle = "empty";
+        };
+        "UserData/BeatLeader/Replays" = {
+          type = "directory";
+          initStyle = "none";
+          srcPathFor = {...}: cfg.sharedDataDir + "/ReplaysBeatLeader";
+        };
+        "UserData/BeatLeader/ReplayerCache" = {
+          type = "directory";
+          versioned = true;
+        };
+        "UserData/BeatLeader/LeaderboardsCache" = {
+          versioned = true;
+          init = "${emptyJson}";
+        };
+        "UserData/BeatLeader/ReplayHeadersCache" = {
+          versioned = true;
+          init = "${emptyJson}";
+        };
         "UserData/Beat Saber IPA.json".versioned = true;
         "UserData/SongCore/" = {
           versioned = true;
@@ -744,6 +767,14 @@ in {
           srcStyle = "empty";
         };
         "UserData/SongCore/SongCore.json" = {
+          versioned = true;
+        };
+        "UserData/BeatLeader" = {
+          type = "directory";
+          versioned = true;
+          srcStyle = "empty";
+        };
+        "UserData/BeatLeader.json" = {
           versioned = true;
         };
         "UserData/ScoreSaber" = {
@@ -888,6 +919,7 @@ in {
         "CustomWalls"
         "Playlists"
         "Replays"
+        "ReplaysBeatLeader"
         "AppData"
         "UserData"
       ];
