@@ -1,14 +1,14 @@
 resource "cloudflare_pages_project" "wiki" {
   account_id = var.cloudflare_account_id
   name = "wiki"
-  production_branch = "main"
+production_branch = "v4"
 
   source {
     type = "github"
     config {
       owner = "gensokyo-zone"
       repo_name = "wiki"
-      production_branch = "main"
+      production_branch = "v4"
       deployments_enabled = true
       pr_comments_enabled = false
       production_deployment_enabled = true
