@@ -144,7 +144,7 @@ in {
           ffmpegThreads = 2;
           timelapse = {
             fps = 25;
-            options.interval = 4;
+            options.interval = 5;
             postRoll = 0;
             type = "timed";
           };
@@ -191,7 +191,12 @@ in {
     ];
   };
 
-  systemd.services.octoprint = mkIf cfg.enable {
-    restartIfChanged = false;
+  systemd = mkIf cfg.enable {
+    services.octoprint.restartIfChanged = false;
+    tmpfiles.rules = [
+      # clean up stale timelapse videos, since they can get pretty large
+      "e ${cfg.stateDir}/timelapse - - - 10d -"
+      # TODO: consider also cleaning the `uploads` gcode folder?
+    ];
   };
 }
