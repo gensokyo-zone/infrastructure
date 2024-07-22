@@ -99,7 +99,7 @@ jobs:
         CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
         NF_CONFIG_ROOT: ${{ github.workspace }}
         NF_UPDATE_CACHIX_PUSH: '1'
-        NF_UPDATE_GIT_COMMIT: '1'
+        NF_UPDATE_GIT_COMMIT: ''
       id: flake-update
       name: flake update build
       run: nix run .#nf-update
@@ -142,6 +142,13 @@ jobs:
         command: ci-build-cache
         quiet: false
         stdin: ${{ runner.temp }}/ci.build.cache
+    - env:
+        NF_CONFIG_ROOT: ${{ github.workspace }}
+        NF_UPDATE_GIT_COMMIT: '1'
+        NF_UPDATE_SKIP: '1'
+      id: flake-commit
+      name: git push
+      run: nix run .#nf-update
 name: flake-update
 'on':
   pull_request:

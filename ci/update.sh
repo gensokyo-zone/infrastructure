@@ -1,26 +1,32 @@
 #!/usr/bin/env bash
 set -eu
 
-if [[ -n ${CACHIX_SIGNING_KEY-} ]]; then
+if [[ -n ${CACHIX_SIGNING_KEY-} && ! -v NF_UPDATE_CACHIX_PUSH ]]; then
 	export NF_UPDATE_CACHIX_PUSH=1
 fi
 
 cd "$NF_CONFIG_ROOT"
 
-nix flake update "$@"
+if [[ -z ${NF_UPDATE_SKIP-} ]]; then
+	nix flake update "$@"
+fi
 
 if [[ -n $(git status --porcelain ./flake.lock) ]]; then
-	git -P diff ./flake.lock
+	if [[ -z ${NF_UPDATE_SKIP-} ]]; then
+		git -P diff ./flake.lock
+	fi
 else
 	echo "no source changes" >&2
 	exit
 fi
 
-echo "checking that nodes still build..." >&2
-if [[ -n ${NF_UPDATE_CACHIX_PUSH-} ]]; then
-	export NF_ACTIONS_TEST_OUTLINK=${NF_ACTIONS_TEST_OUTLINK-result}
+if [[ -z ${NF_UPDATE_SKIP-} ]]; then
+	echo "checking that nodes still build..." >&2
+	if [[ -n ${NF_UPDATE_CACHIX_PUSH-} ]]; then
+		export NF_ACTIONS_TEST_OUTLINK=${NF_ACTIONS_TEST_OUTLINK-result}
+	fi
+	nf-actions-test -L
 fi
-nf-actions-test -L
 
 if [[ -n ${NF_UPDATE_CACHIX_PUSH-} ]]; then
 	cachix push gensokyo-infrastructure "./${NF_ACTIONS_TEST_OUTLINK}"*/ &

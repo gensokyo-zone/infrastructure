@@ -34,15 +34,25 @@ in {
         workflow_dispatch = {};
       };
       jobs.flake-update = {
-        # TODO: split this up into two phases, then push at the end so other CI tests can run first
         step.flake-update = {
           name = "flake update build";
           order = 500;
           run = "nix run .#nf-update";
           env = {
             CACHIX_SIGNING_KEY = "\${{ secrets.CACHIX_SIGNING_KEY }}";
-            NF_UPDATE_GIT_COMMIT = "1";
+            NF_UPDATE_GIT_COMMIT = "";
             NF_UPDATE_CACHIX_PUSH = "1";
+            NF_CONFIG_ROOT = "\${{ github.workspace }}";
+          };
+        };
+        # we split this up into two phases so other CI tests can run in-between
+        step.flake-commit = {
+          name = "git push";
+          order = 1500;
+          run = "nix run .#nf-update";
+          env = {
+            NF_UPDATE_SKIP = "1";
+            NF_UPDATE_GIT_COMMIT = "1";
             NF_CONFIG_ROOT = "\${{ github.workspace }}";
           };
         };
