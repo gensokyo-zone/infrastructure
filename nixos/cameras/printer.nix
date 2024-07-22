@@ -9,9 +9,10 @@
 in {
   services.motion.cameras.printercam.settings = mapDefaults {
     videodevice = "/dev/printercam";
-    width = 1280;
-    height = 720;
-    framerate = 5;
+    video_params = "auto_brightness=1,palette=8"; # MJPG=8, YUYV=15
+    width = 1920;
+    height = 1080;
+    framerate = 2;
     camera_id = 2;
     text_left = "";
     #text_right = "";

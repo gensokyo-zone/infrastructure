@@ -9,10 +9,10 @@
 in {
   services.motion.cameras.kitchencam.settings = mapDefaults {
     videodevice = "/dev/kitchencam";
-    v4l2_palette = 8;
-    width = 640;
-    height = 480;
-    framerate = 5;
+    video_params = "auto_brightness=2,palette=8"; # MJPG=8, YUYV=15
+    width = 1280;
+    height = 720;
+    framerate = 2;
     camera_id = 1;
     text_left = "kitchen";
   };
