@@ -16,6 +16,8 @@ in {
       ] ++ old.nativeBuildInputs;
     });
     isBroken = !(builtins.tryEval freeipa.outPath).success;
-    warnFixed = lib.warnIf (lib.versionAtLeast final.python3.version "3.12") "freeipa python overlay fix no longer needed";
-  in if isBroken then freeipa'py311 else warnFixed freeipa;
+    isUpdated = lib.versionAtLeast freeipa.version "4.12.2";
+    isPythonUpdated = lib.versionAtLeast final.python3.version "3.12";
+    warnFixed = lib.warnIf isUpdated "freeipa python overlay fix probably no longer needed";
+  in if isPythonUpdated && (isBroken || !isUpdated) then freeipa'py311 else warnFixed freeipa;
 }
