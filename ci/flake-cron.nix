@@ -53,6 +53,7 @@ in {
           env = {
             NF_UPDATE_SKIP = "1";
             NF_UPDATE_GIT_COMMIT = "1";
+            NF_UPDATE_CACHIX_PUSH = "";
             NF_CONFIG_ROOT = "\${{ github.workspace }}";
           };
         };

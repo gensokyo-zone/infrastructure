@@ -144,6 +144,7 @@ jobs:
         stdin: ${{ runner.temp }}/ci.build.cache
     - env:
         NF_CONFIG_ROOT: ${{ github.workspace }}
+        NF_UPDATE_CACHIX_PUSH: ''
         NF_UPDATE_GIT_COMMIT: '1'
         NF_UPDATE_SKIP: '1'
       id: flake-commit
