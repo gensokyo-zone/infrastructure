@@ -10,16 +10,6 @@ in {
   services.unifi = {
     enable = mkDefault true;
     unifiPackage = mkDefault pkgs.unifi8;
-    # XXX: https://github.com/NixOS/nixpkgs/pull/325961
-    mongodbPackage = pkgs.mongodb-5_0.override {
-      callPackage = pkgs.newScope {
-        buildPackages = pkgs.buildPackages // {
-          scons = pkgs.buildPackages.scons.override {
-            python3 = pkgs.buildPackages.python311;
-          };
-        };
-      };
-    };
   };
 
   networking.firewall = mkIf cfg.enable {
