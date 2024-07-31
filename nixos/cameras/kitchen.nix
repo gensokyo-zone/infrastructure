@@ -6,12 +6,24 @@
 }: let
   inherit (gensokyo-zone.lib) mapDefaults;
   inherit (config.services) motion;
+  format = "mjpeg"; # or "yuyv"
+  params = {
+    mjpeg = {
+      palette = 8;
+      width = 1280;
+      height = 720;
+    };
+    yuyv = {
+      palette = 15;
+      width = 640;
+      height = 480;
+    };
+  };
 in {
   services.motion.cameras.kitchencam.settings = mapDefaults {
-    videodevice = "/dev/kitchencam";
-    video_params = "auto_brightness=2,palette=8"; # MJPG=8, YUYV=15
-    width = 1280;
-    height = 720;
+    video_device = "/dev/kitchencam";
+    video_params = "auto_brightness=2,palette=${toString params.${format}.palette}";
+    inherit (params.${format}) width height;
     framerate = 2;
     camera_id = 1;
     text_left = "kitchen";

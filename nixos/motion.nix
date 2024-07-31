@@ -18,9 +18,10 @@ in {
       movie_output = false;
       picture_filename = "%Y%m%d%H%M%S-%q";
       movie_filename = "%t-%v-%Y%m%d%H%M%S";
+      movie_passthrough = true;
+      pause = true;
 
       text_right = "%Y-%m-%d\\n%T-%q";
-      emulate_motion = false;
       threshold = 1500;
       despeckle_filter = "EedDl";
       minimum_motion_frames = 1;
@@ -33,7 +34,16 @@ in {
       webcontrol_parms = 0;
       webcontrol_port = webPort;
       stream_port = streamPort;
+
+      stream_maxrate = 30;
+      stream_quality = 75;
     };
+  };
+  systemd.services.motion = mkIf cfg.enable {
+    serviceConfig.LogFilterPatterns = [
+      ''~Corrupt image \.\.\. continue''
+      ''~Invalid JPEG file structure: missing SOS marker''
+    ];
   };
   networking.firewall.interfaces.local = mkIf cfg.enable {
     allowedTCPPorts = [cfg.settings.stream_port cfg.settings.webcontrol_port];

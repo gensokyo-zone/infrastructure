@@ -110,13 +110,11 @@ in
     };
     config.services.motion = let
       configFile = pkgs.writeText "motion.conf" cfg.configText;
-      enableIPv6 = mkIf config.networking.enableIPv6 (mkOptionDefault true);
       enabledCameras = filter (camera: camera.enable) (attrValues cfg.cameras);
     in {
       settings = {
         target_dir = mkOptionDefault cfg.dataDir;
-        ipv6_enabled = enableIPv6;
-        webcontrol_ipv6 = enableIPv6;
+        webcontrol_ipv6 = mkIf config.networking.enableIPv6 (mkOptionDefault true);
       };
       configFile = mkOptionDefault "${configFile}";
       configText = mkMerge (

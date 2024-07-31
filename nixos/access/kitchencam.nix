@@ -4,7 +4,7 @@
   access,
   ...
 }: let
-  inherit (lib.modules) mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (lib.attrsets) mapAttrs;
   inherit (config.services) nginx;
   system = access.systemForServiceId "kitchen";
@@ -12,6 +12,7 @@
 in {
   config.services.nginx = {
     virtualHosts = let
+      # TODO: use upstreams for this!
       url = access.proxyUrlFor {
         inherit system;
         service = motion;
@@ -21,6 +22,9 @@ in {
         service = motion;
         portName = "stream";
       };
+      mkSubFilter = port: ''
+        sub_filter '${port.protocol}://kitchen.local.gensokyo.zone:${toString port.port}/' '/';
+      '';
       extraConfig = ''
         proxy_redirect off;
         proxy_buffering off;
@@ -28,6 +32,11 @@ in {
       locations = {
         "/" = {
           proxyPass = mkDefault url;
+          extraConfig = ''
+            sub_filter_once off;
+            ${mkSubFilter motion.ports.stream}
+            ${mkSubFilter motion.ports.default}
+          '';
         };
         "~ ^/[0-9]+/(stream|motion|substream|current|source|status\\.json)$" = {
           proxyPass = mkDefault streamUrl;
@@ -42,7 +51,8 @@ in {
         http = {};
         https.ssl = true;
         stream = {
-          enable = mkDefault motion.ports.stream.enable;
+          enable = false;
+          #enable = mkDefault motion.ports.stream.enable;
           port = mkDefault motion.ports.stream.port;
         };
       };
@@ -67,7 +77,7 @@ in {
   };
   config.networking.firewall.allowedTCPPorts = let
     inherit (nginx.virtualHosts.kitchencam) listen';
-  in [
+  in mkIf listen'.stream.enable [
     listen'.stream.port
   ];
 }

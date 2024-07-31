@@ -8,11 +8,11 @@
   inherit (config.services) motion;
 in {
   services.motion.cameras.printercam.settings = mapDefaults {
-    videodevice = "/dev/printercam";
+    video_device = "/dev/printercam";
     video_params = "auto_brightness=1,palette=8"; # MJPG=8, YUYV=15
     width = 1920;
     height = 1080;
-    framerate = 2;
+    framerate = 4;
     camera_id = 2;
     text_left = "";
     #text_right = "";
