@@ -15,20 +15,21 @@ in {
   services.octoprint = {
     enable = mkDefault true;
     # host = mkIf config.networking.enableIPv6 "::";
-    plugins = python3Packages: with python3Packages; [
-      prometheus-exporter
-      octorant
-      queue
-      abl-expert
-      bedlevelvisualizer
-      #displayprogress / displaylayerprogress?
-      marlingcodedocumentation
-      printtimegenius
-      stlviewer
-      #octoklipper?
-      #octolapse?
-      #dashboard?
-    ];
+    plugins = python3Packages:
+      with python3Packages; [
+        prometheus-exporter
+        octorant
+        queue
+        abl-expert
+        bedlevelvisualizer
+        #displayprogress / displaylayerprogress?
+        marlingcodedocumentation
+        printtimegenius
+        stlviewer
+        #octoklipper?
+        #octolapse?
+        #dashboard?
+      ];
     extraConfig = mkMerge [
       # https://docs.octoprint.org/en/master/configuration/config_yaml.html
       {
@@ -167,12 +168,13 @@ in {
           autologinHeadsupAcknowledged = true;
           #autologinAs = "guest";
           autologinAs = "admin";
-          localNetworks = access.cidrForNetwork.allLocal.all
-          ++ [
-            # vouch protects it from the outside world so...
-            "0.0.0.0/0"
-            "::/0"
-          ];
+          localNetworks =
+            access.cidrForNetwork.allLocal.all
+            ++ [
+              # vouch protects it from the outside world so...
+              "0.0.0.0/0"
+              "::/0"
+            ];
         };
       })
       (mkIf (vouchHeader != null) {

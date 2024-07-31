@@ -6,7 +6,8 @@
   # https://github.com/minecraft-linux/server-modloader/tree/master?tab=readme-ov-file#getting-mods-to-work-on-newer-versions-116
   inherit (lib.meta) getExe;
   python = python3.withPackages (p: [p.lief]);
-  static_symbols = if lib.versionAtLeast python3.pkgs.lief.version "0.15.0"
+  static_symbols =
+    if lib.versionAtLeast python3.pkgs.lief.version "0.15.0"
     then "symtab_symbols"
     else "static_symbols";
   script = ''

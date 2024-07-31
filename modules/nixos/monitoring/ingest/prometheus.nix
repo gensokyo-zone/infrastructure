@@ -23,7 +23,10 @@
   }: let
     port = service.ports.${portName};
     # TODO: this properly
-    getAddressFor = if port.status.gatus.client.network or "ip" == "ip4" then "getAddress4For" else "getAddressFor";
+    getAddressFor =
+      if port.status.gatus.client.network or "ip" == "ip4"
+      then "getAddress4For"
+      else "getAddressFor";
   in "${mkAddress6 (access.${getAddressFor} system.name "lan")}:${toString port.port}";
   mkServiceConfig = system: serviceName: let
     inherit (service.prometheus) exporter;

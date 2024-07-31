@@ -75,8 +75,10 @@ in {
         allowedTCPPorts = map mkExporterPort exporters;
         res = builtins.tryEval (any (enablePort true) exporters);
         cond = lib.warnIf (!res.success) "broken prometheus exporter: ${name}" res.value;
-      in mkIf cond allowedTCPPorts;
+      in
+        mkIf cond allowedTCPPorts;
       mkExporterPort = exporter: mkIf (enablePort false exporter) exporter.port;
-    in mkMerge (mapAttrsToList mkExporterPorts allExporters);
+    in
+      mkMerge (mapAttrsToList mkExporterPorts allExporters);
   };
 }

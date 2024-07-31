@@ -54,12 +54,15 @@ let
           ++ optional (sshd.ports.public.enable or false) sshd.ports.public.port
           ++ [sshd.ports.standard.port]
         );
-      in mkOptionDefault port;
+      in
+        mkOptionDefault port;
       hostName = let
-        hostName = if config.network != null
+        hostName =
+          if config.network != null
           then system.network.networks.${config.network}.fqdn
           else sshHostConfig.hostName;
-      in mkOptionDefault hostName;
+      in
+        mkOptionDefault hostName;
       hostKeyAlias = mkOptionDefault sshHostConfig.hostKeyAlias;
       matchBlockSettings = {
         hostname = mkDefault config.hostName;
@@ -176,7 +179,10 @@ let
           then head canonNetworkName'
           else null;
         mkNetwork = network: nameValuePair (mkNetworkName network) (mkNetworkConf network);
-        mkNetworkName = network: if network != null then network else "fallback";
+        mkNetworkName = network:
+          if network != null
+          then network
+          else "fallback";
         mkNetworkConf = network: let
           needsProxy = network == "int" || (network == "local" && !access.local.enable);
           networkConf = {
@@ -186,7 +192,8 @@ let
               cfg.proxyJump
             )));
           };
-        in networkConf;
+        in
+          networkConf;
       in
         mapListToAttrs mkNetwork networks;
       set = {
@@ -197,7 +204,8 @@ let
             extraOptions = unmerged.mergeAttrs config.extraOptions;
           };
           extraSettings = unmerged.mergeAttrs config.extraSettings;
-        in mkMerge [ matchBlock extraSettings ];
+        in
+          mkMerge [matchBlock extraSettings];
         matchBlocksSettings = let
           mkMatchBlock = _: network: let
             matchBlockConf = mkMerge [

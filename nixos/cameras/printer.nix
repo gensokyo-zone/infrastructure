@@ -31,5 +31,6 @@ in {
       ''ENV{SYSTEMD_WANTS}="motion.service"''
     ];
     rulesLine = concatStringsSep ", " rules;
-  in rulesLine;
+  in
+    rulesLine;
 }

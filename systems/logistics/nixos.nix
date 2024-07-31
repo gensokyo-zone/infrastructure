@@ -51,7 +51,7 @@ in {
     #jack.enable = true;
   };
 
-  environment.systemPackages = [ pkgs.cura-octoprint ];
+  environment.systemPackages = [pkgs.cura-octoprint];
 
   users.users.logistics = {
     uid = 1000;

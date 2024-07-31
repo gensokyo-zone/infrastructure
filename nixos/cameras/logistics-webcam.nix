@@ -1,7 +1,4 @@
-{
-  gensokyo-zone,
-  ...
-}: let
+{gensokyo-zone, ...}: let
   inherit (gensokyo-zone.lib) mapDefaults;
 in {
   services.motion.cameras.webcam.settings = mapDefaults {
