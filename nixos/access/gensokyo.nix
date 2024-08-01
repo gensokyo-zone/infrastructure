@@ -44,9 +44,10 @@ in {
               set ${acct} $2;
               add_header "Content-Type" "application/jrd+json";
             }
-            if ($arg_rel !~* "http.*openid\.net") {
-              set ${acct} "";
-            }
+            # whitelist responses for OIDC only
+            #if ($arg_rel !~* "http.*openid\.net") {
+            #  set ${acct} "";
+            #}
             if (${acct} = "") {
               return 404;
             }
