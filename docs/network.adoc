@@ -45,8 +45,8 @@ bedroom-friend:: `10.1.1.82`
 bedroom-colour-strip:: `10.1.1.85`
 
 net_ac_9628:: `10.1.1.90`
+printer:: `10.1.1.91`
 ps2:: `10.1.1.96`
-
 pinecube:: `10.1.1.97`
 
 DHCP:: `10.1.1.98` to `10.1.1.252`
