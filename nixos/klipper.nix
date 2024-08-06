@@ -1,15 +1,24 @@
-_: {
+{ pkgs, ... }: {
+
+environment.etc."fluidd.cfg".source = ./fluidd.cfg;
+
   services = {
     klipper = {
       enable = true;
       octoprintIntegration = true;
       settings = {
+        "include fluidd.cfg" = {};
+
         filter = {};
 
         print_stats = {};
 
+        pause_resume = {};
+
+        display_status = {};
+
         virtual_sdcard = {
-          path = "/printersd/";
+          path = "/var/lib/moonraker/gcodes";
         };
 
         dirzctl = {};
