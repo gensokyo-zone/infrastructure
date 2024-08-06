@@ -18,6 +18,7 @@ in {
     nixos.cameras.printer
     nixos.cameras.logistics-webcam
     nixos.octoprint
+    nixos.nginx
     nixos.klipper
     nixos.moonraker
     nixos.fluidd

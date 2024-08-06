@@ -12,6 +12,8 @@ _: {
         ports.stream.port = 41081;
       };
       octoprint.enable = true;
+      nginx.enable = true;
+      moonraker.enable = true;
     };
   };
   network.networks = {
