@@ -18,6 +18,9 @@ in {
     nixos.cameras.printer
     nixos.cameras.logistics-webcam
     nixos.octoprint
+    nixos.klipper
+    nixos.moonraker
+    nixos.fluidd
     ./hardware-configuration.nix
   ];
 
