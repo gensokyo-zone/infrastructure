@@ -1,4 +1,4 @@
-{ config, ... }: let
+{ config, gensokyo-zone, ... }: let
   inherit (config.services) motion;
   inherit (gensokyo-zone.lib) domain;
 in {
