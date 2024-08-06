@@ -5,6 +5,8 @@ in {
     plugins = [final.curaPlugins.octoprint];
   };
 
+  klipper = prev.callPackage ../packages/klipper.nix {};
+
   octoprint = let
     mapPlugin = python3Packages: _: plugin:
       plugin.override {

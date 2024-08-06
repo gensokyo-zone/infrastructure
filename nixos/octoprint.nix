@@ -71,7 +71,7 @@ in {
         serial = {
           port = "/dev/ttyUSB0";
           baudrate = 115200;
-          autoconnect = true;
+          autoconnect = false;
         };
       }
       {

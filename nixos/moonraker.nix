@@ -3,6 +3,7 @@ _: {
     moonraker = {
       enable = true;
       address = "0.0.0.0";
+      user = "octoprint";
       port = 7125; # it's the default but i'm specifying it anyway
       settings = {
         octoprint_compat = { };
