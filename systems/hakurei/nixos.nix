@@ -42,7 +42,7 @@ in {
     nixos.access.grafana
     nixos.access.loki
     nixos.access.kitchencam
-    nixos.access.octoprint
+    nixos.access.fluidd
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.home-assistant
