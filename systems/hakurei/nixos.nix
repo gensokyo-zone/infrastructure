@@ -269,10 +269,10 @@ in {
     };
     print = {
       inherit (nginx) group;
-      domain = virtualHosts.octoprint.serverName;
+      domain = virtualHosts.fluidd.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.octoprint.otherServerNames
-        virtualHosts.octoprint'local.allServerNames
+        virtualHosts.fluidd.otherServerNames
+        virtualHosts.fluidd'local.allServerNames
       ];
     };
     webrx = {
@@ -405,7 +405,7 @@ in {
         };
       };
       kitchencam.ssl.cert.enable = true;
-      octoprint.ssl.cert.enable = true;
+      fluidd.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
       deluge.ssl.cert.enable = true;
       invidious = {

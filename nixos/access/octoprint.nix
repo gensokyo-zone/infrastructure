@@ -4,33 +4,27 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkDefault;
-  inherit (config.services) octoprint;
+  inherit (config.services) nginx fluidd;
   name.shortServer = mkDefault "print";
-  upstreamName = "octoprint'access";
+  upstreamName = "fluidd'access";
 in {
   config.services.nginx = {
     upstreams'.${upstreamName}.servers = {
-      local = {
-        enable = mkDefault octoprint.enable;
-        addr = mkDefault "localhost";
-        port = mkIf octoprint.enable (mkDefault octoprint.port);
-      };
       service = {upstream, ...}: {
-        enable = mkIf upstream.servers.local.enable (mkDefault false);
+        enable = true;
         accessService = {
-          name = "octoprint";
+          name = "nginx";
+          system = "logistics";
+          port = "http";
           # XXX: logistics doesn't listen on v6
           getAddressFor = "getAddress4For";
         };
       };
     };
     virtualHosts = let
-      copyFromVhost = mkDefault "octoprint";
+      copyFromVhost = mkDefault "fluidd";
       locations = {
         "/" = {
-          proxy.enable = true;
-        };
-        "/sockjs/" = {
           proxy = {
             enable = true;
             websocket.enable = true;
@@ -38,12 +32,15 @@ in {
         };
       };
     in {
-      octoprint = {
+      fluidd = {
         inherit name locations;
-        proxy.upstream = mkDefault upstreamName;
+        proxy = {
+          upstream = mkDefault upstreamName;
+          host = nginx.virtualHosts.fluidd'local.serverName;
+        };
         vouch.enable = mkDefault true;
       };
-      octoprint'local = {
+      fluidd'local = {
         inherit name locations;
         ssl.cert = {
           inherit copyFromVhost;

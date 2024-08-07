@@ -14,6 +14,7 @@ _: {
       octoprint.enable = true;
       nginx.enable = true;
       moonraker.enable = true;
+      fluidd.enable = true;
     };
   };
   network.networks = {
