@@ -5,7 +5,8 @@
       enable = true;
       octoprintIntegration = true;
       mutableConfig = true;
-      configFile = "/var/lib/printer.cfg";
+      mutableConfigFolder = "/var/lib/moonraker/config";
+      settings = {};
     };
   };
 }
