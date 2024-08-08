@@ -28,6 +28,7 @@ in {
       extraConfig = ''
         proxy_redirect off;
         proxy_buffering off;
+        set $args "";
       '';
       locations = {
         "/" = {
