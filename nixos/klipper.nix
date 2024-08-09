@@ -15,4 +15,12 @@ in {
       settings = {};
     };
   };
+  systemd = mkIf cfg.enable {
+    services.klipper = {
+      restartIfChanged = false;
+      serviceConfig.LogFilterPatterns = [
+        ''~INFO:root:Stats''
+      ];
+    };
+  };
 }

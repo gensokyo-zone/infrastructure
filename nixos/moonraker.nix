@@ -48,6 +48,9 @@
       };
     };
   };
+  systemd.services.moonraker = mkIf cfg.enable {
+    # TODO: restartIfChanged = false;
+  };
   networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = [
       cfg.port
