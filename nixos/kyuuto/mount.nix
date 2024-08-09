@@ -75,16 +75,18 @@ in {
         group = mkDefault "kyuuto";
         mode = mkDefault "3775";
       };
+      share = mkMerge [
+        shared
+        {group = "peeps";}
+      ];
       leaf = {
         inherit (shared) owner group;
         mode = mkDefault "2775";
       };
       setupFiles = [
         {
-          ${cfg.shareDir} = mkMerge [
-            shared
-            {group = "peeps";}
-          ];
+          ${cfg.shareDir} = share;
+          ${cfg.shareDir + "/projects"} = share;
           ${cfg.transferDir} = shared;
           ${cfg.libraryDir} = shared;
           ${cfg.libraryDir + "/unsorted"} = shared;
