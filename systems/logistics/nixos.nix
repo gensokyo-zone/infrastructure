@@ -12,13 +12,12 @@ in {
   in [
     nixos.sops
     nixos.base
+    nixos.nginx
     nixos.barcodebuddy-scanner
     nixos.motion
     nixos.cameras.kitchen
     nixos.cameras.printer
     nixos.cameras.logistics-webcam
-    nixos.octoprint
-    nixos.nginx
     nixos.klipper
     nixos.moonraker
     nixos.fluidd
@@ -63,7 +62,7 @@ in {
     description = "Logistics";
     extraGroups = [
       "nixbuilder"
-      (mkIf (!config.services.octoprint.enable) "dialout")
+      (mkIf (!config.services.octoprint.enable && !!config.services.klipper.enable) "dialout")
       (mkIf config.networking.networkmanager.enable "networkmanager")
     ];
     hashedPasswordFile = config.sops.secrets.logistics-user-password.path;

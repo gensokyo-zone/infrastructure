@@ -26,7 +26,7 @@ in {
         marlingcodedocumentation
         printtimegenius
         stlviewer
-        #octoklipper?
+        octoklipper
         #octolapse?
         #dashboard?
       ];

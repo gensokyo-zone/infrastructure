@@ -6,13 +6,15 @@ _: {
   ];
   exports = {
     services = {
+      nginx = {
+        enable = true;
+        ports.proxied.enable = true;
+      };
       motion = {
         id = "kitchen";
         enable = true;
         ports.stream.port = 41081;
       };
-      octoprint.enable = true;
-      nginx.enable = true;
       moonraker.enable = true;
       fluidd.enable = true;
     };
