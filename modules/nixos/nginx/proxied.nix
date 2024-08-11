@@ -9,6 +9,10 @@ let
     set $proxied_cf on;
     set $proxied_host_cf ${host};
   '';
+  xNotCloudflared = ''
+    set $proxied_cf "";
+    set $proxied_host_cf "";
+  '';
   xHeadersProxied = {xvars}: ''
     ${xvars.init "forwarded_for" "$proxy_add_x_forwarded_for"}
     if ($http_x_forwarded_proto) {
@@ -103,6 +107,9 @@ let
       extraConfig = mkMerge [
         (mkIf (cfg.enable == "cloudflared" && virtualHost.proxied.enable != "cloudflared") (
           mkJustBefore (xCloudflared {inherit virtualHost;})
+        ))
+        (mkIf (cfg.enabled && emitVars && cfg.enable != "cloudflared") (
+          mkJustBefore xNotCloudflared
         ))
         (mkIf (xInit && emitVars) (
           mkJustBefore (xHeadersProxied {inherit xvars;})
@@ -211,6 +218,9 @@ let
       extraConfig = mkMerge [
         (mkIf (cfg.enable == "cloudflared") (
           mkOrder orderJustBefore (xCloudflared {virtualHost = config;})
+        ))
+        (mkIf (cfg.enabled && cfg.enable != "cloudflared") (
+          mkOrder orderJustBefore xNotCloudflared
         ))
         (mkIf (xInit && cfg.enabled && config.xvars.enable) (
           mkOrder (orderJustBefore + 25) (xHeadersProxied {inherit xvars;})
