@@ -43,13 +43,16 @@
             "*.lan"
             "*.${domain}"
           ];
-          trusted_clients = access.cidrForNetwork.allLocal.all;
+          trusted_clients =
+            access.cidrForNetwork.allLocal.all
+            # XXX: only safe when protected behind vouch!
+            ++ [ "0.0.0.0/24" ];
         };
       };
     };
   };
   systemd.services.moonraker = mkIf cfg.enable {
-    # TODO: restartIfChanged = false;
+    restartIfChanged = false;
   };
   networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = [

@@ -8,8 +8,7 @@
   inherit (lib.modules) mkDefault;
   name.shortServer = mkDefault "print";
   upstreamName = "fluidd'access";
-  serverName = "print.local.${domain}";
-  # TODO: serverName = "@fluidd_internal";
+  serverName = "@fluidd_internal"; # "print.local.${domain}"
 in {
   config.services.nginx = {
     upstreams'.${upstreamName} = {
@@ -19,13 +18,12 @@ in {
           name = "nginx";
           system = "logistics";
           port = "proxied";
-          # XXX: logistics doesn't listen on v6
-          getAddressFor = "getAddress4For";
         };
       };
     };
     virtualHosts = let
       copyFromVhost = mkDefault "fluidd";
+      # TODO: just use moonraker as the upstream directly?
       locations = {
         "/" = {
           proxy = {
