@@ -1,6 +1,7 @@
 { config, gensokyo-zone, lib, ... }: let
   inherit (gensokyo-zone.lib) domain;
   inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.strings) removePrefix;
   cfg = config.services.fluidd;
   serverName = "@fluidd_internal";
   virtualHost = config.services.nginx.virtualHosts.${cfg.hostName};
@@ -22,6 +23,8 @@ in {
         };
         ${serverName} = {
           # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/web-apps/fluidd.nix
+          # XXX: non-@ host required for gatus to work
+          serverAliases = [ (removePrefix "@" serverName) ];
           proxied.enable = true;
           # TODO: proxy.upstream = "fluidd-apiserver";
           proxy.url = "http://fluidd-apiserver";
