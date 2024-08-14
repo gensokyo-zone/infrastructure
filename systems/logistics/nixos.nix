@@ -20,7 +20,6 @@ in {
     nixos.cameras.logistics-webcam
     nixos.klipper
     nixos.moonraker
-    nixos.fluidd
     ./hardware-configuration.nix
   ];
 

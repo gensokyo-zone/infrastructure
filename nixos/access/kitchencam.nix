@@ -23,7 +23,7 @@ in {
         portName = "stream";
       };
       mkSubFilter = port: ''
-        sub_filter '${port.protocol}://kitchen.local.gensokyo.zone:${toString port.port}/' '/';
+        sub_filter '${port.protocol}://$host:${toString port.port}/' '/';
       '';
       extraConfig = ''
         proxy_redirect off;

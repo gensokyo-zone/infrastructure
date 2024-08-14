@@ -42,7 +42,7 @@ in {
     nixos.access.grafana
     nixos.access.loki
     nixos.access.kitchencam
-    nixos.access.fluidd
+    nixos.access.moonraker
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.home-assistant
@@ -269,10 +269,10 @@ in {
     };
     print = {
       inherit (nginx) group;
-      domain = virtualHosts.fluidd.serverName;
+      domain = virtualHosts.moonraker.serverName;
       extraDomainNames = mkMerge [
-        virtualHosts.fluidd.otherServerNames
-        virtualHosts.fluidd'local.allServerNames
+        virtualHosts.moonraker.otherServerNames
+        virtualHosts.moonraker'local.allServerNames
       ];
     };
     webrx = {
@@ -405,7 +405,7 @@ in {
         };
       };
       kitchencam.ssl.cert.enable = true;
-      fluidd.ssl.cert.enable = true;
+      moonraker.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
       deluge.ssl.cert.enable = true;
       invidious = {
