@@ -170,7 +170,6 @@ in {
     };
     grocy.enable = true;
     extraComponents = [
-      "zha"
       "esphome"
       "apple_tv"
       "spotify"
