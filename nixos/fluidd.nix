@@ -1,6 +1,6 @@
-{ config, gensokyo-zone, lib, ... }: let
+{ config, access, gensokyo-zone, lib, ... }: let
   inherit (gensokyo-zone.lib) domain;
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkDefault mkForce;
   inherit (lib.strings) removePrefix;
   cfg = config.services.fluidd;
   serverName = "@fluidd_internal";
@@ -17,6 +17,14 @@ in {
     };
     nginx = mkIf cfg.enable {
       proxied.enable = true;
+      upstreams.fluidd-apiserver = let
+        moonraker = access.proxyUrlFor {
+          serviceName = "moonraker";
+          scheme = "";
+        };
+      in mkForce {
+        servers.${moonraker} = { };
+      };
       virtualHosts = {
         ${cfg.hostName} = {
           enable = false;

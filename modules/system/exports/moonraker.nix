@@ -31,7 +31,6 @@ in {
         protocol = "http";
         status = {
           enable = mkAlmostOptionDefault true;
-          gatus.client.network = mkAlmostOptionDefault "ip4";
         };
       };
     };

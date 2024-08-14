@@ -14,7 +14,7 @@
   services = {
     moonraker = {
       enable = mkDefault true;
-      address = mkDefault "0.0.0.0";
+      address = mkDefault "all";
       user = mkDefault klipper.user;
       group = mkDefault klipper.group;
       port = 7125; # it's the default but i'm specifying it anyway
@@ -46,7 +46,7 @@
           trusted_clients =
             access.cidrForNetwork.allLocal.all
             # XXX: only safe when protected behind vouch!
-            ++ [ "0.0.0.0/24" ];
+            ++ [ "0.0.0.0/0" "::/0" ];
         };
       };
     };
