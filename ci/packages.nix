@@ -38,7 +38,7 @@ in {
       # TODO: packages.aarch64-linux.openwebrxplus
     ];
     print.inputs = [
-      legacyPackages.x86_64-linux.pkgs.cura-octoprint
+      #legacyPackages.x86_64-linux.pkgs.cura-octoprint
     ];
     systemd2mqtt.inputs = [
       packages.x86_64-linux.systemd2mqtt

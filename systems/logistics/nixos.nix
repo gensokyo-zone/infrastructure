@@ -53,7 +53,10 @@ in {
     #jack.enable = true;
   };
 
-  environment.systemPackages = [pkgs.cura-octoprint];
+  environment.systemPackages = [
+    # XXX: currently broken in nixpkgs
+    # pkgs.cura-octoprint
+  ];
 
   users.users.logistics = {
     uid = 1000;
