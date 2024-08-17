@@ -157,6 +157,7 @@ in {
           trusted_proxies = mkIf cfg.reverseProxy.enable cfg.reverseProxy.trustedAddresses;
           cors_allowed_origins = [
             (mkIf cfg.googleAssistant.enable "https://google.com")
+            (mkIf cfg.cast.enable "https://cast.home-assistant.io")
             (mkIf (cfg.localDomain != null) "https://${cfg.localDomain}")
             # TODO: (mkIf (cfg.reverseProxy.enable && cfg.reverseProxy.auth.enable) vouch cors idk)
             "https://www.home-assistant.io"

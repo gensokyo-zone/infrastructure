@@ -4,6 +4,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkForce mkDefault;
+  inherit (lib.strings) escapeRegex;
   inherit (config.services) nginx home-assistant;
   name.shortServer = mkDefault "home";
   listen' = {
@@ -18,6 +19,15 @@
   upstreamName = "home-assistant'access";
 in {
   config.services.nginx = {
+    commonHttpConfig = ''
+      map $http_origin $hass_allow_origin {
+        ~^https?://(.*\.)?google\.com(:\d+)?$ $http_origin;
+        ~^https?://(www|cast)\.home-assistant\.io(:\d+)?$ $http_origin;
+        ~^https?://${escapeRegex nginx.virtualHosts.home-assistant.serverName}(:\d+)?$ $http_origin;
+        ~^https?://${escapeRegex nginx.virtualHosts.home-assistant'local.serverName}(:\d+)?$ $http_origin;
+        default "";
+      }
+    '';
     upstreams'.${upstreamName}.servers = {
       local = {
         enable = mkDefault home-assistant.enable;
@@ -57,6 +67,16 @@ in {
           proxy = {
             inherit headers;
             enable = true;
+          };
+        };
+        "/hacsfiles/" = {
+          proxy = {
+            inherit headers;
+            enable = true;
+          };
+          headers.set = {
+            Access-Control-Allow-Origin = "$hass_allow_origin";
+            Vary = "Origin";
           };
         };
         # TODO: restrict to "/auth/authorize" and "/auth/login_flow" only..?
