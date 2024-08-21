@@ -41,11 +41,11 @@
     "ci": {
       "flake": false,
       "locked": {
-        "lastModified": 1723587358,
-        "narHash": "sha256-FPtXy3+7uMSNYSmnsTx64BLKBtkgqpB7/molqAnj8No=",
+        "lastModified": 1724182609,
+        "narHash": "sha256-uU9Q0GWiWZDB4mTVLxFvV0uT6jLYRW1HklkOshweg24=",
         "owner": "arcnmx",
         "repo": "ci",
-        "rev": "094589728de9a9bef66e44bca5f825fa7393cacf",
+        "rev": "6121ecf831f09afb240d622efaa7d65dd680eda2",
         "type": "github"
       },
       "original": {
