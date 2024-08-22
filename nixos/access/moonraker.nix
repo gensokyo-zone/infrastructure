@@ -75,6 +75,9 @@ in {
             path = mkDefault "";
             # TODO: path = mkDefault "$request_uri";
           };
+          extraConfig = ''
+            gzip off;
+          '';
         };
       };
     in {
