@@ -19,6 +19,8 @@ in {
     settings = {
       EXTERNAL_GROCY_URL = "https://grocy.${config.networking.domain}";
       DISABLE_AUTHENTICATION = true;
+      USE_GROCY_QU_FACTOR = true;
+      SHOW_STOCK_ON_SCAN = true;
     };
     nginxPhpSettings.extraConfig = ''
       include ${config.sops.secrets.barcodebuddy-fastcgi-params.path};

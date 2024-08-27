@@ -1,6 +1,7 @@
 {
   stdenvNoCC,
   fetchFromGitHub,
+  fetchpatch,
   lib,
   ...
 }: let
@@ -17,6 +18,13 @@ in
       inherit (barcodebuddy.locked) repo owner rev;
       sha256 = barcodebuddy.locked.narHash;
     };
+    patches = [
+      (fetchpatch {
+        name = "barcodebuddy-quantity.patch";
+        url = "https://github.com/gensokyo-zone/barcodebuddy/commit/c46416b40540da0bef4841c2ddf884fa7dd152fe.diff";
+        sha256 = "sha256-PPVZ996Tm+/YkzECFsy1PJQMCjk3+i9jQuOawYzXRgU=";
+      })
+    ];
 
     skipConfigure = true;
     skipBuild = true;
