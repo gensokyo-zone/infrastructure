@@ -48,6 +48,10 @@
             # XXX: only safe when protected behind vouch!
             ++ [ "0.0.0.0/0" "::/0" ];
         };
+        machine = {
+          # disable all machine control
+          provider = "none";
+        };
       };
     };
   };

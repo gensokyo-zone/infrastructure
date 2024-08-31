@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   access,
   gensokyo-zone,
@@ -185,6 +186,9 @@ in {
       "wake_on_lan"
       "withings"
       "wled"
+    ];
+    customComponents = [
+      pkgs.home-assistant-custom-components.moonraker
     ];
   };
   systemd.services.home-assistant = mkIf cfg.enable {
