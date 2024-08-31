@@ -52,6 +52,7 @@
       barcodebuddy
       barcodebuddy-scanner
       barcodebuddy-scanner-python
+      niimprint
       openwebrxplus
       systemd2mqtt
       ;

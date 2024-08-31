@@ -5,7 +5,7 @@ in {
     plugins = [final.curaPlugins.octoprint];
   };
 
-  klipper = prev.callPackage ../packages/klipper.nix {};
+  klipper = final.callPackage ../packages/klipper.nix {};
 
   octoprint = let
     mapPlugin = python3Packages: _: plugin:
@@ -73,4 +73,6 @@ in {
       in
         callPackage octoklipper {};
     };
+
+  niimprint = final.python3Packages.callPackage ../packages/niimprint.nix {};
 }

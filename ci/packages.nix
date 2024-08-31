@@ -39,6 +39,7 @@ in {
     ];
     print.inputs = [
       #legacyPackages.x86_64-linux.pkgs.cura-octoprint
+      legacyPackages.x86_64-linux.pkgs.niimprint
     ];
     systemd2mqtt.inputs = [
       packages.x86_64-linux.systemd2mqtt
