@@ -9,6 +9,12 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  network.networks = {
+    tail = {
+      address4 = "100.70.124.79";
+      address6 = "fd7a:115c:a1e0::b001:7c4f";
+    };
+  };
   exports = {
     services = {
       tailscale.enable = true;

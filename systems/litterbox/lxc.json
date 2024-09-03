@@ -1,7 +1,8 @@
 {
-	"lxc": {
-		"lxc.mount.entry": [
-			"/dev/net/tun dev/net/tun none bind,optional,create=file"
-		]
-	}
+  "lxc": {
+    "lxc.mount.entry": [
+      "/mnt/kyuuto-litterbox mnt/kyuuto-litterbox none bind,optional,create=dir",
+      "/dev/net/tun dev/net/tun none bind,optional,create=file"
+    ]
+  }
 }
