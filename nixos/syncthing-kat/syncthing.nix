@@ -5,5 +5,10 @@
     openDefaultPorts = true;
     dataDir = "/mnt/kyuuto-litterbox";
   };
-  networking.firewall.interfaces.local.allowedTCPPorts = [ 8384 ];
+  networking.firewall.interfaces = let
+    x.allowedTCPPorts = [8384];
+  in {
+    local = x;
+    tail = x;
+  };
 }

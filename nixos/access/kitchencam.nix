@@ -78,7 +78,8 @@ in {
   };
   config.networking.firewall.allowedTCPPorts = let
     inherit (nginx.virtualHosts.kitchencam) listen';
-  in mkIf listen'.stream.enable [
-    listen'.stream.port
-  ];
+  in
+    mkIf listen'.stream.enable [
+      listen'.stream.port
+    ];
 }

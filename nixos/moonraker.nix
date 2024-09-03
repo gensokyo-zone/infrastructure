@@ -1,16 +1,22 @@
-{ config, access, gensokyo-zone, lib, ... }: let
+{
+  config,
+  access,
+  gensokyo-zone,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf mkDefault;
   inherit (gensokyo-zone.lib) domain;
   inherit (config.services) klipper;
   cfg = config.services.moonraker;
- in {
+in {
   sops.secrets = {
     moonraker_cfg = {
       sopsFile = ./secrets/moonraker.yaml;
       path = "${cfg.stateDir}/config/secrets.conf";
       owner = cfg.user;
     };
-   };
+  };
   services = {
     moonraker = {
       enable = mkDefault true;
@@ -19,9 +25,9 @@
       group = mkDefault klipper.group;
       port = 7125; # it's the default but i'm specifying it anyway
       settings = {
-        "include secrets.conf" = { };
-        octoprint_compat = { };
-        history = { };
+        "include secrets.conf" = {};
+        octoprint_compat = {};
+        history = {};
         "webcam printer" = let
           inherit (config.services.motion.cameras) printercam;
           inherit (printercam.settings) camera_id;
@@ -46,7 +52,7 @@
           trusted_clients =
             access.cidrForNetwork.allLocal.all
             # XXX: only safe when protected behind vouch!
-            ++ [ "0.0.0.0/0" "::/0" ];
+            ++ ["0.0.0.0/0" "::/0"];
         };
         machine = {
           # disable all machine control

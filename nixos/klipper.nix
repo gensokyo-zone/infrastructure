@@ -1,4 +1,9 @@
-{ config, gensokyo-zone, lib, ... }: let
+{
+  config,
+  gensokyo-zone,
+  lib,
+  ...
+}: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) moonraker octoprint;

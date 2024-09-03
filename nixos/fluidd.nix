@@ -1,4 +1,10 @@
-{ config, access, gensokyo-zone, lib, ... }: let
+{
+  config,
+  access,
+  gensokyo-zone,
+  lib,
+  ...
+}: let
   inherit (gensokyo-zone.lib) domain;
   inherit (lib.modules) mkIf mkDefault mkForce;
   inherit (lib.strings) removePrefix;
@@ -11,9 +17,9 @@ in {
       enable = mkDefault true;
       hostName = mkDefault "print.local.${domain}"; # TODO: serverName?
       nginx.locations."/webcam".proxyPass = let
-            inherit (config.services.motion.cameras) printercam;
-            inherit (printercam.settings) camera_id;
-          in "https://kitchen.local.${domain}/${toString camera_id}/stream";
+        inherit (config.services.motion.cameras) printercam;
+        inherit (printercam.settings) camera_id;
+      in "https://kitchen.local.${domain}/${toString camera_id}/stream";
     };
     nginx = mkIf cfg.enable {
       proxied.enable = true;
@@ -22,9 +28,10 @@ in {
           serviceName = "moonraker";
           scheme = "";
         };
-      in mkForce {
-        servers.${moonraker} = { };
-      };
+      in
+        mkForce {
+          servers.${moonraker} = {};
+        };
       virtualHosts = {
         ${cfg.hostName} = {
           enable = false;
@@ -32,7 +39,7 @@ in {
         ${serverName} = {
           # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/web-apps/fluidd.nix
           # XXX: non-@ host required for gatus to work
-          serverAliases = [ (removePrefix "@" serverName) ];
+          serverAliases = [(removePrefix "@" serverName)];
           proxied.enable = true;
           # TODO: proxy.upstream = "fluidd-apiserver";
           proxy.url = "http://fluidd-apiserver";

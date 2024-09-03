@@ -1,43 +1,44 @@
 {
-  buildPythonApplication
-, fetchFromGitHub
-, poetry-core
-, pyserial
-, pillow
-, click
+  buildPythonApplication,
+  fetchFromGitHub,
+  poetry-core,
+  pyserial,
+  pillow,
+  click,
 }: let
   mainProgram = "niimprint";
-in buildPythonApplication {
-  pname = "niimprint";
-  version = "2024_04_05";
+in
+  buildPythonApplication {
+    pname = "niimprint";
+    version = "2024_04_05";
 
-  src = fetchFromGitHub {
-    owner = "AndBondStyle";
-    repo = "niimprint";
-    rev = "be39f68c16a5a7dc1b09bb173700d0ee1ec9cb66";
-    sha256 = "sha256-+YISYchdqeVKrQ0h2cj5Jy2ezMjnQcWCCYm5f95H9dI=";
-  };
+    src = fetchFromGitHub {
+      owner = "AndBondStyle";
+      repo = "niimprint";
+      rev = "be39f68c16a5a7dc1b09bb173700d0ee1ec9cb66";
+      sha256 = "sha256-+YISYchdqeVKrQ0h2cj5Jy2ezMjnQcWCCYm5f95H9dI=";
+    };
 
-  pyproject = true;
+    pyproject = true;
 
-  nativeBuildInputs = [
-    poetry-core
-  ];
+    nativeBuildInputs = [
+      poetry-core
+    ];
 
-  propagatedBuildInputs = [
-    pyserial
-    pillow
-    click
-  ];
+    propagatedBuildInputs = [
+      pyserial
+      pillow
+      click
+    ];
 
-  postInstall = ''
-    install -d $out/bin
-    echo '#!/usr/bin/env python' > $out/bin/${mainProgram}
-    cat niimprint/__main__.py >> $out/bin/${mainProgram}
-    chmod +x $out/bin/${mainProgram}
-  '';
+    postInstall = ''
+      install -d $out/bin
+      echo '#!/usr/bin/env python' > $out/bin/${mainProgram}
+      cat niimprint/__main__.py >> $out/bin/${mainProgram}
+      chmod +x $out/bin/${mainProgram}
+    '';
 
-  meta = {
-    inherit mainProgram;
-  };
-}
+    meta = {
+      inherit mainProgram;
+    };
+  }
