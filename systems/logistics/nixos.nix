@@ -19,7 +19,6 @@ in {
     nixos.cameras.printer
     nixos.cameras.logistics-webcam
     nixos.klipper
-    nixos.moonraker
     ./hardware-configuration.nix
   ];
 

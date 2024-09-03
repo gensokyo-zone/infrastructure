@@ -5,14 +5,14 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
-  inherit (gensokyo-zone.lib) domain;
+  inherit (lib.modules) mkIf mkBefore mkDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault domain;
   inherit (config.services) klipper;
   cfg = config.services.moonraker;
 in {
   sops.secrets = {
     moonraker_cfg = {
-      sopsFile = ./secrets/moonraker.yaml;
+      sopsFile = mkDefault ../secrets/moonraker.yaml;
       path = "${cfg.stateDir}/config/secrets.conf";
       owner = cfg.user;
     };
@@ -60,9 +60,27 @@ in {
         };
       };
     };
+    klipper = mkIf cfg.enable {
+      user = mkAlmostOptionDefault "moonraker";
+      group = mkAlmostOptionDefault "moonraker";
+      mutableConfig = true;
+      mutableConfigFolder = mkDefault "${cfg.stateDir}/config";
+      configFiles = mkBefore [./fluidd.cfg];
+      settings = {
+        print_stats = {};
+        pause_resume = {};
+        display_status = {};
+        virtual_sdcard = {
+          path = "${cfg.stateDir}/gcodes";
+          on_error_gcode = mkAlmostOptionDefault "CANCEL_PRINT";
+        };
+      };
+    };
   };
-  systemd.services.moonraker = mkIf cfg.enable {
-    restartIfChanged = false;
+  systemd.services = mkIf cfg.enable {
+    moonraker = {
+      restartIfChanged = false;
+    };
   };
   networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = [
