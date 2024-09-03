@@ -550,12 +550,6 @@ EOT
     size         = 64
   }
 
-  startup {
-    order      = 64
-    up_delay   = 0
-    down_delay = 0
-  }
-
   initialization {
     hostname = "litterbox"
     ip_config {
