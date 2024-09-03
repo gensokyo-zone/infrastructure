@@ -44,6 +44,10 @@ in {
     serviceConfig = mkIf cfg.quiet {
       LogFilterPatterns = [
         ''~INFO:root:Stats''
+        ''~INFO:root:toolhead''
+        ''~max_accel:''
+        ''~minimum_cruise_ratio:''
+        ''~square_corner_velocity:''
       ];
     };
     preStart = mkIf (cfg.configFiles != [] && cfg.mutableConfig) (mkAfter ''
