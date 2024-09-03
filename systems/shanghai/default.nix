@@ -1,4 +1,4 @@
-{lib, ...}: let
+{config, lib, ...}: let
   inherit (lib.strings) concatStringsSep;
   dot = concatStringsSep ".";
   cutie = dot ["cutie" "moe"];
@@ -7,7 +7,13 @@
   };
 in {
   type = "Linux";
-  access.domain = dot ["gensokyo" cutie];
+  access = {
+    domain = dot ["gensokyo" cutie];
+    fqdnAliases = map dot [
+      [config.access.hostName cutie]
+      #[config.access.hostName gensokyo-zone.lib.domain]
+    ];
+  };
   network.networks = {
     local = {
       imports = [netname];

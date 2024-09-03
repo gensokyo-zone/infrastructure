@@ -196,6 +196,10 @@ in {
     fqdn = mkOption {
       type = str;
     };
+    fqdnAliases = mkOption {
+      type = listOf str;
+      default = [];
+    };
     hostName = mkOption {
       type = str;
       default = name;

@@ -7,8 +7,8 @@
 }: let
   inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkDefault mkForce;
-  inherit (lib.attrsets) filterAttrs mapAttrsToList nameValuePair listToAttrs;
-  inherit (lib.lists) filter optional singleton concatLists;
+  inherit (lib.attrsets) attrValues filterAttrs mapAttrsToList nameValuePair listToAttrs;
+  inherit (lib.lists) filter optional singleton concatMap;
   inherit (lib.strings) hasPrefix replaceStrings concatStringsSep;
   inherit (lib.trivial) mapNullable flip;
   cfg = config.services.dnsmasq;
@@ -19,21 +19,23 @@
         system.access.online.enable && system.network.networks.local.enable or false
     )
     systems;
-  mkHostRecordPairs = _: system: [
+  mkHostRecordPairs = system: [
     (mkHostRecordPair "int" system)
     (mkHostRecordPair "local" system)
     (mkHostRecordPair "tail" system)
   ];
   mapDynamic4 = replaceStrings ["10.1.1."] ["0.0.0."];
   mapDynamic6 = replaceStrings ["fd0a::"] ["2001::"];
-  mkDynamicHostRecord = _: system: let
+  mkDynamicHostRecords = system: map (mkDynamicHostRecord system) (
+    singleton system.access.fqdn
+    ++ system.access.fqdnAliases
+  );
+  mkDynamicHostRecord = system: let
     address4 = system.network.networks.local.address4 or null;
     address6 = system.network.networks.local.address6 or null;
-  in
+  in fqdn:
     concatStringsSep "," (
-      [
-        system.access.fqdn
-      ]
+      singleton fqdn
       ++ optional (address4 != null)
       (toString (mapNullable mapDynamic4 address4))
       ++ optional (address6 != null)
@@ -59,7 +61,7 @@
       (toString address6)
     ));
   systemHosts = filterAttrs (_: value: value != "") (
-    listToAttrs (concatLists (mapAttrsToList mkHostRecordPairs systems))
+    listToAttrs (concatMap mkHostRecordPairs (attrValues systems))
   );
   mkHostRecord = name: record: "${name},${record}";
   filterns = ns: !hasPrefix "127.0.0" ns || ns == "::1";
@@ -109,7 +111,7 @@ in {
             (mapAttrsToList mkHostRecord systemHosts)
             (mkIf (cfg.bedrockConnect.address != null || cfg.bedrockConnect.address6 != null) bedrockRecords)
           ];
-        dynamic-host = mapAttrsToList mkDynamicHostRecord localSystems;
+        dynamic-host = concatMap mkDynamicHostRecords (attrValues localSystems);
         server =
           if config.networking.nameservers' != []
           then map (ns: ns.address) (filter filterns' config.networking.nameservers')
