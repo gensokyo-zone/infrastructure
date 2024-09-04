@@ -6,7 +6,6 @@
 }: let
   inherit (lib.modules) mkIf mkMerge mkDefault;
   cfg = config.services.vouch-proxy;
-  sopsFile = mkDefault ./secrets/vouch.yaml;
   enableKeycloak = true;
   hassVouch = false;
 in {
@@ -21,10 +20,6 @@ in {
         + old.postPatch or "";
       doCheck = false;
     }));
-    domain = mkDefault "login.${config.networking.domain}";
-    authUrl = mkIf enableKeycloak (
-      mkDefault "https://sso.${config.networking.domain}/realms/${config.networking.domain}"
-    );
     settings = mkMerge [
       {
         vouch.listen = mkDefault "0.0.0.0";
@@ -38,21 +33,5 @@ in {
         };
       })
     ];
-    enableSettingsSecrets = mkDefault true;
-    extraSettings = {
-      oauth.client_secret._secret = config.sops.secrets.vouch-client-secret.path;
-      vouch.jwt.secret._secret = config.sops.secrets.vouch-jwt.path;
-    };
-  };
-
-  sops.secrets = {
-    vouch-jwt = {
-      inherit sopsFile;
-      owner = cfg.user;
-    };
-    vouch-client-secret = {
-      inherit sopsFile;
-      owner = cfg.user;
-    };
   };
 }

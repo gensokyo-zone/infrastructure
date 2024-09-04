@@ -17,7 +17,7 @@ in {
     nixos.keycloak
     nixos.vaultwarden
     nixos.cloudflared
-    nixos.vouch
+    nixos.vouch.gensokyo
     nixos.nginx
     nixos.access.vaultwarden
   ];

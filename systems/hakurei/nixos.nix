@@ -26,7 +26,7 @@ in {
     nixos.ddclient
     nixos.acme
     nixos.nginx
-    nixos.vouch
+    nixos.vouch.local
     nixos.access.nginx
     nixos.access.global
     nixos.access.mosquitto
@@ -75,13 +75,6 @@ in {
         (virtualHosts.gensokyoZone.proxied.cloudflared.getIngress {})
       ];
     };
-  };
-
-  # configure a secondary vouch instance for local clients, but don't use it by default
-  services.vouch-proxy = {
-    authUrl = "https://${virtualHosts.keycloak'local.serverName}/realms/${config.networking.domain}";
-    domain = "login.local.${config.networking.domain}";
-    settings.cookie.domain = "local.${config.networking.domain}";
   };
 
   security.acme.certs = {
