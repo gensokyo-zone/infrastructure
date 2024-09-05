@@ -43,6 +43,7 @@ in {
     nixos.access.loki
     nixos.access.kitchencam
     nixos.access.moonraker
+    nixos.access.mpd
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.home-assistant
@@ -268,6 +269,14 @@ in {
         virtualHosts.moonraker'local.allServerNames
       ];
     };
+    radio = {
+      inherit (nginx) group;
+      domain = virtualHosts.mpd.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.mpd.otherServerNames
+        virtualHosts.mpd'local.allServerNames
+      ];
+    };
     webrx = {
       inherit (nginx) group;
       domain = virtualHosts.openwebrx.serverName;
@@ -400,6 +409,7 @@ in {
       kitchencam.ssl.cert.enable = true;
       moonraker.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
+      mpd.ssl.cert.enable = true;
       deluge.ssl.cert.enable = true;
       invidious = {
         ssl.cert.enable = true;
