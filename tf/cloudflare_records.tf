@@ -122,7 +122,7 @@ module "sakuya_system_records" {
   source    = "./system/records"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id
   zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
-  net_data  = local.systems.kasen.network
+  net_data  = local.systems.sakuya.network
 }
 
 module "logistics_system_records" {
