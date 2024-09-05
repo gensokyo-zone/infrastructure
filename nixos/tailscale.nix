@@ -1,17 +1,20 @@
 {
   config,
+  systemConfig,
+  gensokyo-zone,
   lib,
   pkgs,
   ...
-}:
-let
+}: let
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkEnableOption;
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.lists) elem;
   inherit (lib.strings) optionalString;
   inherit (lib.meta) getExe;
   cfg = config.services.tailscale;
 in {
-  options.services.tailscale = with types; {
+  options.services.tailscale = with lib.types; {
     advertiseExitNode = mkEnableOption "exit node";
   };
   config = {
@@ -31,9 +34,20 @@ in {
 
     services.tailscale.enable = mkDefault true;
 
-    sops.secrets.tailscale-key = mkIf cfg.enable {
-      sopsFile = mkDefault ./secrets/tailscale.yaml;
-    };
+    sops.secrets.tailscale-key = let
+      keyReisen = "tailscale-key-reisen";
+      keyGenso = "tailscale-key-gensokyo";
+      sharedKeys = [keyReisen keyGenso];
+    in
+      mkIf cfg.enable {
+        key = mkMerge [
+          (mkIf (systemConfig.proxmox.enabled && systemConfig.proxmox.node.name == "reisen") (mkDefault keyReisen))
+          (mkIf (config.networking.domain == gensokyo-zone.lib.domain) (mkAlmostOptionDefault keyGenso))
+        ];
+        sopsFile = mkIf (elem config.sops.secrets.tailscale-key.key sharedKeys) (
+          mkDefault ./secrets/tailscale.yaml
+        );
+      };
     systemd.services.tailscale-autoconnect = mkIf cfg.enable rec {
       description = "Automatic connection to Tailscale";
 

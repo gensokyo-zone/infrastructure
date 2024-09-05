@@ -1,8 +1,24 @@
+locals {
+  tailscale_tag_infra  = "tag:infrastructure"
+  tailscale_tag_genso  = "tag:gensokyo"
+  tailscale_tag_reisen = "tag:reisen"
+  tailscale_tag_arc    = "tag:arc"
+  tailscale_tag_kat    = "tag:kat"
+
+  tailscale_group_admin = "autogroup:admin"
+
+  tailscale_user_arc = "arc@${var.tailscale_tailnet}"
+  tailscale_user_kat = "kat@${var.tailscale_tailnet}"
+}
+
 resource "tailscale_acl" "tailnet" {
   acl = jsonencode({
     tagOwners = {
-      "tag:reisen" : ["autogroup:admin"],
-      "tag:gensokyo" : ["autogroup:admin"],
+      "${local.tailscale_tag_infra}" : [local.tailscale_group_admin],
+      "${local.tailscale_tag_reisen}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
+      "${local.tailscale_tag_genso}" : [local.tailscale_group_admin, local.tailscale_tag_arc, local.tailscale_tag_kat],
+      "${local.tailscale_tag_arc}" : [local.tailscale_user_arc],
+      "${local.tailscale_tag_kat}" : [local.tailscale_user_kat],
     }
     acls = [
       {
@@ -30,11 +46,25 @@ resource "tailscale_tailnet_key" "reisen" {
   ephemeral     = false
   preauthorized = true
   description   = "Reisen VM"
-  tags          = ["tag:gensokyo", "tag:reisen"]
+  tags          = [local.tailscale_tag_infra, local.tailscale_tag_genso, local.tailscale_tag_reisen]
+  depends_on    = [tailscale_acl.tailnet]
+}
+
+resource "tailscale_tailnet_key" "gensokyo" {
+  reusable      = true
+  ephemeral     = false
+  preauthorized = true
+  description   = "Reisen VM"
+  tags          = [local.tailscale_tag_infra, local.tailscale_tag_genso]
   depends_on    = [tailscale_acl.tailnet]
 }
 
 output "tailscale_key_reisen" {
   value     = tailscale_tailnet_key.reisen.key
+  sensitive = true
+}
+
+output "tailscale_key_gensokyo" {
+  value     = tailscale_tailnet_key.gensokyo.key
   sensitive = true
 }
