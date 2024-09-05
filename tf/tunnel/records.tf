@@ -14,6 +14,6 @@ resource "cloudflare_record" "records" {
   proxied  = true
   ttl      = 1
   type     = "CNAME"
-  value    = cloudflare_tunnel.tunnel.cname
+  content  = cloudflare_tunnel.tunnel.cname
   zone_id  = var.zone_id
 }

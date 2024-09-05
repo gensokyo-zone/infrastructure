@@ -73,7 +73,7 @@ resource "cloudflare_record" "kerberos_txt" {
   name    = "_kerberos"
   type    = "TXT"
   ttl     = 3600
-  value   = "GENSOKYO.ZONE"
+  content = "GENSOKYO.ZONE"
 }
 
 resource "cloudflare_record" "kerberos_uri_tcp" {
@@ -177,5 +177,5 @@ resource "cloudflare_record" "idp-ca" {
   name    = "idp-ca"
   type    = "CNAME"
   ttl     = 60
-  value   = local.idp_fqdn
+  content = local.idp_fqdn
 }

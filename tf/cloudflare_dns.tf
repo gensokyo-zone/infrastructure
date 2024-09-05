@@ -1,6 +1,6 @@
 locals {
-  dyndns_cidr6    = cidrsubnet("${cloudflare_record.dyndns_aaaa.value}/64", 0, 0)
-  dyndns_address4 = cloudflare_record.dyndns_a.value
+  dyndns_cidr6    = cidrsubnet("${cloudflare_record.dyndns_aaaa.content}/64", 0, 0)
+  dyndns_address4 = cloudflare_record.dyndns_a.content
 }
 
 resource "cloudflare_api_token" "dyndns" {
@@ -32,11 +32,11 @@ resource "cloudflare_record" "dyndns_a" {
   proxied = false
   ttl     = 300
   type    = "A"
-  value   = "127.0.0.1"
+  content = "127.0.0.1"
   zone_id = cloudflare_zone.gensokyo-zone_zone.id
 
   lifecycle {
-    ignore_changes = [value]
+    ignore_changes = [content]
   }
 }
 
@@ -45,11 +45,11 @@ resource "cloudflare_record" "dyndns_aaaa" {
   proxied = false
   ttl     = 300
   type    = "AAAA"
-  value   = "::1"
+  content = "::1"
   zone_id = cloudflare_zone.gensokyo-zone_zone.id
 
   lifecycle {
-    ignore_changes = [value]
+    ignore_changes = [content]
   }
 }
 

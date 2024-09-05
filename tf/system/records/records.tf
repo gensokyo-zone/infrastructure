@@ -152,7 +152,7 @@ resource "cloudflare_record" "a_records" {
   proxied  = false
   ttl      = 3600
   type     = "A"
-  value    = local.a_records[each.value].value
+  content  = local.a_records[each.value].value
   zone_id  = var.zone_id
 }
 
@@ -162,6 +162,6 @@ resource "cloudflare_record" "aaaa_records" {
   proxied  = false
   ttl      = 3600
   type     = "AAAA"
-  value    = local.aaaa_records[each.value].value
+  content  = local.aaaa_records[each.value].value
   zone_id  = var.zone_id
 }

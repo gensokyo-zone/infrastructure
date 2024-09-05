@@ -35,6 +35,6 @@ resource "cloudflare_record" "cname_records" {
   proxied  = false
   ttl      = 600
   type     = "CNAME"
-  value    = local.cname_records[each.value].value
+  content  = local.cname_records[each.value].value
   zone_id  = var.zone_id
 }
