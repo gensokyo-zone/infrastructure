@@ -6,9 +6,9 @@ _: {
   modules = [
     ./nixos.nix
   ];
-deploy = {
-hostname = "10.1.1.50";
-};
+  deploy = {
+    hostname = "10.1.1.50";
+  };
   network.networks = {
     tail = {
       #address4 = "100.70.124.79";

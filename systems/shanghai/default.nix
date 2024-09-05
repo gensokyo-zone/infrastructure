@@ -1,4 +1,8 @@
-{config, lib, ...}: let
+{
+  config,
+  lib,
+  ...
+}: let
   inherit (lib.strings) concatStringsSep;
   dot = concatStringsSep ".";
   cutie = dot ["cutie" "moe"];

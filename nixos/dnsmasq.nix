@@ -26,23 +26,25 @@
   ];
   mapDynamic4 = replaceStrings ["10.1.1."] ["0.0.0."];
   mapDynamic6 = replaceStrings ["fd0a::"] ["2001::"];
-  mkDynamicHostRecords = system: map (mkDynamicHostRecord system) (
-    singleton system.access.fqdn
-    ++ system.access.fqdnAliases
-  );
+  mkDynamicHostRecords = system:
+    map (mkDynamicHostRecord system) (
+      singleton system.access.fqdn
+      ++ system.access.fqdnAliases
+    );
   mkDynamicHostRecord = system: let
     address4 = system.network.networks.local.address4 or null;
     address6 = system.network.networks.local.address6 or null;
-  in fqdn:
-    concatStringsSep "," (
-      singleton fqdn
-      ++ optional (address4 != null)
-      (toString (mapNullable mapDynamic4 address4))
-      ++ optional (address6 != null)
-      (toString (mapNullable mapDynamic6 address6))
-      ++ singleton
-      cfg.dynamic.interface
-    );
+  in
+    fqdn:
+      concatStringsSep "," (
+        singleton fqdn
+        ++ optional (address4 != null)
+        (toString (mapNullable mapDynamic4 address4))
+        ++ optional (address6 != null)
+        (toString (mapNullable mapDynamic6 address6))
+        ++ singleton
+        cfg.dynamic.interface
+      );
   mkHostRecordPair = network: system: let
     address4 = system.network.networks.${network}.address4 or null;
     address6 = system.network.networks.${network}.address6 or null;

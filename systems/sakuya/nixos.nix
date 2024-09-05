@@ -1,8 +1,11 @@
-{ config, meta, ... }: {
-
+{
+  config,
+  meta,
+  ...
+}: {
   imports = let
     inherit (meta) nixos;
-   in [
+  in [
     nixos.sops
     nixos.tailscale
   ];
@@ -12,9 +15,9 @@
   };
 
   fileSystems."/" = {
-      device = "/dev/disk/by-uuid/44444444-4444-4444-8888-888888888888";
-      fsType = "ext4";
-    };
+    device = "/dev/disk/by-uuid/44444444-4444-4444-8888-888888888888";
+    fsType = "ext4";
+  };
 
   networking.useNetworkd = true;
   systemd.network = {
