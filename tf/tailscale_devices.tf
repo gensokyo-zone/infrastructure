@@ -2,13 +2,16 @@ locals {
   tailscale_tag_infra  = "tag:infrastructure"
   tailscale_tag_genso  = "tag:gensokyo"
   tailscale_tag_reisen = "tag:reisen"
-  tailscale_tag_arc    = "tag:arc"
-  tailscale_tag_kat    = "tag:kat"
 
-  tailscale_group_admin = "autogroup:admin"
+  tailscale_tag_arc        = "tag:arc"
+  tailscale_tag_arc_deploy = "tag:arc-deploy"
+  tailscale_tag_kat        = "tag:kat"
+  tailscale_tag_kat_deploy = "tag:kat-deploy"
 
   tailscale_user_arc = "arc@${var.tailscale_tailnet}"
   tailscale_user_kat = "kat@${var.tailscale_tailnet}"
+
+  tailscale_group_admin = "autogroup:admin"
 }
 
 resource "tailscale_acl" "tailnet" {
@@ -16,9 +19,11 @@ resource "tailscale_acl" "tailnet" {
     tagOwners = {
       "${local.tailscale_tag_infra}" : [local.tailscale_group_admin],
       "${local.tailscale_tag_reisen}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
-      "${local.tailscale_tag_genso}" : [local.tailscale_group_admin, local.tailscale_tag_arc, local.tailscale_tag_kat],
-      "${local.tailscale_tag_arc}" : [local.tailscale_user_arc],
-      "${local.tailscale_tag_kat}" : [local.tailscale_user_kat],
+      "${local.tailscale_tag_genso}" : [local.tailscale_group_admin, local.tailscale_tag_arc_deploy, local.tailscale_tag_kat_deploy],
+      "${local.tailscale_tag_arc}" : [local.tailscale_user_arc, local.tailscale_tag_arc_deploy],
+      "${local.tailscale_tag_arc_deploy}" : [local.tailscale_user_arc],
+      "${local.tailscale_tag_kat}" : [local.tailscale_user_kat, local.tailscale_tag_kat_deploy],
+      "${local.tailscale_tag_kat_deploy}" : [local.tailscale_user_kat],
     }
     acls = [
       {
