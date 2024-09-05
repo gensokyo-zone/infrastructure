@@ -18,6 +18,10 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.6.0"
     }
+    tailscale = {
+      source  = "tailscale/tailscale"
+      version = ">= 0.16.2"
+    }
     tls = {
       source  = "hashicorp/tls"
       version = ">= 4.0.5"

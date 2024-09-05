@@ -4,7 +4,11 @@
   pkgs,
   ...
 }:
-with lib; let
+let
+  inherit (lib.options) mkEnableOption;
+  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.strings) optionalString;
+  inherit (lib.meta) getExe;
   cfg = config.services.tailscale;
 in {
   options.services.tailscale = with types; {
@@ -27,7 +31,9 @@ in {
 
     services.tailscale.enable = mkDefault true;
 
-    sops.secrets.tailscale-key = mkIf cfg.enable {};
+    sops.secrets.tailscale-key = mkIf cfg.enable {
+      sopsFile = mkDefault ./secrets/tailscale.yaml;
+    };
     systemd.services.tailscale-autoconnect = mkIf cfg.enable rec {
       description = "Automatic connection to Tailscale";
 
