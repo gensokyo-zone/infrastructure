@@ -18,7 +18,7 @@ _: {
   network.networks = {
     tail = {
       address4 = "100.113.253.48";
-      address6 = "fd7a:115c:a1e0::f1b1:fd30";
+      address6 = "fd7a:115c:a1e0::f101:fd31";
     };
   };
 }
