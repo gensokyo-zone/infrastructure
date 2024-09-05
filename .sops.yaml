@@ -17,6 +17,7 @@ keys:
 - &logistics_osh age1tkkau8vk5h9dh3kemash4eghn7lk84j0hhpmvvf7j6phgcsm9vmsphv0py
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
+- &sakuya_osh age1ehdj6hghtr8sf5s5c03rru4y3a02nwrt694e36tjnd6g7eq4l43qfradn6
 creation_rules:
 - path_regex: 'nixos/secrets/.+\.yaml$'
   shamir_threshold: 1
@@ -34,6 +35,7 @@ creation_rules:
     - *litterbox_osh
     - *keycloak_osh
     - *kasen_osh
+    - *sakuya_osh
     - *logistics_osh
 - path_regex: 'modules/extern/secrets/.+\.yaml$'
   shamir_threshold: 1
@@ -68,6 +70,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *aya_osh
+- path_regex: 'systems/sakuya/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *sakuya_osh
 - path_regex: 'systems/tewi/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
