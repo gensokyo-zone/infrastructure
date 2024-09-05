@@ -1,8 +1,7 @@
 _: {
   arch = "aarch64";
   type = "NixOS";
-  ci.allowFailure = true;
-  access.online.enable = false;
+  ci.enable = false;
   modules = [
     ./nixos.nix
   ];
@@ -11,8 +10,8 @@ _: {
   };
   network.networks = {
     tail = {
-      #address4 = "100.70.124.79";
-      #address6 = "fd7a:115c:a1e0::b001:7c4f";
+      address4 = "100.71.135.42";
+      address6 = "fd7a:115c:a1e0::4f01:872a";
     };
     local = {
       macAddress = "02:ba:46:f8:40:52";

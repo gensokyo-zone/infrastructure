@@ -201,7 +201,11 @@
           "address6": "fd0a::be24:11ff:fec4:66ab",
           "macAddress": "BC:24:11:C4:66:AB"
         },
-        "tail": null
+        "tail": {
+          "address4": "100.70.124.79",
+          "address6": "fd7a:115c:a1e0::b001:7c4f",
+          "macAddress": null
+        }
       }
     }
   },
@@ -292,6 +296,24 @@
           "macAddress": null
         },
         "tail": null
+      }
+    }
+  },
+  "sakuya": {
+    "network": {
+      "hostName": "sakuya",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.50",
+          "address6": "fd0a::2ba:46ff:fef8:4052",
+          "macAddress": "02:ba:46:f8:40:52"
+        },
+        "tail": {
+          "address4": "100.71.135.42",
+          "address6": "fd7a:115c:a1e0::4f01:872a",
+          "macAddress": null
+        }
       }
     }
   },
