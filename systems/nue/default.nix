@@ -16,8 +16,8 @@ in {
     };
     tail = {
       imports = [netname];
-      address4 = "100.86.77.54";
-      address6 = "fd7a:115c:a1e0:ab12:4843:cd96:6256:4d36";
+      address4 = "100.75.15.95";
+      address6 = "fd7a:115c:a1e0::fa01:f5f";
     };
   };
   exports.services = {

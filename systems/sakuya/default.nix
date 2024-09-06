@@ -10,8 +10,8 @@ _: {
   };
   network.networks = {
     tail = {
-      address4 = "100.71.135.42";
-      address6 = "fd7a:115c:a1e0::4f01:872a";
+      address4 = "100.106.9.75";
+      address6 = "fd7a:115c:a1e0::f501:94b";
     };
     local = {
       macAddress = "02:ba:46:f8:40:52";

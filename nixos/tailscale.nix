@@ -88,7 +88,7 @@ in {
           fi
 
           # otherwise authenticate with tailscale
-          ${getExe tailscale} up ${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+          ${getExe tailscale} up --accept-dns=false ${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
         '';
     };
   };

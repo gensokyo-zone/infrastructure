@@ -252,8 +252,8 @@
           "macAddress": null
         },
         "tail": {
-          "address4": "100.86.77.54",
-          "address6": "fd7a:115c:a1e0:ab12:4843:cd96:6256:4d36",
+          "address4": "100.75.15.95",
+          "address6": "fd7a:115c:a1e0::fa01:f5f",
           "macAddress": null
         }
       }
@@ -310,8 +310,8 @@
           "macAddress": "02:ba:46:f8:40:52"
         },
         "tail": {
-          "address4": "100.71.135.42",
-          "address6": "fd7a:115c:a1e0::4f01:872a",
+          "address4": "100.106.9.75",
+          "address6": "fd7a:115c:a1e0::f501:94b",
           "macAddress": null
         }
       }
@@ -328,8 +328,8 @@
           "macAddress": "18:c0:4d:08:87:bc"
         },
         "tail": {
-          "address4": "100.104.155.122",
-          "address6": "fd7a:115c:a1e0:ab12:4843:cd96:6268:9b7a",
+          "address4": "100.107.45.44",
+          "address6": "fd7a:115c:a1e0::4e01:2d2c",
           "macAddress": null
         }
       }

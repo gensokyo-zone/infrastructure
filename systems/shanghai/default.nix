@@ -30,8 +30,8 @@ in {
     };
     tail = {
       imports = [netname];
-      address4 = "100.104.155.122";
-      address6 = "fd7a:115c:a1e0:ab12:4843:cd96:6268:9b7a";
+      address4 = "100.107.45.44";
+      address6 = "fd7a:115c:a1e0::4e01:2d2c";
     };
   };
   exports.services = {
