@@ -4,7 +4,11 @@
   pkgs,
   ...
 }: let
-  inherit (lib) types mkIf mkOption mkEnableOption mkPackageOption mkOptionDefault;
+  inherit (lib.options) mkOption mkEnableOption mkPackageOption;
+  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.attrsets) attrValues;
+  inherit (lib.lists) length unique;
+  inherit (lib) types;
 
   cfg = config.services.gatus;
 
@@ -364,6 +368,14 @@ in {
         isSystemUser = true;
       };
     };
+    assertions = let
+      endpointNames = map (endpoint: endpoint.name) (attrValues cfg.settings.endpoints);
+    in [
+      {
+        assertion = length (unique endpointNames) == length endpointNames;
+        message = "Gatus endpoint names must be unique";
+      }
+    ];
   };
 
   meta.maintainers = with lib.maintainers; [christoph-heiss];
