@@ -306,7 +306,7 @@
         "int": null,
         "local": {
           "address4": "10.1.1.50",
-          "address6": "fd0a::2ba:46ff:fef8:4052",
+          "address6": "fd0a::ba:46ff:fef8:4052",
           "macAddress": "02:ba:46:f8:40:52"
         },
         "tail": {

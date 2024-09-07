@@ -15,7 +15,7 @@
     part = List.index parts;
     part0 = part: let
       nibble1' = UInt.FromHexDigit (Str.index part 1);
-      nibble1 = UInt.or' 2 nibble1';
+      nibble1 = UInt.xor 2 nibble1';
       nibble0 = Str.index part 0;
     in
       nibble0 + UInt.toHexLower nibble1;
