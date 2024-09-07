@@ -4,8 +4,9 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkForce mkDefault;
   cfg = config.services.unifi;
+  delayRestart = true;
 in {
   services.unifi = {
     enable = mkDefault true;
@@ -38,7 +39,14 @@ in {
     users.unifi.uid = 990;
     groups.unifi.gid = 990;
   };
-  systemd.services.unifi = mkIf cfg.enable {
-    gensokyo-zone.sharedMounts.unifi.path = mkDefault "/var/lib/unifi";
-  };
+  systemd.services.unifi = let
+    restartConfig = {
+      restartTriggers = mkForce [ ];
+      restartIfChanged = false;
+    };
+    conf.gensokyo-zone.sharedMounts.unifi.path = mkDefault "/var/lib/unifi";
+  in mkIf cfg.enable (mkMerge [
+    conf
+    (mkIf delayRestart restartConfig)
+  ]);
 }
