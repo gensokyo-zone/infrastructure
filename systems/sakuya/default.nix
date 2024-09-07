@@ -21,6 +21,7 @@ _: {
       motion = {
         enable = true;
         id = "printercam";
+        displayName = "Motion/printer";
       };
       moonraker.enable = true;
     };

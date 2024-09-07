@@ -8,9 +8,9 @@ _: {
     services = {
       nginx.enable = true;
       motion = {
-        id = "kitchen";
         enable = true;
-        ports.stream.port = 41081;
+        id = "kitchen";
+        displayName = "Motion/kitchen";
       };
     };
   };
