@@ -48,7 +48,7 @@ in {
         };
         "/" = {
           extraConfig = ''
-            rewrite ^.*$ /high last;
+            #rewrite ^.*$ /high last;
             return 404;
           '';
         };
