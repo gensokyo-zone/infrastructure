@@ -21,11 +21,17 @@ in {
           name = "motion";
           id = "kitchen";
         };
+        settings.max_fails = 5;
       };
-      "${upstreamNameKitchen}'stream".servers.service = {
+      "${upstreamNameKitchen}'stream".servers.service = let
+        motionServer = nginx.upstreams'.${upstreamNameKitchen}.servers.service;
+      in {
         accessService = {
-          inherit (nginx.upstreams'.${upstreamNameKitchen}.servers.service.accessService) name id;
+          inherit (motionServer.accessService) name id;
           port = "stream";
+        };
+        settings = {
+          inherit (motionServer.settings) max_fails;
         };
       };
       ${upstreamNamePrinter}.servers.service = {
@@ -34,9 +40,11 @@ in {
           id = "printercam";
         };
       };
-      "${upstreamNamePrinter}'stream".servers.service = {
+      "${upstreamNamePrinter}'stream".servers.service = let
+        motionServer = nginx.upstreams'.${upstreamNamePrinter}.servers.service;
+      in {
         accessService = {
-          inherit (nginx.upstreams'.${upstreamNamePrinter}.servers.service.accessService) name id;
+          inherit (motionServer.accessService) name id;
           port = "stream";
         };
       };
