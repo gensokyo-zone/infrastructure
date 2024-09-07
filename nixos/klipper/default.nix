@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkAfter mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
   inherit (config.services) octoprint;
   cfg = config.services.klipper;
 in {

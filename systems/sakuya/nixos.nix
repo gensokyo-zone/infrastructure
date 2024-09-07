@@ -12,6 +12,9 @@
     nixos.base
     nixos.sops
     nixos.tailscale
+    nixos.klipper
+    nixos.motion
+    nixos.cameras.printer
   ];
   boot.loader = {
     grub.enable = false;

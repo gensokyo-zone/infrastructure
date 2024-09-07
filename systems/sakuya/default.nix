@@ -5,9 +5,6 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  deploy = {
-    hostname = "10.1.1.50";
-  };
   network.networks = {
     tail = {
       address4 = "100.106.9.75";
@@ -21,6 +18,11 @@ _: {
   exports = {
     services = {
       tailscale.enable = true;
+      motion = {
+        enable = true;
+        id = "printercam";
+      };
+      moonraker.enable = true;
     };
   };
 }

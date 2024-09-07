@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   name.shortServer = mkDefault "print";
   upstreamName = "moonraker'access";
   upstreamNameMotion = "moonraker'motion";
@@ -30,6 +30,7 @@ in {
       servers.service = {
         accessService = {
           name = "motion";
+          id = "printercam";
           port = "stream";
         };
       };
@@ -52,10 +53,24 @@ in {
           headers.set.Cache-Control = "no-store, no-cache, must-revalidate";
         };
         "/webcam" = {
+          return = "302 /webcam/stream";
+        };
+        "/webcam/stream" = {
           proxy = {
             enable = true;
             upstream = upstreamNameMotion;
             path = "/2/stream";
+          };
+          extraConfig = ''
+            proxy_buffering off;
+            set $args "";
+          '';
+        };
+        "/webcam/current" = {
+          proxy = {
+            enable = true;
+            upstream = upstreamNameMotion;
+            path = "/2/current";
           };
           extraConfig = ''
             proxy_buffering off;
@@ -88,6 +103,7 @@ in {
           {
             "/index.html".vouch.requireAuth = true;
             "/webcam".vouch.requireAuth = true;
+            "/webcam/current".vouch.requireAuth = true;
             "/websocket".vouch.requireAuth = true;
             "@moonraker".vouch.requireAuth = true;
           }

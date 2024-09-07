@@ -26,20 +26,20 @@ in {
       port = 7125; # it's the default but i'm specifying it anyway
       settings = {
         "include secrets.conf" = {};
-        octoprint_compat = {};
+        octoprint_compat = {
+          stream_url = "/webcam/stream";
+          webcam_enabled = true;
+        };
         history = {};
-        "webcam printer" = let
-          inherit (config.services.motion.cameras) printercam;
-          inherit (printercam.settings) camera_id;
-        in {
+        "webcam printer" = {
           location = "printer";
           enabled = true;
           service = "mjpegstreamer";
           icon = "mdiPrinter3d";
           target_fps = 5;
           target_fps_idle = 1;
-          stream_url = "https://kitchen.local.${domain}/${toString camera_id}/stream";
-          snapshot_url = "https://kitchen.local.${domain}/${toString camera_id}/current";
+          stream_url = "/webcam/stream";
+          snapshot_url = "/webcam/current";
           aspect_ratio = "16:9";
         };
         authorization = {

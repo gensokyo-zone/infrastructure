@@ -16,10 +16,13 @@ in {
     fluidd = {
       enable = mkDefault true;
       hostName = mkDefault "print.local.${domain}"; # TODO: serverName?
-      nginx.locations."/webcam".proxyPass = let
+      nginx.locations = let
         inherit (config.services.motion.cameras) printercam;
         inherit (printercam.settings) camera_id;
-      in "https://kitchen.local.${domain}/${toString camera_id}/stream";
+      in {
+        "/webcam".proxyPass = "https://kitchen.local.${domain}/${toString camera_id}/stream";
+        "/webcam/current".proxyPass = "https://kitchen.local.${domain}/${toString camera_id}/current";
+      };
     };
     nginx = mkIf cfg.enable {
       proxied.enable = true;
@@ -61,6 +64,9 @@ in {
             };
             "/webcam" = {
               inherit (virtualHost.locations."/webcam") proxyPass;
+            };
+            "/webcam/current" = {
+              inherit (virtualHost.locations."/webcam/current") proxyPass;
             };
             "~ ^/(printer|api|access|machine|server)/" = {
               proxy = {

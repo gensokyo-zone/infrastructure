@@ -12,7 +12,6 @@ _: {
         enable = true;
         ports.stream.port = 41081;
       };
-      moonraker.enable = true;
     };
   };
   network.networks = {

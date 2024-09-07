@@ -16,9 +16,7 @@ in {
     nixos.barcodebuddy-scanner
     nixos.motion
     nixos.cameras.kitchen
-    nixos.cameras.printer
     nixos.cameras.logistics-webcam
-    nixos.klipper
     ./hardware-configuration.nix
   ];
 
@@ -63,7 +61,7 @@ in {
     description = "Logistics";
     extraGroups = [
       "nixbuilder"
-      (mkIf (!config.services.octoprint.enable && !!config.services.klipper.enable) "dialout")
+      (mkIf (!config.services.octoprint.enable && !config.services.klipper.enable) "dialout")
       (mkIf config.networking.networkmanager.enable "networkmanager")
     ];
     hashedPasswordFile = config.sops.secrets.logistics-user-password.path;
