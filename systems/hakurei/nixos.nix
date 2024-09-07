@@ -106,7 +106,6 @@ in {
       ];
     };
     syncplay = {
-      inherit (syncplay) group;
       domain = "syncplay.${config.networking.domain}";
       extraDomainNames = [
         "syncplay.local.${config.networking.domain}"
@@ -425,7 +424,7 @@ in {
   };
   services.syncplay = {
     openFirewall = true;
-    useACMECert = "syncplay";
+    useACMEHost = "syncplay";
   };
 
   services.tailscale.advertiseExitNode = true;

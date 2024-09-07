@@ -8,14 +8,13 @@
 in {
   sops.secrets = let
     sopsFile = mkDefault ./secrets/syncplay.yaml;
-    owner = cfg.user;
   in
     mkIf cfg.enable {
       syncplay-password = {
-        inherit sopsFile owner;
+        inherit sopsFile;
       };
       syncplay-salt = {
-        inherit sopsFile owner;
+        inherit sopsFile;
       };
     };
 
@@ -24,8 +23,6 @@ in {
     extraArgs = [
       "--disable-ready"
     ];
-    user = mkDefault "syncplay";
-    group = mkDefault "syncplay";
     saltFile = mkDefault config.sops.secrets.syncplay-salt.path;
     passwordFile = mkDefault config.sops.secrets.syncplay-password.path;
   };

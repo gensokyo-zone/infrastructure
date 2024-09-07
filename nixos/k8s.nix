@@ -55,7 +55,7 @@ in {
     };
     kubelet = {
       extraOpts = "--fail-swap-on=false";
-      clusterDns = "10.43.0.2";
+      clusterDns = ["10.43.0.2"];
     };
   };
 
