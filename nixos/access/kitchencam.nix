@@ -50,8 +50,8 @@ in {
       };
     };
     virtualHosts = let
-      printerCams = [ 2 ];
-      kitchenCams = [ 1 3 ];
+      printerCams = [2];
+      kitchenCams = [1 3];
       mkSubFilter = port: path: ''
         sub_filter '${port.protocol}://$host:${toString port.port}/' '${path}';
       '';
@@ -79,35 +79,37 @@ in {
       streamLocations =
         map (mkStreamLocation upstreamNamePrinter) printerCams
         ++ map (mkStreamLocation upstreamNameKitchen) kitchenCams;
-      locations = {
-        "/" = {
-          return = "302 /kitchen/";
-        };
-        "/kitchen" = {
-          proxy = {
-            enable = true;
-            upstream = mkDefault upstreamNameKitchen;
-            path = "/";
+      locations =
+        {
+          "/" = {
+            return = "302 /kitchen/";
           };
-          extraConfig = subFilterConfig "/kitchen/";
-        };
-        "/printer" = {
-          proxy = {
-            enable = true;
-            upstream = mkDefault upstreamNamePrinter;
-            path = "/";
+          "/kitchen" = {
+            proxy = {
+              enable = true;
+              upstream = mkDefault upstreamNameKitchen;
+              path = "/";
+            };
+            extraConfig = subFilterConfig "/kitchen/";
           };
-          extraConfig = subFilterConfig "/printer/";
-        };
-        "~ ^/(stream|motion|substream|current|source|cameras\\.json|status\\.json)$" = {
-          proxy = {
-            enable = true;
-            upstream = mkDefault "${upstreamNameKitchen}'stream";
-            path = "";
+          "/printer" = {
+            proxy = {
+              enable = true;
+              upstream = mkDefault upstreamNamePrinter;
+              path = "/";
+            };
+            extraConfig = subFilterConfig "/printer/";
           };
-          extraConfig = streamConfig;
-        };
-      } // mergeAttrsList streamLocations;
+          "~ ^/(stream|motion|substream|current|source|cameras\\.json|status\\.json)$" = {
+            proxy = {
+              enable = true;
+              upstream = mkDefault "${upstreamNameKitchen}'stream";
+              path = "";
+            };
+            extraConfig = streamConfig;
+          };
+        }
+        // mergeAttrsList streamLocations;
       listen' = {
         http = {};
         https.ssl = true;
@@ -130,9 +132,15 @@ in {
         locations = mapAttrs (name: location:
           location
           // {
-            ${if location ? proxy then "proxy" else null} = location.proxy // (mapDefaults {
-              inherit (nginx.virtualHosts.kitchencam.locations.${name}.proxy) upstream path;
-            });
+            ${
+              if location ? proxy
+              then "proxy"
+              else null
+            } =
+              location.proxy
+              // (mapDefaults {
+                inherit (nginx.virtualHosts.kitchencam.locations.${name}.proxy) upstream path;
+              });
           })
         locations;
       };

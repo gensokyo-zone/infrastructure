@@ -41,12 +41,13 @@ in {
   };
   systemd.services.unifi = let
     restartConfig = {
-      restartTriggers = mkForce [ ];
+      restartTriggers = mkForce [];
       restartIfChanged = false;
     };
     conf.gensokyo-zone.sharedMounts.unifi.path = mkDefault "/var/lib/unifi";
-  in mkIf cfg.enable (mkMerge [
-    conf
-    (mkIf delayRestart restartConfig)
-  ]);
+  in
+    mkIf cfg.enable (mkMerge [
+      conf
+      (mkIf delayRestart restartConfig)
+    ]);
 }
