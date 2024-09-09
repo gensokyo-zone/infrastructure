@@ -63,6 +63,12 @@
     device = "/dev/disk/by-label/NIXOS_SD";
     fsType = "ext4";
   };
+  swapDevices = [
+    {
+      device = "/swap0";
+      size = 4096;
+    }
+  ];
 
   networking.useNetworkd = true;
   systemd.network = {
