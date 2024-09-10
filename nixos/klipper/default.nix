@@ -17,6 +17,10 @@ in {
         ./ender3v3se.cfg
         ./macros.cfg
       ];
+      settings = {
+        # allow the z_offset to be saved by moonraker
+        bltouch.z_offset = mkDefault 1.85;
+      };
     };
   };
   systemd.services.klipper = mkIf cfg.enable {

@@ -12,3 +12,7 @@ indent_size = 2
 [*.tf]
 indent_style = space
 indent_size = 2
+
+[nixos/klipper/*.cfg]
+indent_style = space
+indent_size = 4
