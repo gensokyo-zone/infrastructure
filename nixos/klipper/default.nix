@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   lib,
   ...
@@ -10,6 +11,7 @@ in {
   services = {
     klipper = {
       enable = mkDefault true;
+      package = pkgs.klipper-ender3v3se;
       quiet = mkDefault true;
       octoprintIntegration = mkIf octoprint.enable (mkDefault true);
       configFiles = [
