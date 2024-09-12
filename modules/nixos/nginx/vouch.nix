@@ -5,7 +5,7 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault bindToAddress;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault mkDefault;
   inherit (lib.attrsets) mapAttrsToList;
@@ -296,10 +296,7 @@ in {
     upstreams' = let
       localVouch = let
         inherit (vouch-proxy.settings.vouch) listen port;
-        host =
-          if listen == "0.0.0.0" || listen == "[::]"
-          then "localhost"
-          else listen;
+        host = bindToAddress {localhost = "localhost";} listen;
       in {
         # TODO: accessService.exportedId = "login";
         enable = mkAlmostOptionDefault vouch-proxy.enable;

@@ -35,6 +35,19 @@
       then addr
       else trimAddress6 addrReplaced;
 
+  bindToAddress = {
+    localhost ? null,
+    localhost4 ? coalesce [localhost "127.0.0.1"],
+    localhost6 ? coalesce [localhost "::1"],
+  }: listen:
+    if listen == "localhost"
+    then coalesce [localhost listen]
+    else if listen == "0.0.0.0"
+    then localhost4
+    else if getAddress6 listen == "::"
+    then localhost6
+    else listen;
+
   parseUrl = url: let
     parts' = Regex.match ''^([^:]+)://(\[[0-9a-fA-F:]+]|[^/:\[]+)(|:[0-9]+)(|/.*)$'' url;
     parts = parts'.value;
@@ -59,6 +72,10 @@
   mkAddress6 = addr:
     if Str.hasInfix ":" addr && ! Str.hasPrefix "[" addr
     then "[${addr}]"
+    else addr;
+  getAddress6 = addr:
+    if Str.hasInfix ":" addr
+    then Str.removePrefix "[" (Str.removeSuffix "]" addr)
     else addr;
 
   coalesce = values: Opt.default null (List.find (v: v != null) values);
@@ -116,7 +133,9 @@ in {
       mkWinPath
       mkBaseDn
       mkAddress6
+      getAddress6
       trimAddress6
+      bindToAddress
       mapListToAttrs
       coalesce
       mkAlmostOptionDefault

@@ -44,6 +44,8 @@ in {
     nixos.access.kitchencam
     nixos.access.moonraker
     nixos.access.mpd
+    nixos.access.ollama
+    nixos.access.nextjs-ollama
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.home-assistant
@@ -53,6 +55,7 @@ in {
     nixos.access.proxmox
     nixos.access.plex
     nixos.access.invidious
+    nixos.ollama.nextjs
     nixos.wake-chen
     nixos.samba
     nixos.syncplay
@@ -276,6 +279,15 @@ in {
         virtualHosts.mpd'local.allServerNames
       ];
     };
+    lm = {
+      inherit (nginx) group;
+      domain = virtualHosts.llama.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.llama.otherServerNames
+        virtualHosts.llama'local.allServerNames
+        (mkIf virtualHosts.llama'tail.enable virtualHosts.llama'tail.allServerNames)
+      ];
+    };
     webrx = {
       inherit (nginx) group;
       domain = virtualHosts.openwebrx.serverName;
@@ -409,6 +421,7 @@ in {
       moonraker.ssl.cert.enable = true;
       openwebrx.ssl.cert.enable = true;
       mpd.ssl.cert.enable = true;
+      llama.ssl.cert.enable = true;
       deluge.ssl.cert.enable = true;
       invidious = {
         ssl.cert.enable = true;

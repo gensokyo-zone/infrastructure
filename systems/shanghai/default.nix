@@ -41,5 +41,10 @@ in {
       ports.public.port = 32022;
     };
     prometheus-exporters-node.enable = true;
+    ollama = {
+      enable = true;
+      defaults.port.listen = "tail";
+      ports.default.status.enable = false;
+    };
   };
 }

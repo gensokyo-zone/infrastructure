@@ -38,7 +38,7 @@
           else config.name;
       };
       listen = mkOption {
-        type = enum ["wan" "lan" "int" "localhost"];
+        type = enum ["wan" "lan" "int" "tail" "localhost"];
       };
       protocol = mkOption {
         type = nullOr (enum ["http" "https"]);

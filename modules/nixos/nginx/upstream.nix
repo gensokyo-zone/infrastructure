@@ -60,6 +60,7 @@ let
           (mkIf (cfg.id != null) (mkAlmostOptionDefault (access.systemForServiceId cfg.id).name))
           (mkOptionDefault (mapNullable (serviceName: (access.systemForService serviceName).name) cfg.name))
         ];
+        network = mkIf (port.listen == "tail") (mkAlmostOptionDefault "tail");
       };
       conf = {
         enable = lib.warnIf (!port.enable) "${cfg.system}.exports.services.${cfg.name}.ports.${cfg.port} isn't enabled" (
