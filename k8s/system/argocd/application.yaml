@@ -14,7 +14,7 @@ spec:
         server:
           service:
             type: LoadBalancer
-          inigress:
+          ingress:
             enabled: true
   destination:
     namespace: argocd
