@@ -211,7 +211,8 @@ in {
       type = nullOr path;
       default = null;
     };
-    settings = mkOption {
+    # TODO: move to upstream settings!
+    settings' = mkOption {
       type = attrsOf settingType;
       default = {};
     };
@@ -269,7 +270,7 @@ in {
           };
         })
       ];
-      settings = mkMerge ([
+      settings' = mkMerge ([
           {
             "use sendfile" = mkOptionDefault true;
             "mdns name" = mkOptionDefault "mdns";
@@ -326,7 +327,7 @@ in {
         ]
         ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
       extraConfig = mkMerge (
-        mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings
+        mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings'
         ++ [
           (mkIf (cfg.ldap.enable && cfg.ldap.passdb.enable) (mkBefore ''
             passdb backend = ${cfg.ldap.passdb.backend}:"${cfg.ldap.url}"

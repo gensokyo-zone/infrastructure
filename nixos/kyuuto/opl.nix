@@ -35,7 +35,7 @@ in {
 
   config = {
     services.samba = {
-      settings = mkIf cfg.enable {
+      settings' = mkIf cfg.enable {
         "ntlm auth" = mkDefault "ntlmv1-permitted";
         "server min protocol" = mkDefault "NT1";
         "keepalive" = mkDefault 0;

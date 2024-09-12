@@ -61,7 +61,7 @@ in {
     passdb.smbpasswd.path = mkIf (!cfg.ldap.enable || !cfg.ldap.passdb.enable) (
       mkDefault config.sops.secrets.smbpasswd.path
     );
-    settings = mkMerge [
+    settings' = mkMerge [
       {
         "local master" = true;
         "preferred master" = true;
