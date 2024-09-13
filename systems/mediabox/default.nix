@@ -20,6 +20,9 @@ _: {
         enable = true;
         ports.proxied.enable = true;
       };
+      piper.enable = true;
+      faster-whisper.enable = true;
+      openwakeword.enable = true;
       cloudflared.enable = true;
       plex.enable = true;
       invidious.enable = true;

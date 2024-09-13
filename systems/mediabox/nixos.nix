@@ -1,5 +1,6 @@
 {
   config,
+  gensokyo-zone,
   meta,
   lib,
   pkgs,
@@ -16,6 +17,20 @@
     "/mnt/Movies".hostPath = kyuuto.libraryDir + "/movies";
     "/mnt/Music".hostPath = kyuuto.libraryDir + "/music/assorted";
   };
+  useZLUDA = false;
+  useRocm = useZLUDA;
+  rocmPackages =
+    if useZLUDA
+    then pkgs.rocmPackages_5
+    else pkgs.rocmPackages;
+  zluda = let
+    rustChannel = gensokyo-zone.inputs.systemd2mqtt.inputs.rust.legacyPackages.x86_64-linux.releases."1.79.0";
+  in
+    pkgs.zluda.override {
+      inherit rocmPackages;
+      inherit (rustChannel) rustPlatform;
+      inherit (rustChannel.buildChannel) rustc;
+    };
 in {
   imports = let
     inherit (meta) nixos;
@@ -37,6 +52,11 @@ in {
     nixos.deluge
     nixos.mediatomb
     nixos.invidious
+
+    # accelerated
+    nixos.wyoming.whisper
+    nixos.wyoming.piper
+    nixos.wyoming.openwakeword
 
     # yarr harr fiddle dee dee >w<
     nixos.radarr
@@ -75,10 +95,22 @@ in {
     in [libraryDir];
   };
 
+  nixpkgs.config = mkIf useZLUDA {
+    cudaSupport = true;
+  };
   hardware.graphics = {
     enable = true;
-    extraPackages = with pkgs; [mesa.drivers];
+    extraPackages = with pkgs;
+      mkMerge [
+        [mesa.drivers]
+        (mkIf useZLUDA [zluda])
+        (mkIf useRocm [rocmPackages.clr.icd rocmPackages.clr])
+      ];
   };
+  environment.systemPackages = with pkgs; [
+    radeontop
+    (mkIf useRocm rocmPackages.rocminfo)
+  ];
 
   fileSystems = let
     bind = {
