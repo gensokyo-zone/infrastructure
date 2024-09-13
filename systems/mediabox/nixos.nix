@@ -22,6 +22,7 @@ in {
   in [
     nixos.reisen-ct
     nixos.sops
+    nixos.tailscale
     nixos.nginx
     nixos.access.plex
     nixos.access.deluge

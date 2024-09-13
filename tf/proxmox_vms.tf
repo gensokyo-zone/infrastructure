@@ -142,7 +142,7 @@ EOT
 
   disk {
     datastore_id = "local-zfs"
-    size         = 30
+    size         = 35
   }
 
   initialization {

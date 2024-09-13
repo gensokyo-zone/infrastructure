@@ -5,6 +5,7 @@
 			"/mnt/kyuuto-media/downloads/deluge mnt/kyuuto-media/downloads/deluge none bind,optional,create=dir",
 			"/rpool/caches/plex mnt/caches/plex none bind,optional,create=dir",
 			"/rpool/shared/plex mnt/shared/plex none bind,optional,create=dir",
+			"/dev/net/tun dev/net/tun none bind,optional,create=file",
 			"/dev/kfd dev/kfd none bind,optional,create=file",
 			"/dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file"
 		],

@@ -143,7 +143,11 @@
           "address6": "fd0a::be24:11ff:fe34:f4a8",
           "macAddress": "BC:24:11:34:F4:A8"
         },
-        "tail": null
+        "tail": {
+          "address4": "100.104.170.16",
+          "address6": "fd7a:115c:a1e0::ee01:aa11",
+          "macAddress": null
+        }
       }
     }
   },
