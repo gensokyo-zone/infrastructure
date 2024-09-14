@@ -28,4 +28,7 @@ in {
   systemd.services.klipper = mkIf cfg.enable {
     restartIfChanged = false;
   };
+  services.udev.extraRules = mkIf cfg.enable ''
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="ttyEnder3v3se"
+  '';
 }

@@ -1,14 +1,23 @@
 {
+  pkgs,
   config,
   access,
   gensokyo-zone,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkBefore mkDefault;
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault domain;
+  inherit (lib.modules) mkIf mkMerge mkBefore mkDefault;
+  inherit (lib.strings) concatStringsSep;
   inherit (config.services) klipper;
   cfg = config.services.moonraker;
+  controlServices = [
+    # defaults: https://github.com/Arksine/moonraker/blob/71f9e677b81afcc6b99dd5002f595025c38edc7b/moonraker/assets/default_allowed_services
+    "klipper"
+  ];
+  controlServiceUnits = map (name: "${name}.service") controlServices;
+  controlServicesFile = pkgs.writeText "moonraker.asvc" (concatStringsSep "\n" controlServices);
+  allowSystemControl = true;
 in {
   sops.secrets = {
     moonraker_cfg = {
@@ -55,8 +64,12 @@ in {
             ++ ["0.0.0.0/0" "::/0"];
         };
         machine = {
-          # disable all machine control
-          provider = "none";
+          provider = mkMerge [
+            # tell moonraker when machine control should be disabled
+            (mkIf (!allowSystemControl && !cfg.allowSystemControl) "none")
+            # the default systemd_dbus provider is too aggressive about checking for permission first...
+            (mkIf (allowSystemControl && !cfg.allowSystemControl) (mkAlmostOptionDefault "systemd_cli"))
+          ];
         };
       };
     };
@@ -80,8 +93,25 @@ in {
   systemd.services = mkIf cfg.enable {
     moonraker = {
       restartIfChanged = false;
+      preStart = mkIf allowSystemControl ''
+        ln -sf ${controlServicesFile} ${cfg.stateDir}/moonraker.asvc
+      '';
     };
   };
+  security.polkit = mkIf (cfg.enable && (allowSystemControl || cfg.allowSystemControl)) {
+    enable = mkDefault true;
+    extraConfig = mkIf (allowSystemControl && !cfg.allowSystemControl) ''
+      // moonraker machine control
+      polkit.addRule(function(action, subject) {
+        if (action.id == "org.freedesktop.systemd1.manage-units" && subject.user == "${cfg.user}") {
+          if (${builtins.toJSON controlServiceUnits}.indexOf(action.lookup("unit")) > -1) {
+            return polkit.Result.YES;
+          }
+        }
+      });
+    '';
+  };
+
   networking.firewall = mkIf cfg.enable {
     interfaces.lan.allowedTCPPorts = [
       cfg.port
