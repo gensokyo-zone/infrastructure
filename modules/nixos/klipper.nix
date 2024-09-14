@@ -5,7 +5,7 @@
   lib,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapListToAttrs;
+  inherit (gensokyo-zone.lib) mapListToAttrs mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
   inherit (lib.attrsets) nameValuePair;
@@ -25,6 +25,7 @@
 in {
   options.services.klipper = with lib.types; {
     quiet = mkEnableOption "more silent logs";
+    logRotate = mkEnableOption "logrotate";
     configFiles = mkOption {
       type = listOf path;
       default = [];
@@ -53,5 +54,8 @@ in {
     preStart = mkIf (cfg.configFiles != [] && cfg.mutableConfig) (mkAfter ''
       ln -sfT ${includeFile} ${escapeShellArg "${cfg.mutableConfigFolder}/${includeFileName}"}
     '');
+  };
+  config.services.logrotate.settings.klipper = mkIf (cfg.enable && cfg.logRotate && cfg.logFile != null) {
+    files = mkAlmostOptionDefault cfg.logFile;
   };
 }

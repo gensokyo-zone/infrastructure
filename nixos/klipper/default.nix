@@ -11,8 +11,10 @@ in {
   services = {
     klipper = {
       enable = mkDefault true;
-      package = pkgs.klipper-ender3v3se;
+      package = mkDefault pkgs.klipper-ender3v3se;
       quiet = mkDefault true;
+      logFile = mkDefault "/var/log/klipper/klippy.log";
+      logRotate = mkDefault true;
       octoprintIntegration = mkIf octoprint.enable (mkDefault true);
       configFiles = [
         ./printer.cfg
@@ -25,8 +27,13 @@ in {
       };
     };
   };
-  systemd.services.klipper = mkIf cfg.enable {
-    restartIfChanged = false;
+  systemd = mkIf cfg.enable {
+    services.klipper = {
+      restartIfChanged = false;
+    };
+    tmpfiles.rules = mkIf (cfg.logFile != null) [
+      "d ${dirOf cfg.logFile} 0755 ${cfg.user} ${cfg.group} 8w -"
+    ];
   };
   services.udev.extraRules = mkIf cfg.enable ''
     SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="ttyEnder3v3se"
