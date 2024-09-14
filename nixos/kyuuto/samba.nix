@@ -24,7 +24,7 @@ in {
       enable = mkDefault true;
       path = mkDefault (kyuuto.mountDir + "/usershares");
     };
-    shares = {
+    shares' = {
       kyuuto-transfer = {
         comment = "Kyuuto Media Transfer Area";
         path = kyuuto.transferDir;

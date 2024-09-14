@@ -40,7 +40,7 @@ in {
         "server min protocol" = mkDefault "NT1";
         "keepalive" = mkDefault 0;
       };
-      shares.opl = let
+      shares'.opl = let
         inherit (config.networking.access) cidrForNetwork;
       in
         mkIf cfg.enable {

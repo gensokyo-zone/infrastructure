@@ -17,10 +17,10 @@
 in {
   services.samba = {
     enable = mkDefault true;
-    enableWinbindd = mkDefault true;
-    enableNmbd = mkDefault true;
-    securityType = mkDefault "user";
-    # TODO: securityType = "ADS"? kerberos..!
+    winbindd.enable = mkDefault true;
+    nmbd.enable = mkDefault true;
+    # TODO: security = "ADS"? kerberos..!
+    settings.global.security = mkDefault "user";
     domain = {
       name = "GENSOKYO";
       netbiosName = "reisen";

@@ -29,16 +29,17 @@ in {
         enable = true;
         requireAuth = false;
       };
-      subFilterLocation = { virtualHost, ... }: mkIf (virtualHost.locations ? "/ollama/") {
-        proxy.headers.set.Accept-Encoding = "";
-        extraConfig = ''
-          sub_filter_once off;
-          sub_filter_types application/javascript;
-          sub_filter '${cfg.ollamaUrl}' '/ollama';
-        '';
-      };
+      subFilterLocation = {virtualHost, ...}:
+        mkIf (virtualHost.locations ? "/ollama/") {
+          proxy.headers.set.Accept-Encoding = "";
+          extraConfig = ''
+            sub_filter_once off;
+            sub_filter_types application/javascript;
+            sub_filter '${cfg.ollamaUrl}' '/ollama';
+          '';
+        };
       proxyLocation = {
-        imports = [ subFilterLocation ];
+        imports = [subFilterLocation];
         proxy = {
           enable = true;
           upstream = mkDefault upstreamName;
@@ -49,16 +50,16 @@ in {
           return = mkDefault "302 /llama/";
         };
         "/llama/" = {virtualHost, ...}: {
-          imports = [ proxyLocation ];
+          imports = [proxyLocation];
           vouch.requireAuth = mkIf virtualHost.vouch.enable true;
           proxy.path = "/";
         };
         "/_next/" = {virtualHost, ...}: {
-          imports = [ proxyLocation ];
+          imports = [proxyLocation];
           vouch.requireAuth = mkIf virtualHost.vouch.enable true;
         };
         "/_next/static/" = _: {
-          imports = [ proxyLocation ];
+          imports = [proxyLocation];
         };
         "~ '^/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'" = {
           return = mkDefault "302 /llama$request_uri";

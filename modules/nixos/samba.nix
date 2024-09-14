@@ -7,8 +7,8 @@
 }: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkBefore mkAfter mkOptionDefault;
-  inherit (lib.attrsets) mapAttrs' mapAttrsToList listToAttrs nameValuePair;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
+  inherit (lib.attrsets) mapAttrs mapAttrs' mapAttrsToList listToAttrs nameValuePair;
   inherit (lib.lists) concatLists;
   inherit (lib.strings) toUpper hasPrefix concatMapStringsSep;
   inherit (lib.trivial) flip;
@@ -211,7 +211,10 @@ in {
       type = nullOr path;
       default = null;
     };
-    # TODO: move to upstream settings!
+    shares' = mkOption {
+      type = attrsOf (attrsOf settingType);
+      default = {};
+    };
     settings' = mkOption {
       type = attrsOf settingType;
       default = {};
@@ -226,7 +229,7 @@ in {
         else pkgs.samba-ldap
       ));
       domain = {
-        isWorkgroup = mkOptionDefault (cfg.securityType != "domain" && cfg.securityType != "ads");
+        isWorkgroup = mkOptionDefault (cfg.settings.global.security != "domain" && cfg.settings.global.security != "ads");
         netbiosName' = let
           name =
             if cfg.domain.netbiosName != null
@@ -300,7 +303,7 @@ in {
             "kerberos encryption types" = mkOptionDefault "strong";
             "create krb5 conf" = mkOptionDefault false;
           })
-          (mkIf cfg.enableWinbindd {
+          (mkIf cfg.winbindd.enable {
             "winbind nss info" = mkOptionDefault "rfc2307";
             "winbind use default domain" = mkOptionDefault true;
           })
@@ -326,15 +329,34 @@ in {
           })
         ]
         ++ mapAttrsToList (_: idmap: mapAttrs' (key: value: nameValuePair "idmap config ${idmap.domain} : ${key}" (mkOptionDefault value)) idmap.settings) cfg.idmap.domains);
-      extraConfig = mkMerge (
-        mapAttrsToList (key: value: ''${key} = ${settingValue value}'') cfg.settings'
-        ++ [
-          (mkIf (cfg.ldap.enable && cfg.ldap.passdb.enable) (mkBefore ''
-            passdb backend = ${cfg.ldap.passdb.backend}:"${cfg.ldap.url}"
-          ''))
-        ]
-      );
-      shares.${cfg.usershare.templateShare} = mkIf cfg.usershare.enable {
+      settings = let
+        settingsValues = mapAttrs (_: settingValue);
+        defaults =
+          mapAttrs (_: mkOptionDefault) {
+            security = "user";
+            "passwd program" = "/run/wrappers/bin/passwd %u";
+          }
+          // {
+            "invalid users" = ["root"];
+          };
+        ldap = {
+          # TODO: this may need to be mkBefore'd?
+          "passdb backend" = mkIf (cfg.ldap.enable && cfg.ldap.passdb.enable) ''${cfg.ldap.passdb.backend}:"${cfg.ldap.url}"'';
+        };
+        global = settingsValues cfg.settings';
+        shares = mapAttrs (_: settingsValues) cfg.shares';
+      in
+        mkMerge [
+          shares
+          {
+            global = mkMerge [
+              defaults
+              global
+              ldap
+            ];
+          }
+        ];
+      shares'.${cfg.usershare.templateShare} = mkIf cfg.usershare.enable {
         "-valid" = false;
       };
     };
