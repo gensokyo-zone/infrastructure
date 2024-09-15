@@ -9,7 +9,7 @@
 in {
   services.motion.cameras.printercam.settings = mapDefaults {
     video_device = "/dev/printercam";
-    video_params = "auto_brightness=1,palette=8"; # MJPG=8, YUYV=15
+    video_params = "auto_brightness=0,sharpness=5,palette=8"; # MJPG=8, YUYV=15
     width = 1920;
     height = 1080;
     framerate = 4;
@@ -21,10 +21,9 @@ in {
     inherit (lib.strings) concatStringsSep;
     rules = [
       ''SUBSYSTEM=="video4linux"''
-      ''ACTION=="add"''
       ''ATTR{index}=="0"''
-      ''ATTRS{idProduct}=="6366"''
       ''ATTRS{idVendor}=="0c45"''
+      ''ATTRS{idProduct}=="6366"''
       ''SYMLINK+="printercam"''
       ''OWNER="${motion.user}"''
       ''TAG+="systemd"''

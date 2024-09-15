@@ -16,6 +16,16 @@
     nixos.motion
     nixos.cameras.printer
   ];
+
+  services.motion.cameras.printercam.settings = {
+    # TODO: try to limit CPU usage for now...
+    width = 1280;
+    height = 720;
+    framerate = 2;
+    text_right = "";
+    stream_quality = 60;
+  };
+
   boot.loader = {
     grub.enable = false;
     generic-extlinux-compatible.enable = true;

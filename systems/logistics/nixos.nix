@@ -16,6 +16,7 @@ in {
     nixos.barcodebuddy-scanner
     nixos.motion
     nixos.cameras.kitchen
+    nixos.cameras.living
     nixos.cameras.logistics-webcam
     ./hardware-configuration.nix
   ];

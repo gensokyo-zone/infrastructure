@@ -20,22 +20,25 @@
     };
   };
 in {
-  services.motion.cameras.kitchencam.settings = mapDefaults {
-    video_device = "/dev/kitchencam";
-    video_params = "auto_brightness=2,power_line_frequency=2,palette=${toString params.${format}.palette}";
+  services.motion.cameras.livingcam.settings = mapDefaults {
+    video_device = "/dev/livingcam";
+    video_params = "auto_brightness=2,brightness=72,power_line_frequency=2,palette=${toString params.${format}.palette}";
     inherit (params.${format}) width height;
-    framerate = 2;
-    camera_id = 1;
-    text_left = "kitchen";
+    #framerate = 30;
+    framerate = 20;
+    camera_id = 4;
+    text_left = "";
+    text_right = "";
+    stream_quality = 85;
   };
   services.udev.extraRules = let
     inherit (lib.strings) concatStringsSep;
     rules = [
       ''SUBSYSTEM=="video4linux"''
       ''ATTR{index}=="0"''
-      ''ATTRS{idVendor}=="1224"''
-      ''ATTRS{idProduct}=="2a25"''
-      ''SYMLINK+="kitchencam"''
+      ''ATTRS{idVendor}=="1d3f"''
+      ''ATTRS{idProduct}=="1120"''
+      ''SYMLINK+="livingcam"''
       ''OWNER="${motion.user}"''
       ''TAG+="systemd"''
       ''ENV{SYSTEMD_WANTS}="motion.service"''

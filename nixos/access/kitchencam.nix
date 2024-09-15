@@ -51,7 +51,7 @@ in {
     };
     virtualHosts = let
       printerCams = [2];
-      kitchenCams = [1 3];
+      kitchenCams = [1 3 4];
       mkSubFilter = port: path: ''
         sub_filter '${port.protocol}://$host:${toString port.port}/' '${path}';
       '';
