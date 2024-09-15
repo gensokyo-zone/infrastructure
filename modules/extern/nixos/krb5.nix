@@ -414,8 +414,9 @@ in {
 
   config = {
     nixpkgs = mkIf cfg.enable {
-      overlays = [
-        gensokyo-zone.overlays.krb5
+      overlays = mkMerge [
+        [gensokyo-zone.overlays.krb5]
+        (mkIf cfg.nfs.enable [gensokyo-zone.overlays.nfs])
       ];
     };
     security = {

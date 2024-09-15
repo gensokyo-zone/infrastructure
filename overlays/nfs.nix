@@ -1,13 +1,10 @@
 final: prev: {
-  # https://github.com/NixOS/nixpkgs/pull/286793
+  # https://github.com/NixOS/nixpkgs/pull/342130
   nfs-utils-ldap = prev.nfs-utils.overrideAttrs (old: {
     buildInputs =
       old.buildInputs
       ++ [
-        final.openldap
-        (final.cyrus_sasl.override {
-          openssl = final.openssl_legacy;
-        })
+        final.cyrus_sasl
       ];
     configureFlags =
       old.configureFlags
