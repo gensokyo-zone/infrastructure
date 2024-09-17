@@ -763,6 +763,10 @@ resource "proxmox_virtual_environment_container" "minecraft" {
 minecraft!!!!
 EOT
 
+  cpu {
+    cores = 4
+  }
+
   memory {
     dedicated = 8192
     swap      = 8192
