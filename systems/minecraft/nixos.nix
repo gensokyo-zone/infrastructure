@@ -5,7 +5,6 @@
     nixos.sops
     nixos.reisen-ct
     nixos.tailscale
-    nixos.syncthing-kat
   ];
 
   sops = {
