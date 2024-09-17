@@ -1,0 +1,8 @@
+{
+  "lxc": {
+    "lxc.mount.entry": [
+      "/mnt/kyuuto-minecraft mnt/kyuuto-minecraft none bind,optional,create=dir",
+      "/dev/net/tun dev/net/tun none bind,optional,create=file"
+    ]
+  }
+}

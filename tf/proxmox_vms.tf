@@ -4,6 +4,8 @@ variable "proxmox_container_template" {
 }
 
 locals {
+  proxmox_minecraft_vm_id  = 109
+  proxmox_minecraft_config = jsondecode(file("${path.root}/../systems/minecraft/lxc.json"))
   proxmox_utsuho_vm_id     = 108
   proxmox_utsuho_config    = jsondecode(file("${path.root}/../systems/utsuho/lxc.json"))
   proxmox_keycloak_vm_id   = 107
@@ -751,4 +753,85 @@ module "keycloak_config" {
   connection = local.proxmox_reisen_connection
   container  = proxmox_virtual_environment_container.keycloak
   config     = local.proxmox_keycloak_config.lxc
+}
+
+resource "proxmox_virtual_environment_container" "minecraft" {
+  node_name   = "reisen"
+  vm_id       = local.proxmox_minecraft_vm_id
+  tags        = ["tf"]
+  description = <<EOT
+minecraft!!!!
+EOT
+
+  memory {
+    dedicated = 8192
+    swap      = 8192
+  }
+
+  disk {
+    datastore_id = "local-zfs"
+    size         = 64
+  }
+
+  initialization {
+    hostname = "minecraft"
+    ip_config {
+      ipv6 {
+        address = "auto"
+      }
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+    ip_config {
+      ipv6 {
+        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_minecraft_vm_id - local.reisen_int_offset)}/64"
+      }
+      ipv4 {
+        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_minecraft_vm_id - local.reisen_int_offset)}/24"
+      }
+    }
+  }
+
+  startup {
+    order      = 4
+    up_delay   = 0
+    down_delay = 0
+  }
+
+  network_interface {
+    name        = "eth0"
+    mac_address = "BC:24:11:C4:66:AD"
+  }
+  network_interface {
+    name        = "eth9"
+    mac_address = "BC:24:19:C4:66:AD"
+    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
+  }
+
+  operating_system {
+    template_file_id = var.proxmox_container_template
+    type             = "nixos"
+  }
+
+  unprivileged = true
+  features {
+    nesting = true
+  }
+
+  console {
+    type = "console"
+  }
+  started = false
+
+  lifecycle {
+    ignore_changes = [started, unprivileged, initialization[0].dns, operating_system[0].template_file_id]
+  }
+}
+
+module "minecraft_config" {
+  source     = "./system/proxmox/lxc/config"
+  connection = local.proxmox_reisen_connection
+  container  = proxmox_virtual_environment_container.minecraft
+  config     = local.proxmox_minecraft_config.lxc
 }
