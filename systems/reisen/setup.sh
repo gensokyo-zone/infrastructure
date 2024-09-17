@@ -100,31 +100,51 @@ if [[ ! -d /rpool/caches ]]; then
 	zfs create rpool/caches
 fi
 
-mkrpool() {
-	local SHARED_PATH SHARED_MODE SHARED_OWNER SHARED_GROUP
-	SHARED_PATH=$1
-	SHARED_OWNER=$2
-	SHARED_GROUP=$3
-	SHARED_MODE=$4
+mkzfs() {
+	local ZFS_PATH ZFS_MODE ZFS_OWNER ZFS_GROUP
+	ZFS_PATH=$1
+	ZFS_OWNER=$2
+	ZFS_GROUP=$3
+	ZFS_MODE=$4
 	shift 4
 
-	if [[ ! -d "/rpool/$SHARED_PATH" ]]; then
-		zfs create "rpool/$SHARED_PATH"
+	ZFS_NAME=${ZFS_PATH#/}
+	if [[ $# -gt 0 ]]; then
+		ZFS_NAME=$1
+		shift
 	fi
-	chmod "$SHARED_MODE" "/rpool/$SHARED_PATH"
-	chown "$SHARED_OWNER:$SHARED_GROUP" "/rpool/$SHARED_PATH"
+
+	ZFS_ARGS=("$@")
+
+	if [[ $ZFS_NAME != ${ZFS_PATH#/} ]]; then
+		ZFS_ARGS+=(-o "mountpoint=$ZFS_PATH")
+	fi
+
+	if [[ ! -d "$ZFS_PATH" ]]; then
+		zfs create "$ZFS_NAME" ${ZFS_ARGS[@]+"${ZFS_ARGS[@]}"}
+	fi
+	chmod "$ZFS_MODE" "$ZFS_PATH"
+	chown "$ZFS_OWNER:$ZFS_GROUP" "$ZFS_PATH"
 }
 
 mkshared() {
 	local SHARED_PATH=$1
 	shift
-	mkrpool "shared/$SHARED_PATH" "$@"
+	mkzfs "/rpool/shared/$SHARED_PATH" "$@"
 }
 
 mkcache() {
-	local SHARED_PATH=$1
+	local CACHE_PATH=$1
 	shift
-	mkrpool "caches/$SHARED_PATH" "$@"
+	mkzfs "/rpool/caches/$CACHE_PATH" "$@"
+}
+
+mkkyuuto() {
+	local KYUUTO_PATH KYUUTO_ARGS=()
+	KYUUTO_NAME=$1
+	KYUUTO_ARGS=("$2" "$3" "$4")
+	shift 4
+	mkzfs "/mnt/kyuuto-$KYUUTO_NAME" "${KYUUTO_ARGS[@]}" "kyuuto/$KYUUTO_NAME" "$@"
 }
 
 mkshared nix 0 0 0755
@@ -163,6 +183,15 @@ mkshared zigbee2mqtt 100317 100317 0700
 mkshared vaultwarden 100915 100915 0750
 mkshared minecraft 100913 100913 0750
 mkshared minecraft/bedrock 100913 100913 0750
+mkshared minecraft/katsink 100913 100913 0750
+
+mkkyuuto data 0 0 0755 -o compression=on
+mkkyuuto data/minecraft 0 8126 0775
+if [[ ! -d /mnt/kyuuto-data/minecraft/simplebackups ]]; then
+	mkdir -p /mnt/kyuuto-data/minecraft/simplebackups
+fi
+chown 100913:8126 /mnt/kyuuto-data/minecraft/simplebackups
+chmod 0775 /mnt/kyuuto-data/minecraft/simplebackups
 
 ln -sf /lib/systemd/system/auth-rpcgss-module.service /etc/systemd/system/
 mkdir -p /etc/systemd/system/auth-rpcgss-module.service.d

@@ -245,6 +245,24 @@
       }
     }
   },
+  "minecraft": {
+    "network": {
+      "hostName": "minecraft",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.51",
+          "address6": "fd0a::be24:11ff:fec4:66ad",
+          "macAddress": "BC:24:11:C4:66:AD"
+        },
+        "tail": {
+          "address4": "100.73.157.122",
+          "address6": "fd7a:115c:a1e0::1f01:9d7a",
+          "macAddress": null
+        }
+      }
+    }
+  },
   "nue": {
     "network": {
       "hostName": "nue",

@@ -784,15 +784,8 @@ EOT
         address = "auto"
       }
       ipv4 {
-        address = "dhcp"
-      }
-    }
-    ip_config {
-      ipv6 {
-        address = "${cidrhost(local.reisen_int_prefix6, local.proxmox_minecraft_vm_id - local.reisen_int_offset)}/64"
-      }
-      ipv4 {
-        address = "${cidrhost(local.reisen_int_prefix4, local.proxmox_minecraft_vm_id - local.reisen_int_offset)}/24"
+        address = "10.1.1.51/24"
+        gateway = "10.1.1.1"
       }
     }
   }
@@ -806,11 +799,6 @@ EOT
   network_interface {
     name        = "eth0"
     mac_address = "BC:24:11:C4:66:AD"
-  }
-  network_interface {
-    name        = "eth9"
-    mac_address = "BC:24:19:C4:66:AD"
-    bridge      = proxmox_virtual_environment_network_linux_bridge.internal.name
   }
 
   operating_system {

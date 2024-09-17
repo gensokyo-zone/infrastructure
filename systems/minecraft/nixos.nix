@@ -1,19 +1,20 @@
-{meta, pkgs, ...}:{
+{
+  meta,
+  config,
+  ...
+}: {
   imports = let
     inherit (meta) nixos;
   in [
     nixos.sops
     nixos.reisen-ct
     nixos.tailscale
+    nixos.minecraft.katsink
   ];
 
-  environment.systemPackages = with pkgs; [
-    jre
-    tmux
+  environment.systemPackages = [
+    config.services.minecraft-katsink-server.jre.package
   ];
-
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 25565 ];
-  networking.firewall.interfaces.local.allowedTCPPorts = [ 25565 ];
 
   sops = {
     defaultSopsFile = ./secrets.yaml;
