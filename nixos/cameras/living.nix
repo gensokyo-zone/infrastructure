@@ -5,6 +5,7 @@
   ...
 }: let
   inherit (gensokyo-zone.lib) mapDefaults;
+  inherit (lib.strings) concatStringsSep;
   inherit (config.services) motion;
   format = "mjpeg"; # or "yuyv"
   params = {
@@ -22,7 +23,12 @@
 in {
   services.motion.cameras.livingcam.settings = mapDefaults {
     video_device = "/dev/livingcam";
-    video_params = "auto_brightness=2,brightness=72,power_line_frequency=2,palette=${toString params.${format}.palette}";
+    video_params = concatStringsSep "," [
+      #"auto_brightness=2"
+      "brightness=56"
+      "power_line_frequency=2"
+      "palette=${toString params.${format}.palette}"
+    ];
     inherit (params.${format}) width height;
     #framerate = 30;
     framerate = 20;

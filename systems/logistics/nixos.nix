@@ -38,6 +38,7 @@ in {
     mouse.naturalScrolling = config.services.libinput.touchpad.naturalScrolling;
   };
   programs.firefox.enable = true;
+  services.motion.cameras.webcam.enable = false;
 
   services.printing.enable = true;
 
@@ -52,8 +53,6 @@ in {
   };
 
   environment.systemPackages = [
-    # XXX: currently broken in nixpkgs
-    # pkgs.cura-octoprint
   ];
 
   users.users.logistics = {
