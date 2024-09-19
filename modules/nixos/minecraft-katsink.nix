@@ -89,6 +89,12 @@ in {
       requires = ["minecraft-katsink-server.socket"];
       after = ["network.target" "minecraft-katsink-server.socket"];
 
+      restartTriggers = [
+        cfg.dataDir
+        cfg.jvmOpts
+        cfg.argsFiles
+      ];
+
       serviceConfig = {
         ExecStart = [execStart];
         ExecStop = "${getExe execStop} $MAINPID";

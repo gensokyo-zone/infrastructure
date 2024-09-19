@@ -9,6 +9,10 @@
   inherit (lib.attrsets) listToAttrs nameValuePair;
   inherit (config.services.steam) accountSwitch beatsaber;
   cfg = config.kyuuto;
+  mapId = id:
+    if config.proxmoxLXC.privileged or true
+    then 100000 + id
+    else id;
 in {
   options.kyuuto = with lib.types; {
     setup = mkEnableOption "directory and permission setup";
@@ -31,6 +35,10 @@ in {
     gameLibraryDir = mkOption {
       type = path;
       default = cfg.libraryDir + "/games";
+    };
+    dataDir = mkOption {
+      type = path;
+      default = "/mnt/kyuuto-data";
     };
     gameLibraries = mkOption {
       type = listOf str;
@@ -98,6 +106,10 @@ in {
           ${cfg.libraryDir + "/movies"} = leaf;
           ${cfg.libraryDir + "/software"} = leaf;
           ${cfg.libraryDir + "/books"} = leaf;
+          ${cfg.dataDir + "/minecraft/simplebackups"} = leaf // {
+            owner = toString (mapId 913); # minecraft-bedrock uid
+            group = "admin";
+          };
           ${cfg.gameLibraryDir} = shared;
         }
         (listToAttrs (
@@ -123,10 +135,6 @@ in {
     };
 
     users = let
-      mapId = id:
-        if config.proxmoxLXC.privileged or true
-        then 100000 + id
-        else id;
       mkDummyUsers = {
         name,
         group ? name,

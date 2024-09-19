@@ -25,13 +25,13 @@ in {
         root = config.rootDir + "/minecraft/katsink";
         path = mkDefault cfg.dataDir;
       };
+      # TODO: serviceConfig.ExecStart = mkForce [ "${pkgs.runtimeShell} ${cfg.dataDir}/run.sh" ]; for imperative updates ?
     };
     sockets.minecraft-katsink-server = {
       socketConfig.SocketGroup = "admin";
     };
   };
   networking.firewall = mkIf cfg.enable {
-    interfaces.tailscale0.allowedTCPPorts = [cfg.port];
     interfaces.local.allowedTCPPorts = [cfg.port];
   };
 }
