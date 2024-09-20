@@ -182,13 +182,4 @@ in {
     # TODO: there must be a better way to provide promtail access to these logs!
     serviceConfig.Group = mkIf nginx.enable (lib.mkForce nginx.group);
   };
-  config.networking.firewall.interfaces.lan = let
-    inherit (cfg.configuration) server;
-  in
-    mkIf cfg.enable {
-      allowedTCPPorts = [
-        server.http_listen_port
-        (mkIf (server.grpc_listen_port != 0) server.grpc_listen_port)
-      ];
-    };
 }
