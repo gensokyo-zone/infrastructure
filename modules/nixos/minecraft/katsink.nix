@@ -1,15 +1,17 @@
 {
   config,
+  gensokyo-zone,
   lib,
   pkgs,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mapOptionDefaults;
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-  inherit (lib.strings) concatStringsSep;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
+  inherit (lib.strings) escapeShellArgs;
   inherit (lib.meta) getExe;
+  inherit (config.lib.minecraft) mkAllowPlayerType writeWhiteList writeOps;
   cfg = config.services.minecraft-katsink-server;
-
 in {
   options.services.minecraft-katsink-server = with lib.types; {
     enable = mkEnableOption "kat-kitchen-sink";
@@ -35,7 +37,7 @@ in {
 
     argsFiles = mkOption {
       type = listOf str;
-      default = [ "user_jvm_args.txt" ];
+      default = ["user_jvm_args.txt"];
     };
 
     jvmOpts = mkOption {
@@ -52,10 +54,21 @@ in {
       type = str;
       default = cfg.user;
     };
+
+    serverProperties = mkOption {
+      type = attrsOf (oneOf [bool int str float]);
+    };
+
+    allowPlayers = mkOption {
+      type = nullOr (attrsOf (mkAllowPlayerType {}));
+      default = null;
+    };
   };
 
   config = let
     confService.services.minecraft-katsink-server = {
+      serverProperties = mapOptionDefaults {
+      };
     };
     conf.users = mkIf (cfg.user == "minecraft-bedrock") {
       users.${cfg.user} = {
@@ -69,10 +82,9 @@ in {
     };
 
     conf.systemd.services.minecraft-katsink-server = let
-      execStart = concatStringsSep " " ([
-        "${getExe cfg.jre.package}"
-      ] ++ map (argsFile: "@${argsFile}") cfg.argsFiles
-      ++ cfg.jvmOpts);
+      execStartArgs =
+        map (argsFile: "@${argsFile}") cfg.argsFiles
+        ++ cfg.jvmOpts;
       execStop = pkgs.writeShellScriptBin "minecraft-katsink-stop" ''
         echo /stop > ${config.systemd.sockets.minecraft-katsink-server.socketConfig.ListenFIFO}
 
@@ -82,7 +94,6 @@ in {
           sleep 1s
         done
       '';
-
     in {
       description = "Minecraft Kat Kitchen Server";
       wantedBy = ["multi-user.target"];
@@ -95,24 +106,29 @@ in {
         cfg.argsFiles
       ];
 
+      path = [cfg.jre.package];
+      script = mkAfter ''
+        exec java ${escapeShellArgs execStartArgs}
+      '';
+
       serviceConfig = {
-        ExecStart = [execStart];
+        BindReadOnlyPaths = mkIf (cfg.allowPlayers != null) [
+          "${writeWhiteList cfg.allowPlayers}:${cfg.dataDir}/whitelist.json"
+          "${writeOps cfg.allowPlayers}:${cfg.dataDir}/ops.json"
+        ];
         ExecStop = "${getExe execStop} $MAINPID";
-        Restart = "on-failure";
+        Restart = "always";
         User = cfg.user;
         WorkingDirectory = cfg.dataDir;
-        /*LogFilterPatterns = [
-          "~.*minecraft:trial_chambers/chamber/end"
-          "~Running AutoCompaction"
-        ];*/
+        RuntimeDirectory = "minecraft-katsink";
 
         StandardInput = "socket";
         StandardOutput = "journal";
         StandardError = "journal";
 
         # Hardening
-        CapabilityBoundingSet = [ "" ];
-        DeviceAllow = [ "" ];
+        CapabilityBoundingSet = [""];
+        DeviceAllow = [""];
         LockPersonality = true;
         PrivateDevices = true;
         PrivateTmp = true;
@@ -125,7 +141,7 @@ in {
         ProtectKernelModules = true;
         ProtectKernelTunables = true;
         ProtectProc = "invisible";
-        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
+        RestrictAddressFamilies = ["AF_INET" "AF_INET6" "AF_UNIX"];
         RestrictNamespaces = true;
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
@@ -134,9 +150,9 @@ in {
       };
     };
     conf.systemd.sockets.minecraft-katsink-server = {
-      bindsTo = [ "minecraft-katsink-server.service" ];
+      bindsTo = ["minecraft-katsink-server.service"];
       socketConfig = {
-        ListenFIFO = "/run/minecraft-katsink.stdin";
+        ListenFIFO = "/run/minecraft-katsink/stdin";
         SocketMode = "0660";
         SocketUser = mkOptionDefault cfg.user;
         SocketGroup = mkOptionDefault cfg.group;

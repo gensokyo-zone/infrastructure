@@ -59,6 +59,57 @@ in {
               target_label = "priority";
             }
           ];
+          pipeline_stages = let
+            minecraftServer = [
+              {
+                match = {
+                  selector = ''{unit="minecraft-katsink-server.service"}'';
+                  pipeline_name = "minecraft-log4j";
+                  stages = [
+                    {
+                      decolorize = {};
+                    }
+                    {
+                      multiline = {
+                        firstline = ''^(\[[^\]]+\]|[0-9A-Z]+:)'';
+                        max_wait_time = "2s";
+                        max_lines = 512;
+                      };
+                    }
+                    {
+                      regex.expression = concatStringsSep " " [
+                        ''^\[(?P<time>[0-9:.]+)\]''
+                        ''\[(?P<thread>[^\/]+)\/(?P<level>[^\]]+)\]''
+                        ''\[(?P<component>[^\/]+)\/((?P<category>[^\]]+)|)\]:''
+                        ''(?P<message><(?P<chat_user>[^> ]+)> (?P<chat_message>.*)|.*)$''
+                      ];
+                    }
+                    {
+                      labels = {
+                        time = null;
+                        thread = null;
+                        level = null;
+                        component = null;
+                        category = null;
+                        message = null;
+                        chat_user = null;
+                        chat_message = null;
+                      };
+                    }
+                    {
+                      timestamp = {
+                        source = "time";
+                        format = "15:04:05";
+                      };
+                    }
+                  ];
+                };
+              }
+            ];
+          in
+            mkMerge [
+              (mkIf config.services.minecraft-katsink-server.enable minecraftServer)
+            ];
         }
         (mkIf nginx.enable {
           job_name = "${systemConfig.name}-nginx-access";

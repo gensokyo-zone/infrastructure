@@ -1,120 +1,3 @@
-let
-  allowListModule = {
-    config,
-    name,
-    gensokyo-zone,
-    lib,
-    ...
-  }: let
-    inherit (gensokyo-zone.Std) UInt;
-    inherit (lib.options) mkOption;
-    inherit (lib.modules) mkOptionDefault;
-    inherit (builtins) typeOf;
-  in {
-    options = with lib.types; {
-      name = mkOption {
-        type = str;
-        default = name;
-      };
-      xuid = mkOption {
-        type = oneOf [int str];
-      };
-      permission = mkOption {
-        type = enum ["visitor" "member" "operator"];
-        default = "member";
-      };
-      settings = mkOption {
-        type = attrsOf str;
-      };
-      permissionSettings = mkOption {
-        type = attrsOf str;
-      };
-    };
-    config = let
-      xuid =
-        {
-          string = toString (UInt.FromHex config.xuid);
-          int = toString config.xuid;
-        }
-        .${typeOf config.xuid};
-    in {
-      settings = {
-        name = mkOptionDefault config.name;
-        xuid = mkOptionDefault xuid;
-        # TODO: ignoresPlayerLimit = true/false
-      };
-      permissionSettings = {
-        xuid = mkOptionDefault xuid;
-        permission = mkOptionDefault config.permission;
-      };
-    };
-  };
-  packModule = {
-    config,
-    lib,
-    ...
-  }: let
-    inherit (lib.options) mkOption mkEnableOption;
-    inherit (lib.modules) mkIf mkOptionDefault;
-    inherit (lib.strings) splitString;
-    inherit (builtins) typeOf;
-  in {
-    options = with lib.types; {
-      enable =
-        mkEnableOption "pack"
-        // {
-          default = true;
-        };
-      package = mkOption {
-        type = nullOr package;
-        default = null;
-      };
-      packDir = mkOption {
-        type = str;
-      };
-      packType = mkOption {
-        type = enum ["resource_packs" "behavior_packs"];
-      };
-      packId = mkOption {
-        type = str;
-      };
-      version = mkOption {
-        type = oneOf [str (listOf str)];
-      };
-      settings = mkOption {
-        type = attrsOf (oneOf [str (listOf str)]);
-      };
-    };
-    config = {
-      packId = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.pack_id) (
-        mkOptionDefault
-        config.package.minecraft-bedrock.pack.pack_id
-      );
-      packType = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.type) (
-        mkOptionDefault
-        config.package.minecraft-bedrock.pack.type
-      );
-      version = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.version) (
-        mkOptionDefault
-        config.package.minecraft-bedrock.pack.version
-      );
-      packDir = mkIf (config.package != null && config.package ? minecraft-bedrock.pack.dir) (
-        mkOptionDefault
-        config.package.minecraft-bedrock.pack.dir
-      );
-      settings = {
-        pack_id = mkOptionDefault config.packId;
-        version =
-          mkOptionDefault
-          {
-            string = splitString "." config.version;
-            list = config.version;
-          }
-          .${typeOf config.version};
-      };
-    };
-  };
-in
   {
     config,
     gensokyo-zone,
@@ -128,23 +11,9 @@ in
     inherit (lib.modules) mkIf mkMerge mkOptionDefault;
     inherit (lib.attrsets) filterAttrs mapAttrsToList;
     inherit (lib.lists) optional;
-    inherit (lib.strings) concatStringsSep;
-    inherit (lib.trivial) boolToString;
     inherit (lib.meta) getExe;
-    inherit (builtins) toJSON;
+    inherit (config.lib.minecraft) mkAllowPlayerType mkPackType writeServerProperties writeAllowList writePermissions writePacks;
     cfg = config.services.minecraft-bedrock-server;
-
-    cfgToString = v:
-      if builtins.isBool v
-      then boolToString v
-      else toString v;
-
-    serverPropertiesFile = pkgs.writeText "server.properties" (''
-        # server.properties managed by NixOS configuration
-      ''
-      + concatStringsSep "\n" (mapAttrsToList
-        (n: v: "${n}=${cfgToString v}")
-        cfg.serverProperties));
   in {
     options.services.minecraft-bedrock-server = with lib.types; {
       enable = mkOption {
@@ -221,13 +90,7 @@ in
       };
 
       allowPlayers = mkOption {
-        type = nullOr (attrsOf (submoduleWith {
-          modules = [allowListModule];
-          specialArgs = {
-            inherit gensokyo-zone;
-            nixosConfig = config;
-          };
-        }));
+        type = nullOr (attrsOf (mkAllowPlayerType {}));
         default = null;
       };
 
@@ -240,13 +103,7 @@ in
       };
 
       packs = mkOption {
-        type = attrsOf (submoduleWith {
-          modules = [packModule];
-          specialArgs = {
-            inherit gensokyo-zone;
-            nixosConfig = config;
-          };
-        });
+        type = attrsOf (mkPackType {});
         default = {};
       };
     };
@@ -279,28 +136,16 @@ in
           player-movement-duration-threshold-in-ms = 500;
           correct-player-movement = false;
         };
-        allowList = let
-          allowPlayers = mapAttrsToList (_: allow: allow.settings) cfg.allowPlayers;
-          allowListJson = pkgs.writeText "minecraft-bedrock-server-allowlist.json" (
-            toJSON allowPlayers
-          );
-        in
-          mkOptionDefault (
-            if cfg.allowPlayers != null
-            then allowListJson
-            else null
-          );
-        permissions = let
-          permissions = mapAttrsToList (_: allow: allow.permissionSettings) cfg.allowPlayers;
-          permissionsJson = pkgs.writeText "minecraft-bedrock-server-permissions.json" (
-            toJSON permissions
-          );
-        in
-          mkOptionDefault (
-            if cfg.allowPlayers != null
-            then permissionsJson
-            else null
-          );
+        allowList = mkOptionDefault (
+          if cfg.allowPlayers != null
+          then writeAllowList cfg.allowPlayers
+          else null
+        );
+        permissions = mkOptionDefault (
+          if cfg.allowPlayers != null
+          then writePermissions cfg.allowPlayers
+          else null
+        );
       };
       conf.users.users.${cfg.user} = {
         inherit (cfg) group;
@@ -334,13 +179,11 @@ in
               ]
               ++ optional (cfg.permissions == null) "permissions.json");
             mkWorldPacks = type: let
-              enabledPacks = filterAttrs (_: pack: pack.enable && pack.packType == "${type}_packs") cfg.packs;
-              jsonName = "world_${type}_packs.json";
-              packsJson = mapAttrsToList (_: pack: pack.settings) enabledPacks;
-              packsJsonPath = pkgs.writeText jsonName (toJSON packsJson);
+              enabledPacks = filterAttrs (_: pack: pack.enable && pack.packType == type) cfg.packs;
+              packsJsonPath = writePacks { inherit type; } enabledPacks;
             in
               mkIf (enabledPacks != {}) [
-                "${packsJsonPath}:${cfg.dataDir}/worlds/${cfg.serverProperties.level-name}/${jsonName}"
+                "${packsJsonPath}:${cfg.dataDir}/worlds/${cfg.serverProperties.level-name}/${packsJsonPath.name}"
               ];
             mapWorldPacks = packs: let
               enabledPacks = filterAttrs (_: pack: pack.enable && pack.package != null) packs;
@@ -350,8 +193,8 @@ in
             in
               mapAttrsToList mapPackPath enabledPacks;
             packsPaths = mkMerge [
-              (mkWorldPacks "behavior")
-              (mkWorldPacks "resource")
+              (mkWorldPacks "behavior_packs")
+              (mkWorldPacks "resource_packs")
               (mapWorldPacks cfg.packs)
             ];
           in
@@ -376,7 +219,7 @@ in
         preStart = ''
           mkdir -p behavior_packs
           ln -sf ${cfg.package}/var/lib/minecraft-bedrock/behavior_packs/* behavior_packs/
-          cp -f ${serverPropertiesFile} server.properties
+          cp -f ${writeServerProperties cfg.serverProperties} server.properties
           chmod +w server.properties
         '';
       };

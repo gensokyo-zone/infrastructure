@@ -10,6 +10,10 @@ _: {
   exports = {
     services = {
       tailscale.enable = true;
+      minecraft = {
+        enable = true;
+        id = "katsink";
+      };
     };
   };
 }

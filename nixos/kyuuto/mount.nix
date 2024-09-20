@@ -106,10 +106,12 @@ in {
           ${cfg.libraryDir + "/movies"} = leaf;
           ${cfg.libraryDir + "/software"} = leaf;
           ${cfg.libraryDir + "/books"} = leaf;
-          ${cfg.dataDir + "/minecraft/simplebackups"} = leaf // {
-            owner = toString (mapId 913); # minecraft-bedrock uid
-            group = "admin";
-          };
+          ${cfg.dataDir + "/minecraft/simplebackups"} =
+            leaf
+            // {
+              owner = toString (mapId 913); # minecraft-bedrock uid
+              group = "admin";
+            };
           ${cfg.gameLibraryDir} = shared;
         }
         (listToAttrs (

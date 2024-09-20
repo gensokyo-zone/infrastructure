@@ -56,6 +56,7 @@
     };
     "modules/nixos/access".functor.enable = true;
     "modules/nixos/ldap".functor.enable = true;
+    "modules/nixos/minecraft".functor.enable = true;
     "modules/nixos/monitoring".functor.enable = true;
     "modules/nixos/monitoring/ingest".functor.enable = true;
     "modules/nixos/monitoring/source".functor.enable = true;
