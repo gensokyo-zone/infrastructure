@@ -63,7 +63,7 @@ in {
             minecraftServer = [
               {
                 match = {
-                  selector = ''{unit="minecraft-katsink-server.service"}'';
+                  selector = ''{unit="minecraft-java-server.service"}'';
                   pipeline_name = "minecraft-log4j";
                   stages = [
                     {
@@ -80,26 +80,34 @@ in {
                       regex.expression = concatStringsSep " " [
                         ''^\[(?P<time>[0-9:.]+)\]''
                         ''\[(?P<thread>[^\/]+)\/(?P<level>[^\]]+)\]''
-                        ''\[(?P<component>[^\/]+)\/((?P<category>[^\]]+)|)\]:''
-                        ''(?P<message><(?P<chat_user>[^> ]+)> (?P<chat_message>.*)|.*)$''
+                        ''\[(?P<context>[^\/]+)\/((?P<category>[^\]]+)|)\]:''
+                        ''(?P<message>(\[DISCORD\] <(?P<chat_user_discord>[^> ]+)>|<(?P<chat_user>[^> ]+)>) (?P<chat_message>.*)|(?s:.*))$''
                       ];
+                    }
+                    {
+                      template = {
+                        source = "time";
+                        template = ''{{ .__journal__realtime_timestamp | date "2006-01-02" }}T{{ .Value }}'';
+                      };
                     }
                     {
                       labels = {
                         time = null;
                         thread = null;
                         level = null;
-                        component = null;
+                        context = null;
                         category = null;
                         message = null;
                         chat_user = null;
+                        chat_user_discord = null;
                         chat_message = null;
                       };
                     }
                     {
                       timestamp = {
                         source = "time";
-                        format = "15:04:05";
+                        format = "2006-01-02T15:04:05";
+                        location = config.time.timeZone;
                       };
                     }
                   ];
@@ -108,7 +116,7 @@ in {
             ];
           in
             mkMerge [
-              (mkIf config.services.minecraft-katsink-server.enable minecraftServer)
+              (mkIf config.services.minecraft-java-server.enable minecraftServer)
             ];
         }
         (mkIf nginx.enable {

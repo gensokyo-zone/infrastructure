@@ -1,7 +1,7 @@
 {
 	"lxc": {
 		"lxc.mount.entry": [
-			"/rpool/shared/minecraft/katsink mnt/shared/minecraft/katsink none bind,optional,create=dir",
+			"/rpool/shared/minecraft/java mnt/shared/minecraft/java none bind,optional,create=dir",
 			"/mnt/kyuuto-data/minecraft mnt/kyuuto-data/minecraft none bind,optional,create=dir",
 			"/mnt/kyuuto-minecraft mnt/kyuuto-minecraft none bind,optional,create=dir",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"

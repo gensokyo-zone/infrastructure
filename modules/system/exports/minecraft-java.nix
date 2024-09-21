@@ -3,9 +3,8 @@
   gensokyo-zone,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapAlmostOptionDefaults mkAlmostOptionDefault;
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkIf;
-  inherit (lib.attrsets) mapAttrs;
 in {
   config.exports.services.minecraft = {config, ...}: let
     mkAssertion = f: nixosConfig: let
@@ -15,7 +14,7 @@ in {
   in {
     displayName = "Minecraft";
     nixos = {
-      serviceAttr = "minecraft-katsink-server";
+      serviceAttr = "minecraft-java-server";
       assertions = mkIf config.enable [
         (mkAssertion (nixosConfig: cfg: {
           assertion = config.ports.default.port == cfg.port;

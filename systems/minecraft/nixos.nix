@@ -9,11 +9,12 @@
     nixos.sops
     nixos.reisen-ct
     nixos.tailscale
-    nixos.minecraft.katsink
+    nixos.kyuuto.mount
+    nixos.minecraft.java
   ];
 
   environment.systemPackages = [
-    config.services.minecraft-katsink-server.jre.package
+    config.services.minecraft-java-server.jre.package
   ];
 
   sops = {

@@ -185,7 +185,7 @@ mkshared zigbee2mqtt 100317 100317 0700
 mkshared vaultwarden 100915 100915 0750
 mkshared minecraft 100913 100913 0750
 mkshared minecraft/bedrock 100913 100913 0750
-mkshared minecraft/katsink 100913 100913 0750
+mkshared minecraft/java 100913 100913 0750
 
 mkkyuuto data 0 0 0755 -o compression=on
 mkkyuuto data/minecraft 0 8126 0775

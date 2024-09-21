@@ -12,7 +12,8 @@ _: {
       tailscale.enable = true;
       minecraft = {
         enable = true;
-        id = "katsink";
+        id = "marka";
+        ports.query.enable = true;
       };
     };
   };

@@ -11,10 +11,10 @@
   inherit (lib.strings) escapeShellArgs;
   inherit (lib.meta) getExe;
   inherit (config.lib.minecraft) mkAllowPlayerType writeWhiteList writeOps;
-  cfg = config.services.minecraft-katsink-server;
+  cfg = config.services.minecraft-java-server;
 in {
-  options.services.minecraft-katsink-server = with lib.types; {
-    enable = mkEnableOption "kat-kitchen-sink";
+  options.services.minecraft-java-server = with lib.types; {
+    enable = mkEnableOption "minecraft java edition server";
 
     openFirewall = mkOption {
       type = bool;
@@ -29,7 +29,7 @@ in {
 
     dataDir = mkOption {
       type = path;
-      default = "/var/lib/minecraft-katsink";
+      default = "/var/lib/minecraft-java";
       description = ''
         Directory to store Minecraft database and other state/data files.
       '';
@@ -66,7 +66,7 @@ in {
   };
 
   config = let
-    confService.services.minecraft-katsink-server = {
+    confService.services.minecraft-java-server = {
       serverProperties = mapOptionDefaults {
       };
     };
@@ -81,12 +81,12 @@ in {
       groups.${cfg.group} = {};
     };
 
-    conf.systemd.services.minecraft-katsink-server = let
+    conf.systemd.services.minecraft-java-server = let
       execStartArgs =
         map (argsFile: "@${argsFile}") cfg.argsFiles
         ++ cfg.jvmOpts;
-      execStop = pkgs.writeShellScriptBin "minecraft-katsink-stop" ''
-        echo /stop > ${config.systemd.sockets.minecraft-katsink-server.socketConfig.ListenFIFO}
+      execStop = pkgs.writeShellScriptBin "minecraft-java-stop" ''
+        echo /stop > ${config.systemd.sockets.minecraft-java-server.socketConfig.ListenFIFO}
 
         # Wait for the PID of the minecraft server to disappear before
         # returning, so systemd doesn't attempt to SIGKILL it.
@@ -97,8 +97,8 @@ in {
     in {
       description = "Minecraft Kat Kitchen Server";
       wantedBy = ["multi-user.target"];
-      requires = ["minecraft-katsink-server.socket"];
-      after = ["network.target" "minecraft-katsink-server.socket"];
+      requires = ["minecraft-java-server.socket"];
+      after = ["network.target" "minecraft-java-server.socket"];
 
       restartTriggers = [
         cfg.dataDir
@@ -120,7 +120,7 @@ in {
         Restart = "always";
         User = cfg.user;
         WorkingDirectory = cfg.dataDir;
-        RuntimeDirectory = "minecraft-katsink";
+        RuntimeDirectory = "minecraft-java";
 
         StandardInput = "socket";
         StandardOutput = "journal";
@@ -149,10 +149,10 @@ in {
         UMask = "0077";
       };
     };
-    conf.systemd.sockets.minecraft-katsink-server = {
-      bindsTo = ["minecraft-katsink-server.service"];
+    conf.systemd.sockets.minecraft-java-server = {
+      bindsTo = ["minecraft-java-server.service"];
       socketConfig = {
-        ListenFIFO = "/run/minecraft-katsink/stdin";
+        ListenFIFO = "/run/minecraft-java/stdin";
         SocketMode = "0660";
         SocketUser = mkOptionDefault cfg.user;
         SocketGroup = mkOptionDefault cfg.group;

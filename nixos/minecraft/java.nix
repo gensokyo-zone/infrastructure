@@ -5,14 +5,21 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkDefault;
-  cfg = config.services.minecraft-katsink-server;
+  cfg = config.services.minecraft-java-server;
+  #forge = "neoforge";
+  forge = "forge";
+  backupsDir = "${config.kyuuto.dataDir}/minecraft/simplebackups/marka";
 in {
-  services.minecraft-katsink-server = {
+  services.minecraft-java-server = {
     enable = mkDefault true;
     argsFiles = [
       "user_jvm_args.txt"
-      "/run/minecraft-katsink/unix_args.txt"
+      "/run/minecraft-java/unix_args.txt"
     ];
+    serverProperties = {
+      enable-query = true;
+      "query.port" = cfg.port;
+    };
     allowPlayers = {
       katrynn = {
         uuid = "356d8cf2-246a-4c07-b547-422aea06c0ab";
@@ -37,16 +44,27 @@ in {
   };
 
   systemd = mkIf cfg.enable {
-    services.minecraft-katsink-server = {
+    services.minecraft-java-server = {
       # TODO: confinement.enable = true;
-      gensokyo-zone.sharedMounts."minecraft/katsink/kat-kitchen-server" = {config, ...}: {
-        root = config.rootDir + "/minecraft/katsink";
+      gensokyo-zone.sharedMounts."minecraft/java/marka-server" = {config, ...}: {
+        root = config.rootDir + "/minecraft/java";
         path = mkDefault cfg.dataDir;
       };
-      preStart = ''
-        ${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/neoforged/neoforge/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt
+      preStart = let
+        forgeDir = {
+          neoforge = "neoforged/neoforge";
+          forge = "minecraftforge/forge";
+        }.${forge};
+      in ''
+        ${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/${forgeDir}/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt
       '';
+      serviceConfig = {
+        BindPaths = [
+          "${backupsDir}:${cfg.dataDir}/simplebackups"
+        ];
+      };
     };
+    # TODO: tmpfiles.rules = ["d ${backupsDir} 775 ${cfg.user} admin - -"];
   };
   networking.firewall = mkIf cfg.enable {
     interfaces.local = {
