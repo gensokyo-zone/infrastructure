@@ -33,6 +33,7 @@ module "hakurei_system_records" {
     "lm",
     "webrx",
     "deluge",
+    "task",
     "home",
     "z2m",
     "grocy",

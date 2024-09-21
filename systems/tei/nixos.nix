@@ -16,6 +16,7 @@ in {
     nixos.postgres
     nixos.nginx
     nixos.adb
+    nixos.access.taskchampion
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
@@ -39,6 +40,7 @@ in {
         proxied.enable = "cloudflared";
         vouch.enable = mkIf hassVouch true;
       };
+      taskchampion.proxied.enable = "cloudflared";
     };
   };
   services.home-assistant = {

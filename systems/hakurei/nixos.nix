@@ -48,6 +48,7 @@ in {
     nixos.access.nextjs-ollama
     nixos.access.openwebrx
     nixos.access.deluge
+    nixos.access.taskchampion
     nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
@@ -130,6 +131,14 @@ in {
       extraDomainNames = mkMerge [
         virtualHosts.vaultwarden.otherServerNames
         virtualHosts.vaultwarden'local.allServerNames
+      ];
+    };
+    task = {
+      inherit (nginx) group;
+      domain = virtualHosts.taskchampion.serverName;
+      extraDomainNames = mkMerge [
+        virtualHosts.taskchampion.otherServerNames
+        virtualHosts.taskchampion'local.allServerNames
       ];
     };
     home = {
@@ -377,6 +386,11 @@ in {
       };
       loki = {
         # we're not the real logs record-holder, so don't respond globally..
+        local.denyGlobal = true;
+        ssl.cert.enable = true;
+      };
+      taskchampion = {
+        # not the real task record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };

@@ -19,6 +19,7 @@ in {
           (nginx.virtualHosts.grocy.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.barcodebuddy.proxied.cloudflared.getIngress {})
           (nginx.virtualHosts.home-assistant.proxied.cloudflared.getIngress {})
+          (nginx.virtualHosts.taskchampion.proxied.cloudflared.getIngress {})
         ];
       };
     };
