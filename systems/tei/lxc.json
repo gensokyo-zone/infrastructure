@@ -1,8 +1,10 @@
 {
 	"lxc": {
 		"lxc.mount.entry": [
+			"/rpool/caches/taskchampion mnt/caches/taskchampion none bind,optional,create=dir",
 			"/rpool/caches/zigbee2mqtt mnt/caches/zigbee2mqtt none bind,optional,create=dir",
 			"/rpool/shared/zigbee2mqtt mnt/shared/zigbee2mqtt none bind,optional,create=dir",
+			"/rpool/shared/taskchampion mnt/shared/taskchampion none bind,optional,create=dir",
 			"/rpool/shared/hass mnt/shared/hass none bind,optional,create=dir",
 			"/rpool/shared/grocy mnt/shared/grocy none bind,optional,create=dir",
 			"/rpool/shared/barcodebuddy mnt/shared/barcodebuddy none bind,optional,create=dir",

@@ -25,6 +25,7 @@ in {
     nixos.zigbee2mqtt
     nixos.grocy
     nixos.barcodebuddy
+    nixos.taskchampion
     ./cloudflared.nix
   ];
 

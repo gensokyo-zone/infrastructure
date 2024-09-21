@@ -159,6 +159,7 @@ chmod 1775 /rpool/shared/nix/store
 chown 100000:100000 /rpool/shared/nix/var
 
 mkcache zigbee2mqtt 100317 100317 0700
+mkcache taskchampion 100917 100917 0750
 mkcache plex 0 0 0755
 if [[ ! -d /rpool/caches/plex/Cache ]]; then
 	mkdir /rpool/caches/plex/Cache
@@ -178,6 +179,7 @@ mkshared kanidm 100994 100993 0700
 mkshared mosquitto 100246 100246 0700
 mkshared plex 100193 100193 0750
 mkshared postgresql 100071 100071 0750
+mkshared taskchampion 100917 100917 0750
 mkshared unifi 100990 100990 0750
 mkshared zigbee2mqtt 100317 100317 0700
 mkshared vaultwarden 100915 100915 0750
