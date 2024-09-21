@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (gensokyo-zone.lib) mkAlmostDefault;
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) optionalAttrs;
   inherit (lib.trivial) importJSON;
   hasSops = options ? sops;
@@ -30,10 +30,19 @@ in {
           // optionalAttrs (node.original.type == "github") {
             inherit (node.original) repo owner;
           };
+        nixpkgs'ref.to = mapFlake "nixpkgs";
+        nixpkgs'copy.flake = gensokyo-zone.inputs.nixpkgs;
       in {
-        nixpkgs.to = mapFlake "nixpkgs";
-        arc.to = mapFlake "arcexprs";
-        ci = {
+        nixpkgs = mkMerge [
+          (mkDefault nixpkgs'ref)
+          # front-load nixpkgs to real machines as part of the system closure
+          # (they're likely to fetch slowly on demand due to underpowered networking)
+          (mkIf (!config.boot.isContainer) nixpkgs'copy)
+        ];
+        arc = mkDefault {
+          to = mapFlake "arcexprs";
+        };
+        ci = mkDefault {
           to = {
             inherit (lock.nodes.ci.original) type owner repo;
           };
