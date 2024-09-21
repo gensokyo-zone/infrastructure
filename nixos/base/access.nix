@@ -27,7 +27,7 @@
   users.defaultUserShell = pkgs.zsh;
 
   users.users.root = {
-    hashedPassword = "$6$i28yOXoo$/WokLdKds5ZHtJHcuyGrH2WaDQQk/2Pj0xRGLgS8UcmY2oMv3fw2j/85PRpsJJwCB2GBRYRK5LlvdTleHd3mB.";
+    hashedPassword = "$6$SLue7utn4qXtW1TE$yQOliCPKgkiFST5H6iqCCwT2dn3o4e/h39MaCbhOXVreFQrkWe7ZzJUOzC0u28/0.Hzs6xKSiJnGjbLXvGstr1";
     openssh.authorizedKeys.keys = with pkgs.lib; (concatLists (mapAttrsToList
       (name: user:
         if elem "wheel" user.extraGroups
