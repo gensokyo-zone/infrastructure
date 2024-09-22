@@ -1,14 +1,22 @@
 {
   pkgs,
   config,
+  systemConfig,
+  gensokyo-zone,
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkDefault;
+  inherit (gensokyo-zone.lib) mapDefaults;
+  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib) versions;
+  inherit (systemConfig.exports.services) minecraft;
   cfg = config.services.minecraft-java-server;
   #forge = "neoforge";
   forge = "forge";
+  mcVersion = "1.20.1";
   backupsDir = "${config.kyuuto.dataDir}/minecraft/simplebackups/marka";
+  enableDynmap = minecraft.ports.dynmap.enable;
+  enableBluemap = minecraft.ports.bluemap.enable;
 in {
   services.minecraft-java-server = {
     enable = mkDefault true;
@@ -16,10 +24,20 @@ in {
       "user_jvm_args.txt"
       "/run/minecraft-java/unix_args.txt"
     ];
-    serverProperties = {
-      enable-query = true;
-      "query.port" = cfg.port;
-    };
+    serverProperties = let
+      props = {
+        enable-query = true;
+        "query.port" = cfg.port;
+        pvp = false;
+        broadcast-console-to-ops = false;
+        op-permission-level = 2;
+      };
+    in mkMerge [
+      (mapDefaults props)
+      (mkIf enableDynmap {
+        max-tick-time = 60000 * 12;
+      })
+    ];
     allowPlayers = {
       katrynn = {
         uuid = "356d8cf2-246a-4c07-b547-422aea06c0ab";
@@ -62,6 +80,31 @@ in {
         BindPaths = [
           "${backupsDir}:${cfg.dataDir}/simplebackups"
         ];
+        BindReadOnlyPaths = let
+          dynmap = assert forge == "forge"; pkgs.fetchurl {
+            url = "https://cdn.modrinth.com/data/fRQREgAc/versions/RtI5TFAi/Dynmap-3.7-beta-6-${forge}-${versions.majorMinor mcVersion}.jar";
+            sha256 = "sha256-rrs7ab0OKEwkPBYGm4CDD/I5341P/f4wwU52hyKd/Ls=";
+          };
+          dynmap-block-scan = assert forge == "forge"; pkgs.fetchurl {
+            url = "https://dynmap.us/builds/DynmapBlockScan/DynmapBlockScan-3.6-${forge}-${versions.majorMinor mcVersion}.jar";
+            sha256 = "sha256-YOuXeE+6kOtFpA42Yhv5sBdjpvZsuHXvx5fnocY5yvM=";
+          };
+          bluemap = assert forge == "forge"; pkgs.fetchurl {
+            url = "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.3/BlueMap-5.3-${forge}-${versions.majorMinor mcVersion}.jar";
+            sha256 = "sha256-eN4wWUItI7WleFk1KUSTM5EQv9ri4QRKrBuvCgN89qU=";
+          };
+        in mkMerge [
+          (mkIf enableDynmap [
+            "${dynmap}:${cfg.dataDir}/mods/${dynmap.name}"
+            "${dynmap-block-scan}:${cfg.dataDir}/mods/${dynmap-block-scan.name}"
+          ])
+          (mkIf enableBluemap [
+            "${bluemap}:${cfg.dataDir}/mods/${bluemap.name}"
+          ])
+        ];
+        LogFilterPatterns = [
+          "~.*Invalid modellist patch.*"
+        ];
       };
     };
     # TODO: tmpfiles.rules = ["d ${backupsDir} 775 ${cfg.user} admin - -"];
@@ -70,6 +113,12 @@ in {
     interfaces.local = {
       allowedTCPPorts = [cfg.port];
       allowedUDPPorts = mkIf cfg.serverProperties.enable-query or false [cfg.serverProperties."query.port"];
+    };
+    interfaces.lan = {
+      allowedTCPPorts = [
+        (mkIf enableDynmap minecraft.ports.dynmap.port)
+        (mkIf enableBluemap minecraft.ports.bluemap.port)
+      ];
     };
   };
 }

@@ -13,7 +13,11 @@ _: {
       minecraft = {
         enable = true;
         id = "marka";
-        ports.query.enable = true;
+        ports = {
+          query.enable = true;
+          dynmap.enable = true;
+          bluemap.enable = true;
+        };
       };
     };
   };

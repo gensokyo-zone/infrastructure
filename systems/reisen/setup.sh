@@ -160,6 +160,7 @@ chown 100000:100000 /rpool/shared/nix/var
 
 mkcache zigbee2mqtt 100317 100317 0700
 mkcache taskchampion 100917 100917 0750
+mkcache minecraft 100913 100913 0750
 mkcache plex 0 0 0755
 if [[ ! -d /rpool/caches/plex/Cache ]]; then
 	mkdir /rpool/caches/plex/Cache

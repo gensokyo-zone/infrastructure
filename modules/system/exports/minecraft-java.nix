@@ -55,6 +55,18 @@ in {
         port = mkAlmostOptionDefault config.ports.default.port;
         transport = "udp";
       };
+      dynmap = {
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 8123;
+        protocol = "http";
+        listen = mkAlmostOptionDefault "int";
+      };
+      bluemap = {
+        enable = mkAlmostOptionDefault false;
+        port = mkAlmostOptionDefault 8100;
+        protocol = "http";
+        listen = mkAlmostOptionDefault "int";
+      };
     };
   };
 }
