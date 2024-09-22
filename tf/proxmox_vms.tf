@@ -768,7 +768,7 @@ EOT
   }
 
   memory {
-    dedicated = 16384
+    dedicated = 12288
     swap      = 16384
   }
 
