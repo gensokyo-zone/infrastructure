@@ -9,7 +9,6 @@
   inherit (lib.strings) escapeRegex;
   inherit (gensokyo-zone.lib) domain;
   inherit (config.services) nginx;
-  minecraftBackups = "${config.kyuuto.dataDir}/minecraft/simplebackups";
 in {
   services.nginx.virtualHosts.gensokyoZone = {
     serverName = domain;
@@ -24,20 +23,6 @@ in {
             path = gensokyo-zone.self.packages.${pkgs.system}.docs;
           }
         ];
-      };
-      "/minecraft/backups" = {
-        root = pkgs.linkFarm "genso-minecraft-backups" [
-          {
-            name = "minecraft/backups";
-            path = minecraftBackups;
-          }
-        ];
-        extraConfig = ''
-          gzip off;
-          autoindex on;
-          auth_basic "private";
-          auth_basic_user_file ${config.sops.secrets.access-web-htpasswd.path};
-        '';
       };
       "/.well-known/webfinger" = let
         # https://www.rfc-editor.org/rfc/rfc7033#section-3.1
@@ -72,12 +57,5 @@ in {
         ];
       };
     };
-  };
-  systemd.services.nginx.serviceConfig.BindReadOnlyPaths = [
-    minecraftBackups
-  ];
-  sops.secrets.access-web-htpasswd = {
-    sopsFile = mkDefault ../secrets/access.yaml;
-    owner = nginx.user;
   };
 }
