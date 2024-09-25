@@ -49,6 +49,10 @@ in {
       };
       Matricariac = {
         uuid = "e6204250-05dc-4f4a-890a-71619170a321";
+        permissionLevel = 2;
+      };
+      Kaosubaloo = {
+        uuid = "1340bc67-5296-4f6d-9643-29011971f88e";
         permissionLevel = 1; # 2?
       };
     };
@@ -64,9 +68,19 @@ in {
   systemd = mkIf cfg.enable {
     services.minecraft-java-server = {
       # TODO: confinement.enable = true;
-      gensokyo-zone.sharedMounts."minecraft/java/marka-server" = {config, ...}: {
-        root = config.rootDir + "/minecraft/java";
-        path = mkDefault cfg.dataDir;
+      gensokyo-zone = {
+        sharedMounts."minecraft/java/marka-server" = {config, ...}: {
+          root = config.rootDir + "/minecraft/java";
+          path = mkDefault cfg.dataDir;
+        };
+        cacheMounts = {
+          "minecraft/dynmap" = mkIf enableDynmap {
+            path = mkDefault "${cfg.dataDir}/dynmap";
+          };
+          "minecraft/bluemap" = mkIf enableBluemap {
+            path = mkDefault "${cfg.dataDir}/bluemap";
+          };
+        };
       };
       preStart = let
         forgeDir = {
@@ -103,11 +117,18 @@ in {
           ])
         ];
         LogFilterPatterns = [
+          "~.*Invalid modellist patch"
           "~.*Invalid modellist patch.*"
         ];
       };
     };
-    # TODO: tmpfiles.rules = ["d ${backupsDir} 775 ${cfg.user} admin - -"];
+    tmpfiles.rules = let
+      inherit (config.systemd.services.minecraft-java-server.gensokyo-zone) cacheMounts;
+    in mkMerge [
+      #["d ${backupsDir} 775 ${cfg.user} ${cfg.group} - -"]
+      (mkIf enableDynmap ["d ${cacheMounts."minecraft/dynmap".source} 750 ${cfg.user} ${cfg.group} - -"])
+      (mkIf enableBluemap ["d ${cacheMounts."minecraft/bluemap".source} 750 ${cfg.user} ${cfg.group} - -"])
+    ];
   };
   networking.firewall = mkIf cfg.enable {
     interfaces.local = {
