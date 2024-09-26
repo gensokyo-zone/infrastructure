@@ -22,8 +22,30 @@ in {
         ./macros.cfg
       ];
       settings = {
-        # allow the z_offset to be saved by moonraker
+        # allow settings to be saved by moonraker
         bltouch.z_offset = mkDefault 1.85;
+        extruder = {
+          control = "pid";
+          #stock defaults provided by someone
+          #pid_Kp = 27.142000;
+          #pid_Ki = 1.371000;
+          #pid_Kd = 134.351000;
+          #recent PID_CALIBRATE results
+          pid_Kp = 30.573;
+          pid_Ki = 1.742;
+          pid_Kd = 134.141;
+        };
+        heater_bed = {
+          control = "pid";
+          #stock defaults provided by someone
+          #pid_Kp = 66.371000;
+          #pid_Ki = 0.846000;
+          #pid_Kd = 1301.702000;
+          #recent PID_CALIBRATE results
+          pid_Kp = 64.742;
+          pid_Ki = 0.684;
+          pid_Kd = 1531.969;
+        };
       };
     };
   };
