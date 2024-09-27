@@ -17,6 +17,13 @@
   backupsDir = "${config.kyuuto.dataDir}/minecraft/simplebackups/marka";
   enableDynmap = minecraft.ports.dynmap.enable;
   enableBluemap = minecraft.ports.bluemap.enable;
+  packwizUpdate = true;
+  modpack = rec {
+    owner = "kittywitch";
+    repo = "minecraft-modpack";
+    branch = "marka-${versions.majorMinor mcVersion}";
+    packUrl = "https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/pack.toml";
+  };
 in {
   services.minecraft-java-server = {
     enable = mkDefault true;
@@ -74,6 +81,12 @@ in {
           path = mkDefault cfg.dataDir;
         };
         cacheMounts = {
+          "minecraft/logs" = {
+            path = mkDefault "${cfg.dataDir}/logs";
+          };
+          "minecraft/mods" = {
+            path = mkDefault "${cfg.dataDir}/mods";
+          };
           "minecraft/dynmap" = mkIf enableDynmap {
             path = mkDefault "${cfg.dataDir}/dynmap";
           };
@@ -87,34 +100,17 @@ in {
           neoforge = "neoforged/neoforge";
           forge = "minecraftforge/forge";
         }.${forge};
-      in ''
-        ${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/${forgeDir}/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt
-      '';
+      in mkMerge [
+        "${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/${forgeDir}/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt"
+        (mkIf packwizUpdate ''
+          if ! java -jar packwiz-installer-bootstrap.jar -g -s server ${modpack.packUrl}; then
+            echo "packwiz update failed" >&2
+          fi
+        '')
+      ];
       serviceConfig = {
         BindPaths = [
           "${backupsDir}:${cfg.dataDir}/simplebackups"
-        ];
-        BindReadOnlyPaths = let
-          dynmap = assert forge == "forge"; pkgs.fetchurl {
-            url = "https://cdn.modrinth.com/data/fRQREgAc/versions/RtI5TFAi/Dynmap-3.7-beta-6-${forge}-${versions.majorMinor mcVersion}.jar";
-            sha256 = "sha256-rrs7ab0OKEwkPBYGm4CDD/I5341P/f4wwU52hyKd/Ls=";
-          };
-          dynmap-block-scan = assert forge == "forge"; pkgs.fetchurl {
-            url = "https://dynmap.us/builds/DynmapBlockScan/DynmapBlockScan-3.6-${forge}-${versions.majorMinor mcVersion}.jar";
-            sha256 = "sha256-YOuXeE+6kOtFpA42Yhv5sBdjpvZsuHXvx5fnocY5yvM=";
-          };
-          bluemap = assert forge == "forge"; pkgs.fetchurl {
-            url = "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.3/BlueMap-5.3-${forge}-${versions.majorMinor mcVersion}.jar";
-            sha256 = "sha256-eN4wWUItI7WleFk1KUSTM5EQv9ri4QRKrBuvCgN89qU=";
-          };
-        in mkMerge [
-          (mkIf enableDynmap [
-            "${dynmap}:${cfg.dataDir}/mods/${dynmap.name}"
-            "${dynmap-block-scan}:${cfg.dataDir}/mods/${dynmap-block-scan.name}"
-          ])
-          (mkIf enableBluemap [
-            "${bluemap}:${cfg.dataDir}/mods/${bluemap.name}"
-          ])
         ];
         LogFilterPatterns = [
           "~.*Invalid modellist patch"
@@ -125,7 +121,11 @@ in {
     tmpfiles.rules = let
       inherit (config.systemd.services.minecraft-java-server.gensokyo-zone) cacheMounts;
     in mkMerge [
-      #["d ${backupsDir} 775 ${cfg.user} ${cfg.group} - -"]
+      [
+        #["d ${backupsDir} 775 ${cfg.user} ${cfg.group} - -"]
+        "d ${cacheMounts."minecraft/logs".source} 750 ${cfg.user} ${cfg.group} - -"
+        "d ${cacheMounts."minecraft/mods".source} 750 ${cfg.user} ${cfg.group} - -"
+      ]
       (mkIf enableDynmap ["d ${cacheMounts."minecraft/dynmap".source} 750 ${cfg.user} ${cfg.group} - -"])
       (mkIf enableBluemap ["d ${cacheMounts."minecraft/bluemap".source} 750 ${cfg.user} ${cfg.group} - -"])
     ];

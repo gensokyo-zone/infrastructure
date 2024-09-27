@@ -15,7 +15,6 @@ _: {
         id = "marka";
         ports = {
           query.enable = true;
-          dynmap.enable = true;
           bluemap.enable = true;
         };
       };
