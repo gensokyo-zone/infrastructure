@@ -165,11 +165,17 @@ mkcache plex 0 0 0755
 if [[ ! -d /rpool/caches/plex/Cache ]]; then
 	mkdir /rpool/caches/plex/Cache
 fi
+if [[ ! -d /rpool/caches/plex/Logs ]]; then
+	mkdir /rpool/caches/plex/Logs
+fi
+if [[ ! -d /rpool/caches/plex/mesa_shader_cache ]]; then
+	mkdir /rpool/caches/plex/mesa_shader_cache
+fi
 if [[ ! -d /rpool/caches/plex/tautulli/cache ]]; then
 	mkdir -p /rpool/caches/plex/tautulli/cache
 fi
-chown 100193:100193 /rpool/caches/plex/Cache
-chmod 0775 /rpool/caches/plex/Cache
+chown 100193:100193 /rpool/caches/plex/{Cache,Logs,mesa_shader_cache}
+chmod 0775 /rpool/caches/plex/{Cache,Logs,mesa_shader_cache}
 chown 100195:65534 /rpool/caches/plex/tautulli/cache
 chmod 0755 /rpool/caches/plex/tautulli/cache
 
