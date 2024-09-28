@@ -38,6 +38,19 @@ in {
       }
     ];
   };
+  services.postgresqlBackup = {
+    enable = mkDefault cfg.enable;
+    compression = mkDefault "none";
+    location = mkDefault "/mnt/shared/postgresql/dump";
+    startAt = mkDefault "*-*-* 00:30:00";
+    databases = [
+      #"hass" # only used for recorder (entity state history) module, so just a useless large cache?
+      "invidious"
+      #"dex"
+      "keycloak"
+      "vaultwarden"
+    ];
+  };
 
   systemd = {
     services.postgresql = mkIf cfg.enable {

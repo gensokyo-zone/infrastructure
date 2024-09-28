@@ -25,6 +25,7 @@ in {
     nixos.systemd2mqtt
     nixos.ddclient
     nixos.acme
+    nixos.backups
     nixos.nginx
     nixos.vouch.local
     nixos.access.nginx
