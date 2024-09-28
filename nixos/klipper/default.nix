@@ -30,6 +30,9 @@ in {
   systemd = mkIf cfg.enable {
     services.klipper = {
       restartIfChanged = false;
+      serviceConfig = {
+        Nice = mkDefault (-5);
+      };
     };
     tmpfiles.rules = mkIf (cfg.logFile != null) [
       "d ${dirOf cfg.logFile} 0755 ${cfg.user} ${cfg.group} 8w -"

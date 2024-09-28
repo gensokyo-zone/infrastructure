@@ -116,6 +116,7 @@ in {
           "~.*Invalid modellist patch"
           "~.*Invalid modellist patch.*"
         ];
+        Nice = mkDefault (-4);
       };
     };
     tmpfiles.rules = let

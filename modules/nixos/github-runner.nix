@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib.options) mkOption;
-  inherit (lib.modules) mkIf mkDefault mkForce;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkForce;
   inherit (lib.attrsets) attrNames attrValues filterAttrs mapAttrs' nameValuePair;
   inherit (gensokyo-zone.lib) unmerged;
   cfg = config.services.github-runners;
@@ -24,28 +24,32 @@
     };
     config = {
       replace = mkIf config.ephemeral (mkDefault true);
-      serviceSettings = mkIf (config.networkNamespace.name != null) {
-        networkNamespace = {
-          name = mkDefault config.networkNamespace.name;
-          afterOnline = mkDefault true;
-        };
-        restartTriggers = [
-          config.ephemeral
-          config.url
-          config.name
-          config.runnerGroup
-          config.extraLabels
-          config.noDefaultLabels
-          config.user
-          config.group
-          config.workDir
-          "${config.package}"
-          config.extraPackages
-          config.nodeRuntimes
-          (attrNames config.extraEnvironment)
-          (attrValues config.extraEnvironment)
-        ];
-      };
+      serviceSettings = mkMerge [
+        (mkIf (config.networkNamespace.name != null) {
+          networkNamespace = {
+            name = mkDefault config.networkNamespace.name;
+            afterOnline = mkDefault true;
+          };
+        })
+        {
+          restartTriggers = [
+            config.ephemeral
+            config.url
+            config.name
+            config.runnerGroup
+            config.extraLabels
+            config.noDefaultLabels
+            config.user
+            config.group
+            config.workDir
+            "${config.package}"
+            config.extraPackages
+            config.nodeRuntimes
+            (attrNames config.extraEnvironment)
+            (attrValues config.extraEnvironment)
+          ];
+        }
+      ];
       serviceOverrides = mkIf (config.user != null || config.group != null) {
         DynamicUser = mkForce true;
       };

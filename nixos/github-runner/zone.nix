@@ -79,6 +79,9 @@ in {
           unitConfig = {
             StopPropagatedFrom = ["${cfg.targetName}.target"];
           };
+          serviceConfig = {
+            Nice = mkDefault 5;
+          };
         };
         serviceOverrides = mkIf (!cfg.dynamicUser) {
           # XXX: the ci sshd hack requires this for now :<
