@@ -22,7 +22,10 @@
     owner = "kittywitch";
     repo = "minecraft-modpack";
     branch = "marka-${versions.majorMinor mcVersion}";
-    packUrl = "https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/pack.toml";
+    pages = true;
+    packUrl = if pages
+      then "https://${owner}.github.io/${repo}/pack.toml"
+      else "https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/pack.toml";
   };
 in {
   services.minecraft-java-server = {

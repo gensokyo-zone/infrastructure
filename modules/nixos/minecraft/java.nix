@@ -146,13 +146,15 @@ in {
         map (argsFile: "@${argsFile}") cfg.argsFiles
         ++ cfg.jvmOpts;
       execStop = pkgs.writeShellScriptBin "minecraft-java-stop" ''
-        echo /stop > ${config.systemd.sockets.minecraft-java-server.socketConfig.ListenFIFO}
+        echo /stop > ${config.systemd.sockets.minecraft-java-server.socketConfig.ListenFIFO} || true
 
-        # Wait for the PID of the minecraft server to disappear before
-        # returning, so systemd doesn't attempt to SIGKILL it.
-        while kill -0 "$1" 2> /dev/null; do
-          sleep 1s
-        done
+        if [[ -n $1 ]]; then
+          # Wait for the PID of the minecraft server to disappear before
+          # returning, so systemd doesn't attempt to SIGKILL it.
+          while kill -0 "$1" 2> /dev/null; do
+            sleep 1s
+          done
+        fi
       '';
     in {
       description = "Minecraft Kat Kitchen Server";
@@ -177,7 +179,7 @@ in {
           "${writeWhiteList cfg.allowPlayers}:${cfg.dataDir}/whitelist.json"
           "${writeOps cfg.allowPlayers}:${cfg.dataDir}/ops.json"
         ];
-        ExecStop = "${getExe execStop} $MAINPID";
+        ExecStop = ''${getExe execStop} "$MAINPID"'';
         Restart = "always";
         User = cfg.user;
         WorkingDirectory = cfg.dataDir;
