@@ -1,10 +1,11 @@
-{config, systemConfig, lib, ...}: let
+{pkgs, config, systemConfig, lib, ...}: let
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) mapAttrs' mapAttrsToList nameValuePair;
-  inherit (lib.lists) concatMap;
-  inherit (lib.strings) replaceStrings;
+  inherit (lib.lists) concatMap toList;
+  inherit (lib.strings) replaceStrings concatMapStringsSep;
   inherit (config.sops.secrets) restic-shared-repo-b2 restic-shared-password restic-shared-env-b2;
   group = "backups";
+  mkSharedPath = subpath: "/mnt/shared/${subpath}";
   # TODO: this properly as a module or something
   sharedServices = {
     hass.config = config.services.home-assistant;
@@ -13,11 +14,27 @@
     kanidm = {
       config = config.services.kanidm;
       enable = config.services.kanidm.enableServer;
+      subpath = "kanidm/kanidm.db";
     };
     mosquitto.config = config.services.mosquitto;
     plex = {
       config = config.services.plex;
       compression = "auto";
+      subpath = [
+        "plex/Plex Media Server/Preferences.xml"
+        #"plex/Databases" # omitted, see dynamicFilesFrom to select only the latest backup...
+      ];
+      settings = {
+        dynamicFilesFrom = let
+          databases = [
+            "com.plexapp.plugins.library.blobs.db"
+            "com.plexapp.plugins.library.db"
+          ];
+          ls = "${pkgs.coreutils}/bin/ls";
+          tail = "${pkgs.coreutils}/bin/tail";
+          mkLatestDb = database: ''${ls} ${mkSharedPath "plex/Databases/${database}"}* | ${tail} -n1'';
+        in concatMapStringsSep " &&\n" mkLatestDb databases;
+      };
     };
     postgresql = {
       # TODO: synchronize with postgresqlBackup service via flock or After=
@@ -40,31 +57,31 @@
 in {
   services.restic.backups = let
     isBackup = config.networking.hostName == "hakurei";
-    mkSharedPath = subpath: "/mnt/shared/${subpath}";
-    mkBackupB2 = name: subpath': { config, enable ? config.enable, user ? config.user or null, subpath ? subpath', path ? mkSharedPath subpath, compression ? "max" }: let
+    mkBackupB2 = name: subpath': { config, enable ? config.enable, user ? config.user or null, subpath ? subpath', compression ? "max", settings ? {} }: let
       tags = [
         "infra"
         "shared-${name}"
         "system-${systemConfig.name}"
       ];
-    in mkIf (enable || isBackup) {
-      user = mkIf (enable && user != null) user;
-      repositoryFile = restic-shared-repo-b2.path;
-      passwordFile = restic-shared-password.path;
-      environmentFile = restic-shared-env-b2.path;
-      paths = [path];
-      extraBackupArgs = mkMerge [
-        (mkIf (compression != "auto") [
-          "--compression" compression
-        ])
-        (concatMap (tag: ["--tag" tag]) tags)
-      ];
-      timerConfig = {
-        OnCalendar = "03:30";
-        Persistent = true;
-        RandomizedDelaySec = "4h";
+      conf = {
+        user = mkIf (enable && user != null) user;
+        repositoryFile = restic-shared-repo-b2.path;
+        passwordFile = restic-shared-password.path;
+        environmentFile = restic-shared-env-b2.path;
+        paths = map mkSharedPath (toList subpath);
+        extraBackupArgs = mkMerge [
+          (mkIf (compression != "auto") [
+            "--compression" compression
+          ])
+          (concatMap (tag: ["--tag" tag]) tags)
+        ];
+        timerConfig = {
+          OnCalendar = "03:30";
+          Persistent = true;
+          RandomizedDelaySec = "4h";
+        };
       };
-    };
+    in mkIf (enable || isBackup) (mkMerge [ conf settings ]);
     backups = mapAttrs' (subpath: service: let
       name = replaceStrings [ "/" ] [ "-" ] subpath;
     in nameValuePair "${name}-b2" (mkBackupB2 name subpath service)) sharedServices;

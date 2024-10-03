@@ -162,20 +162,16 @@ mkcache zigbee2mqtt 100317 100317 0700
 mkcache taskchampion 100917 100917 0750
 mkcache minecraft 100913 100913 0750
 mkcache plex 0 0 0755
-if [[ ! -d /rpool/caches/plex/Cache ]]; then
-	mkdir /rpool/caches/plex/Cache
-fi
-if [[ ! -d /rpool/caches/plex/Logs ]]; then
-	mkdir /rpool/caches/plex/Logs
-fi
-if [[ ! -d /rpool/caches/plex/mesa_shader_cache ]]; then
-	mkdir /rpool/caches/plex/mesa_shader_cache
-fi
+for plexcache in Logs CrashReports Diagnostics Cache Caches Drivers Codecs Scanners Updates mesa_shader_cache; do
+	if [[ ! -d /rpool/caches/plex/$plexcache ]]; then
+		mkdir /rpool/caches/plex/$plexcache
+	fi
+	chown 100193:100193 /rpool/caches/plex/$plexcache
+	chmod 0775 /rpool/caches/plex/$plexcache
+done
 if [[ ! -d /rpool/caches/plex/tautulli/cache ]]; then
 	mkdir -p /rpool/caches/plex/tautulli/cache
 fi
-chown 100193:100193 /rpool/caches/plex/{Cache,Logs,mesa_shader_cache}
-chmod 0775 /rpool/caches/plex/{Cache,Logs,mesa_shader_cache}
 chown 100195:65534 /rpool/caches/plex/tautulli/cache
 chmod 0755 /rpool/caches/plex/tautulli/cache
 
