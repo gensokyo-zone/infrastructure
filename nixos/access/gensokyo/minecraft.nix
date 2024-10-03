@@ -72,7 +72,10 @@ in {
           return = "302 https://wiki.${domain}/minecraft/";
         };
         "/minecraft/map" = {xvars, ...}: let
-          defaultMap = if minecraft.ports.bluemap.enable then "bmap" else "dmap";
+          defaultMap =
+            if minecraft.ports.bluemap.enable
+            then "bmap"
+            else "dmap";
         in {
           return = "302 ${xvars.get.scheme}://${xvars.get.host}/minecraft/${defaultMap}/";
         };

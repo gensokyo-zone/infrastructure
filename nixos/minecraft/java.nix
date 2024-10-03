@@ -23,7 +23,8 @@
     repo = "minecraft-modpack";
     branch = "marka-${versions.majorMinor mcVersion}";
     pages = true;
-    packUrl = if pages
+    packUrl =
+      if pages
       then "https://${owner}.github.io/${repo}/pack.toml"
       else "https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/pack.toml";
   };
@@ -42,12 +43,13 @@ in {
         broadcast-console-to-ops = false;
         op-permission-level = 2;
       };
-    in mkMerge [
-      (mapDefaults props)
-      (mkIf enableDynmap {
-        max-tick-time = 60000 * 12;
-      })
-    ];
+    in
+      mkMerge [
+        (mapDefaults props)
+        (mkIf enableDynmap {
+          max-tick-time = 60000 * 12;
+        })
+      ];
     allowPlayers = {
       katrynn = {
         uuid = "356d8cf2-246a-4c07-b547-422aea06c0ab";
@@ -99,18 +101,21 @@ in {
         };
       };
       preStart = let
-        forgeDir = {
-          neoforge = "neoforged/neoforge";
-          forge = "minecraftforge/forge";
-        }.${forge};
-      in mkMerge [
-        "${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/${forgeDir}/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt"
-        (mkIf packwizUpdate ''
-          if ! java -jar packwiz-installer-bootstrap.jar -g -s server ${modpack.packUrl}; then
-            echo "packwiz update failed" >&2
-          fi
-        '')
-      ];
+        forgeDir =
+          {
+            neoforge = "neoforged/neoforge";
+            forge = "minecraftforge/forge";
+          }
+          .${forge};
+      in
+        mkMerge [
+          "${pkgs.coreutils}/bin/ln -sf $PWD/libraries/net/${forgeDir}/*/unix_args.txt $RUNTIME_DIRECTORY/unix_args.txt"
+          (mkIf packwizUpdate ''
+            if ! java -jar packwiz-installer-bootstrap.jar -g -s server ${modpack.packUrl}; then
+              echo "packwiz update failed" >&2
+            fi
+          '')
+        ];
       serviceConfig = {
         BindPaths = [
           "${backupsDir}:${cfg.dataDir}/simplebackups"
@@ -124,15 +129,16 @@ in {
     };
     tmpfiles.rules = let
       inherit (config.systemd.services.minecraft-java-server.gensokyo-zone) cacheMounts;
-    in mkMerge [
-      [
-        #["d ${backupsDir} 775 ${cfg.user} ${cfg.group} - -"]
-        "d ${cacheMounts."minecraft/logs".source} 750 ${cfg.user} ${cfg.group} - -"
-        "d ${cacheMounts."minecraft/mods".source} 750 ${cfg.user} ${cfg.group} - -"
-      ]
-      (mkIf enableDynmap ["d ${cacheMounts."minecraft/dynmap".source} 750 ${cfg.user} ${cfg.group} - -"])
-      (mkIf enableBluemap ["d ${cacheMounts."minecraft/bluemap".source} 750 ${cfg.user} ${cfg.group} - -"])
-    ];
+    in
+      mkMerge [
+        [
+          #["d ${backupsDir} 775 ${cfg.user} ${cfg.group} - -"]
+          "d ${cacheMounts."minecraft/logs".source} 750 ${cfg.user} ${cfg.group} - -"
+          "d ${cacheMounts."minecraft/mods".source} 750 ${cfg.user} ${cfg.group} - -"
+        ]
+        (mkIf enableDynmap ["d ${cacheMounts."minecraft/dynmap".source} 750 ${cfg.user} ${cfg.group} - -"])
+        (mkIf enableBluemap ["d ${cacheMounts."minecraft/bluemap".source} 750 ${cfg.user} ${cfg.group} - -"])
+      ];
   };
   networking.firewall = mkIf cfg.enable {
     interfaces.local = {

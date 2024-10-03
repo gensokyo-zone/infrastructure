@@ -1,4 +1,10 @@
-{pkgs, config, systemConfig, lib, ...}: let
+{
+  pkgs,
+  config,
+  systemConfig,
+  lib,
+  ...
+}: let
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.attrsets) mapAttrs' mapAttrsToList nameValuePair;
   inherit (lib.lists) concatMap toList;
@@ -34,7 +40,8 @@
           ls = "${pkgs.coreutils}/bin/ls";
           tail = "${pkgs.coreutils}/bin/tail";
           mkLatestDb = database: ''${ls} ${mkSharedPath "plex/Databases/${database}"}* | ${tail} -n1'';
-        in concatMapStringsSep " &&\n" mkLatestDb databases;
+        in
+          concatMapStringsSep " &&\n" mkLatestDb databases;
       };
     };
     postgresql = {
@@ -58,7 +65,14 @@
 in {
   services.restic.backups = let
     isBackup = config.networking.hostName == "hakurei";
-    mkBackupB2 = name: subpath': { config, enable ? config.enable, user ? config.user or null, subpath ? subpath', compression ? "max", settings ? {} }: let
+    mkBackupB2 = name: subpath': {
+      config,
+      enable ? config.enable,
+      user ? config.user or null,
+      subpath ? subpath',
+      compression ? "max",
+      settings ? {},
+    }: let
       tags = [
         "infra"
         "shared-${name}"
@@ -72,7 +86,8 @@ in {
         paths = map mkSharedPath (toList subpath);
         extraBackupArgs = mkMerge [
           (mkIf (compression != "auto") [
-            "--compression" compression
+            "--compression"
+            compression
           ])
           (concatMap (tag: ["--tag" tag]) tags)
         ];
@@ -82,13 +97,24 @@ in {
           RandomizedDelaySec = "4h";
         };
       };
-    in mkIf (enable || isBackup) (mkMerge [ conf settings ]);
+    in
+      mkIf (enable || isBackup) (mkMerge [conf settings]);
     backups = mapAttrs' (subpath: service: let
-      name = replaceStrings [ "/" ] [ "-" ] subpath;
-    in nameValuePair "${name}-b2" (mkBackupB2 name subpath service)) sharedServices;
-  in backups;
+      name = replaceStrings ["/"] ["-"] subpath;
+    in
+      nameValuePair "${name}-b2" (mkBackupB2 name subpath service))
+    sharedServices;
+  in
+    backups;
   users.groups.${group} = {
-    members = mapAttrsToList (_: { config, enable ? config.enable, user ? config.user or null, ... }: mkIf (enable && user != null) user) sharedServices;
+    members = mapAttrsToList (_: {
+      config,
+      enable ? config.enable,
+      user ? config.user or null,
+      ...
+    }:
+      mkIf (enable && user != null) user)
+    sharedServices;
   };
   sops.secrets = let
     sopsFile = mkDefault ../secrets/restic.yaml;

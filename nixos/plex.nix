@@ -25,9 +25,11 @@ in {
   systemd.services.plex = mkIf cfg.enable {
     gensokyo-zone = {
       sharedMounts.plex.path = mkDefault cfg.dataDir;
-      cacheMounts = mapAttrs' (name: _: nameValuePair "plex/${name}" {
-        path = mkDefault "${cfg.dataDir}/${name}";
-      }) plexCaches;
+      cacheMounts = mapAttrs' (name: _:
+        nameValuePair "plex/${name}" {
+          path = mkDefault "${cfg.dataDir}/${name}";
+        })
+      plexCaches;
     };
     # /var/lib/plex/mesa_shader_cache
     environment.MESA_SHADER_CACHE_DIR = mkDefault cfg.dataDir;
@@ -36,8 +38,10 @@ in {
         ln = "${pkgs.coreutils}/bin/ln";
         install = "${pkgs.coreutils}/bin/install";
         # systemd doesn't seem to like spaces so use a symlink instead...
-        mkCacheSetup = name: { path ? "Plex Media Server/${subpath}", subpath ? name }:
-          ''${ln} -srfT "$PLEX_DATADIR/"${escapeShellArg name} "$PLEX_DATADIR/"${escapeShellArg path}'';
+        mkCacheSetup = name: {
+          path ? "Plex Media Server/${subpath}",
+          subpath ? name,
+        }: ''${ln} -srfT "$PLEX_DATADIR/"${escapeShellArg name} "$PLEX_DATADIR/"${escapeShellArg path}'';
         cacheSetup = mapAttrsToList mkCacheSetup (filterAttrs (_: cache: cache.path or "" != null) plexCaches);
         preStartScript = pkgs.writeShellScript "plex-run-prestart" ''
           set -eu
