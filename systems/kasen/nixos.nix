@@ -9,6 +9,7 @@
   in [
     nixos.sops
     nixos.base
+    nixos.tailscale
     nixos.nginx
     nixos.openwebrx
   ];
