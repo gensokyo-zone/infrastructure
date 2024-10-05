@@ -148,10 +148,10 @@ in {
       execStop = pkgs.writeShellScriptBin "minecraft-java-stop" ''
         echo /stop > ${config.systemd.sockets.minecraft-java-server.socketConfig.ListenFIFO} || true
 
-        if [[ -n $1 ]]; then
+        if [[ -n ''${MAINPID-} ]]; then
           # Wait for the PID of the minecraft server to disappear before
           # returning, so systemd doesn't attempt to SIGKILL it.
-          while kill -0 "$1" 2> /dev/null; do
+          while kill -0 "$MAINPID" 2> /dev/null; do
             sleep 1s
           done
         fi
@@ -179,8 +179,9 @@ in {
           "${writeWhiteList cfg.allowPlayers}:${cfg.dataDir}/whitelist.json"
           "${writeOps cfg.allowPlayers}:${cfg.dataDir}/ops.json"
         ];
-        ExecStop = ''${getExe execStop} "$MAINPID"'';
+        ExecStop = getExe execStop;
         Restart = "always";
+        RestartSec = 3;
         User = cfg.user;
         WorkingDirectory = cfg.dataDir;
         RuntimeDirectory = "minecraft-java";
@@ -213,7 +214,7 @@ in {
       };
     };
     conf.systemd.sockets.minecraft-java-server = {
-      bindsTo = ["minecraft-java-server.service"];
+      partOf = ["minecraft-java-server.service"];
       socketConfig = {
         ListenFIFO = "/run/minecraft-java/stdin";
         SocketMode = "0660";
