@@ -11,11 +11,12 @@
     hass.config = config.services.home-assistant;
     grocy.config = config.services.grocy;
     barcodebuddy.config = config.services.barcodebuddy;
-    kanidm = {
+    # XXX: kanidm currently unused
+    /*kanidm = {
       config = config.services.kanidm;
       enable = config.services.kanidm.enableServer;
       subpath = "kanidm/kanidm.db";
-    };
+    };*/
     mosquitto.config = config.services.mosquitto;
     plex = {
       config = config.services.plex;
