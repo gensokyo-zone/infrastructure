@@ -5,19 +5,232 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkForce;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) length unique;
   inherit (lib) types;
 
-  cfg = config.services.gatus;
+  cfg' = config.services.gatus';
 
-  configFile = pkgs.writeText "gatus-config.yml" (builtins.toJSON (cfg.settings
+  configFile = pkgs.writeText "gatus-config.yml" (builtins.toJSON (cfg'.settings
     // {
-      endpoints = builtins.attrValues cfg.settings.endpoints;
+      endpoints = builtins.attrValues cfg'.settings.endpoints;
     }));
+  endpointModule = {name, lib, ...}: let
+    inherit (lib) types;
+    inherit (lib.options) mkOption mkEnableOption;
+    inherit (lib.modules) mkOptionDefault;
+  in {
+    options = {
+      enabled = mkOption {
+        type = types.bool;
+        default = true;
+        description = ''
+          Whether to monitor the endpoint.
+        '';
+      };
+      name = mkOption {
+        type = types.str;
+        description = ''
+          Name of the endpoint. Can be anything.
+          Defaults to attribute name in `endpoints`.
+        '';
+      };
+      group = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Group name. Used to group multiple endpoints together on the dashboard.
+          See [https://github.com/TwiN/gatus#endpoint-groups](Endpoint groups).
+        '';
+      };
+      url = mkOption {type = types.str;};
+      method = mkOption {
+        type = types.enum [
+          "GET"
+          "HEAD"
+          "POST"
+          "PUT"
+          "DELETE"
+          "CONNECT"
+          "OPTIONS"
+          "TRACE"
+          "PATCH"
+        ];
+        default = "GET";
+        description = ''
+          Request method.
+        '';
+      };
+      conditions = mkOption {
+        type = types.listOf types.str;
+        description = ''
+          Conditions used to determine the health of the endpoint.
+          See [https://github.com/TwiN/gatus#conditions](Conditions).
+        '';
+      };
+      interval = mkOption {
+        type = types.str;
+        default = "60s";
+        description = ''
+          Duration to wait between every status check.
+        '';
+      };
+      graphql =
+        mkEnableOption "wrapping the body in a query param for GraphQL";
+      body = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Request body.
+        '';
+      };
+      headers = mkOption {
+        type = types.submodule {
+          freeformType = (pkgs.formats.yaml {}).type;
+        };
+        default = {};
+        description = ''
+          Request headers.
+        '';
+      };
+      dns = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            query-type = mkOption {
+              type = types.enum ["A" "AAAA" "CNAME" "MX" "NS"];
+              description = ''
+                Query type (e.g. MX)
+              '';
+            };
+            query-name = mkOption {
+              type = types.str;
+              description = ''
+                Query name (e.g. example.com)
+              '';
+            };
+          };
+        });
+        default = null;
+      };
+      ssh = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            username = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                SSH username
+              '';
+            };
+            password = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                SSH password
+              '';
+            };
+          };
+        });
+        default = null;
+      };
+      alerts = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            type = mkOption {
+              type = types.enum [
+                "custom"
+                "discord"
+                "email"
+                "github"
+                "gitlab"
+                "googlechat"
+                "gotify"
+                "matrix"
+                "mattermost"
+                "messagebird"
+                "ntfy"
+                "opsgenie"
+                "pagerduty"
+                "pushover"
+                "slack"
+                "teams"
+                "telegram"
+                "twilio"
+              ];
+            };
+            enabled = mkOption {
+              type = types.bool;
+              default = true;
+            };
+            failure-threshold = mkOption {type = types.ints.positive;};
+            success-threshold = mkOption {type = types.ints.positive;};
+            send-on-resolved =
+              mkEnableOption
+              "sending a notification once a triggered alert is marked as solved";
+            description = mkOption {type = types.str;};
+          };
+        });
+        default = [];
+      };
+      client = mkOption {
+        type = types.submodule {
+          freeformType = (pkgs.formats.yaml {}).type;
+        };
+        default = {};
+        description = ''
+          [https://github.com/TwiN/gatus#client-configuration](Client configuration).
+        '';
+      };
+      ui = {
+        hide-conditions =
+          mkEnableOption "hiding the condition results on the UI";
+        hide-hostname =
+          mkEnableOption "hiding the hostname in the result";
+        hide-url = mkEnableOption "hiding the URL in the results";
+        dont-resolve-failed-conditions =
+          mkEnableOption "resolving failed conditions for the UI";
+        badge.response-time.thresholds = mkOption {
+          type = types.listOf types.ints.positive;
+          default = [50 200 300 500 750];
+          description = ''
+            List of response time thresholds. Each time a threshold is reached,
+            the badge has a different color.
+          '';
+        };
+      };
+    };
+    config = {
+      name = mkOptionDefault name;
+    };
+  };
 in {
-  options.services.gatus = {
+  options.services.gatus = let
+    settingsModule = { ... }: {
+      options = with types; {
+        endpoints = mkOption {
+          type = listOf unspecified;
+          #type = attrsOf (submodule endpointModule);
+          #default = {};
+        };
+      };
+    };
+  in with types; {
+    user = mkOption {
+      type = nullOr str;
+      default = null;
+    };
+
+    endpoints = mkOption {
+      type = attrsOf (submodule endpointModule);
+      default = {};
+    };
+
+    settings = mkOption {
+      type = submodule settingsModule;
+    };
+  };
+  options.services.gatus' = {
     enable = mkEnableOption "a developer-oriented service status page";
 
     package = mkPackageOption pkgs "gatus" {};
@@ -51,188 +264,7 @@ in {
       };
 
       endpoints = mkOption {
-        type = types.attrsOf (types.submodule ({name, ...}: {
-          options = {
-            enabled = mkOption {
-              type = types.bool;
-              default = true;
-              description = ''
-                Whether to monitor the endpoint.
-              '';
-            };
-            name = mkOption {
-              type = types.str;
-              description = ''
-                Name of the endpoint. Can be anything.
-                Defaults to attribute name in `endpoints`.
-              '';
-            };
-            group = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = ''
-                Group name. Used to group multiple endpoints together on the dashboard.
-                See [https://github.com/TwiN/gatus#endpoint-groups](Endpoint groups).
-              '';
-            };
-            url = mkOption {type = types.str;};
-            method = mkOption {
-              type = types.enum [
-                "GET"
-                "HEAD"
-                "POST"
-                "PUT"
-                "DELETE"
-                "CONNECT"
-                "OPTIONS"
-                "TRACE"
-                "PATCH"
-              ];
-              default = "GET";
-              description = ''
-                Request method.
-              '';
-            };
-            conditions = mkOption {
-              type = types.listOf types.str;
-              description = ''
-                Conditions used to determine the health of the endpoint.
-                See [https://github.com/TwiN/gatus#conditions](Conditions).
-              '';
-            };
-            interval = mkOption {
-              type = types.str;
-              default = "60s";
-              description = ''
-                Duration to wait between every status check.
-              '';
-            };
-            graphql =
-              mkEnableOption "wrapping the body in a query param for GraphQL";
-            body = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = ''
-                Request body.
-              '';
-            };
-            headers = mkOption {
-              type = types.submodule {
-                freeformType = (pkgs.formats.yaml {}).type;
-              };
-              default = {};
-              description = ''
-                Request headers.
-              '';
-            };
-            dns = mkOption {
-              type = types.nullOr (types.submodule {
-                options = {
-                  query-type = mkOption {
-                    type = types.enum ["A" "AAAA" "CNAME" "MX" "NS"];
-                    description = ''
-                      Query type (e.g. MX)
-                    '';
-                  };
-                  query-name = mkOption {
-                    type = types.str;
-                    description = ''
-                      Query name (e.g. example.com)
-                    '';
-                  };
-                };
-              });
-              default = null;
-            };
-            ssh = mkOption {
-              type = types.nullOr (types.submodule {
-                options = {
-                  username = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = ''
-                      SSH username
-                    '';
-                  };
-                  password = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = ''
-                      SSH password
-                    '';
-                  };
-                };
-              });
-              default = null;
-            };
-            alerts = mkOption {
-              type = types.listOf (types.submodule {
-                options = {
-                  type = mkOption {
-                    type = types.enum [
-                      "custom"
-                      "discord"
-                      "email"
-                      "github"
-                      "gitlab"
-                      "googlechat"
-                      "gotify"
-                      "matrix"
-                      "mattermost"
-                      "messagebird"
-                      "ntfy"
-                      "opsgenie"
-                      "pagerduty"
-                      "pushover"
-                      "slack"
-                      "teams"
-                      "telegram"
-                      "twilio"
-                    ];
-                  };
-                  enabled = mkOption {
-                    type = types.bool;
-                    default = true;
-                  };
-                  failure-threshold = mkOption {type = types.ints.positive;};
-                  success-threshold = mkOption {type = types.ints.positive;};
-                  send-on-resolved =
-                    mkEnableOption
-                    "sending a notification once a triggered alert is marked as solved";
-                  description = mkOption {type = types.str;};
-                };
-              });
-              default = [];
-            };
-            client = mkOption {
-              type = types.submodule {
-                freeformType = (pkgs.formats.yaml {}).type;
-              };
-              default = {};
-              description = ''
-                [https://github.com/TwiN/gatus#client-configuration](Client configuration).
-              '';
-            };
-            ui = {
-              hide-conditions =
-                mkEnableOption "hiding the condition results on the UI";
-              hide-hostname =
-                mkEnableOption "hiding the hostname in the result";
-              hide-url = mkEnableOption "hiding the URL in the results";
-              dont-resolve-failed-conditions =
-                mkEnableOption "resolving failed conditions for the UI";
-              badge.response-time.thresholds = mkOption {
-                type = types.listOf types.ints.positive;
-                default = [50 200 300 500 750];
-                description = ''
-                  List of response time thresholds. Each time a threshold is reached,
-                  the badge has a different color.
-                '';
-              };
-            };
-          };
-          config = {name = mkOptionDefault name;};
-        }));
+        type = types.attrsOf (types.submodule endpointModule);
         default = {};
       };
       alerting = mkOption {
@@ -310,8 +342,8 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    systemd.services.gatus = {
+  config = let
+    conf'.systemd.services.gatus = {
       description = "Automated developer-oriented status page";
       after = ["network.target"];
       wantedBy = ["multi-user.target"];
@@ -321,12 +353,12 @@ in {
       serviceConfig = {
         Type = "simple";
         Restart = "on-failure";
-        User = cfg.user;
-        Group = cfg.group;
+        User = cfg'.user;
+        Group = cfg'.group;
         StateDirectory = "gatus";
         LogsDirectory = "gatus";
         EnvironmentFile =
-          mkIf (cfg.environmentFile != null) [cfg.environmentFile];
+          mkIf (cfg'.environmentFile != null) [cfg'.environmentFile];
 
         AmbientCapabilities = ["CAP_NET_RAW"]; # needed for ICMP probes
         DevicePolicy = "closed";
@@ -354,29 +386,42 @@ in {
         UMask = "0077";
 
         ExecStart = [
-          (lib.getExe cfg.package)
+          (lib.getExe cfg'.package)
         ];
       };
     };
 
-    users.groups = mkIf (cfg.group == "gatus") {${cfg.group} = {};};
+    conf'.users.groups = mkIf (cfg'.group == "gatus") {${cfg'.group} = {};};
 
-    users.users = mkIf (cfg.user == "gatus") {
-      ${cfg.user} = {
-        inherit (cfg) group;
+    conf'.users.users = mkIf (cfg'.user == "gatus") {
+      ${cfg'.user} = {
+        inherit (cfg') group;
         description = "gatus service user";
         isSystemUser = true;
       };
     };
-    assertions = let
-      endpointNames = map (endpoint: endpoint.name) (attrValues cfg.settings.endpoints);
+    assertions = endpoints: let
+      endpointNames = map (endpoint: endpoint.name) (attrValues endpoints);
     in [
       {
         assertion = length (unique endpointNames) == length endpointNames;
         message = "Gatus endpoint names must be unique";
       }
     ];
-  };
+    conf'.assertions = assertions cfg'.settings.endpoints;
+    cfg = config.services.gatus;
+    conf.systemd.services.gatus = {
+      serviceConfig.User = mkIf (cfg.user != null) (mkForce cfg.user);
+    };
+    conf.assertions = assertions cfg.endpoints;
+    serviceConf = {
+      services.gatus.settings.endpoints = mkIf (cfg.endpoints != {}) (attrValues cfg.endpoints);
+    };
+  in mkMerge [
+    (mkIf cfg'.enable conf')
+    (mkIf cfg.enable conf)
+    serviceConf
+  ];
 
   meta.maintainers = with lib.maintainers; [christoph-heiss];
 }

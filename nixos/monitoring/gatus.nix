@@ -174,15 +174,17 @@ in {
   };
   services.gatus = {
     enable = true;
+    user = mkDefault "gatus";
     environmentFile = config.sops.secrets.gatus_environment_file.path;
+
+    # Endpoint configuration
+    endpoints = listToAttrs (concatMap mapSystem statusSystems);
+
     settings = {
       # Environment variables are pulled in to be usable within the config.
       alerting.discord = {
         webhook-url = "\${DISCORD_WEBHOOK_URL}";
       };
-
-      # Endpoint configuration
-      endpoints = listToAttrs (concatMap mapSystem statusSystems);
 
       # The actual status page configuration
       ui = {
@@ -206,6 +208,15 @@ in {
         address = "[::]";
         port = 9095;
       };
+    };
+  };
+
+  users = mkIf (cfg.enable && cfg.user == "gatus") {
+    groups.gatus = {};
+    users.gatus = {
+      group = "gatus";
+      description = "gatus service user";
+      isSystemUser = true;
     };
   };
 
