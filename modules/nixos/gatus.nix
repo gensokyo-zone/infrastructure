@@ -4,18 +4,13 @@
   pkgs,
   ...
 }: let
-  inherit (lib.options) mkOption mkEnableOption mkPackageOption;
+  inherit (lib.options) mkOption;
   inherit (lib.modules) mkIf mkMerge mkForce;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) length unique;
   inherit (lib) types;
+  cfg = config.services.gatus;
 
-  cfg' = config.services.gatus';
-
-  configFile = pkgs.writeText "gatus-config.yml" (builtins.toJSON (cfg'.settings
-    // {
-      endpoints = builtins.attrValues cfg'.settings.endpoints;
-    }));
   endpointModule = {name, lib, ...}: let
     inherit (lib) types;
     inherit (lib.options) mkOption mkEnableOption;
@@ -208,11 +203,11 @@ in {
   options.services.gatus = let
     settingsModule = { ... }: {
       options = with types; {
-        endpoints = mkOption {
+        /*endpoints = mkOption {
           type = listOf unspecified;
           #type = attrsOf (submodule endpointModule);
           #default = {};
-        };
+        };*/
       };
     };
   in with types; {
@@ -230,198 +225,24 @@ in {
       type = submodule settingsModule;
     };
   };
-  options.services.gatus' = {
-    enable = mkEnableOption "a developer-oriented service status page";
-
-    package = mkPackageOption pkgs "gatus" {};
-
-    user = mkOption {
-      type = types.str;
-      default = "gatus";
-    };
-
-    group = mkOption {
-      type = types.str;
-      default = "gatus";
-    };
-
-    environmentFile = mkOption {
-      type = types.nullOr types.path;
-      default = null;
-    };
-
-    # https://github.com/TwiN/gatus#configuration
-
-    settings = {
-      debug = mkEnableOption "debug logs";
-
-      metrics = mkEnableOption "expose metrics at /metrics";
-
-      storage = {
-        path = mkOption {type = types.path;};
-        type = mkOption {type = types.enum ["memory" "sqlite" "postgres"];};
-        caching = mkEnableOption "write-through caching";
-      };
-
-      endpoints = mkOption {
-        type = types.attrsOf (types.submodule endpointModule);
-        default = {};
-      };
-      alerting = mkOption {
-        type = types.submodule {freeformType = (pkgs.formats.yaml {}).type;};
-        default = {};
-        description = ''
-          [https://github.com/TwiN/gatus#alerting](Alerting configuration).
-        '';
-      };
-      security = mkOption {
-        type =
-          types.nullOr
-          (types.submodule {freeformType = (pkgs.formats.yaml {}).type;});
-        default = null;
-        description = ''
-          [https://github.com/TwiN/gatus#security](Security configuration).
-        '';
-      };
-      disable-monitoring-lock = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Whether to disable the monitoring lock";
-      };
-      skip-invalid-config-update = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Whether to ignore invalid configuration update";
-      };
-      web = {
-        address = mkOption {
-          type = types.str;
-          default = "0.0.0.0";
-          description = "Address to listen on";
-        };
-        port = mkOption {
-          type = types.port;
-          default = 8080;
-          description = "Port to listen on";
-        };
-        tls = mkOption {
-          type = types.nullOr (types.submodule {
-            options = {
-              certificate-file = mkOption {
-                type = types.nullOr types.path;
-                default = null;
-                description = "Optional public certificate file for TLS in PEM format";
-              };
-              private-key-file = mkOption {
-                type = types.nullOr types.path;
-                default = null;
-                description = "Optional private key file for TLS in PEM format";
-              };
-            };
-          });
-          default = null;
-        };
-      };
-      ui = {
-        title = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Title of the document";
-        };
-        description = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Meta description for the page";
-        };
-        header = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Header at the top of the dashboard";
-        };
-      };
-    };
-  };
 
   config = let
-    conf'.systemd.services.gatus = {
-      description = "Automated developer-oriented status page";
-      after = ["network.target"];
-      wantedBy = ["multi-user.target"];
-
-      environment.GATUS_CONFIG_PATH = "${configFile}";
-
-      serviceConfig = {
-        Type = "simple";
-        Restart = "on-failure";
-        User = cfg'.user;
-        Group = cfg'.group;
-        StateDirectory = "gatus";
-        LogsDirectory = "gatus";
-        EnvironmentFile =
-          mkIf (cfg'.environmentFile != null) [cfg'.environmentFile];
-
-        AmbientCapabilities = ["CAP_NET_RAW"]; # needed for ICMP probes
-        DevicePolicy = "closed";
-        LockPersonality = true;
-        MemoryDenyWriteExecute = true;
-        NoNewPrivileges = true;
-        PrivateDevices = true;
-        PrivateMounts = true;
-        PrivateTmp = true;
-        ProcSubset = "pid";
-        ProtectClock = true;
-        ProtectControlGroups = true;
-        ProtectHome = true;
-        ProtectHostname = true;
-        ProtectKernelLogs = true;
-        ProtectKernelModules = true;
-        ProtectKernelTunables = true;
-        ProtectProc = "invisible";
-        ProtectSystem = "strict";
-        RemoveIPC = true;
-        RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
-        RestrictNamespaces = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
-        UMask = "0077";
-
-        ExecStart = [
-          (lib.getExe cfg'.package)
-        ];
-      };
-    };
-
-    conf'.users.groups = mkIf (cfg'.group == "gatus") {${cfg'.group} = {};};
-
-    conf'.users.users = mkIf (cfg'.user == "gatus") {
-      ${cfg'.user} = {
-        inherit (cfg') group;
-        description = "gatus service user";
-        isSystemUser = true;
-      };
-    };
-    assertions = endpoints: let
-      endpointNames = map (endpoint: endpoint.name) (attrValues endpoints);
+    conf.assertions = let
+      endpointNames = map (endpoint: endpoint.name) (attrValues cfg.endpoints);
     in [
       {
         assertion = length (unique endpointNames) == length endpointNames;
         message = "Gatus endpoint names must be unique";
       }
     ];
-    conf'.assertions = assertions cfg'.settings.endpoints;
-    cfg = config.services.gatus;
     conf.systemd.services.gatus = {
       serviceConfig.User = mkIf (cfg.user != null) (mkForce cfg.user);
     };
-    conf.assertions = assertions cfg.endpoints;
     serviceConf = {
       services.gatus.settings.endpoints = mkIf (cfg.endpoints != {}) (attrValues cfg.endpoints);
     };
   in mkMerge [
-    (mkIf cfg'.enable conf')
     (mkIf cfg.enable conf)
     serviceConf
   ];
-
-  meta.maintainers = with lib.maintainers; [christoph-heiss];
 }
