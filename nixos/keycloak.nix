@@ -59,11 +59,6 @@ in {
         then hostname
         else null
       );
-      proxy = mkDefault (
-        if cfg.protocol == "https"
-        then "reencrypt"
-        else "edge"
-      );
       hostname-strict = mkDefault hostname-strict;
       hostname-strict-https = mkDefault hostname-strict;
       proxy-headers = mkDefault "xforwarded";
