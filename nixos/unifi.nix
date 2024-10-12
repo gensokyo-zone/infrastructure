@@ -11,6 +11,7 @@ in {
   services.unifi = {
     enable = mkDefault true;
     unifiPackage = mkDefault pkgs.unifi8;
+    mongodbPackage = mkDefault pkgs.mongodb-6_0;
   };
 
   networking.firewall = mkIf cfg.enable {
