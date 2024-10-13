@@ -286,6 +286,9 @@ in {
           (mkIf cfg.grocy.enable [
             (python3Packages.callPackage ../../packages/grocy/pygrocy.nix {})
           ])
+          (mkIf (elem "discord" cfg.extraComponents) [
+            setuptools
+          ])
         ];
     extraComponents = mkMerge [
       [

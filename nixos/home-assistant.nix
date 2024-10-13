@@ -178,6 +178,7 @@ in {
       "ipp"
       "androidtv"
       "cast"
+      "discord"
       "nfandroidtv"
       "octoprint"
       "ollama"
