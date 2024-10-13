@@ -192,6 +192,13 @@ module "u7pro_system_records" {
   local_v6  = "fd0a::${var.u7pro_ipv6_postfix}"
 }
 
+module "kvm_reisen_system_records" {
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.kvm-reisen.network
+}
+
 module "tewi_legacy_system_records" {
   source    = "./system/records"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id

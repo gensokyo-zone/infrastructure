@@ -15,6 +15,8 @@ u7-pro:: `10.1.1.3`
 gensokyo:: `10.1.1.4`
 eientei:: `10.1.1.5`
 
+kvm-reisen:: `10.1.1.9`
+
 shanghai:: `10.1.1.32`
 
 hourai:: `10.1.1.36`
@@ -44,10 +46,12 @@ koishi:: `10.1.1.68`
 
 outdoor-friend:: `10.1.1.81`
 bedroom-friend:: `10.1.1.82`
+
 bedroom-colour-strip:: `10.1.1.85`
 
 net_ac_9628:: `10.1.1.90`
 printer:: `10.1.1.91`
+
 ps2:: `10.1.1.96`
 pinecube:: `10.1.1.97`
 

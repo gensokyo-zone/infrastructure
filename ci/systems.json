@@ -191,6 +191,24 @@
       }
     }
   },
+  "kvm-reisen": {
+    "network": {
+      "hostName": "kvm-reisen",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.9",
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": {
+          "address4": "100.127.157.98",
+          "address6": "fd7a:115c:a1e0::1901:9d62",
+          "macAddress": null
+        }
+      }
+    }
+  },
   "litterbox": {
     "network": {
       "hostName": "litterbox",
