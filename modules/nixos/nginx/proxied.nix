@@ -1,5 +1,9 @@
 let
   xInit = true;
+  extraConfigCommon = ''
+    absolute_redirect off;
+    port_in_redirect off;
+  '';
   xCloudflared = {virtualHost}: let
     host =
       if virtualHost.proxied.cloudflared.host == virtualHost.serverName
@@ -10,6 +14,7 @@ let
     set $proxied_host_cf ${host};
   '';
   xNotCloudflared = ''
+    server_name_in_redirect off;
     set $proxied_cf "";
     set $proxied_host_cf "";
   '';
@@ -105,6 +110,9 @@ let
         defaults = mkIf (!xInit && cfg.enable != virtualHost.proxied.enable) (mapAlmostOptionDefaults (xDefaults {inherit cfg;}));
       };
       extraConfig = mkMerge [
+        (mkIf emitVars (
+          mkJustBefore extraConfigCommon
+        ))
         (mkIf (cfg.enable == "cloudflared" && virtualHost.proxied.enable != "cloudflared") (
           mkJustBefore (xCloudflared {inherit virtualHost;})
         ))
@@ -216,6 +224,9 @@ let
         );
       };
       extraConfig = mkMerge [
+        (mkIf cfg.enabled (
+          mkOrder orderJustBefore extraConfigCommon
+        ))
         (mkIf (cfg.enable == "cloudflared") (
           mkOrder orderJustBefore (xCloudflared {virtualHost = config;})
         ))

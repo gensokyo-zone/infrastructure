@@ -80,7 +80,7 @@ in {
             then "bmap"
             else "dmap";
         in {
-          return = "302 ${xvars.get.scheme}://${xvars.get.host}/minecraft/${defaultMap}/";
+          return = "302 /minecraft/${defaultMap}/";
         };
         "/minecraft/dmap/" = mkIf minecraft.ports.dynmap.enable {
           proxy = {
