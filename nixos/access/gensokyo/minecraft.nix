@@ -71,6 +71,9 @@ in {
         "/minecraft/wiki" = {
           return = "302 https://wiki.${domain}/minecraft/";
         };
+        "~ '^/minecraft/modpack/(\\S*)$'" = {
+          return = ''308 "https://gensokyo-zone.github.io/minecraft-modpack/$1"'';
+        };
         "/minecraft/map" = {xvars, ...}: let
           defaultMap =
             if minecraft.ports.bluemap.enable
