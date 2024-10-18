@@ -1,4 +1,5 @@
 {
+  pkgs,
   config,
   gensokyo-zone,
   lib,
@@ -73,6 +74,11 @@ in {
         extraEnvironment = {
           GIT_TEXTDOMAINDIR = "${config.programs.git.package}/share/locale";
         };
+        extraPackages = with pkgs; [
+          rsync
+          zip
+          curl
+        ];
         networkNamespace.name = mkIf (cfg.networkNamespace.name != null) (mkDefault cfg.networkNamespace.name);
         serviceSettings = {
           wantedBy = ["${cfg.targetName}.target"];
