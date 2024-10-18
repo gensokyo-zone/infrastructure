@@ -6,7 +6,7 @@
   lib,
   ...
 }: let
-  inherit (gensokyo-zone.lib) mapDefaults;
+  inherit (gensokyo-zone.lib) mapDefaults domain;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib) versions;
   inherit (systemConfig.exports.services) minecraft;
@@ -19,13 +19,16 @@
   enableBluemap = minecraft.ports.bluemap.enable;
   packwizUpdate = true;
   modpack = rec {
-    owner = "kittywitch";
+    owner = "gensokyo-zone";
     repo = "minecraft-modpack";
     branch = "marka-${versions.majorMinor mcVersion}";
+    permalink = true;
     pages = true;
     packUrl =
-      if pages
-      then "https://${owner}.github.io/${repo}/pack.toml"
+      if permalink
+      then "https://${domain}/minecraft/modpack/${branch}/pack.toml"
+      else if pages
+      then "https://${owner}.github.io/${repo}/${branch}/pack.toml"
       else "https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/pack.toml";
   };
 in {
