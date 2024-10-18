@@ -82,7 +82,7 @@ in {
       locations =
         {
           "/" = {
-            return = "302 /kitchen/";
+            return = "307 /kitchen/";
           };
           "/kitchen" = {
             proxy = {

@@ -31,7 +31,7 @@ in {
           set $prox_plain $1;
         }
         if ($prox_plain = $prox_expected) {
-          return 302 https://$host/$prox_plain/;
+          return 307 https://$host/$prox_plain/;
         }
         if ($prox_plain != ''') {
           rewrite /(.*) /prox/$1 last;

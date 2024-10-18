@@ -53,7 +53,7 @@ in {
           headers.set.Cache-Control = "no-store, no-cache, must-revalidate";
         };
         "/webcam" = {
-          return = "302 /webcam/stream";
+          return = "307 /webcam/stream";
         };
         "/webcam/stream" = {
           proxy = {

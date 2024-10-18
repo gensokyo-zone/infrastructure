@@ -47,7 +47,7 @@ in {
       };
       locations = {
         "~ ^/llama$" = {
-          return = mkDefault "302 /llama/";
+          return = mkDefault "308 /llama/";
         };
         "/llama/" = {virtualHost, ...}: {
           imports = [proxyLocation];
@@ -62,12 +62,12 @@ in {
           imports = [proxyLocation];
         };
         "~ '^/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'" = {
-          return = mkDefault "302 /llama$request_uri";
+          return = mkDefault "307 /llama$request_uri";
         };
         "/" = {virtualHost, ...}: {
           extraConfig = mkBefore ''
             if ($http_referer ~ '^https?://${escapeRegex virtualHost.serverName}/llama/') {
-              return 302 /llama$request_uri;
+              return 307 /llama$request_uri;
             }
           '';
           return = mkDefault "404";

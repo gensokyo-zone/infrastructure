@@ -69,7 +69,7 @@ in {
           inherit root extraConfig;
         };
         "/minecraft/wiki" = {
-          return = "302 https://wiki.${domain}/minecraft/";
+          return = "301 https://wiki.${domain}/minecraft/";
         };
         "~ '^/minecraft/modpack/(\\S*)$'" = {
           return = ''308 "https://gensokyo-zone.github.io/minecraft-modpack/$1"'';
@@ -80,7 +80,7 @@ in {
             then "bmap"
             else "dmap";
         in {
-          return = "302 /minecraft/${defaultMap}/";
+          return = "308 /minecraft/${defaultMap}/";
         };
         "/minecraft/dmap/" = mkIf minecraft.ports.dynmap.enable {
           proxy = {
