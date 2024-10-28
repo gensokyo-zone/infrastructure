@@ -29,33 +29,24 @@
       (mkIf config.smb.enable config.smb.fstabOptions)
       (mkIf config.automount.enable config.automount.fstabOptions)
     ];
+    mountOptions = subpath: {
+      enable =
+        mkEnableOption "/mnt/${subpath}"
+        // {
+          default = true;
+        };
+      krb5.enable =
+        mkEnableOption "krb5"
+        // {
+          default = enabled.krb5;
+        };
+    };
   in {
     options = with lib.types; {
       enable = mkEnableOption "kyuuto";
-      media = {
-        enable =
-          mkEnableOption "/mnt/kyuuto-media"
-          // {
-            default = true;
-          };
-        krb5.enable =
-          mkEnableOption "krb5"
-          // {
-            default = enabled.krb5;
-          };
-      };
-      transfer = {
-        enable =
-          mkEnableOption "/mnt/kyuuto-transfer"
-          // {
-            default = true;
-          };
-        krb5.enable =
-          mkEnableOption "krb5"
-          // {
-            default = enabled.krb5;
-          };
-      };
+      media = mountOptions "kyuuto-media";
+      data = mountOptions "kyuuto-data";
+      transfer = mountOptions "kyuuto-transfer";
       shared.enable = mkEnableOption "/mnt/kyuuto-shared";
       domain = mkOption {
         type = str;
@@ -127,17 +118,15 @@
         "x-systemd.mount-timeout=2m"
         "x-systemd.idle-timeout=10m"
       ];
-      setFilesystems = {
-        "/mnt/kyuuto-media" = mkIf config.media.enable {
+      setFilesystems = let
+        mkKyuutoFs = {
+          cfg,
+          nfsSubpath,
+          smbSubpath,
+        }: mkIf cfg.enable {
           device = mkMerge [
-            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/kyuuto/media")
-            (mkIf config.smb.enable (
-              if config.smb.user != null && access.local.enable
-              then ''\\smb.${config.domain}\kyuuto-media''
-              else if config.smb.user != null
-              then ''\\smb.${config.domain}\kyuuto-media-global''
-              else ''\\smb.${config.domain}\kyuuto-library-access''
-            ))
+            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/${nfsSubpath}")
+            (mkIf config.smb.enable ''\\smb.${config.domain}\${smbSubpath}'')
           ];
           fsType = mkMerge [
             (mkIf config.nfs.enable "nfs4")
@@ -145,11 +134,26 @@
           ];
           options = mkMerge (setFilesystemOptions
             ++ [
-              (mkIf config.media.krb5.enable [
+              (mkIf cfg.krb5.enable [
                 "sec=krb5"
                 (mkIf config.nfs.enable "nfsvers=4")
               ])
             ]);
+        };
+      in {
+        "/mnt/kyuuto-media" = mkKyuutoFs {
+          cfg = config.media;
+          nfsSubpath = "kyuuto/media";
+          smbSubpath = if config.smb.user != null && access.local.enable
+            then "kyuuto-media"
+            else if config.smb.user != null
+            then "kyuuto-library-net"
+            else "kyuuto-library";
+        };
+        "/mnt/kyuuto-data" = mkKyuutoFs {
+          cfg = config.data;
+          nfsSubpath = "kyuuto/data";
+          smbSubpath = "kyuuto-data";
         };
         "/mnt/kyuuto-transfer" = mkIf config.transfer.enable {
           device = mkMerge [
@@ -162,7 +166,7 @@
           ];
           options = mkMerge (setFilesystemOptions
             ++ [
-              (mkIf config.media.krb5.enable [
+              (mkIf config.transfer.krb5.enable [
                 (
                   if access.local.enable || access.tail.enabled
                   then "sec=sys:krb5"
@@ -199,6 +203,7 @@
         };
       in {
         "${escapeSystemdPath "/mnt/kyuuto-media"}.mount" = mkIf config.media.enable netMountConfig;
+        "${escapeSystemdPath "/mnt/kyuuto-data"}.mount" = mkIf config.data.enable netMountConfig;
         "${escapeSystemdPath "/mnt/kyuuto-transfer"}.mount" = mkIf config.transfer.enable netMountConfig;
         "${escapeSystemdPath "/mnt/kyuuto-shared"}.mount" = mkIf (config.shared.enable && config.smb.enable) netMountConfig;
       };

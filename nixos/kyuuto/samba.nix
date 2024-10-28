@@ -81,6 +81,17 @@ in {
           "valid users" = ["@kyuuto-peeps"];
         }
       ];
+      kyuuto-data = mkMerge [
+        kyuuto-media
+        {
+          path = kyuuto.dataDir;
+          comment = "Kyuuto Data";
+          writeable = true;
+          public = false;
+          browseable = false;
+          "valid users" = ["@kyuuto-peeps"];
+        }
+      ];
       shared = {
         path = kyuuto.shareDir;
         comment = "Shared Data";

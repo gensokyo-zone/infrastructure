@@ -13,6 +13,7 @@
     __toString = _: config.services.nfs.export.root.path;
     transfer = "${nfsRoot}/kyuuto/transfer";
     media = "${nfsRoot}/kyuuto/media";
+    data = "${nfsRoot}/kyuuto/data";
   };
 in {
   services.nfs = {
@@ -20,6 +21,15 @@ in {
       paths = {
         ${nfsRoot.media} = {
           flags = flagSets.common ++ ["fsid=128"] ++ flagSets.secip ++ ["rw"] ++ flagSets.anon_ro;
+          clients = {
+            local = {
+              machine = flagSets.allClients;
+              flags = flagSets.seclocal ++ ["rw" "no_all_squash"];
+            };
+          };
+        };
+        ${nfsRoot.data} = {
+          flags = flagSets.common ++ ["fsid=130"] ++ flagSets.secip ++ ["rw"] ++ flagSets.anon_ro;
           clients = {
             local = {
               machine = flagSets.allClients;
@@ -53,6 +63,11 @@ in {
         inherit type options wantedBy before;
         what = kyuuto.mountDir;
         where = nfsRoot.media;
+      }
+      {
+        inherit type options wantedBy before;
+        what = kyuuto.dataDir;
+        where = nfsRoot.data;
       }
       {
         inherit type options wantedBy before;
