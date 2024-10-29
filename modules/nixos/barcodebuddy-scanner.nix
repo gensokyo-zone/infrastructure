@@ -1,11 +1,9 @@
 {
   config,
   lib,
-  utils,
   pkgs,
   ...
 }: let
-  inherit (utils) escapeSystemdPath;
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault mkDefault;
   inherit (lib.attrsets) mapAttrs' nameValuePair;
@@ -85,7 +83,7 @@ in {
         };
     };
 
-    # https://github.com/Forceu/barcodebuddy/blob/master/example/bbuddy-grabInput.conf
+    # https://github.com/Forceu/barcodebuddy/blob/master/example/bbuddy-grabInput.service
     conf.systemd.services.barcodebuddy-scanner = let
       RuntimeDirectory = "barcodebuddy-scanner";
       apiKeyFile = "apikey.env";
