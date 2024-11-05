@@ -32,6 +32,10 @@ in {
       type = path;
       default = cfg.mountDir + "/library";
     };
+    downloadsDir = mkOption {
+      type = path;
+      default = cfg.mountDir + "/downloads";
+    };
     gameLibraryDir = mkOption {
       type = path;
       default = cfg.libraryDir + "/games";
@@ -91,6 +95,11 @@ in {
         inherit (shared) owner group;
         mode = mkDefault "2775";
       };
+      deluge = rec {
+        inherit (leaf) mode;
+        owner = toString (mapId 83); # deluge uid
+        group = owner;
+      };
       setupFiles = [
         {
           ${cfg.shareDir} = share;
@@ -106,6 +115,14 @@ in {
           ${cfg.libraryDir + "/movies"} = leaf;
           ${cfg.libraryDir + "/software"} = leaf;
           ${cfg.libraryDir + "/books"} = leaf;
+          ${cfg.downloadsDir} = shared;
+          ${cfg.downloadsDir + "/deluge"} = deluge;
+          ${cfg.downloadsDir + "/deluge/download"} =
+            deluge
+            // {
+              group = "kyuuto";
+              mode = mkDefault "2755";
+            };
           ${cfg.dataDir + "/minecraft/simplebackups"} =
             leaf
             // {

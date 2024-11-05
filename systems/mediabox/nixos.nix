@@ -129,7 +129,7 @@ in {
       "${deluge.downloadDir}" = mkIf deluge.enable (mkMerge [
         bind
         {
-          device = kyuuto.mountDir + "/downloads/deluge/download";
+          device = kyuuto.downloadsDir + "/deluge/download";
         }
       ]);
     };
