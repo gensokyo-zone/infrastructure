@@ -55,7 +55,18 @@ in {
       mountdPort = mkDefault 4002;
     };
     export = {
-      flagSets = {
+      flagSets = let
+        mkMetalClient = name: let
+          system = gensokyo-zone.systems.${name};
+          inherit (system.network.networks) local;
+          addrs =
+            optional (local.enable or false && local.address4 != null) "${local.address4}/32"
+            ++ optional (local.enable or false && local.address6 != null) "${local.address6}/128";
+          allowed =
+            if addrs != [] then addrs
+            else lib.warn "${name} NFS: falling back to all LAN" cidrForNetwork.allLan.all;
+        in allowed;
+      in {
         common = [
           "no_subtree_check"
           "anonuid=${toString config.users.users.guest.uid}"
@@ -78,6 +89,9 @@ in {
           "all_squash"
           "ro"
         ];
+        metal = [
+          "sec=sys" "no_root_squash" "rw"
+        ];
         # client machines
         clientGroups = [
           "@peeps"
@@ -89,6 +103,7 @@ in {
         tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
         localClients = cidrForNetwork.allLan.all ++ flagSets.tailClients;
         allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;
+        gengetsuClients = mkMetalClient "gengetsu";
       };
       root = {
         path = "/srv/fs";

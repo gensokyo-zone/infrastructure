@@ -117,14 +117,16 @@ mkzfs() {
 	ZFS_ARGS=("$@")
 
 	if [[ $ZFS_NAME != ${ZFS_PATH#/} ]]; then
-		ZFS_ARGS+=(-o "mountpoint=$ZFS_PATH")
+		ZFS_ARGS+=(-o "mountpoint=${ZFS_PATH-none}")
 	fi
 
-	if [[ ! -d "$ZFS_PATH" ]]; then
+	if [[ -z "$ZFS_PATH" || ! -d "$ZFS_PATH" ]]; then
 		zfs create "$ZFS_NAME" ${ZFS_ARGS[@]+"${ZFS_ARGS[@]}"}
 	fi
-	chmod "$ZFS_MODE" "$ZFS_PATH"
-	chown "$ZFS_OWNER:$ZFS_GROUP" "$ZFS_PATH"
+	if [[ -n "$ZFS_PATH" ]]; then
+		chmod "$ZFS_MODE" "$ZFS_PATH"
+		chown "$ZFS_OWNER:$ZFS_GROUP" "$ZFS_PATH"
+	fi
 }
 
 mkshared() {
@@ -140,11 +142,12 @@ mkcache() {
 }
 
 mkkyuuto() {
-	local KYUUTO_PATH KYUUTO_ARGS=()
+	local KYUUTO_MOUNTNAME KYUUTO_ARGS=()
 	KYUUTO_NAME=$1
 	KYUUTO_ARGS=("$2" "$3" "$4")
 	shift 4
-	mkzfs "/mnt/kyuuto-$KYUUTO_NAME" "${KYUUTO_ARGS[@]}" "kyuuto/$KYUUTO_NAME" "$@"
+	KYUUTO_MOUNTNAME=${KYUUTO_MOUNT-$KYUUTO_NAME}
+	mkzfs "/mnt/kyuuto-$KYUUTO_MOUNTNAME" "${KYUUTO_ARGS[@]}" "kyuuto/$KYUUTO_NAME" "$@"
 }
 
 mkshared nix 0 0 0755
@@ -197,6 +200,22 @@ if [[ ! -d /mnt/kyuuto-data/minecraft/simplebackups ]]; then
 fi
 chown 100913:8126 /mnt/kyuuto-data/minecraft/simplebackups
 chmod 0775 /mnt/kyuuto-data/minecraft/simplebackups
+
+mkkyuuto data/systems 0 0 0775
+nfsystemroot=/mnt/kyuuto-data/systems
+for nfsystem in gengetsu; do
+	mkkyuuto data/systems/$nfsystem 0 0 0750
+
+	if [[ ! -d $nfsystemroot/$nfsystem/fs ]]; then
+		mkdir $nfsystemroot/$nfsystem/fs
+	fi
+	chown 0:0 $nfsystemroot/$nfsystem/fs
+	chmod 0755 $nfsystemroot/$nfsystem/fs
+
+	for nfsystemfs in root boot; do
+		KYUUTO_MOUNT=data/systems/$nfsystem/fs/$nfsystemfs mkkyuuto data/systems/$nfsystem/$nfsystemfs 0 0 0755
+	done
+done
 
 ln -sf /lib/systemd/system/auth-rpcgss-module.service /etc/systemd/system/
 mkdir -p /etc/systemd/system/auth-rpcgss-module.service.d

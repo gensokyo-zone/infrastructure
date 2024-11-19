@@ -4,9 +4,6 @@
   ...
 }: let
   inherit (lib.modules) mkIf;
-  inherit (lib.lists) optionals;
-  inherit (lib.strings) concatStringsSep;
-  inherit (config.networking.access) cidrForNetwork;
   inherit (config) kyuuto;
   inherit (config.services.nfs.export) flagSets;
   nfsRoot = {
@@ -14,6 +11,8 @@
     transfer = "${nfsRoot}/kyuuto/transfer";
     media = "${nfsRoot}/kyuuto/media";
     data = "${nfsRoot}/kyuuto/data";
+    systems = "${nfsRoot}/kyuuto/systems";
+    gengetsu = "${nfsRoot.systems}/gengetsu";
   };
 in {
   services.nfs = {
@@ -46,6 +45,24 @@ in {
             };
           };
         };
+        "${nfsRoot.gengetsu}/root" = {
+          flags = flagSets.common ++ ["fsid=162"] ++ ["async"];
+          clients = {
+            gengetsu = {
+              machine = flagSets.gengetsuClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
+        "${nfsRoot.gengetsu}/boot" = {
+          flags = flagSets.common ++ ["fsid=163"] ++ ["async"];
+          clients = {
+            gengetsu = {
+              machine = flagSets.gengetsuClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
       };
     };
   };
@@ -73,6 +90,16 @@ in {
         inherit type options wantedBy before;
         what = kyuuto.transferDir;
         where = nfsRoot.transfer;
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/gengetsu/fs/root";
+        where = "${nfsRoot.gengetsu}/root";
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/gengetsu/fs/boot";
+        where = "${nfsRoot.gengetsu}/boot";
       }
     ];
 }
