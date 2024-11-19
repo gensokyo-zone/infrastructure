@@ -300,7 +300,6 @@ in {
         "met"
         "generic_thermostat"
         "ios"
-        "map"
         "mqtt"
         "zeroconf"
       ]
