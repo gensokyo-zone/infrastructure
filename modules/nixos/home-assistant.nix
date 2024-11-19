@@ -241,6 +241,11 @@ in {
                 "test_idle_timeout"
               ]);
           });
+          env-canada = super.env-canada.overridePythonAttrs (old: {
+            dependencies = old.dependencies ++ [
+              self.defusedxml
+            ];
+          });
         };
       };
     in
