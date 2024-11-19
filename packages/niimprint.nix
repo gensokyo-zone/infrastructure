@@ -1,5 +1,6 @@
 {
   buildPythonApplication,
+  pythonRelaxDepsHook,
   fetchFromGitHub,
   poetry-core,
   pyserial,
@@ -22,6 +23,7 @@ in
     pyproject = true;
 
     nativeBuildInputs = [
+      pythonRelaxDepsHook
       poetry-core
     ];
 
@@ -29,6 +31,10 @@ in
       pyserial
       pillow
       click
+    ];
+
+    pythonRelaxDeps = [
+      "pillow"
     ];
 
     postInstall = ''
