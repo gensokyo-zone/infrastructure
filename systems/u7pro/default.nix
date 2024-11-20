@@ -11,6 +11,7 @@ _: {
     };
   };
   exports = {
+    status.displayName = "U7 Pro";
     services = {
       sshd = {
         enable = true;

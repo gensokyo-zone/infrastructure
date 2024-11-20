@@ -258,6 +258,10 @@ in
           // {
             default = config.access.online.enable;
           };
+        displayName = mkOption {
+          type = str;
+          default = config.name;
+        };
         alert = {
           enable =
             mkEnableOption "health check alerts"

@@ -6,6 +6,7 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
 in {
   config.exports.services.unifi = {config, ...}: {
+    displayName = mkAlmostOptionDefault "UniFi";
     nixos.serviceAttr = "unifi";
     defaults.port.listen = mkAlmostOptionDefault "lan";
     ports = {

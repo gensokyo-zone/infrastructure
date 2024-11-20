@@ -110,7 +110,7 @@
         [alertingConfig]
         ++ optional status.alert.enable alertingConfigAlerts;
       config = {
-        name = mkAlmostOptionDefault system.name;
+        name = mkAlmostOptionDefault system.exports.status.displayName;
         # XXX: it can't seem to ping ipv6 for some reason..? :<
         enabled = mkIf addrIs6 (mkAlmostOptionDefault false);
         client.network = mkIf addrIs6 (mkAlmostOptionDefault "ip6");
@@ -176,6 +176,11 @@ in {
     enable = true;
     user = mkDefault "gatus";
     environmentFile = config.sops.secrets.gatus_environment_file.path;
+
+    hardening = {
+      enable = mkDefault true;
+      icmp.enable = mkDefault true;
+    };
 
     # Endpoint configuration
     endpoints = listToAttrs (concatMap mapSystem statusSystems);

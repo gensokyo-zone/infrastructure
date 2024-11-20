@@ -5,11 +5,13 @@ _: {
   };
   network.networks = {
     local = {
+      slaac.enable = false;
       address4 = "10.1.1.12";
       address6 = null;
     };
   };
   exports = {
+    status.displayName = "gengetsu/IDRAC";
     services = {
       sshd = {
         enable = true;

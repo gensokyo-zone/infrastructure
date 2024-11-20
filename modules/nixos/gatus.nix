@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  inherit (lib.options) mkOption;
+  inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkForce;
   inherit (lib.attrsets) attrValues;
   inherit (lib.lists) length unique;
@@ -211,6 +211,10 @@ in {
       };
     };
   in with types; {
+    hardening = {
+      enable = mkEnableOption "sandbox and harden service";
+      icmp.enable = mkEnableOption "needed for ICMP probes";
+    };
     user = mkOption {
       type = nullOr str;
       default = null;
@@ -236,10 +240,43 @@ in {
       }
     ];
     conf.systemd.services.gatus = {
-      serviceConfig.User = mkIf (cfg.user != null) (mkForce cfg.user);
+      serviceConfig = mkMerge [
+        serviceConfig
+        (mkIf cfg.hardening.enable serviceConfig'hardening)
+      ];
     };
     serviceConf = {
       services.gatus.settings.endpoints = mkIf (cfg.endpoints != {}) (attrValues cfg.endpoints);
+    };
+    serviceConfig = {
+      User = mkIf (cfg.user != null) (mkForce cfg.user);
+
+      AmbientCapabilities = mkIf cfg.hardening.icmp.enable ["CAP_NET_RAW"];
+    };
+    serviceConfig'hardening = {
+      DevicePolicy = "closed";
+      LockPersonality = true;
+      MemoryDenyWriteExecute = true;
+      NoNewPrivileges = true;
+      PrivateDevices = true;
+      PrivateMounts = true;
+      PrivateTmp = true;
+      ProcSubset = "pid";
+      ProtectClock = true;
+      ProtectControlGroups = true;
+      ProtectHome = true;
+      ProtectHostname = true;
+      ProtectKernelLogs = true;
+      ProtectKernelModules = true;
+      ProtectKernelTunables = true;
+      ProtectProc = "invisible";
+      ProtectSystem = "strict";
+      RemoveIPC = true;
+      RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
+      RestrictNamespaces = true;
+      RestrictRealtime = true;
+      RestrictSUIDSGID = true;
+      UMask = "0077";
     };
   in mkMerge [
     (mkIf cfg.enable conf)

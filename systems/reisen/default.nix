@@ -3,6 +3,9 @@ _: {
   proxmox.node = {
     enable = true;
   };
+  access = {
+    online.available = true;
+  };
   extern.files = {
     "/etc/sysctl.d/50-net.conf" = {
       source = ./sysctl.50-net.conf;

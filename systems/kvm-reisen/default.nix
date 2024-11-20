@@ -1,5 +1,8 @@
 {...}: {
   type = "Linux";
+  access = {
+    online.available = true;
+  };
   network.networks = {
     local = {
       slaac.enable = false;
@@ -11,9 +14,12 @@
       address6 = "fd7a:115c:a1e0::1901:9d62";
     };
   };
-  exports.services = {
-    tailscale.enable = true;
-    sshd.enable = true;
-    #nkvm.enable = true;
+  exports = {
+    status.displayName = "reisen/KVM";
+    services = {
+      tailscale.enable = true;
+      sshd.enable = true;
+      #nkvm.enable = true;
+    };
   };
 }
