@@ -68,7 +68,7 @@ in {
     };
     networking.firewall.interfaces.lan.allowedTCPPorts = let
       # blacklist broken/deprecated exporters
-      allExporters = removeAttrs config.services.prometheus.exporters ["unifi-poller" "minio"];
+      allExporters = removeAttrs config.services.prometheus.exporters ["unifi-poller" "minio" "tor"];
       enablePort = fallback: exporter: exporter.enable or fallback && !exporter.openFirewall or (!fallback);
       mkExporterPorts = name: exporters': let
         exporters = toList exporters';
