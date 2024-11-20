@@ -1,6 +1,7 @@
 {
   pkgs,
   config,
+  gensokyo-zone,
   lib,
   ...
 }: let
@@ -11,7 +12,12 @@ in {
   services.unifi = {
     enable = mkDefault true;
     unifiPackage = mkDefault pkgs.unifi8;
-    mongodbPackage = mkDefault pkgs.mongodb-6_0;
+    #TODO: mongodbPackage = mkDefault pkgs.mongodb-6_0;
+    mongodbPackage = let
+      nixpkgs = import gensokyo-zone.inputs.nixpkgs-2405 {
+        inherit (pkgs) system config;
+      };
+    in mkDefault nixpkgs.mongodb-5_0;
   };
 
   networking.firewall = mkIf cfg.enable {

@@ -2,6 +2,7 @@
   description = "gensokyo.zone";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-2405.url = "github:nixos/nixpkgs/nixos-24.05";
     arcexprs = {
       url = "github:arcnmx/nixexprs/master";
       inputs.nixpkgs.follows = "nixpkgs";
