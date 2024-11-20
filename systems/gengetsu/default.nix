@@ -14,7 +14,8 @@ _: {
   #};
   network.networks = {
     local = {
-      address4 = "10.1.1.204";
+      macAddress = "54:48:10:f3:fe:aa";
+      address4 = "10.1.1.61";
     };
   };
 }

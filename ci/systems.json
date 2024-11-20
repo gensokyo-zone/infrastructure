@@ -91,6 +91,20 @@
       }
     }
   },
+  "gengetsu": {
+    "network": {
+      "hostName": "gengetsu",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.61",
+          "address6": "fd0a::5648:10ff:fef3:feaa",
+          "macAddress": "54:48:10:f3:fe:aa"
+        },
+        "tail": null
+      }
+    }
+  },
   "hakurei": {
     "network": {
       "hostName": "hakurei",
@@ -110,6 +124,20 @@
           "address6": "fd7a:115c:a1e0::9101:413b",
           "macAddress": null
         }
+      }
+    }
+  },
+  "idrac-gengetsu": {
+    "network": {
+      "hostName": "idrac-gengetsu",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.12",
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": null
       }
     }
   },
