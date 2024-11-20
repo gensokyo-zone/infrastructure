@@ -6,8 +6,8 @@
   ...
 }: let
   inherit (gensokyo-zone) systems;
-  inherit (gensokyo-zone.lib) mkAddress6 mkAlmostOptionDefault mapOptionDefaults unmerged;
-  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
+  inherit (gensokyo-zone.lib) mkAddress6 mkAlmostOptionDefault unmerged domain;
+  inherit (lib.modules) mkIf mkMerge mkAfter mkDefault mkOptionDefault;
   inherit (lib.attrsets) attrValues nameValuePair listToAttrs;
   inherit (lib.lists) filter length optional concatMap;
   inherit (lib.strings) hasPrefix hasInfix optionalString concatStringsSep match;
@@ -197,6 +197,23 @@ in {
         description = "The status of the various girls in Gensokyo!";
         header = "Gensokyo Zone Status";
       };
+      ui.buttons = let
+        grafana = {
+          name = "Monitoring";
+          link = "https://mon.${domain}";
+        };
+        prometheus = {
+          name = "Prometheus";
+          link = "https://prometheus.${domain}";
+        };
+        gatusLogs = {
+          name = "Gatus Logs";
+          link = "${grafana.link}/d/ae4jrpnh74ohsa/gatus";
+        };
+      in mkMerge [
+        [grafana prometheus]
+        (mkAfter [gatusLogs])
+      ];
 
       # Prometheus metrics...!
       metrics = true;
