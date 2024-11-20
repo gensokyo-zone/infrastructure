@@ -12,6 +12,20 @@ module "gengetsu_idrac_system_records" {
   net_data  = local.systems.idrac-gengetsu.network
 }
 
+module "mugetsu_system_records" {
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.mugetsu.network
+}
+
+module "mugetsu_idrac_system_records" {
+  source    = "./system/records"
+  zone_id   = cloudflare_zone.gensokyo-zone_zone.id
+  zone_zone = cloudflare_zone.gensokyo-zone_zone.zone
+  net_data  = local.systems.idrac-mugetsu.network
+}
+
 module "reisen_system_records" {
   source    = "./system/records"
   zone_id   = cloudflare_zone.gensokyo-zone_zone.id

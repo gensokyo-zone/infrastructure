@@ -13,6 +13,7 @@
     data = "${nfsRoot}/kyuuto/data";
     systems = "${nfsRoot}/kyuuto/systems";
     gengetsu = "${nfsRoot.systems}/gengetsu";
+    mugetsu = "${nfsRoot.systems}/mugetsu";
   };
 in {
   services.nfs = {
@@ -63,6 +64,24 @@ in {
             };
           };
         };
+        "${nfsRoot.mugetsu}/root" = {
+          flags = flagSets.common ++ ["fsid=170"] ++ ["async"];
+          clients = {
+            mugetsu = {
+              machine = flagSets.mugetsuClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
+        "${nfsRoot.mugetsu}/boot" = {
+          flags = flagSets.common ++ ["fsid=171"] ++ ["async"];
+          clients = {
+            mugetsu = {
+              machine = flagSets.mugetsuClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
       };
     };
   };
@@ -100,6 +119,16 @@ in {
         inherit type options wantedBy before;
         what = "${kyuuto.dataDir}/systems/gengetsu/fs/boot";
         where = "${nfsRoot.gengetsu}/boot";
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/mugetsu/fs/root";
+        where = "${nfsRoot.mugetsu}/root";
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/mugetsu/fs/boot";
+        where = "${nfsRoot.mugetsu}/boot";
       }
     ];
 }

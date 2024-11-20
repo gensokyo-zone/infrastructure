@@ -18,6 +18,7 @@ eientei:: `10.1.1.5`
 kvm-reisen:: `10.1.1.9`
 
 idrac-gengetsu:: `10.1.1.12`
+idrac-mugetsu:: `10.1.1.13`
 
 shanghai:: `10.1.1.32`
 
@@ -38,6 +39,7 @@ kasen:: `10.1.1.49`
 sakuya:: `10.1.1.50`
 minecraft:: `10.1.1.51`
 
+mugetsu:: `10.1.1.60`
 gengetsu:: `10.1.1.61`
 
 nue:: `10.1.1.62`

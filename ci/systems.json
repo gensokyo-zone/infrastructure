@@ -141,6 +141,20 @@
       }
     }
   },
+  "idrac-mugetsu": {
+    "network": {
+      "hostName": "idrac-mugetsu",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.13",
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
   "kasen": {
     "network": {
       "hostName": "kasen",
@@ -310,6 +324,20 @@
           "address6": "fd7a:115c:a1e0::1f01:9d7a",
           "macAddress": null
         }
+      }
+    }
+  },
+  "mugetsu": {
+    "network": {
+      "hostName": "mugetsu",
+      "networks": {
+        "int": null,
+        "local": {
+          "address4": "10.1.1.60",
+          "address6": "fd0a::6600:6aff:fec0:a14c",
+          "macAddress": "64:00:6a:c0:a1:4c"
+        },
+        "tail": null
       }
     }
   },

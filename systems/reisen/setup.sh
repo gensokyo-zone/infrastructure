@@ -203,7 +203,7 @@ chmod 0775 /mnt/kyuuto-data/minecraft/simplebackups
 
 mkkyuuto data/systems 0 0 0775
 nfsystemroot=/mnt/kyuuto-data/systems
-for nfsystem in gengetsu; do
+for nfsystem in gengetsu mugetsu; do
 	mkkyuuto data/systems/$nfsystem 0 0 0750
 
 	if [[ ! -d $nfsystemroot/$nfsystem/fs ]]; then

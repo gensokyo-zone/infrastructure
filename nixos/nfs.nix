@@ -104,6 +104,7 @@ in {
         localClients = cidrForNetwork.allLan.all ++ flagSets.tailClients;
         allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;
         gengetsuClients = mkMetalClient "gengetsu";
+        mugetsuClients = mkMetalClient "mugetsu";
       };
       root = {
         path = "/srv/fs";
