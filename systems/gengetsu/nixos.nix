@@ -32,7 +32,7 @@
       fsType = "xfs";
     };
     "/boot" = {
-      device = "/dev/disk/by-uuid/CA62-7FDF";
+      device = "/dev/disk/by-label/boot";
       fsType = "vfat";
       options = ["fmask=0077" "dmask=0077"];
     };
