@@ -17,6 +17,7 @@
     initrd = {
       availableKernelModules = ["ahci" "xhci_pci" "ehci_pci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
       kernelModules = [];
+      systemd.emergencyAccess = true;
     };
     kernelModules = [];
     extraModulePackages = [];
