@@ -1,30 +1,19 @@
 {
+  meta,
   config,
-  pkgs,
   ...
 }: {
-  environment.systemPackages = [
-    pkgs.ipmitool
+  imports = let
+    inherit (meta) nixos;
+  in [
+    nixos.hw.c4130
   ];
 
-  boot = {
-    initrd = {
-      availableKernelModules = ["ahci" "xhci_pci" "ehci_pci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
-      kernelModules = [];
-    };
-    kernelModules = [];
-    extraModulePackages = [];
-    loader = {
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
-    };
-  };
-
   fileSystems = {
-    "/" = {
-      # TODO
-      device = "/dev/disk/by-uuid/44444444-4444-4444-8888-888888888888";
-      fsType = "xfs";
+    "/boot" = {
+      device = "/dev/disk/by-label/EFI";
+      fsType = "vfat";
+      options = ["fmask=0077" "dmask=0077"];
     };
   };
 
