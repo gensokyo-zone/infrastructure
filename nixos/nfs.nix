@@ -66,6 +66,7 @@ in {
             if addrs != [] then addrs
             else lib.warn "${name} NFS: falling back to all LAN" cidrForNetwork.allLan.all;
         in allowed;
+        mkC4130Client = name: mkMetalClient name ++ mkMetalClient "idrac-${name}";
       in {
         common = [
           "no_subtree_check"
@@ -103,8 +104,9 @@ in {
         tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
         localClients = cidrForNetwork.allLan.all ++ flagSets.tailClients;
         allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;
-        gengetsuClients = mkMetalClient "gengetsu";
-        mugetsuClients = mkMetalClient "mugetsu";
+        gengetsuClients = mkC4130Client "gengetsu";
+        mugetsuClients = mkC4130Client "mugetsu";
+        goliathClients = flagSets.gengetsuClients ++ flagSets.mugetsuClients;
       };
       root = {
         path = "/srv/fs";

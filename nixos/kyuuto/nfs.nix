@@ -14,6 +14,7 @@
     systems = "${nfsRoot}/kyuuto/systems";
     gengetsu = "${nfsRoot.systems}/gengetsu";
     mugetsu = "${nfsRoot.systems}/mugetsu";
+    goliath = "${nfsRoot.systems}/goliath";
   };
 in {
   services.nfs = {
@@ -82,6 +83,24 @@ in {
             };
           };
         };
+        "${nfsRoot.goliath}/root" = {
+          flags = flagSets.common ++ ["fsid=172"] ++ ["async"];
+          clients = {
+            goliath = {
+              machine = flagSets.goliathClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
+        "${nfsRoot.goliath}/boot" = {
+          flags = flagSets.common ++ ["fsid=173"] ++ ["async"];
+          clients = {
+            goliath = {
+              machine = flagSets.goliathClients;
+              flags = flagSets.metal;
+            };
+          };
+        };
       };
     };
   };
@@ -129,6 +148,16 @@ in {
         inherit type options wantedBy before;
         what = "${kyuuto.dataDir}/systems/mugetsu/fs/boot";
         where = "${nfsRoot.mugetsu}/boot";
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/goliath/fs/root";
+        where = "${nfsRoot.goliath}/root";
+      }
+      {
+        inherit type options wantedBy before;
+        what = "${kyuuto.dataDir}/systems/goliath/fs/boot";
+        where = "${nfsRoot.goliath}/boot";
       }
     ];
 }

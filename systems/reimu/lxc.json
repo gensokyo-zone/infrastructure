@@ -7,6 +7,9 @@
 			"/mnt/kyuuto-data/systems/gengetsu/fs/boot mnt/kyuuto-data/systems/gengetsu/fs/boot none bind,optional,create=dir",
 			"/mnt/kyuuto-data/systems/mugetsu/fs/root mnt/kyuuto-data/systems/mugetsu/fs/root none bind,optional,create=dir",
 			"/mnt/kyuuto-data/systems/mugetsu/fs/boot mnt/kyuuto-data/systems/mugetsu/fs/boot none bind,optional,create=dir",
+			"/mnt/kyuuto-data/systems/goliath mnt/kyuuto-data/systems/goliath none bind,optional,create=dir",
+			"/mnt/kyuuto-data/systems/goliath/fs/root mnt/kyuuto-data/systems/goliath/fs/root none bind,optional,create=dir",
+			"/mnt/kyuuto-data/systems/goliath/fs/boot mnt/kyuuto-data/systems/goliath/fs/boot none bind,optional,create=dir",
 			"/dev/net/tun dev/net/tun none bind,optional,create=file"
 		],
 		"lxc.cgroup2.devices.allow": [
