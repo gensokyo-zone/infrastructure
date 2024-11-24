@@ -7,14 +7,14 @@
     inherit (meta) nixos;
   in [
     nixos.hw.c4130
-    #nixos.netboot.kyuuto
+    nixos.netboot.kyuuto
   ];
 
   fileSystems = {
-    "/" = {
+    "/mnt/root-old" = {
       device = "/dev/disk/by-uuid/bf317f5d-ffc2-45fd-9621-b645ff7223fc";
       fsType = "xfs";
-      options = ["lazytime" "noatime"];
+      options = ["x-systemd.automount" "lazytime" "noatime" "noauto" "nofail"];
     };
     "/boot" = {
       device = "/dev/disk/by-label/boot";

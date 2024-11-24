@@ -7,7 +7,7 @@
   ...
 }: let
   inherit (lib.options) mkOption mkEnableOption mkPackageOption;
-  inherit (lib.modules) mkIf mkDefault mkMerge;
+  inherit (lib.modules) mkIf mkMerge mkOptionDefault mkDefault;
   cfg = config.gensokyo-zone.netboot;
   nfsEnabled = config.boot.initrd.supportedFilesystems.nfs or config.boot.initrd.supportedFilesystems.nfs4 or false;
   defaultCacheTimeoutMax = 60 * 60; # 1h
@@ -19,6 +19,9 @@ in {
     nfs = {
       package = mkPackageOption pkgs "nfs-utils" {
         example = "pkgs.mkinitcpio-nfs-utils";
+      };
+      host = mkOption {
+        type = str;
       };
       security = mkOption {
         type = str;
@@ -39,6 +42,20 @@ in {
     };
   };
   config = {
+    gensokyo-zone.netboot = {
+      nfs = {
+        host = let
+          nfsUrl = access.proxyUrlFor {
+            serviceName = "nfs";
+            scheme = "";
+            defaultPort = 2049;
+            # XXX: consider using dns hostname here instead? (does this require the dns_resolver kernel module?)
+            getAddressFor = "getAddress4For";
+          };
+        in
+          mkOptionDefault nfsUrl;
+      };
+    };
     boot = {
       initrd = {
         network = {
@@ -75,15 +92,7 @@ in {
       };
     };
     fileSystems = let
-      nfsUrl =
-        access.proxyUrlFor {
-          serviceName = "nfs";
-          scheme = "";
-          defaultPort = 2049;
-          # XXX: consider using dns hostname here instead? (does this require the dns_resolver kernel module?)
-          getAddressFor = "getAddress4For";
-        }
-        + ":/srv/fs/kyuuto/systems/${systemConfig.name}";
+      nfsUrl = "${cfg.nfs.host}:/srv/fs/kyuuto/systems/${systemConfig.name}";
       nfsOpts =
         [
           "sec=${cfg.nfs.security}"
@@ -100,6 +109,9 @@ in {
         fsType = "nfs";
         options = nfsOpts;
       };
+    };
+    systemd.services.systemd-remount-fs = mkIf (config.fileSystems."/".fsType == "nfs") {
+      unitConfig.ConditionPathExists = "/tmp/systemd-remount-fs-broken";
     };
   };
 }

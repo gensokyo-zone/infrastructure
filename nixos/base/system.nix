@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
-  inherit (lib.modules) mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
 in {
   hardware.enableRedistributableFirmware = mkDefault true;
   boot.zfs.package = mkDefault pkgs.zfs_unstable;
@@ -29,4 +29,8 @@ in {
     useTmpfs = mkAlmostOptionDefault true;
     tmpfsSize = mkAlmostOptionDefault "80%";
   };
+  system.switch.enableNg = mkIf (config.boot.supportedFilesystems.nfs or false) (
+    # XXX: workaround for nixos switch bug
+    mkAlmostOptionDefault false
+  );
 }

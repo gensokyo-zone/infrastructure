@@ -107,6 +107,10 @@ in {
         ];
         adminClients = [
           "@admin"
+          # TODO: "@personal-admin" host group too...
+          # shanghai.tail:
+          "fd7a:115c:a1e0::4e01:2d2c/128"
+          "100.107.45.44/32"
           # XXX: include tailscale addresses of trusted machines here too?
         ];
         tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
