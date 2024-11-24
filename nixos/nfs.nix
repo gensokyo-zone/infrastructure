@@ -101,6 +101,10 @@ in {
         trustedClients = [
           "@trusted"
         ];
+        adminClients = [
+          "@admin"
+          # XXX: include tailscale addresses of trusted machines here too?
+        ];
         tailClients = optionals config.services.tailscale.enable cidrForNetwork.tail.all;
         localClients = cidrForNetwork.allLan.all ++ flagSets.tailClients;
         allClients = flagSets.clientGroups ++ flagSets.trustedClients ++ flagSets.localClients;

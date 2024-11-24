@@ -10,6 +10,8 @@
   inherit (lib.modules) mkIf mkDefault mkMerge;
   cfg = config.gensokyo-zone.netboot;
   nfsEnabled = config.boot.initrd.supportedFilesystems.nfs or config.boot.initrd.supportedFilesystems.nfs4 or false;
+  defaultCacheTimeoutMax = 60 * 60; # 1h
+  defaultCacheTimeoutMin = 60; # 1m
 in {
   options.gensokyo-zone.netboot = with lib.types; {
     # TODO: default = true;
@@ -26,6 +28,11 @@ in {
         type = listOf str;
         default = [
           "nolock" # required in order to mount in initrd when statd daemon isn't running
+          "nocto"
+          "lazytime" "noatime"
+          "actimeo=${toString defaultCacheTimeoutMax}"
+          "acregmin=${toString defaultCacheTimeoutMin}"
+          "acdirmin=${toString defaultCacheTimeoutMin}"
         ];
       };
     };

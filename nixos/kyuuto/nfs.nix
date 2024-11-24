@@ -3,7 +3,9 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkMerge;
+  inherit (lib.attrsets) mapAttrs' mapAttrsToList nameValuePair;
+  inherit (lib.lists) concatLists;
   inherit (config) kyuuto;
   inherit (config.services.nfs.export) flagSets;
   nfsRoot = {
@@ -12,14 +14,53 @@
     media = "${nfsRoot}/kyuuto/media";
     data = "${nfsRoot}/kyuuto/data";
     systems = "${nfsRoot}/kyuuto/systems";
-    gengetsu = "${nfsRoot.systems}/gengetsu";
-    mugetsu = "${nfsRoot.systems}/mugetsu";
-    goliath = "${nfsRoot.systems}/goliath";
+  };
+  mkSystemExport = { name, fsid, machine, flags ? ["async"], machineFlags ? flagSets.metal }: {
+    flags = flagSets.common ++ ["fsid=${toString fsid}"] ++ flags;
+    clients = {
+      ${name} = {
+        inherit machine;
+        flags = machineFlags;
+      };
+      admin = {
+        machine = flagSets.adminClients;
+        flags = machineFlags;
+      };
+    };
+  };
+  mkSystemExports = name: { machine, fileSystems }: let
+    systemRoot = "${nfsRoot.systems}/${name}";
+    mapSystemExport = fsName: fs: nameValuePair "${systemRoot}/${fsName}" (mkSystemExport ({
+      inherit name machine;
+    } // fs));
+  in mapAttrs' mapSystemExport fileSystems;
+  exportedSystems = {
+    gengetsu = {
+      machine = flagSets.gengetsuClients;
+      fileSystems = {
+        root.fsid = 162;
+        boot.fsid = 163;
+      };
+    };
+    mugetsu = {
+      machine = flagSets.mugetsuClients;
+      fileSystems = {
+        root.fsid = 170;
+        boot.fsid = 171;
+      };
+    };
+    goliath = {
+      machine = flagSets.goliathClients;
+      fileSystems = {
+        root.fsid = 172;
+        boot.fsid = 173;
+      };
+    };
   };
 in {
   services.nfs = {
-    export = {
-      paths = {
+    export = let
+      exportPaths = {
         ${nfsRoot.media} = {
           flags = flagSets.common ++ ["fsid=128"] ++ flagSets.secip ++ ["rw"] ++ flagSets.anon_ro;
           clients = {
@@ -47,61 +88,13 @@ in {
             };
           };
         };
-        "${nfsRoot.gengetsu}/root" = {
-          flags = flagSets.common ++ ["fsid=162"] ++ ["async"];
-          clients = {
-            gengetsu = {
-              machine = flagSets.gengetsuClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
-        "${nfsRoot.gengetsu}/boot" = {
-          flags = flagSets.common ++ ["fsid=163"] ++ ["async"];
-          clients = {
-            gengetsu = {
-              machine = flagSets.gengetsuClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
-        "${nfsRoot.mugetsu}/root" = {
-          flags = flagSets.common ++ ["fsid=170"] ++ ["async"];
-          clients = {
-            mugetsu = {
-              machine = flagSets.mugetsuClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
-        "${nfsRoot.mugetsu}/boot" = {
-          flags = flagSets.common ++ ["fsid=171"] ++ ["async"];
-          clients = {
-            mugetsu = {
-              machine = flagSets.mugetsuClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
-        "${nfsRoot.goliath}/root" = {
-          flags = flagSets.common ++ ["fsid=172"] ++ ["async"];
-          clients = {
-            goliath = {
-              machine = flagSets.goliathClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
-        "${nfsRoot.goliath}/boot" = {
-          flags = flagSets.common ++ ["fsid=173"] ++ ["async"];
-          clients = {
-            goliath = {
-              machine = flagSets.goliathClients;
-              flags = flagSets.metal;
-            };
-          };
-        };
       };
+      systemPaths = mkMerge (mapAttrsToList mkSystemExports exportedSystems);
+    in {
+      paths = mkMerge [
+        exportPaths
+        systemPaths
+      ];
     };
   };
   systemd.mounts = let
@@ -112,52 +105,39 @@ in {
       "nfs-mountd.service"
     ];
     before = wantedBy;
-  in
-    mkIf config.services.nfs.server.enable [
+    mkMount = { what, where, ... }@args: {
+      inherit type options wantedBy before;
+    } // args;
+    mkSystemMount = { name, fsName }: let
+      systemRoot = "${nfsRoot.systems}/${name}";
+    in mkMount {
+      what = "${kyuuto.dataDir}/systems/${name}/fs/${fsName}";
+      where = "${systemRoot}/${fsName}";
+    };
+    mapSystemMounts = name: { fileSystems, ... }: let
+      mapFileSystem = fsName: fs: mkSystemMount { inherit name fsName; };
+    in mapAttrsToList mapFileSystem fileSystems;
+    systemMounts = let
+      systemMounts = mapAttrsToList mapSystemMounts exportedSystems;
+    in concatLists systemMounts;
+    exportMounts = map mkMount [
       {
-        inherit type options wantedBy before;
         what = kyuuto.mountDir;
         where = nfsRoot.media;
       }
       {
-        inherit type options wantedBy before;
         what = kyuuto.dataDir;
         where = nfsRoot.data;
       }
       {
-        inherit type options wantedBy before;
         what = kyuuto.transferDir;
         where = nfsRoot.transfer;
       }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/gengetsu/fs/root";
-        where = "${nfsRoot.gengetsu}/root";
-      }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/gengetsu/fs/boot";
-        where = "${nfsRoot.gengetsu}/boot";
-      }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/mugetsu/fs/root";
-        where = "${nfsRoot.mugetsu}/root";
-      }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/mugetsu/fs/boot";
-        where = "${nfsRoot.mugetsu}/boot";
-      }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/goliath/fs/root";
-        where = "${nfsRoot.goliath}/root";
-      }
-      {
-        inherit type options wantedBy before;
-        what = "${kyuuto.dataDir}/systems/goliath/fs/boot";
-        where = "${nfsRoot.goliath}/boot";
-      }
     ];
+    pathMounts = mkMerge [
+      exportMounts
+      systemMounts
+    ];
+  in
+    mkIf config.services.nfs.server.enable pathMounts;
 }

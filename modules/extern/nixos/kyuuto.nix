@@ -104,13 +104,19 @@
       ];
       nfs.fstabOptions = [
         "noauto"
+        "lazytime" "noatime"
         #"nfsvers=4"
         "soft"
+        "nocto"
         "retrans=2"
         "timeo=60"
+        "actimeo=300"
+        "acregmin=60"
+        "acdirmin=60"
       ];
       smb.fstabOptions = [
         "noauto"
+        "lazytime" "noatime"
         (mkIf (config.smb.user != null) "user=${config.smb.user}")
       ];
       automount.fstabOptions = [
