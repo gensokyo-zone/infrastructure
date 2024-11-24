@@ -17,7 +17,8 @@ in {
       nixpkgs = import gensokyo-zone.inputs.nixpkgs-2405 {
         inherit (pkgs) system config;
       };
-    in mkDefault nixpkgs.mongodb-5_0;
+    in
+      mkDefault nixpkgs.mongodb-5_0;
   };
 
   networking.firewall = mkIf cfg.enable {

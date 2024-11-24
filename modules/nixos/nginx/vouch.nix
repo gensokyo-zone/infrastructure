@@ -202,13 +202,14 @@
           vouch.requireAuth = mkAlmostOptionDefault true;
         };
         ${cfg.auth.errorLocation} = let
-          errorLocation = { xvars, ... }: let
+          errorLocation = {xvars, ...}: let
             loginUrl = "$vouch_url/login?url=${xvars.get.scheme}://${xvars.get.host}$request_uri&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err";
           in {
             xvars.enable = true;
             return = mkDefault "303 '${loginUrl}'";
           };
-        in mkIf (cfg.auth.errorLocation != null) errorLocation;
+        in
+          mkIf (cfg.auth.errorLocation != null) errorLocation;
         ${cfg.auth.requestLocation} = {
           config,
           xvars,

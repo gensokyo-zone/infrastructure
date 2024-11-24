@@ -210,10 +210,11 @@ in {
           name = "Gatus Logs";
           link = "${grafana.link}/d/ae4jrpnh74ohsa/gatus";
         };
-      in mkMerge [
-        [grafana prometheus]
-        (mkAfter [gatusLogs])
-      ];
+      in
+        mkMerge [
+          [grafana prometheus]
+          (mkAfter [gatusLogs])
+        ];
 
       # Prometheus metrics...!
       metrics = true;

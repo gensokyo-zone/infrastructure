@@ -242,9 +242,11 @@ in {
               ]);
           });
           env-canada = super.env-canada.overridePythonAttrs (old: {
-            dependencies = old.dependencies ++ [
-              self.defusedxml
-            ];
+            dependencies =
+              old.dependencies
+              ++ [
+                self.defusedxml
+              ];
           });
         };
       };

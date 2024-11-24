@@ -11,7 +11,11 @@
   inherit (lib) types;
   cfg = config.services.gatus;
 
-  endpointModule = {name, lib, ...}: let
+  endpointModule = {
+    name,
+    lib,
+    ...
+  }: let
     inherit (lib) types;
     inherit (lib.options) mkOption mkEnableOption;
     inherit (lib.modules) mkOptionDefault;
@@ -201,34 +205,37 @@
   };
 in {
   options.services.gatus = let
-    settingsModule = { ... }: {
+    settingsModule = {...}: {
       options = with types; {
-        /*endpoints = mkOption {
+        /*
+          endpoints = mkOption {
           type = listOf unspecified;
           #type = attrsOf (submodule endpointModule);
           #default = {};
-        };*/
+        };
+        */
       };
     };
-  in with types; {
-    hardening = {
-      enable = mkEnableOption "sandbox and harden service";
-      icmp.enable = mkEnableOption "needed for ICMP probes";
-    };
-    user = mkOption {
-      type = nullOr str;
-      default = null;
-    };
+  in
+    with types; {
+      hardening = {
+        enable = mkEnableOption "sandbox and harden service";
+        icmp.enable = mkEnableOption "needed for ICMP probes";
+      };
+      user = mkOption {
+        type = nullOr str;
+        default = null;
+      };
 
-    endpoints = mkOption {
-      type = attrsOf (submodule endpointModule);
-      default = {};
-    };
+      endpoints = mkOption {
+        type = attrsOf (submodule endpointModule);
+        default = {};
+      };
 
-    settings = mkOption {
-      type = submodule settingsModule;
+      settings = mkOption {
+        type = submodule settingsModule;
+      };
     };
-  };
 
   config = let
     conf.assertions = let
@@ -278,8 +285,9 @@ in {
       RestrictSUIDSGID = true;
       UMask = "0077";
     };
-  in mkMerge [
-    (mkIf cfg.enable conf)
-    serviceConf
-  ];
+  in
+    mkMerge [
+      (mkIf cfg.enable conf)
+      serviceConf
+    ];
 }

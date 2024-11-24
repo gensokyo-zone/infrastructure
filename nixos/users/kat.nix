@@ -18,7 +18,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII74JrgGsDQ6r7tD7+k3ykxXV7DpeeFRscPMxrBsDPhz kat@goliath"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDkeBFF4xxZgeURLzNHcvUFxImmkQ3pxXtpj3mtSyHXB kat@koishi"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIC3RkyoQ74bb4NGv1H1bZAz5ROO0Zr6FT8TYpowgGUp kat@chen"
-      ];
+    ];
   };
   users.groups.kat = {name, ...}: {
     gid = config.users.users.${name}.uid;
