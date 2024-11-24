@@ -104,7 +104,8 @@
       ];
       nfs.fstabOptions = [
         "noauto"
-        "lazytime" "noatime"
+        "lazytime"
+        "noatime"
         #"nfsvers=4"
         "soft"
         "nocto"
@@ -116,7 +117,8 @@
       ];
       smb.fstabOptions = [
         "noauto"
-        "lazytime" "noatime"
+        "lazytime"
+        "noatime"
         (mkIf (config.smb.user != null) "user=${config.smb.user}")
       ];
       automount.fstabOptions = [
@@ -129,28 +131,30 @@
           cfg,
           nfsSubpath,
           smbSubpath,
-        }: mkIf cfg.enable {
-          device = mkMerge [
-            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/${nfsSubpath}")
-            (mkIf config.smb.enable ''\\smb.${config.domain}\${smbSubpath}'')
-          ];
-          fsType = mkMerge [
-            (mkIf config.nfs.enable "nfs4")
-            (mkIf config.smb.enable "smb3")
-          ];
-          options = mkMerge (setFilesystemOptions
-            ++ [
-              (mkIf cfg.krb5.enable [
-                "sec=krb5"
-                (mkIf config.nfs.enable "nfsvers=4")
-              ])
-            ]);
-        };
+        }:
+          mkIf cfg.enable {
+            device = mkMerge [
+              (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/${nfsSubpath}")
+              (mkIf config.smb.enable ''\\smb.${config.domain}\${smbSubpath}'')
+            ];
+            fsType = mkMerge [
+              (mkIf config.nfs.enable "nfs4")
+              (mkIf config.smb.enable "smb3")
+            ];
+            options = mkMerge (setFilesystemOptions
+              ++ [
+                (mkIf cfg.krb5.enable [
+                  "sec=krb5"
+                  (mkIf config.nfs.enable "nfsvers=4")
+                ])
+              ]);
+          };
       in {
         "/mnt/kyuuto-media" = mkKyuutoFs {
           cfg = config.media;
           nfsSubpath = "kyuuto/media";
-          smbSubpath = if config.smb.user != null && access.local.enable
+          smbSubpath =
+            if config.smb.user != null && access.local.enable
             then "kyuuto-media"
             else if config.smb.user != null
             then "kyuuto-library-net"

@@ -1,9 +1,11 @@
 {
   config,
+  gensokyo-zone,
   lib,
   pkgs,
   ...
 }: let
+  inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.modules) mkDefault;
 in {
   hardware.enableRedistributableFirmware = mkDefault true;
@@ -23,7 +25,8 @@ in {
   services.journald.extraConfig = "SystemMaxUse=512M";
   users.mutableUsers = mkDefault false;
   boot.tmp = {
-    useTmpfs = mkDefault true;
-    tmpfsSize = mkDefault "80%";
+    cleanOnBoot = mkAlmostOptionDefault true;
+    useTmpfs = mkAlmostOptionDefault true;
+    tmpfsSize = mkAlmostOptionDefault "80%";
   };
 }

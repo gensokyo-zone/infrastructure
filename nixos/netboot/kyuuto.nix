@@ -29,7 +29,8 @@ in {
         default = [
           "nolock" # required in order to mount in initrd when statd daemon isn't running
           "nocto"
-          "lazytime" "noatime"
+          "lazytime"
+          "noatime"
           "actimeo=${toString defaultCacheTimeoutMax}"
           "acregmin=${toString defaultCacheTimeoutMin}"
           "acdirmin=${toString defaultCacheTimeoutMin}"
@@ -47,7 +48,8 @@ in {
           };
         };
         availableKernelModules = mkIf nfsEnabled [
-          "nfsv4" "nfsv3"
+          "nfsv4"
+          "nfsv3"
         ];
         extraUtilsCommands = mkIf (nfsEnabled && !config.boot.initrd.systemd.enable) ''
           copy_bin_and_libs ${cfg.nfs.package}/sbin/mount.nfs
@@ -60,7 +62,7 @@ in {
             (mkIf config.boot.initrd.network.enable [
               pkgs.iproute2
             ])
-            [ pkgs.util-linux pkgs.gnugrep ]
+            [pkgs.util-linux pkgs.gnugrep]
           ];
           network = mkIf config.networking.useNetworkd {
             enable = mkDefault true;
@@ -69,20 +71,24 @@ in {
       };
       loader = {
         systemd-boot.enable = true;
-        efi.canTouchEfiVariables = false;
+        efi.canTouchEfiVariables = mkIf cfg.boot.enable false;
       };
     };
     fileSystems = let
-      nfsUrl = access.proxyUrlFor {
-        serviceName = "nfs";
-        scheme = "";
-        defaultPort = 2049;
-        # XXX: consider using dns hostname here instead? (does this require the dns_resolver kernel module?)
-        getAddressFor = "getAddress4For";
-      } + ":/srv/fs/kyuuto/systems/${systemConfig.name}";
-      nfsOpts = [
-        "sec=${cfg.nfs.security}"
-      ] ++ cfg.nfs.flags;
+      nfsUrl =
+        access.proxyUrlFor {
+          serviceName = "nfs";
+          scheme = "";
+          defaultPort = 2049;
+          # XXX: consider using dns hostname here instead? (does this require the dns_resolver kernel module?)
+          getAddressFor = "getAddress4For";
+        }
+        + ":/srv/fs/kyuuto/systems/${systemConfig.name}";
+      nfsOpts =
+        [
+          "sec=${cfg.nfs.security}"
+        ]
+        ++ cfg.nfs.flags;
     in {
       "/" = {
         device = "${nfsUrl}/root";

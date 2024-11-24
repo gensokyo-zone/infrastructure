@@ -6,12 +6,10 @@ _: {
   modules = [
     ./nixos.nix
   ];
-  deploy.hostname = "10.1.1.204";
-  deploy.sshOpts = [];
-  #exports = {
-  #services = {
-  #};
-  #};
+  exports = {
+    services = {
+    };
+  };
   network.networks = {
     local = {
       macAddress = "54:48:10:f3:fe:aa";

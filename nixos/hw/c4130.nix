@@ -4,16 +4,14 @@
   lib,
   ...
 }: let
-  inherit (lib.modules) mkIf mkMerge mkDefault;
+  inherit (lib.modules) mkIf mkMerge;
 in {
   imports = [
+    ./headless.nix
     ./metal.nix
   ];
 
   boot = {
-    loader = {
-      systemd-boot.enable = mkDefault true;
-    };
     initrd = {
       systemd.network = mkIf config.networking.useNetworkd {
         networks."40-eno1" = {

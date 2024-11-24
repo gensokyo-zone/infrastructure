@@ -15,7 +15,13 @@
     data = "${nfsRoot}/kyuuto/data";
     systems = "${nfsRoot}/kyuuto/systems";
   };
-  mkSystemExport = { name, fsid, machine, flags ? ["async"], machineFlags ? flagSets.metal }: {
+  mkSystemExport = {
+    name,
+    fsid,
+    machine,
+    flags ? ["async"],
+    machineFlags ? flagSets.metal,
+  }: {
     flags = flagSets.common ++ ["fsid=${toString fsid}"] ++ flags;
     clients = {
       ${name} = {
@@ -28,12 +34,18 @@
       };
     };
   };
-  mkSystemExports = name: { machine, fileSystems }: let
+  mkSystemExports = name: {
+    machine,
+    fileSystems,
+  }: let
     systemRoot = "${nfsRoot.systems}/${name}";
-    mapSystemExport = fsName: fs: nameValuePair "${systemRoot}/${fsName}" (mkSystemExport ({
-      inherit name machine;
-    } // fs));
-  in mapAttrs' mapSystemExport fileSystems;
+    mapSystemExport = fsName: fs:
+      nameValuePair "${systemRoot}/${fsName}" (mkSystemExport ({
+          inherit name machine;
+        }
+        // fs));
+  in
+    mapAttrs' mapSystemExport fileSystems;
   exportedSystems = {
     gengetsu = {
       machine = flagSets.gengetsuClients;
@@ -105,21 +117,33 @@ in {
       "nfs-mountd.service"
     ];
     before = wantedBy;
-    mkMount = { what, where, ... }@args: {
-      inherit type options wantedBy before;
-    } // args;
-    mkSystemMount = { name, fsName }: let
+    mkMount = {
+      what,
+      where,
+      ...
+    } @ args:
+      {
+        inherit type options wantedBy before;
+      }
+      // args;
+    mkSystemMount = {
+      name,
+      fsName,
+    }: let
       systemRoot = "${nfsRoot.systems}/${name}";
-    in mkMount {
-      what = "${kyuuto.dataDir}/systems/${name}/fs/${fsName}";
-      where = "${systemRoot}/${fsName}";
-    };
-    mapSystemMounts = name: { fileSystems, ... }: let
-      mapFileSystem = fsName: fs: mkSystemMount { inherit name fsName; };
-    in mapAttrsToList mapFileSystem fileSystems;
+    in
+      mkMount {
+        what = "${kyuuto.dataDir}/systems/${name}/fs/${fsName}";
+        where = "${systemRoot}/${fsName}";
+      };
+    mapSystemMounts = name: {fileSystems, ...}: let
+      mapFileSystem = fsName: fs: mkSystemMount {inherit name fsName;};
+    in
+      mapAttrsToList mapFileSystem fileSystems;
     systemMounts = let
       systemMounts = mapAttrsToList mapSystemMounts exportedSystems;
-    in concatLists systemMounts;
+    in
+      concatLists systemMounts;
     exportMounts = map mkMount [
       {
         what = kyuuto.mountDir;

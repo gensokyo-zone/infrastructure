@@ -21,11 +21,6 @@ in {
     ./hardware-configuration.nix
   ];
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  networking.networkmanager.enable = true;
-
   services.xserver = {
     enable = true;
     displayManager.lightdm.enable = true;

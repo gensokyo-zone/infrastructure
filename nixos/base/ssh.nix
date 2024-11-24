@@ -1,10 +1,11 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
-  inherit (lib.modules) mkDefault;
+  inherit (lib.modules) mkIf mkDefault;
+  inherit (lib.lists) head;
+  cfg = config.services.openssh;
   publicPort = 62954;
 in {
   /*
@@ -33,4 +34,8 @@ in {
   };
 
   programs.mosh.enable = true;
+
+  boot.initrd.network.ssh = mkIf cfg.enable {
+    port = mkDefault (head cfg.ports);
+  };
 }

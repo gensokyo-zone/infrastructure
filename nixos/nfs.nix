@@ -63,9 +63,11 @@ in {
             optional (local.enable or false && local.address4 != null) "${local.address4}/32"
             ++ optional (local.enable or false && local.address6 != null) "${local.address6}/128";
           allowed =
-            if addrs != [] then addrs
+            if addrs != []
+            then addrs
             else lib.warn "${name} NFS: falling back to all LAN" cidrForNetwork.allLan.all;
-        in allowed;
+        in
+          allowed;
         mkC4130Client = name: mkMetalClient name ++ mkMetalClient "idrac-${name}";
       in {
         common = [
@@ -91,7 +93,9 @@ in {
           "ro"
         ];
         metal = [
-          "sec=sys" "no_root_squash" "rw"
+          "sec=sys"
+          "no_root_squash"
+          "rw"
         ];
         # client machines
         clientGroups = [

@@ -2,12 +2,19 @@
   config,
   pkgs,
   lib,
+  meta,
   ...
 }: let
   inherit (lib.modules) mkIf;
   opengl32 = false;
   opencl = false;
 in {
+  imports = let
+    inherit (meta) nixos;
+  in [
+    nixos.hw.metal
+  ];
+
   boot = {
     initrd.availableKernelModules = ["xhci_pci" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc"];
     kernelModules = ["kvm-intel"];
@@ -41,4 +48,6 @@ in {
       ];
     };
   };
+
+  networking.networkmanager.enable = true;
 }
