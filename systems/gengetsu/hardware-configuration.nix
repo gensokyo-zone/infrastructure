@@ -25,7 +25,7 @@
 
   networking.useNetworkd = true;
   systemd.network = {
-    networks.eno1 = {
+    networks."10-eno1" = {
       inherit (config.systemd.network.links."10-eno1") matchConfig;
       address = ["10.1.1.61/24"];
       gateway = ["10.1.1.1"];

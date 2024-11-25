@@ -18,9 +18,9 @@ in {
         inherit (config.systemd) network;
       in mkIf config.networking.useNetworkd {
         networks = {
-          eno1 = {
+          "10-eno1" = {
             inherit (config.boot.initrd.systemd.network.links."10-eno1") matchConfig;
-            inherit (network.networks.eno1) address gateway DHCP networkConfig linkConfig;
+            inherit (network.networks."10-eno1") address gateway DHCP networkConfig linkConfig;
           };
         };
         links."10-eno1" = {
@@ -40,7 +40,7 @@ in {
     inherit (config.systemd) network;
   in {
     networks = {
-      br = mkIf enableBridge {
+      "10-br" = mkIf enableBridge {
         matchConfig.Name = "br";
         DHCP = "no";
         linkConfig = {
@@ -52,7 +52,7 @@ in {
           MulticastDNS = true;
         };
       };
-      eno2 = {
+      "10-eno2" = {
         inherit (network.links."10-eno2") matchConfig;
         bridge = mkIf enableBridge ["br"];
         linkConfig = {
