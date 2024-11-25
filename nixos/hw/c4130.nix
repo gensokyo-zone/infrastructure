@@ -70,6 +70,18 @@ in {
         };
       };
     };
+    links = {
+      "10-eno1" = {
+        linkConfig = {
+          NamePolicy = "onboard";
+        };
+      };
+      "10-eno2" = {
+        linkConfig = {
+          NamePolicy = "onboard";
+        };
+      };
+    };
   };
 
   environment.systemPackages = [
