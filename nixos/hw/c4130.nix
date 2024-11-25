@@ -5,6 +5,7 @@
   ...
 }: let
   inherit (lib.modules) mkIf mkMerge;
+  enableBridge = true;
 in {
   imports = [
     ./headless.nix
@@ -13,14 +14,18 @@ in {
 
   boot = {
     initrd = {
-      systemd.network = mkIf config.networking.useNetworkd {
-        networks."40-eno1" = {
-          inherit (config.boot.initrd.systemd.network.links.eno1) matchConfig;
-          inherit (config.systemd.network.networks."40-eno1") address gateway DHCP networkConfig linkConfig;
+      systemd.network = let
+        inherit (config.systemd) network;
+      in mkIf config.networking.useNetworkd {
+        networks = {
+          eno1 = {
+            inherit (config.boot.initrd.systemd.network.links."10-eno1") matchConfig;
+            inherit (network.networks.eno1) address gateway DHCP networkConfig linkConfig;
+          };
         };
-        links.eno1 = {
+        links."10-eno1" = {
           matchConfig = {
-            inherit (config.systemd.network.links.eno1.matchConfig) Type MACAddress;
+            inherit (network.links."10-eno1".matchConfig) Type MACAddress;
           };
         };
       };
@@ -28,6 +33,42 @@ in {
         ["ahci" "xhci_pci" "ehci_pci" "usbhid" "usb_storage" "sd_mod" "sr_mod"]
         (mkIf config.boot.initrd.network.enable ["igb"])
       ];
+    };
+  };
+
+  systemd.network = let
+    inherit (config.systemd) network;
+  in {
+    networks = {
+      br = mkIf enableBridge {
+        matchConfig.Name = "br";
+        DHCP = "no";
+        linkConfig = {
+          RequiredForOnline = false;
+          Multicast = true;
+        };
+        networkConfig = {
+          IPv6AcceptRA = false;
+          MulticastDNS = true;
+        };
+      };
+      eno2 = {
+        inherit (network.links."10-eno2") matchConfig;
+        bridge = mkIf enableBridge ["br"];
+        linkConfig = {
+          RequiredForOnline = false;
+          #ActivationPolicy = mkIf (!enableBridge) "manual";
+        };
+      };
+    };
+    netdevs = {
+      br = mkIf enableBridge {
+        netdevConfig = {
+          Name = "br";
+          Kind = "bridge";
+          inherit (network.links."10-eno2".matchConfig) MACAddress;
+        };
+      };
     };
   };
 

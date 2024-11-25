@@ -25,8 +25,8 @@
 
   networking.useNetworkd = true;
   systemd.network = {
-    networks."40-eno1" = {
-      inherit (config.systemd.network.links.eno1) matchConfig;
+    networks.eno1 = {
+      inherit (config.systemd.network.links."10-eno1") matchConfig;
       address = ["10.1.1.61/24"];
       gateway = ["10.1.1.1"];
       DHCP = "no";
@@ -37,10 +37,18 @@
         Multicast = true;
       };
     };
-    links.eno1 = {
-      matchConfig = {
-        Type = "ether";
-        MACAddress = "54:48:10:f3:fe:aa";
+    links = {
+      "10-eno1" = {
+        matchConfig = {
+          Type = "ether";
+          MACAddress = "54:48:10:f3:fe:aa";
+        };
+      };
+      "10-eno2" = {
+        matchConfig = {
+          Type = "ether";
+          MACAddress = "54:48:10:f3:fe:ac";
+        };
       };
     };
   };
