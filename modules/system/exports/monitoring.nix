@@ -233,10 +233,10 @@ in
         name = "node";
         port = 9091;
       }
-      {
+      /*{
         name = "unifi";
         port = 9130;
-      }
+      }*/
     ];
   in {
     options.exports = with lib.types; {
