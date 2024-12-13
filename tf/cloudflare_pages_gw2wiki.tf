@@ -1,4 +1,4 @@
-resource "cloudflare_pages_project" "wiki" {
+resource "cloudflare_pages_project" "gw2gwiki" {
   account_id        = var.cloudflare_account_id
   name              = "gw2wiki"
   production_branch = "v4"
@@ -27,7 +27,7 @@ resource "cloudflare_pages_project" "wiki" {
   }
 }
 
-resource "cloudflare_pages_domain" "wiki" {
+resource "cloudflare_pages_domain" "gw2wiki" {
   account_id   = var.cloudflare_account_id
   project_name = "gw2wiki"
   domain       = "gw2.gensokyo.zone"
@@ -37,7 +37,7 @@ resource "cloudflare_pages_domain" "wiki" {
   ]
 }
 
-resource "cloudflare_record" "wiki" {
+resource "cloudflare_record" "gw2wiki" {
   zone_id = cloudflare_zone.gensokyo-zone_zone.id
   name    = "gw2"
   proxied = false
