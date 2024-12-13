@@ -1,4 +1,4 @@
-resource "cloudflare_pages_project" "gw2gwiki" {
+resource "cloudflare_pages_project" "gw2wiki" {
   account_id        = var.cloudflare_account_id
   name              = "gw2wiki"
   production_branch = "v4"
