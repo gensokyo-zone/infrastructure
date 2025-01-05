@@ -41,9 +41,6 @@
           crypttab
           mutable-state
           common-root
-          pulseaudio
-          wireplumber
-          alsa
           bindings
           matrix-appservices
           matrix-synapse-appservices
