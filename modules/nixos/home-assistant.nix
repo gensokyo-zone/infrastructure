@@ -214,6 +214,7 @@ in {
     ];
     package = let
       inherit (cfg.package) python;
+      needsPython312pin = cfg.grocy.enable && lib.versionAtLeast pkgs.home-assistant.python.version "3.13";
       # https://github.com/pysnmp/pysnmp/issues/51
       needsPyasn1pin =
         if lib.versionOlder python.pkgs.pysnmplib.version "6.0"
@@ -221,6 +222,7 @@ in {
         else lib.warn "pyasn1 pin likely no longer needed" false;
       pyasn1prefix = "${python.pkgs.pysnmp-pyasn1}/${python.sitePackages}";
       home-assistant = pkgs.home-assistant.override {
+        ${if needsPython312pin then "python313" else null} = pkgs.python312;
         packageOverrides = self: super: {
           brother = super.brother.overridePythonAttrs (old: {
             dontCheckRuntimeDeps =
@@ -240,13 +242,6 @@ in {
               ++ [
                 "test_idle_timeout"
               ]);
-          });
-          env-canada = super.env-canada.overridePythonAttrs (old: {
-            dependencies =
-              old.dependencies
-              ++ [
-                self.defusedxml
-              ];
           });
         };
       };
