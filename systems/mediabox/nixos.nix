@@ -54,9 +54,9 @@ in {
     nixos.invidious
 
     # accelerated
-    nixos.wyoming.whisper
-    nixos.wyoming.piper
-    nixos.wyoming.openwakeword
+    #nixos.wyoming.whisper
+    #nixos.wyoming.piper
+    #nixos.wyoming.openwakeword
 
     # yarr harr fiddle dee dee >w<
     nixos.radarr
