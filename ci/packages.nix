@@ -20,6 +20,9 @@ in {
       barcodebuddy-scanner
       barcodebuddy-scanner-python
     ];
+    grocy.inputs = with packages.x86_64-linux; [
+      pygrocy
+    ];
     samba.inputs = with packages.x86_64-linux; [
       legacyPackages.x86_64-linux.pkgs.samba
       samba-ldap

@@ -4,7 +4,7 @@
   fetchFromGitHub,
   backports-zoneinfo,
   deprecation,
-  pydantic,
+  pydantic_1 ? pydantic, pydantic ? null,
   requests,
   responses,
   pre-commit,
@@ -40,7 +40,7 @@ in
       [
         requests
         deprecation
-        pydantic
+        pydantic_1
       ]
       ++ optional (pythonOlder "3.9") backports-zoneinfo;
 

@@ -57,6 +57,8 @@
       systemd2mqtt
       ;
 
+    pygrocy = pkgs.python3Packages.callPackage ./grocy/pygrocy.nix { };
+
     nf-setup-node = let
       reisen = ../systems/reisen;
       inherit (inputs.self.lib.lib) userIs;
