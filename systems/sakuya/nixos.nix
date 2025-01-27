@@ -10,6 +10,7 @@
   in [
     (modulesPath + "/installer/sd-card/sd-image.nix")
     nixos.base
+    nixos.hw.sbc
     nixos.sops
     nixos.tailscale
     nixos.klipper

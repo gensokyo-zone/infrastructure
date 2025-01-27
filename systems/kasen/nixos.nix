@@ -10,6 +10,7 @@ in {
     inherit (meta) nixos;
   in [
     nixos.sops
+    nixos.hw.sbc
     nixos.base
     nixos.tailscale
     nixos.nginx
