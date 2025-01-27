@@ -3,7 +3,9 @@
   config,
   lib,
   ...
-}: {
+}: let
+  inherit (lib.modules) mkIf;
+in {
   imports = let
     inherit (meta) nixos;
   in [
@@ -12,12 +14,14 @@
     nixos.tailscale
     nixos.nginx
     nixos.openwebrx
+    nixos.rtl_tcp
   ];
 
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
 
   hardware.rtl-sdr.enable = true;
+  services.openwebrx.hardwareDev = mkIf config.services.rtl_tcp.enable null;
 
   sops.defaultSopsFile = ./secrets.yaml;
 

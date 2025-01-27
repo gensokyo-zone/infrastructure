@@ -3,6 +3,7 @@ locals {
   tailscale_tag_genso     = "tag:gensokyo"
   tailscale_tag_reisen    = "tag:reisen"
   tailscale_tag_minecraft = "tag:minecraft"
+  tailscale_tag_rtl       = "tag:rtl"
 
   tailscale_tag_arc        = "tag:arc"
   tailscale_tag_arc_deploy = "tag:arc-deploy"
@@ -29,6 +30,7 @@ resource "tailscale_acl" "tailnet" {
       "${local.tailscale_tag_reisen}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
       "${local.tailscale_tag_genso}" : [local.tailscale_group_admin, local.tailscale_tag_arc_deploy, local.tailscale_tag_kat_deploy],
       "${local.tailscale_tag_minecraft}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
+      "${local.tailscale_tag_rtl}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
       "${local.tailscale_tag_arc}" : [local.tailscale_user_arc, local.tailscale_tag_arc_deploy],
       "${local.tailscale_tag_arc_deploy}" : [local.tailscale_user_arc],
       "${local.tailscale_tag_kat}" : [local.tailscale_user_kat, local.tailscale_tag_kat_deploy],
@@ -58,6 +60,14 @@ resource "tailscale_acl" "tailnet" {
         dst = [
           "autogroup:self:*",
           "${local.tailscale_tag_minecraft}:19132,19133,25565",
+        ]
+      },
+      {
+        action = "accept"
+        src    = ["*"]
+        dst = [
+          "autogroup:self:*",
+          "${local.tailscale_tag_rtl}:1234",
         ]
       },
       {

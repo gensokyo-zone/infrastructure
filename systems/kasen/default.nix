@@ -13,6 +13,7 @@ _: {
       tailscale.enable = true;
       nginx.enable = true;
       openwebrx.enable = true;
+      rtl_tcp.enable = true;
     };
   };
   network.networks = {
