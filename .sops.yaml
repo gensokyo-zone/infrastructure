@@ -17,7 +17,7 @@ keys:
 - &logistics_osh age1tkkau8vk5h9dh3kemash4eghn7lk84j0hhpmvvf7j6phgcsm9vmsphv0py
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
-- &sakuya_osh age1ehdj6hghtr8sf5s5c03rru4y3a02nwrt694e36tjnd6g7eq4l43qfradn6
+- &sakuya_osh age183aj80z0d66fzemlqa8y32rayzsmpf5vugummmldt4nn5s8vjq0sua5dgr
 - &minecraft_osh age16yjxkz4pzuu5qqenmyh9ecwmqkar6ehclvss7wx7mesdntwwy9ys6e7m3c
 creation_rules:
 - path_regex: 'nixos/secrets/.+\.yaml$'

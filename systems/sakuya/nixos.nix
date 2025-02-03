@@ -43,7 +43,7 @@
     ubootProcessed = ubootPrepackagedARM;
   in {
     postBuildCommands = ''
-      dd if=${ubootProcessed} of=$img bs=8k seek=1
+      dd conv=notrunc if=${ubootProcessed} of=$img bs=8k seek=1
     '';
     # taken from sd-image-aarch64.nix
     populateFirmwareCommands = let
