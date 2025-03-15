@@ -1,8 +1,13 @@
 {
   meta,
   config,
+  systemConfig,
+  lib,
   ...
-}: {
+}: let
+  inherit (lib.modules) mkIf mkForce;
+  isOffline = !systemConfig.access.online.available;
+in {
   imports = let
     inherit (meta) nixos;
   in [
@@ -23,4 +28,9 @@
   };
 
   system.stateVersion = "23.11";
+
+  systemd = mkIf isOffline {
+    services.minecraft-java-server.wantedBy = mkForce [];
+    sockets.minecraft-java-server.wantedBy = mkForce [];
+  };
 }

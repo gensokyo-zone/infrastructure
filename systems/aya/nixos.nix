@@ -1,4 +1,12 @@
-{meta, ...}: {
+{
+  meta,
+  systemConfig,
+  lib,
+  ...
+}: let
+  inherit (lib.modules) mkIf mkForce;
+  isOffline = !systemConfig.access.online.available;
+in {
   imports = let
     inherit (meta) nixos;
   in [
@@ -18,6 +26,7 @@
   };
 
   services.github-runner-zone = {
+    enable = mkIf isOffline false;
     count = 32;
     networkNamespace.name = "ns1";
   };
@@ -40,4 +49,8 @@
   sops.defaultSopsFile = ./secrets.yaml;
 
   system.stateVersion = "23.11";
+
+  systemd.services.minecraft-bedrock-server = mkIf isOffline {
+    wantedBy = mkForce [];
+  };
 }

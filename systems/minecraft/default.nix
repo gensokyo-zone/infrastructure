@@ -7,6 +7,10 @@ _: {
   modules = [
     ./nixos.nix
   ];
+  access.online = {
+    # temporarily offline for server migration
+    available = false;
+  };
   exports = {
     services = {
       tailscale.enable = true;
