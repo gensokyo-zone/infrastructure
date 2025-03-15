@@ -99,7 +99,7 @@ in {
       };
     };
 
-    services.github-runners = genZoneAttrs cfg.keyPrefix (i:
+    services.github-runners = mkIf cfg.enable (genZoneAttrs cfg.keyPrefix (i:
       mkMerge [
         (unmerged.merge cfg.runnerSettings)
         {
@@ -108,7 +108,7 @@ in {
             mkDefault "${cfg.userPrefix}${toString i}"
           );
         }
-      ]);
+      ]));
 
     systemd = mkIf cfg.enable {
       services.nix-daemon = mkIf cfg.enable {
