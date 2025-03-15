@@ -25,6 +25,12 @@ in {
           http_listen_port = mkOptionDefault 9093;
           grpc_listen_port = mkOptionDefault 0;
         };
+        compactor = {
+          working_directory = mkOptionDefault "${cfg.dataDir}/retention";
+          retention_enabled = mkOptionDefault true;
+          retention_delete_delay = mkOptionDefault "12h";
+          delete_request_store = mkOptionDefault "filesystem";
+        };
         limits_config = mapOptionDefaults {
           ingestion_rate_mb = 256;
           ingestion_burst_size_mb = 512;
@@ -37,6 +43,7 @@ in {
           per_stream_rate_limit_burst = "256MB";
           reject_old_samples = true;
           reject_old_samples_max_age = "${toString (24 * 9)}h";
+          retention_period = "360h";
         };
         # https://grafana.com/docs/loki/latest/configure/examples/configuration-examples/#1-local-configuration-exampleyaml
         auth_enabled = mkOptionDefault false;
