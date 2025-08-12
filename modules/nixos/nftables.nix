@@ -5,7 +5,7 @@
 }: let
   inherit (lib) types;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf;
+  inherit (lib.modules) mkIf mkMerge;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) optionalString concatStringsSep concatMapStringsSep;
   inherit (lib.lists) optionals;
@@ -161,6 +161,17 @@ in {
     networking.firewall.enable = false;
     networking.nftables = {
       inherit ruleset;
+      flushRuleset = false;
+      extraDeletions = mkMerge [
+        ''
+          table inet filter;
+          delete table inet filter;
+        ''
+        (mkIf doDocker ''
+          table ip nat;
+          delete table ip nat;
+        '')
+      ];
     };
 
     virtualisation.docker = mkIf doDocker {
