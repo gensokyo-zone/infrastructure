@@ -29,7 +29,8 @@
     };
     tree = {
       url = "github:kittywitch/tree";
-      inputs.std.follows = "std-fl/nix-std";
+      inputs.std.follows = "std-fl";
+      inputs.nix-std.follows = "std-fl/nix-std";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     deploy-rs = {
