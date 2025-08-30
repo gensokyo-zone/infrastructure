@@ -12,6 +12,13 @@ in {
       metricsPort = mkDefault 3011;
       metricsBind = "[::]";
     };
+    users = mkIf cfg.enable {
+      users.cloudflared = {
+        group = mkDefault "cloudflared";
+        isSystemUser = true;
+      };
+      groups.cloudflared = {};
+    };
     networking.firewall = mkIf cfg.enable {
       interfaces.lan.allowedTCPPorts = mkIf (cfg.metricsPort != null) [
         cfg.metricsPort

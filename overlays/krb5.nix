@@ -5,26 +5,20 @@ in {
     withLdap = true;
   };
 
-  freeipa = let
-    inherit (prev) freeipa;
-    python3 = final.python311;
-    freeipa'py311 =
-      (freeipa.override {
-        inherit python3;
-      })
-      .overrideAttrs (old: {
-        nativeBuildInputs =
-          [
-            python3
-          ]
-          ++ old.nativeBuildInputs;
-      });
-    isBroken = !(builtins.tryEval freeipa.outPath).success;
-    isUpdated = lib.versionAtLeast freeipa.version "4.12.2";
-    isPythonUpdated = lib.versionAtLeast final.python3.version "3.12";
-    warnFixed = lib.warnIf isUpdated "freeipa python overlay fix probably no longer needed";
-  in
-    if isPythonUpdated && (isBroken || !isUpdated)
-    then freeipa'py311
-    else warnFixed freeipa;
+  _389-ds-base = let
+    inherit (final) fetchpatch;
+    inherit (prev) _389-ds-base;
+    rust189warning = fetchpatch {
+      name = "389-ds-base-rust189.patch";
+      url = "https://github.com/389ds/389-ds-base/commit/1701419551c246e9dc21778b118220eeb2258125.patch";
+      hash = "sha256-trzY/fDH3rs66DWbWI+PY46tIC9ShuVqspMHqEEKZYA=";
+    };
+    drv = _389-ds-base.overrideAttrs (old: {
+      patches = old.patches or [] ++ [
+        rust189warning
+      ];
+    });
+  in if _389-ds-base.version == "3.1.3"
+    then drv
+    else lib.warn "389-ds-base patch probably no longer needed" _389-ds-base;
 }

@@ -57,7 +57,7 @@ in {
   in
     {
       cloudflare_kubernetes_tunnel = {
-        owner = config.services.cloudflared.user;
+        owner = "cloudflared";
       };
     }
     // (genAttrs (map (name: "dex-${name}") dexFiles) (_: dexCommon));

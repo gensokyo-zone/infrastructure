@@ -3,12 +3,12 @@
   lib,
   ...
 }: let
-  inherit (config.services) nginx tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr cloudflared;
+  inherit (config.services) nginx tautulli ombi sonarr radarr bazarr lidarr readarr prowlarr;
   inherit (lib.modules) mkMerge;
   inherit (lib.attrsets) mapAttrs' nameValuePair;
 in {
   sops.secrets.cloudflare_mediabox_tunnel = {
-    owner = cloudflared.user;
+    owner = "cloudflared";
   };
 
   services.cloudflared = let

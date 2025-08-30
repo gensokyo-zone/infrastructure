@@ -65,7 +65,7 @@ in {
   };
 
   sops.secrets.cloudflared-tunnel-utsuho = {
-    owner = config.services.cloudflared.user;
+    owner = "cloudflared";
   };
 
   sops.defaultSopsFile = ./secrets.yaml;

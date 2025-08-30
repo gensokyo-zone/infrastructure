@@ -29,8 +29,4 @@ in {
     useTmpfs = mkAlmostOptionDefault true;
     tmpfsSize = mkAlmostOptionDefault "80%";
   };
-  system.switch.enableNg = mkIf (config.boot.supportedFilesystems.nfs or false) (
-    # XXX: workaround for nixos switch bug
-    mkAlmostOptionDefault false
-  );
 }

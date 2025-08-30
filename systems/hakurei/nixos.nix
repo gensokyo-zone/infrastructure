@@ -65,7 +65,7 @@ in {
   ];
 
   sops.secrets.cloudflared-tunnel-hakurei = {
-    owner = config.services.cloudflared.user;
+    owner = "cloudflared";
   };
 
   services.cloudflared = let

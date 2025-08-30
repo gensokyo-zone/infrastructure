@@ -77,7 +77,7 @@ in {
   };
 
   sops.secrets.cloudflared-tunnel-keycloak = {
-    owner = config.services.cloudflared.user;
+    owner = "cloudflared";
   };
 
   sops.defaultSopsFile = ./secrets.yaml;
