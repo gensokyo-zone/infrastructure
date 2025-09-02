@@ -60,33 +60,56 @@
     pygrocy = pkgs.python3Packages.callPackage ./grocy/pygrocy.nix { };
 
     nf-setup-node = let
-      reisen = ../systems/reisen;
+      defaultNodeName = "reisen";
+      nodes = {
+        reisen = {
+          root = ../systems/reisen;
+          nodeType = "proxmox";
+          userReferenceSystem = "hakurei";
+        };
+      };
       inherit (inputs.self.lib.lib) userIs;
-      inherit (inputs.self.nixosConfigurations.hakurei.config) users;
-      authorizedKeys = list.concatMap (user: user.openssh.authorizedKeys.keys) (
-        list.filter (userIs "wheel") (set.values users.users)
-      );
-      inputAttrs = {
-        INPUT_ROOT_SSH_AUTHORIZEDKEYS = pkgs.writeText "root.authorized_keys" (
+      INPUT_INFRABINS = string.escapeShellArg [ "putfile64" "pve" "mkpam" "ct-config" ];
+      inputAuthorizedKeys = userReferenceSystem: let
+        inherit (inputs.self.nixosConfigurations.${userReferenceSystem}.config) users;
+        authorizedKeys = list.concatMap (user: user.openssh.authorizedKeys.keys) (
+          list.filter (userIs "wheel") (set.values users.users)
+        );
+      in {
+        base64path = pkgs.writeText "root.authorized_keys" (
           string.intercalate "\n" authorizedKeys
         );
-        INPUT_TF_SSH_AUTHORIZEDKEYS = reisen + "/tf.authorized_keys";
-        INPUT_SUBUID = reisen + "/subuid";
-        INPUT_SUBGID = reisen + "/subgid";
-        INPUT_INFRA_SETUP = reisen + "/setup.sh";
-        INPUT_INFRA_PUTFILE64 = reisen + "/bin/putfile64.sh";
-        INPUT_INFRA_PVE = reisen + "/bin/pve.sh";
-        INPUT_INFRA_MKPAM = reisen + "/bin/mkpam.sh";
-        INPUT_INFRA_CT_CONFIG = reisen + "/bin/ct-config.sh";
-        INPUT_AUTHRPCGSS_OVERRIDES = reisen + "/net.auth-rpcgss-module.service.overrides";
       };
-      inputVars = set.mapToValues (key: path: ''${key}="$(base64 -w0 < ${path})"'') inputAttrs;
+      proxmoxRoot = ../ci/proxmox;
+      inputAttrs.proxmox = { root, userReferenceSystem, extraAttrs ? {}, ... }: {
+        INPUT_INFRA_SETUP_NODE.base64path = root + "/setup.sh";
+        inherit INPUT_INFRABINS;
+        INPUT_ROOT_SSH_AUTHORIZEDKEYS = inputAuthorizedKeys userReferenceSystem;
+        INPUT_TF_SSH_AUTHORIZEDKEYS.base64path = proxmoxRoot + "/tf.authorized_keys";
+        INPUT_SUBUID.base64path = proxmoxRoot + "/subuid";
+        INPUT_SUBGID.base64path = proxmoxRoot + "/subgid";
+        INPUT_INFRA_SETUP.base64path = proxmoxRoot + "/setup.sh";
+        INPUT_INFRA_PUTFILE64.base64path = proxmoxRoot + "/bin/putfile64.sh";
+        INPUT_INFRA_PVE.base64path = proxmoxRoot + "/bin/pve.sh";
+        INPUT_INFRA_MKPAM.base64path = proxmoxRoot + "/bin/mkpam.sh";
+        INPUT_INFRA_CT_CONFIG.base64path = proxmoxRoot + "/bin/ct-config.sh";
+        INPUT_AUTHRPCGSS_OVERRIDES.base64path = proxmoxRoot + "/net.auth-rpcgss-module.service.overrides";
+      } // extraAttrs;
+      inputVars = { nodeType, ... }@node: set.mapToValues (key: input: let
+        value =
+          if input ? base64path then ''"$(base64 -w0 < ${input.base64path})"''
+          else string.escapeShellArg input;
+      in ''${key}=${value}'') (inputAttrs.${nodeType} node);
+      setInputVars = nodeName: node: ''
+        NF_SETUP_NODE_NAME=''${NF_SETUP_NODE_NAME:-''${1-${defaultNodeName}}}
+        NF_SETUP_INPUTS_${nodeName}=(
+          ${string.intercalate "\n" (inputVars node)}
+        )
+      '';
     in
       pkgs.writeShellScriptBin "nf-setup-node" ''
         ${exports}
-        NF_SETUP_INPUTS=(
-          ${string.intercalate "\n" inputVars}
-        )
+        ${string.intercalate "\n" (set.mapToValues setInputVars nodes)}
         source ${../ci/setup.sh}
       '';
     nf-actions-test = pkgs.writeShellScriptBin "nf-actions-test" ''

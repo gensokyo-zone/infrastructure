@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -eu
-SETUP_HOSTNAME=${1-reisen}
+NF_SETUP_NODE_HOST=${NF_SETUP_NODE_HOST-$NF_SETUP_NODE_NAME}
+NF_SETUP_INPUTS_NAME="NF_SETUP_INPUTS_${NF_SETUP_NODE_NAME}[@]"
 
-exec ssh root@$SETUP_HOSTNAME env \
-	"${NF_SETUP_INPUTS[@]}" \
+exec ssh root@$NF_SETUP_NODE_HOST env \
+	"${!NF_SETUP_INPUTS_NAME}" \
 	"bash -c \"eval \\\"\\\$(base64 -d <<<\\\$INPUT_INFRA_SETUP)\\\"\""
