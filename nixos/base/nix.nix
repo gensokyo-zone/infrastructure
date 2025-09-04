@@ -66,6 +66,12 @@ in {
           "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
         ];
         trusted-users = ["root" "@wheel"];
+        flake-registry = let
+          registryPath = "nix/registry.json";
+        in mkMerge [
+          (mkIf (config.nix.registry != {}) "/etc/${registryPath}")
+          (mkDefault "")
+        ];
       };
       extraOptions = mkIf hasSops ''
         !include ${config.sops.secrets.github-access-token-public.path}
