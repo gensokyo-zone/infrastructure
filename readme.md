@@ -28,7 +28,7 @@ deploy -s .#<hostname>
 # with trace
 deploy -s .#<hostname> -- --show-trace
 # deploy a fresh container
-deploy -s .#<hostname> --hostname ct.local
+deploy -s .#<hostname> --hostname ct-reisen.local
 ```
 
 ## Editing Secrets
@@ -42,7 +42,7 @@ sops nixos/systems/tewi/secrets.yaml
 ```shell
 nf-sops-keyscan <hostname>
 # or on a fresh container...
-nf-sops-keyscan ct.local
+nf-sops-keyscan ct-reisen.local
 vim .sops.yaml
 for nfsecret in access nix; do sops updatekeys nixos/secrets/$nfsecret.yaml; done
 ```
@@ -60,7 +60,7 @@ nf-tf init -upgrade
 ### Template
 
 ```shell
-nf-tarball ct
+nf-tarball ct-reisen
 ```
 
 [docs-badge]: https://img.shields.io/badge/API-docs-blue.svg?style=flat-square

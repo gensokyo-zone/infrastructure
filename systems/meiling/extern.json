@@ -1,0 +1,10 @@
+{
+  "files": {
+    "/etc/sysctl.d/50-net.conf": {
+      "group": "root",
+      "mode": "0644",
+      "owner": "root",
+      "source": "systems/meiling/sysctl.50-net.conf"
+    }
+  }
+}

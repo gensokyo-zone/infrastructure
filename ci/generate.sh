@@ -32,7 +32,8 @@ nf-eval() {
 
 }
 
-for node in reisen; do
+NF_NODES=$(nix eval --json "${NF_CONFIG_ROOT}#lib.generate.nodeNames")
+for node in $(jq -r '.[]' <<<"$NF_NODES"); do
 	nf-eval --json "lib.generate.nodes.$node.users" "systems/$node/users.json"
 	nf-eval --json "lib.generate.nodes.$node.systems" "systems/$node/systems.json"
 	nf-eval --json "lib.generate.nodes.$node.extern" "systems/$node/extern.json"

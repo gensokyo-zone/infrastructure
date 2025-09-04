@@ -3,7 +3,7 @@
   tree,
 }: let
   nixlib = inputs.nixpkgs.lib;
-  inherit (nixlib.attrsets) mapAttrs mapAttrs' nameValuePair filterAttrs mapAttrsToList;
+  inherit (nixlib.attrsets) attrNames mapAttrs mapAttrs' nameValuePair filterAttrs mapAttrsToList;
   inherit (nixlib.lists) sortOn;
   inherit (inputs.self.lib.lib) userIs;
   inherit (inputs.self.lib.gensokyo-zone) systems;
@@ -91,5 +91,6 @@ in {
     nodes = filterAttrs (_: node: node.proxmox.node.enable) systems;
   in
     mapAttrs (_: mkNode) nodes;
+  nodeNames = attrNames inputs.self.lib.generate.nodes;
   systems = mapAttrs mkSystem systems;
 }

@@ -34,14 +34,22 @@ _: {
       address4 = "10.9.1.2";
       address6 = "fd0c::2";
     };
+    tail = {
+      address4 = "100.101.208.19";
+      address6 = "fd7a:115c:a1e0::3034:d013";
+    };
   };
   exports = {
     services = {
+      tailscale.enable = true;
       sshd = {
         enable = true;
         ports.public.enable = false;
       };
-      proxmox.enable = true;
+      proxmox = {
+        enable = true;
+        id = "proxmox-reisen";
+      };
     };
   };
 }

@@ -2,6 +2,7 @@ locals {
   tailscale_tag_infra     = "tag:infrastructure"
   tailscale_tag_genso     = "tag:gensokyo"
   tailscale_tag_reisen    = "tag:reisen"
+  tailscale_tag_meiling   = "tag:meiling"
   tailscale_tag_minecraft = "tag:minecraft"
   tailscale_tag_rtl       = "tag:rtl"
 
@@ -16,11 +17,12 @@ locals {
   tailscale_group_member = "autogroup:member"
   tailscale_group_admin  = "autogroup:admin"
 
-  tailscale_tags_genso  = [local.tailscale_tag_infra, local.tailscale_tag_genso]
-  tailscale_tags_reisen = concat(local.tailscale_tags_genso, [local.tailscale_tag_reisen])
-  tailscale_tags_arc    = [local.tailscale_user_arc, local.tailscale_tag_arc]
-  tailscale_tags_kat    = [local.tailscale_user_kat, local.tailscale_tag_kat]
-  tailscale_tags_peeps  = concat(local.tailscale_tags_arc, local.tailscale_tags_kat)
+  tailscale_tags_genso   = [local.tailscale_tag_infra, local.tailscale_tag_genso]
+  tailscale_tags_reisen  = concat(local.tailscale_tags_genso, [local.tailscale_tag_reisen])
+  tailscale_tags_meiling = concat(local.tailscale_tags_genso, [local.tailscale_tag_meiling])
+  tailscale_tags_arc     = [local.tailscale_user_arc, local.tailscale_tag_arc]
+  tailscale_tags_kat     = [local.tailscale_user_kat, local.tailscale_tag_kat]
+  tailscale_tags_peeps   = concat(local.tailscale_tags_arc, local.tailscale_tags_kat)
 }
 
 resource "tailscale_acl" "tailnet" {
@@ -28,6 +30,7 @@ resource "tailscale_acl" "tailnet" {
     tagOwners = {
       "${local.tailscale_tag_infra}" : [local.tailscale_group_admin],
       "${local.tailscale_tag_reisen}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
+      "${local.tailscale_tag_meiling}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
       "${local.tailscale_tag_genso}" : [local.tailscale_group_admin, local.tailscale_tag_arc_deploy, local.tailscale_tag_kat_deploy],
       "${local.tailscale_tag_minecraft}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
       "${local.tailscale_tag_rtl}" : [local.tailscale_group_admin, local.tailscale_tag_infra],
@@ -46,6 +49,11 @@ resource "tailscale_acl" "tailnet" {
         action = "accept"
         src    = [local.tailscale_tag_reisen]
         dst    = ["${local.tailscale_tag_reisen}:*"]
+      },
+      {
+        action = "accept"
+        src    = [local.tailscale_tag_meiling]
+        dst    = ["${local.tailscale_tag_meiling}:*"]
       },
       {
         action = "accept"
@@ -98,6 +106,15 @@ resource "tailscale_tailnet_key" "reisen" {
   depends_on    = [tailscale_acl.tailnet]
 }
 
+resource "tailscale_tailnet_key" "meiling" {
+  reusable      = true
+  ephemeral     = false
+  preauthorized = true
+  description   = "Meiling VM"
+  tags          = local.tailscale_tags_meiling
+  depends_on    = [tailscale_acl.tailnet]
+}
+
 resource "tailscale_tailnet_key" "gensokyo" {
   reusable      = true
   ephemeral     = false
@@ -109,6 +126,11 @@ resource "tailscale_tailnet_key" "gensokyo" {
 
 output "tailscale_key_reisen" {
   value     = tailscale_tailnet_key.reisen.key
+  sensitive = true
+}
+
+output "tailscale_key_meiling" {
+  value     = tailscale_tailnet_key.meiling.key
   sensitive = true
 }
 

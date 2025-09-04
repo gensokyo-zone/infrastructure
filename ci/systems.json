@@ -37,9 +37,24 @@
       }
     }
   },
-  "ct": {
+  "ct-meiling": {
     "network": {
-      "hostName": "ct",
+      "hostName": "ct-meiling",
+      "networks": {
+        "global": null,
+        "int": null,
+        "local": {
+          "address4": null,
+          "address6": null,
+          "macAddress": null
+        },
+        "tail": null
+      }
+    }
+  },
+  "ct-reisen": {
+    "network": {
+      "hostName": "ct-reisen",
       "networks": {
         "global": null,
         "int": null,
@@ -328,6 +343,29 @@
       }
     }
   },
+  "meiling": {
+    "network": {
+      "hostName": "meiling",
+      "networks": {
+        "global": {
+          "address4": "49.12.128.117",
+          "address6": null,
+          "macAddress": null
+        },
+        "int": {
+          "address4": "10.9.1.4",
+          "address6": "fd0c::4",
+          "macAddress": null
+        },
+        "local": null,
+        "tail": {
+          "address4": "100.67.99.30",
+          "address6": "fd7a:115c:a1e0::dc34:631e",
+          "macAddress": null
+        }
+      }
+    }
+  },
   "minecraft": {
     "network": {
       "hostName": "minecraft",
@@ -419,7 +457,11 @@
           "address6": null,
           "macAddress": null
         },
-        "tail": null
+        "tail": {
+          "address4": "100.101.208.19",
+          "address6": "fd7a:115c:a1e0::3034:d013",
+          "macAddress": null
+        }
       }
     }
   },

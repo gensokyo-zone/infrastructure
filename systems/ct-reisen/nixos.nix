@@ -1,13 +1,16 @@
-{meta, ...}: {
+{meta, lib, ...}: {
   imports = with meta; [
-    nixos.reisen-ct
+    nixos.ct.reisen
   ];
 
   # allow proxmox to provide us with our hostname
   environment.etc.hostname.enable = false;
   services.avahi.hostName = "";
 
-  system.stateVersion = "23.11";
+  system = {
+    stateVersion = "23.11";
+    nixos.tags = lib.mkForce [ "template" ];
+  };
   environment.etc."systemd/network/eth9.network.d/int.conf".text = ''
     [Match]
     Name=eth9

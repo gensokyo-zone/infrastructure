@@ -4,7 +4,7 @@ if [[ $# -gt 0 ]]; then
 	ARG_NODE=$1
 	shift
 else
-	ARG_NODE=ct
+	ARG_NODE=ct-reisen
 fi
 
 ARG_CONFIG_PATH=nixosConfigurations.$ARG_NODE.config
@@ -12,16 +12,16 @@ RESULT=$(nix build --no-link --print-out-paths \
 	"${NF_CONFIG_ROOT}#$ARG_CONFIG_PATH.system.build.tarball" \
 	--show-trace "$@")
 
-if [[ $ARG_NODE = ct ]]; then
-	DATESTAMP=$(nix eval --raw "${NF_CONFIG_ROOT}#lib.inputs.nixpkgs.sourceInfo.lastModifiedDate")
-	DATENAME=${DATESTAMP:0:4}${DATESTAMP:4:2}${DATESTAMP:6:2}
-	SYSARCH=$(nix eval --raw "${NF_CONFIG_ROOT}#$ARG_CONFIG_PATH.nixpkgs.system")
-	TAREXT=$(nix eval --raw "${NF_CONFIG_ROOT}#$ARG_CONFIG_PATH.system.build.tarball.extension")
-	TARNAME=nixos-system-$SYSARCH.tar$TAREXT
-	OUTNAME="ct-$DATENAME-$TARNAME"
-	ln -sf "$RESULT/tarball/$TARNAME" "$OUTNAME"
+IMAGEPATH="$(nix eval --raw "${NF_CONFIG_ROOT}#$ARG_CONFIG_PATH.image.filePath")"
+if [[ $ARG_NODE = ct-* ]]; then
+	#DATESTAMP=$(nix eval --raw "${NF_CONFIG_ROOT}#lib.inputs.nixpkgs.sourceInfo.lastModifiedDate")
+	#DATENAME=${DATESTAMP:0:4}${DATESTAMP:4:2}${DATESTAMP:6:2}
+	#IMAGEEXT="$(nix eval --raw "${NF_CONFIG_ROOT}#$ARG_CONFIG_PATH.image.extension")"
+	#OUTNAME="$ARG_NODE-$DATENAME-nixos-image.${IMAGEEXT}"
+	OUTNAME=$(basename "$IMAGEPATH")
+	ln -sf "$RESULT/$IMAGEPATH" "./$OUTNAME"
 	echo $OUTNAME
-	ls -l $OUTNAME
+	ls -l $OUTNAME >&2
 else
-	echo $RESULT
+	echo "$RESULT/$IMAGEPATH"
 fi

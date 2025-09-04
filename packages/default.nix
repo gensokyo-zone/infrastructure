@@ -67,6 +67,11 @@
           nodeType = "proxmox";
           userReferenceSystem = "hakurei";
         };
+        meiling = {
+          root = ../systems/meiling;
+          nodeType = "proxmox";
+          userReferenceSystem = "ct-meiling";
+        };
       };
       inherit (inputs.self.lib.lib) userIs;
       INPUT_INFRABINS = string.escapeShellArg [ "putfile64" "pve" "mkpam" "ct-config" ];
