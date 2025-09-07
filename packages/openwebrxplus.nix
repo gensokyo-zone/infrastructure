@@ -29,6 +29,7 @@
       rev = version;
       sha256 = "1j80zclg1cl5clqd00qqa16prz7cyc32bvxqz2mh540cirygq24w";
     };
+    format = "setuptools";
 
     pythonImportsCheck = ["js8py" "test"];
 
@@ -222,13 +223,10 @@ in
       rev = version;
       sha256 = "sha256-QHgt0JGV4E8vOZpY3UwxbtBV38NZBXNrc2asYbHjEqo=";
     };
-
-    nativeBuildInputs = [
-      setuptools
-    ];
+    pyproject = true;
+    build-system = [ setuptools ];
 
     propagatedBuildInputs = [
-      setuptools
       pycsdr
       pycsdr-eti
       pydigiham
