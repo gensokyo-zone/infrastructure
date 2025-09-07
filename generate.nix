@@ -75,6 +75,7 @@
         int = null;
         local = null;
         tail = null;
+        global = null;
       }
       // mapAttrs' (_: network:
         nameValuePair network.name {

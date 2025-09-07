@@ -20,6 +20,7 @@
         prefix = "fd0a:";
       };
       int.slaac.prefix = "fd0c:";
+      global.domain = systemConfig.access.domain;
     };
   in {
     options = with lib.types; {
@@ -68,7 +69,7 @@
         );
         postfix = mkIf (config.macAddress != null) (mkOptionDefault (eui64 config.macAddress));
       };
-      domain = mkOptionDefault "${config.name}.${systemConfig.access.domain}";
+      domain = mkOptionDefault knownNetworks.${config.name}.domain or "${config.name}.${systemConfig.access.domain}";
       fqdn = mkOptionDefault (mapNullable (domain: "${systemConfig.access.hostName}.${domain}") config.domain);
       address6 = mkIf config.slaac.enable (mkOptionDefault "${config.slaac.prefix}:${config.slaac.postfix}");
     };

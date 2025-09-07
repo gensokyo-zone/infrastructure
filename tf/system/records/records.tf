@@ -98,6 +98,9 @@ locals {
   tailscale_v4   = coalesce(var.tailscale_v4, local.tailscale_net.address4, local.empty_address)
   tailscale_v6   = coalesce(var.tailscale_v6, local.tailscale_net.address6, local.empty_address)
   global_name    = coalesce(var.global_name, local.name)
+  global_net     = coalesce(var.net_data.networks.global, local.empty_net)
+  global_v4      = coalesce(var.global_v4, local.global_net.address4, local.empty_address)
+  global_v6      = coalesce(var.global_v6, local.global_net.address6, local.empty_address)
 
   has_tailscale = local.tailscale_v4 != local.empty_address || local.tailscale_v6 != local.empty_address
   has_int       = local.int_v4 != local.empty_address || local.int_v6 != local.empty_address
@@ -114,7 +117,7 @@ locals {
     },
     {
       name  = local.global_name,
-      value = var.global_v4,
+      value = local.global_v4,
     },
     {
       name  = local.int_name,
@@ -133,7 +136,7 @@ locals {
     },
     {
       name  = local.global_name,
-      value = var.global_v6,
+      value = local.global_v6,
     },
     {
       name  = local.int_name,

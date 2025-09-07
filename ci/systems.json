@@ -3,6 +3,7 @@
     "network": {
       "hostName": "aya",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.73",
           "address6": "fd0c::49",
@@ -25,6 +26,7 @@
     "network": {
       "hostName": "chen",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": null,
@@ -39,6 +41,7 @@
     "network": {
       "hostName": "ct",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": null,
@@ -53,6 +56,7 @@
     "network": {
       "hostName": "extern-test",
       "networks": {
+        "global": null,
         "int": null,
         "local": null,
         "tail": null
@@ -63,6 +67,7 @@
     "network": {
       "hostName": "idp",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.170",
           "address6": "fd0c::aa",
@@ -81,6 +86,7 @@
     "network": {
       "hostName": "freepbx",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.43",
@@ -95,6 +101,7 @@
     "network": {
       "hostName": "gengetsu",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.61",
@@ -109,6 +116,7 @@
     "network": {
       "hostName": "hakurei",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.71",
           "address6": "fd0c::47",
@@ -131,6 +139,7 @@
     "network": {
       "hostName": "idrac-gengetsu",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.12",
@@ -145,6 +154,7 @@
     "network": {
       "hostName": "idrac-mugetsu",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.13",
@@ -159,6 +169,7 @@
     "network": {
       "hostName": "kasen",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.49",
@@ -177,6 +188,7 @@
     "network": {
       "hostName": "keycloak",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.75",
           "address6": "fd0c::4b",
@@ -195,6 +207,7 @@
     "network": {
       "hostName": "kitchencam",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": null,
@@ -209,6 +222,7 @@
     "network": {
       "hostName": "koishi",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.68",
@@ -223,6 +237,7 @@
     "network": {
       "hostName": "kuwubernetes",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.42",
@@ -237,6 +252,7 @@
     "network": {
       "hostName": "kvm-reisen",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.9",
@@ -255,6 +271,7 @@
     "network": {
       "hostName": "litterbox",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.74",
           "address6": "fd0c::4a",
@@ -277,6 +294,7 @@
     "network": {
       "hostName": "logistics",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.63",
@@ -291,6 +309,7 @@
     "network": {
       "hostName": "mediabox",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.70",
           "address6": "fd0c::46",
@@ -313,6 +332,7 @@
     "network": {
       "hostName": "minecraft",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.51",
@@ -331,6 +351,7 @@
     "network": {
       "hostName": "mugetsu",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.60",
@@ -345,6 +366,7 @@
     "network": {
       "hostName": "nue",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.62",
@@ -363,6 +385,7 @@
     "network": {
       "hostName": "reimu",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.72",
           "address6": "fd0c::48",
@@ -385,6 +408,7 @@
     "network": {
       "hostName": "reisen",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.2",
           "address6": "fd0c::2",
@@ -403,6 +427,7 @@
     "network": {
       "hostName": "sakuya",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.50",
@@ -421,6 +446,7 @@
     "network": {
       "hostName": "shanghai",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.32",
@@ -439,6 +465,7 @@
     "network": {
       "hostName": "tei",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.69",
           "address6": "fd0c::45",
@@ -461,6 +488,7 @@
     "network": {
       "hostName": "tewi",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": null,
@@ -479,6 +507,7 @@
     "network": {
       "hostName": "u7-pro",
       "networks": {
+        "global": null,
         "int": null,
         "local": {
           "address4": "10.1.1.3",
@@ -493,6 +522,7 @@
     "network": {
       "hostName": "utsuho",
       "networks": {
+        "global": null,
         "int": {
           "address4": "10.9.1.76",
           "address6": "fd0c::4c",

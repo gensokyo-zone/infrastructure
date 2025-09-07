@@ -53,7 +53,10 @@
             fallback =
               if nameAllowed
               then lib.warn "getAddressFor hostname fallback for ${config.networking.hostName} -> ${hostName}@${network}" (access.getHostnameFor hostName network)
+              else if forSystem.access.global.enable
+              then lib.warn "getAddressFor global fallback for ${config.networking.hostName} -> ${hostName}@${network}" (mkGetAddressFor true addressForAttr hostName "global")
               else err;
+            global = forSystem.access.${addressForAttr}.global or forSystem.access.address4ForNetwork.global or fallback;
             local = forSystem.access.${addressForAttr}.local or forSystem.access.address4ForNetwork.local or fallback;
             int = forSystem.access.${addressForAttr}.int or forSystem.access.address4ForNetwork.int or fallback;
             tail = forSystem.access.${addressForAttr}.tail or fallback;
@@ -66,6 +69,8 @@
                 then int
                 else if has'Local && forSystemHas "local"
                 then local
+                else if forSystem.access.global.enable && forSystemHas "global"
+                then global
                 else fallback;
               ${
                 if has'Local
@@ -85,6 +90,7 @@
                 else null
               } =
                 tail;
+              global = global;
             }
             .${network}
             or fallback;
