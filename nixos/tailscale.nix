@@ -35,13 +35,14 @@ in {
     services.tailscale.enable = mkDefault true;
 
     sops.secrets.tailscale-key = let
-      keyReisen = "tailscale-key-reisen";
+      keyNode = "tailscale-key-${systemConfig.proxmox.node.name}";
       keyGenso = "tailscale-key-gensokyo";
-      sharedKeys = [keyReisen keyGenso];
+      # TODO: populate via lib.generate.nodeNames or something
+      sharedKeys = [keyGenso "tailscale-key-reisen" "tailscale-key-meiling"];
     in
       mkIf cfg.enable {
         key = mkMerge [
-          (mkIf (systemConfig.proxmox.enabled && systemConfig.proxmox.node.name == "reisen") (mkDefault keyReisen))
+          (mkIf systemConfig.proxmox.enabled (mkDefault keyNode))
           (mkIf (config.networking.domain == gensokyo-zone.lib.domain) (mkAlmostOptionDefault keyGenso))
         ];
         sopsFile = mkIf (elem config.sops.secrets.tailscale-key.key sharedKeys) (
