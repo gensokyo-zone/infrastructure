@@ -36,7 +36,7 @@ in {
             mkAlmostDefault url
           );
       };
-      homeassistant = true;
+      homeassistant.enabled = true;
       permit_join = false;
       frontend = {
         port = 8072;

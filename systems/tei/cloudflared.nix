@@ -5,10 +5,9 @@
 }: let
   inherit (lib.modules) mkMerge;
   inherit (config.services) nginx;
-  cfg = config.services.cloudflared;
   apartment = "5e85d878-c6b2-4b15-b803-9aeb63d63543";
 in {
-  sops.secrets.cloudflared-tunnel-apartment.owner = cfg.user;
+  sops.secrets.cloudflared-tunnel-apartment.owner = "cloudflared";
   services.cloudflared = {
     tunnels = {
       ${apartment} = {
