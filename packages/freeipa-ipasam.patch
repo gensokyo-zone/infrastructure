@@ -26,3 +26,11 @@ diff --git a/daemons/Makefile.am b/daemons/Makefile.am
  	$(NULL)
  
  ipa-version.h: ipa-version.h.in $(top_builddir)/$(CONFIG_STATUS)
+diff --git a/daemons/ipa-sam/ipa_sam.c b/daemons/ipa-sam/ipa_sam.c
+--- a/daemons/ipa-sam/ipa_sam.c
++++ b/daemons/ipa-sam/ipa_sam.c
+@@ -16,3 +16,3 @@
+ 
+-#include <param.h>
++#include <sys/param.h>
+ #include <ndr.h>

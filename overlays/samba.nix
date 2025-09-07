@@ -11,6 +11,10 @@ in {
           ../packages/freeipa-ipasam.patch
         ];
       configureFlags = lib.filter (f: f != "--disable-server") old.configureFlags;
+      nativeBuildInputs = old.nativeBuildInputs or []
+        # wants 1.17 normally
+        ++ lib.optional (lib.versionAtLeast final.automake.version "1.18") final.autoreconfHook
+      ;
     };
     overrides = {
       samba = final.samba-ldap;
