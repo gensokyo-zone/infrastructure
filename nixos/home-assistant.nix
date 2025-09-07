@@ -169,7 +169,8 @@ in {
       prometheus = {};
       wake_on_lan = {};
     };
-    grocy.enable = true;
+    # XXX: broken on new python x.x
+    grocy.enable = false;
     extraComponents = [
       "esphome"
       "apple_tv"
