@@ -11,13 +11,14 @@
 in {
   services.unifi = {
     enable = mkDefault true;
-    unifiPackage = mkDefault pkgs.unifi8;
+    unifiPackage = mkDefault pkgs.unifi;
     #TODO: mongodbPackage = mkDefault pkgs.mongodb-6_0;
     mongodbPackage = let
       nixpkgs = import gensokyo-zone.inputs.nixpkgs-2405 {
         inherit (pkgs) system config;
       };
-    in
+    # review major update before proceeding
+    in assert lib.versionOlder cfg.unifiPackage.version "10.0";
       mkDefault nixpkgs.mongodb-5_0;
   };
 
