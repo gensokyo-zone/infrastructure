@@ -8,7 +8,8 @@ terraform {
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = ">= 4.22.0"
+      # XXX: 5.0 requires manual migration
+      version = "~> 4.22"
     }
     proxmox = {
       source  = "bpg/proxmox"

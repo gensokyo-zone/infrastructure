@@ -1,0 +1,9 @@
+/**
+!tf/
+tf/.terraform*
+tf/*.tfvars*
+!systems/
+#systems/*/*.nix
+systems/*/secrets.yaml
+!ci/
+/**.nix

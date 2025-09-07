@@ -18,7 +18,7 @@ in {
         rust189warning
       ];
     });
-  in if _389-ds-base.version == "3.1.3"
+  in if _389-ds-base.version == "3.1.3" && _389-ds-base.patches or [] == []
     then drv
     else lib.warn "389-ds-base patch probably no longer needed" _389-ds-base;
 }
