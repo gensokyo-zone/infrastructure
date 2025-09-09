@@ -15,15 +15,15 @@
   network.networks = {
     global = {
       address4 = "49.12.128.117";
-      address6 = null;
+      address6 = "2a01:4f8:242:598d::4";
     };
     local = {
       inherit (config.network.networks.global) address4;
       address6 = null;
     };
     int = {
-      address4 = "10.9.1.4";
-      address6 = "fd0c::4";
+      address4 = "10.9.2.4";
+      address6 = "fd0c:0:0:2::4";
     };
     tail = {
       address4 = "100.67.99.30";

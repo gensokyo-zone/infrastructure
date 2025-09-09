@@ -26,7 +26,7 @@
 
     [IPv6Prefix]
     AddressAutoconfiguration=false
-    Prefix=fd0c::/64
+    Prefix=fd0c:0:0:2::/64
     Assign=true
 
     [IPv6AcceptRA]

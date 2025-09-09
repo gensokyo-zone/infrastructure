@@ -19,7 +19,9 @@
         enable = true;
         prefix = "fd0a:";
       };
-      int.slaac.prefix = "fd0c:";
+      int.slaac.prefix =
+        if systemConfig.proxmox.node.name == "meiling" then "fd0c:0:0:2:"
+        else "fd0c:";
       global.domain = systemConfig.access.domain;
     };
   in {

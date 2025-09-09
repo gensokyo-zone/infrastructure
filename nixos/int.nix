@@ -1,6 +1,7 @@
 {
   lib,
   access,
+  systemConfig,
   ...
 }: let
   inherit (lib.modules) mkDefault;
@@ -21,7 +22,7 @@ in {
       };
       ipv6Prefixes = [
         {
-          Prefix = "fd0c::/64";
+          Prefix = "${systemConfig.network.networks.int.slaac.prefix}:/64";
           Assign = true;
           Token = config.ipv6AcceptRAConfig.Token;
         }

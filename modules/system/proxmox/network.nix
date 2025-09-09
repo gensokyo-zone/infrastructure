@@ -180,8 +180,12 @@
       in {
         name = mkIf systemConfig.proxmox.container.enable (mkAlmostOptionDefault "eth9");
         bridge = mkAlmostOptionDefault "vmbr9";
-        address4 = mkAlmostOptionDefault "10.9.1.${toString index}/24";
-        address6 = mkAlmostOptionDefault "fd0c::${UInt.toHexLower index}/64";
+        address4 = let
+          int4_24 =
+            if systemConfig.proxmox.node.name == "meiling" then "10.9.2"
+            else "10.9.1";
+        in mkAlmostOptionDefault "${int4_24}.${toString index}/24";
+        address6 = mkAlmostOptionDefault "${systemConfig.network.networks.int.slaac.prefix}:${UInt.toHexLower index}/64";
         macAddress = mkIf (systemConfig.proxmox.network.interfaces.net0.macAddress or null != null && hasPrefix "BC:24:11:" systemConfig.proxmox.network.interfaces.net0.macAddress) (mkAlmostOptionDefault (
           replaceStrings ["BC:24:11:"] ["BC:24:19:"] systemConfig.proxmox.network.interfaces.net0.macAddress
         ));
