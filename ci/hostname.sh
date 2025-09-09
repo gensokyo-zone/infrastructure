@@ -41,4 +41,4 @@ if ! ping -w${ARG_TIMEOUT} -c1 "$ARG_HOSTNAME" >/dev/null 2>&1; then
 	fi
 fi
 
-echo "${DEPLOY_USER-}${DEPLOY_USER+@}$ARG_HOSTNAME"
+echo "${DEPLOY_USER-}${DEPLOY_USER:+@}$ARG_HOSTNAME"

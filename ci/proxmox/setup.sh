@@ -61,6 +61,10 @@ TF_ROLE_PRIVS=(
 pveum role add Terraform --privs "${TF_ROLE_PRIVS[*]}"
 pveum acl modify / --users tf@pam --roles Terraform
 
+if ! which sudo; then
+	apt install sudo || true
+fi
+
 INFRABIN=/opt/infra/bin
 WRAPPERBIN=/opt/infra/sbin
 SUDOERS_INFRABINS=

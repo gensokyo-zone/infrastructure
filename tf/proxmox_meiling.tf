@@ -2,9 +2,9 @@ locals {
   meiling_int_prefix4 = "10.9.2.0/24"
   meiling_int_prefix6 = "fd0c:0:0:2::/64"
   meiling_int_offset  = 32
-  meiling_int_addr4 = local.systems.meiling.network.networks.int.address4
+  meiling_int_addr4   = local.systems.meiling.network.networks.int.address4
   #meiling_int_bridge = proxmox_virtual_environment_network_linux_bridge.meiling_internal.name
-  meiling_int_bridge = "vmbr9"
+  meiling_int_bridge  = "vmbr9"
 
   proxmox_meiling_connection = {
     type     = "ssh"
