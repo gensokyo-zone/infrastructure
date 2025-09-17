@@ -2,9 +2,11 @@ let
   tunnelModule = {
     pkgs,
     config,
+    gensokyo-zone,
     lib,
     ...
   }: let
+    inherit (gensokyo-zone.lib) unmerged;
     inherit (lib.options) mkOption mkEnableOption;
     settingsFormat = pkgs.formats.json {};
   in {
@@ -24,6 +26,10 @@ let
           default = {};
         };
       };
+      systemd.extraServiceSettings = mkOption {
+        type = unmerged.types.attrs;
+        default = {};
+      };
     };
   };
 in
@@ -35,6 +41,7 @@ in
     lib,
     ...
   }: let
+    inherit (gensokyo-zone.lib) unmerged;
     inherit (lib.attrsets) mapAttrsToList mapAttrs' nameValuePair filterAttrsRecursive;
     inherit (lib.lists) singleton;
     inherit (lib.modules) mkIf mkMerge mkForce;
@@ -62,6 +69,10 @@ in
             inherit pkgs utils gensokyo-zone;
           };
         });
+      };
+      systemd.extraServiceSettings = mkOption {
+        type = unmerged.types.attrs;
+        default = {};
       };
     };
     config.services.cloudflared = {
@@ -112,6 +123,8 @@ in
               ];
             };
           }
+          (unmerged.mergeAttrs tunnel.systemd.extraServiceSettings)
+          (unmerged.mergeAttrs cfg.systemd.extraServiceSettings)
           (mkIf tunnel.extraTunnel.enable {
             serviceConfig = {
               inherit RuntimeDirectory;

@@ -11,6 +11,9 @@ in {
       enable = mkDefault true;
       metricsPort = mkDefault 3011;
       metricsBind = "[::]";
+      systemd.extraServiceSettings = {
+        serviceConfig.User = mkDefault "cloudflared";
+      };
     };
     users = mkIf cfg.enable {
       users.cloudflared = {
@@ -26,8 +29,8 @@ in {
     };
     boot.kernel.sysctl = mkIf (!config.boot.isContainer && cfg.enable) {
       # https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes
-      "net.core.rmem_max" = mkDefault 2500000;
-      "net.core.wmem_max" = mkDefault 2500000;
+      "net.core.rmem_max" = mkDefault 7500000;
+      "net.core.wmem_max" = mkDefault 7500000;
     };
   };
 }
