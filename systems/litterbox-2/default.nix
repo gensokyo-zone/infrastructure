@@ -16,7 +16,7 @@ _: {
   };
   exports = {
     services = {
-      tailscale.enable = false;
+      tailscale.enable = true;
     };
   };
 }
