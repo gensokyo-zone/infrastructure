@@ -12,6 +12,7 @@ keys:
 - &tei_osh age1a2quf2ekkj94ygu7wgvhrvh44fwn32c0l2cwvgvjh23wst90s54szdsvgr
 - &mediabox_osh age16klpkaut5759dut8mdm3jn0rnp8w6kxyvs9n6ntqrdsayjtd7upqlvw489
 - &litterbox_osh age1xg6zm9t25wjakljm54m38pjdr9q53jysdcl82r5xwkrn0cgyuvvsuh63eh
+- &litterbox2_osh age1qjaxj6dtqqr66pvzp8skwhs740w9n4cfcwu0zt9aggk4w0ey8q5qqjk4yc
 - &keycloak_osh age1ktmx2szedfnpe5xumnzs8vkk0ffqgga6ved3drtksg9pye6ndsnsnqq488
 - &kasen_osh age1fjcafp0j45sz03zq5srnxyq2mujndmn25vceg3wj2cgzymqm73ssmhdgku
 - &logistics_osh age1tkkau8vk5h9dh3kemash4eghn7lk84j0hhpmvvf7j6phgcsm9vmsphv0py
@@ -108,6 +109,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *litterbox_osh
+- path_regex: 'systems/litterbox-2/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *litterbox2_osh
 - path_regex: 'systems/minecraft/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:
