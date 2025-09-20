@@ -3,7 +3,7 @@
     inherit (meta) nixos;
   in [
     nixos.sops
-    nixos.meiling-ct
+    nixos.ct.meiling
     nixos.tailscale
     nixos.syncthing-kat
   ];
