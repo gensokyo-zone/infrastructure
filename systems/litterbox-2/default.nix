@@ -16,6 +16,8 @@ _: {
   };
   exports = {
     services = {
+      promtail.enable = false;
+      prometheus-exporters-node.enable = false;
       tailscale.enable = true;
     };
   };
