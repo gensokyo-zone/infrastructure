@@ -1,6 +1,5 @@
 _: {
   imports = [
-    ./proxmox.nix
   ];
   arch = "x86_64";
   type = "NixOS";
@@ -11,13 +10,13 @@ _: {
   ];
   network.networks = {
     tail = {
-      address4 = "100.70.124.79";
-      address6 = "fd7a:115c:a1e0::b001:7c4f";
+      #address4 = "100.70.124.79";
+      #address6 = "fd7a:115c:a1e0::b001:7c4f";
     };
   };
   exports = {
     services = {
-      tailscale.enable = true;
+      tailscale.enable = false;
     };
   };
 }
