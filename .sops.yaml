@@ -38,6 +38,7 @@ creation_rules:
     - *tei_osh
     - *mediabox_osh
     - *litterbox_osh
+    - *litterbox2_osh
     - *keycloak_osh
     - *kasen_osh
     - *sakuya_osh
