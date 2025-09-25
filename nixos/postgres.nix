@@ -56,7 +56,7 @@ in {
     services.postgresql = mkIf cfg.enable {
       gensokyo-zone.sharedMounts."postgresql/${versions.major cfg.package.version}".path = cfg.dataDir;
       postStart = mkAfter ''
-        $PSQL -tAf ${config.sops.secrets.postgresql-init.path}
+        ''${PSQL-psql} -tAf ${config.sops.secrets.postgresql-init.path}
       '';
     };
   };

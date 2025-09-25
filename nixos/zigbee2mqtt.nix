@@ -42,6 +42,7 @@ in {
         port = 8072;
       };
       serial = {
+        adapter = "zstack";
         port = "/dev/ttyZigbee";
       };
       availability = {
