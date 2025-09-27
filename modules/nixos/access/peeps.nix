@@ -47,10 +47,12 @@ in {
       mkBefore nft)
     cfg.ranges;
     condition = "ip6 saddr { ${concatStringsSep "," (mapAttrsToList (name: _: "$" + mkNftName name) cfg.ranges)} }";
+    mkInclude = name: ''include "${cfg.stateDir}/${name}*.nft"'';
+    includes = mapAttrsToList (name: _: mkBefore (mkInclude name)) cfg.ranges;
   in {
     nftables.ruleset = mkIf cfg.enable (mkMerge (
       nftRanges
-      ++ [(mkBefore ''include "${cfg.stateDir}/*.nft"'')]
+      ++ includes
     ));
     firewall.interfaces.peeps = {
       nftables.enable = cfg.enable;
