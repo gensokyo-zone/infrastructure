@@ -15,7 +15,7 @@
   hasSops = options ? sops.secrets;
 in {
   options.networking.access.peeps = with lib.types; {
-    enable = mkEnableOption "peeps" // {default = hasSops;};
+    enable = mkEnableOption "peeps" // {default = hasSops && cfg.ranges != {};};
     ranges = mkOption {
       type = attrsOf str;
       default = {};
@@ -57,7 +57,7 @@ in {
     firewall.interfaces.peeps = {
       nftables.enable = cfg.enable;
       nftables.conditions = [
-        (mkIf (cfg.enable && networking.enableIPv6) condition)
+        (mkIf (cfg.enable && networking.enableIPv6 && cfg.ranges != {}) condition)
       ];
     };
   };
