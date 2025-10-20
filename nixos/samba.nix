@@ -100,7 +100,8 @@ in {
         "ldap group suffix" = removeSuffix "," ldap.groupDnSuffix;
         "ldap machine suffix" = removeSuffix "," ldap.hostDnSuffix;
         "ldap idmap suffix" = removeSuffix "," ldap.idViewDnSuffix;
-        "ldap server require strong auth" = "allow_sasl_over_tls";
+        "ldap server require strong auth" = "allow_sasl_without_tls_channel_bindings";
+        #"tls trust system cas" = true;
         # TODO: ldap delete dn?
         # TODO: username map script?
       })

@@ -24,7 +24,9 @@ in {
       overrideConfigs = {
         krb5 = mkDefault false;
         sssd = mkDefault false;
+        openldap = false;
       };
+      openldap.settings.tls_cacert = "/etc/ssl/certs/ca-bundle.crt";
     };
   };
 }

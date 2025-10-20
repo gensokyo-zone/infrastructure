@@ -129,6 +129,7 @@ in {
       # man 5 ldap.conf
       LDAPBASE = ldap.base;
       LDAPURI = "ldaps://ldap.int.${config.networking.domain}";
+      LDAPTLS_CACERT = "/etc/ssl/certs/ca-bundle.crt";
     };
     ldapAuth = mkMerge [
       (mkIf config.security.krb5.enable (mapOptionDefaults {

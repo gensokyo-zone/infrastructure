@@ -31,6 +31,40 @@ in {
         default = false;
         description = "allow the ipa module to override the ntp configuration";
       };
+      openldap = mkOption {
+        type = bool;
+        default = false;
+        description = "allow the ipa module to override ldap.conf";
+      };
+    };
+    openldap = {
+      settings = {
+        uri = mkOption {
+          type = str;
+          default = "ldaps://${cfg.server}";
+        };
+        base = mkOption {
+          type = str;
+          default = cfg.basedn;
+        };
+        tls_cacert = mkOption {
+          type = str;
+          default = "/etc/ipa/ca.crt";
+        };
+        sasl_nocanon = mkOption {
+          type = bool;
+          default = true;
+        };
+      };
+      extraConfig = mkOption {
+        type = lines;
+        default = ''
+          SASL_NOCANON ${if cfg.openldap.settings.sasl_nocanon or false then "on" else "off"}
+          URI ${cfg.openldap.settings.uri}
+          BASE ${cfg.openldap.settings.base}
+          TLS_CACERT ${cfg.openldap.settings.tls_cacert}
+        '';
+      };
     };
   };
   config.services.sssd = let
@@ -143,5 +177,11 @@ in {
   in
     mkIf (cfg.enable && !cfg.overrideConfigs.krb5) {
       text = mkForce (format.generate "krb5.conf" krb5.settings).text;
+    };
+  config.environment.etc."ldap.conf" = let
+    ldapConf = cfg.openldap.extraConfig;
+  in
+    mkIf (cfg.enable && !cfg.overrideConfigs.openldap) {
+      source = mkForce (pkgs.writeText "ldap.conf" ldapConf);
     };
 }
