@@ -14,6 +14,7 @@
   rtl-sdr,
   soapysdr-with-plugins,
   pydigiham,
+  digiham,
   direwolf,
   sox,
   wsjtx,
@@ -100,6 +101,8 @@
       libsamplerate
     ];
 
+    cmakeFlags = [ "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" ];
+
     hardeningDisable = lib.optional stdenv.isAarch64 "format";
 
     postFixup = ''
@@ -117,6 +120,15 @@
       maintainers = teams.c3d2.members;
     };
   };
+  digiham' = (digiham.override {
+    inherit csdr;
+  }).overrideAttrs (old: {
+    cmakeFlags = [ "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" ];
+  });
+  pydigiham' = pydigiham.override (old: {
+    digiham = digiham';
+    inherit pycsdr;
+  });
 
   pycsdr-eti = buildPythonPackage rec {
     pname = "pycsdr-eti";
@@ -165,7 +177,7 @@
       hash = "sha256-NjRBC7bhq2bMlRI0Q8bcGcneD/HlAO6l/0As3/lk4e8=";
     };
 
-    buildInputs = [csdr];
+    propagatedBuildInputs = [csdr];
 
     # has no tests
     doCheck = false;
@@ -204,6 +216,8 @@
       soapysdr-with-plugins
     ];
 
+    cmakeFlags = [ "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" ];
+
     meta = with lib; {
       homepage = "https://github.com/jketterl/owrx_connector";
       description = "A set of connectors that are used by OpenWebRX to interface with SDR hardware";
@@ -229,7 +243,7 @@ in
     propagatedBuildInputs = [
       pycsdr
       pycsdr-eti
-      pydigiham
+      pydigiham'
       js8py
       owrx_connector
       soapysdr-with-plugins
