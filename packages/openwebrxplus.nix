@@ -81,13 +81,13 @@
 
   csdr = stdenv.mkDerivation rec {
     pname = "csdr";
-    version = "0.18.23";
+    version = "0.18.36";
 
     src = fetchFromGitHub {
       owner = "luarvique";
       repo = pname;
       rev = version;
-      hash = "sha256-Q7g1OqfpAP6u78zyHjLP2ASGYKNKCAVv8cgGwytZ+cE=";
+      hash = "sha256-Ih75Y8At4Tx9fTHasHQktnhjYY2708DWdxn/V+8UKT8=";
     };
 
     nativeBuildInputs = [
@@ -167,14 +167,14 @@
 
   pycsdr = buildPythonPackage rec {
     pname = "pycsdr";
-    version = "0.18.23";
+    version = "0.18.36";
     format = "setuptools";
 
     src = fetchFromGitHub {
       owner = "luarvique";
       repo = "pycsdr";
       rev = version;
-      hash = "sha256-NjRBC7bhq2bMlRI0Q8bcGcneD/HlAO6l/0As3/lk4e8=";
+      hash = "sha256-8pfiBZJKPfOwNTRu0Kh+5bJpAZsNQQ8GVQzTSWF7W+Y=";
     };
 
     propagatedBuildInputs = [csdr];
