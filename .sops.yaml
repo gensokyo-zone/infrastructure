@@ -16,6 +16,7 @@ keys:
 - &keycloak_osh age1ktmx2szedfnpe5xumnzs8vkk0ffqgga6ved3drtksg9pye6ndsnsnqq488
 - &kasen_osh age1fjcafp0j45sz03zq5srnxyq2mujndmn25vceg3wj2cgzymqm73ssmhdgku
 - &logistics_osh age1tkkau8vk5h9dh3kemash4eghn7lk84j0hhpmvvf7j6phgcsm9vmsphv0py
+- &mail_osh age1nxgmdahcjhmtrf7q66jep55cjdcw6tfpw722jr4gytaykgf89ugqxufgyd
 - &kuwubernetes_osh age1q2yjpxlqkfhsfxumtmax6zsyt669vlr9ffjks3dpkjf3cqdakcwqt2nt66
 - &kuwubernetes_cluster age1nmdv4q8hcyj3s6qevrmc9w2vhd4a8tsj5j5e0cry5utex7vqeprslyjvxz
 #- &sakuya_osh age1ehdj6hghtr8sf5s5c03rru4y3a02nwrt694e36tjnd6g7eq4l43qfradn6
@@ -116,6 +117,12 @@ creation_rules:
   - pgp: *pgp_common
     age:
     - *litterbox2_osh
+- path_regex: 'systems/mail/secrets\.yaml$'
+  shamir_threshold: 1
+  key_groups:
+  - pgp: *pgp_common
+    age:
+    - *mail_osh
 - path_regex: 'systems/minecraft/secrets\.yaml$'
   shamir_threshold: 1
   key_groups:

@@ -49,7 +49,7 @@
           mkGetAddressFor = nameAllowed: addressForAttr: hostName: network: let
             forSystem = access.systemFor hostName;
             forSystemHas = network: forSystem.access ? ${addressForAttr}.${network} || forSystem.access ? address4ForNetwork.${network};
-            err = throw "no interface found between ${config.networking.hostName} -> ${hostName}@${network}";
+            err = throw "no interface found between ${config.networking.hostName} -> ${hostName}@${network} OR disable promtail and prometheus-node-exporter services";
             fallback =
               if nameAllowed
               then lib.warn "getAddressFor hostname fallback for ${config.networking.hostName} -> ${hostName}@${network}" (access.getHostnameFor hostName network)
