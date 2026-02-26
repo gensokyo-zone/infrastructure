@@ -16,11 +16,11 @@ _: {
       cloudflared.enable = true;
       tailscale.enable = true;
       taskchampion.enable = true;
-      home-assistant.enable = true;
+      #home-assistant.enable = true;
       zigbee2mqtt.enable = true;
       barcodebuddy.enable = true;
       postgresql.enable = true;
-      adb.enable = true;
+      #adb.enable = true;
     };
   };
 }

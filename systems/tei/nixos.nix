@@ -5,6 +5,7 @@
 }: let
   inherit (lib.modules) mkIf;
   hassVouch = false;
+  hassEnable = false;
 in {
   imports = let
     inherit (meta) nixos;
@@ -15,19 +16,20 @@ in {
     nixos.cloudflared
     nixos.postgres
     nixos.nginx
-    nixos.adb
     nixos.access.taskchampion
-    nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
     nixos.access.barcodebuddy
-    nixos.access.nfandroidtv
     nixos.home-assistant
     nixos.zigbee2mqtt
     nixos.grocy
     nixos.barcodebuddy
     nixos.taskchampion
     ./cloudflared.nix
+  ] ++ lib.optionals hassEnable [
+    nixos.adb
+    nixos.access.nfandroidtv
+    nixos.access.home-assistant
   ];
 
   services.nginx = {
@@ -36,7 +38,7 @@ in {
       zigbee2mqtt.proxied.enable = "cloudflared";
       grocy.proxied.enable = "cloudflared";
       barcodebuddy.proxied.enable = "cloudflared";
-      home-assistant = {
+      home-assistant = mkIf hassEnable {
         proxied.enable = "cloudflared";
         vouch.enable = mkIf hassVouch true;
       };
@@ -44,6 +46,7 @@ in {
     };
   };
   services.home-assistant = {
+    enable = mkIf (!hassEnable) (lib.mkForce false);
     #reverseProxy.auth.enable = true;
   };
 
