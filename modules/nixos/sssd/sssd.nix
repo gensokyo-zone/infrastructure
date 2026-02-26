@@ -14,6 +14,7 @@
   inherit (lib.trivial) flip;
   inherit (lib) generators;
   cfg = config.services.sssd;
+  opts = options.services.sssd;
   mkValuePrimitive = value:
     if value == true
     then "True"
@@ -163,7 +164,7 @@ in {
       };
     in
       mapAttrs mkServiceOption services;
-    settings = mkOption {
+    settings2 = mkOption {
       type = attrsOf settingsType;
     };
     configText = mkOption {
@@ -174,7 +175,7 @@ in {
     enabledDomains = filter (domain: domain.enable) (attrValues cfg.domains);
     enabledServices = filterAttrs (_: service: service.enable) cfg.services;
   in {
-    settings = let
+    settings2 = let
       serviceSettings = mapAttrs (name: service: mapOptionDefaults service.settings) enabledServices;
       defaultSettings = {
         sssd = mapOptionDefaults {
@@ -208,8 +209,9 @@ in {
       ssh = {};
       pac = {};
     };
-    configText = mkOptionDefault (toINI cfg.settings);
+    configText = mkOptionDefault (toINI cfg.settings2);
     config = mkIf (cfg.configText != null) (mkAlmostOptionDefault cfg.configText);
+    ${if opts ? settings then "settings" else null} = mkIf (cfg.settings2 != {}) (mkForce {});
   };
   config.system.nssDatabases = let
     inherit (cfg.services) nss;

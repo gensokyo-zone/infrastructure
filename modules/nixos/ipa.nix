@@ -136,7 +136,7 @@ in {
     };
   config.security.krb5 = mkIf cfg.enable {
     enable = mkAlmostForce false;
-    package = mkAlmostOptionDefault pkgs.krb5Full;
+    package = mkAlmostOptionDefault pkgs.krb5;
     settings = {
       libdefaults = mapOptionDefaults {
         default_realm = cfg.realm;

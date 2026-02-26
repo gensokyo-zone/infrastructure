@@ -1,11 +1,12 @@
 {
   lib,
   config,
+  options,
   meta,
   access,
   ...
 }: let
-  inherit (lib.modules) mkIf mkBefore mkOrder;
+  inherit (lib.modules) mkIf mkBefore mkDefault mkOrder;
   enableDns = !config.services.dnsmasq.enable && config.networking.hostName != "utsuho";
 in {
   imports = let
@@ -22,7 +23,11 @@ in {
     avahiResolverEnabled = config.services.avahi.enable && (config.services.avahi.nssmdns4 || config.services.avahi.nssmdns4);
   in
     mkIf (enableDns && (config.services.resolved.enable || avahiResolverEnabled)) (mkOrder 475 ["dns"]);
-  services.resolved.extraConfig = mkIf enableDns ''
-    DNSStubListener=no
-  '';
+  services.resolved = mkIf enableDns (if options.services.resolved ? "settings" then {
+    settings.Resolve.DNSStubListener = mkDefault false;
+  } else {
+    extraConfig = ''
+      DNSStubListener=no
+    '';
+  });
 }
