@@ -8,6 +8,14 @@
       setopt HIST_IGNORE_SPACE
       HISTORY_IGNORE="(*^C*|:*|/*|~*|.(/*|./*|.)|(sudo |)(ls|cd)( *|))"
     '';
+    shellAliases = {
+      sys = "systemctl";
+      sysu = "systemctl --user";
+      log = "journalctl";
+      logu = "journalctl --user";
+
+      cp = "cp --reflink=auto --sparse=auto";
+    };
   };
   programs.bash = {
     interactiveShellInit = ''
