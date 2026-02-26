@@ -147,6 +147,15 @@ in {
   systemd.services.plex = mkIf plex.enable {
     unitConfig.RequiresMountsFor = mapAttrsToList (path: _: path) plexLibrary;
   };
+  # when have you last used these?
+  systemd.services.radarr.wantedBy = lib.mkForce [];
+  systemd.services.sonarr.wantedBy = lib.mkForce [];
+  systemd.services.bazarr.wantedBy = lib.mkForce [];
+  systemd.services.lidarr.wantedBy = lib.mkForce [];
+  systemd.services.readarr.wantedBy = lib.mkForce [];
+  systemd.services.prowlarr.wantedBy = lib.mkForce [];
+  # crashy :<
+  systemd.services.invidious.wantedBy = lib.mkForce [];
 
   sops.defaultSopsFile = ./secrets.yaml;
 
