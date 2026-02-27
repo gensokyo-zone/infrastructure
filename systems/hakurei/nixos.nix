@@ -9,6 +9,7 @@
   inherit (config.services) nginx syncplay;
   inherit (nginx) virtualHosts;
   hassVouch = false;
+  hassEnable = false;
 in {
   imports = let
     inherit (meta) nixos;
@@ -50,7 +51,6 @@ in {
     nixos.access.openwebrx
     nixos.access.deluge
     nixos.access.taskchampion
-    nixos.access.home-assistant
     nixos.access.zigbee2mqtt
     nixos.access.grocy
     nixos.access.barcodebuddy
@@ -62,6 +62,8 @@ in {
     nixos.samba
     nixos.syncplay
     ./reisen-ssh.nix
+  ] ++ lib.optionals hassEnable [
+    nixos.access.home-assistant
   ];
 
   sops.secrets.cloudflared-tunnel-hakurei = {
@@ -142,7 +144,7 @@ in {
         virtualHosts.taskchampion'local.allServerNames
       ];
     };
-    home = {
+    home = mkIf hassEnable {
       inherit (nginx) group;
       domain = virtualHosts.home-assistant.serverName;
       extraDomainNames = mkMerge [
@@ -395,7 +397,7 @@ in {
         local.denyGlobal = true;
         ssl.cert.enable = true;
       };
-      home-assistant = {
+      home-assistant = mkIf hassEnable {
         # not the real hass record-holder, so don't respond globally..
         local.denyGlobal = true;
         ssl.cert.enable = true;
