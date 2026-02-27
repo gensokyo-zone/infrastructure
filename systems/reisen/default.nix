@@ -35,8 +35,8 @@ _: {
       address6 = "fd0c::2";
     };
     tail = {
-      address4 = "100.101.208.19";
-      address6 = "fd7a:115c:a1e0::3034:d013";
+      address4 = "100.115.31.42";
+      address6 = "fd7a:115c:a1e0::c934:1f2a";
     };
   };
   exports = {

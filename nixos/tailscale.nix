@@ -32,7 +32,10 @@ in {
       };
     };
 
-    services.tailscale.enable = mkDefault true;
+    services.tailscale = {
+      enable = mkDefault true;
+      # TODO: extraSetFlags = [ "--accept-dns=false" advertiseExitNode ];
+    };
 
     sops.secrets.tailscale-key = let
       keyNode = "tailscale-key-${systemConfig.proxmox.node.name}";
