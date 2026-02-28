@@ -64,6 +64,16 @@ resource "tailscale_acl" "tailnet" {
       },
       {
         action = "accept"
+        src    = concat(local.tailscale_tags_arc, local.tailscale_tags_kat)
+        dst = [
+          "${local.tailscale_tag_arc}:*",
+          "${local.tailscale_tag_arc_deploy}:*",
+          "${local.tailscale_tag_kat}:*",
+          "${local.tailscale_tag_kat_deploy}:*",
+        ]
+      },
+      {
+        action = "accept"
         src    = ["*"]
         dst = [
           "autogroup:self:*",
