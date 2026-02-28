@@ -7,7 +7,7 @@ variable "proxmox_reisen_username" {
 }
 
 variable "proxmox_reisen_password" {
-  type = string
+  type      = string
   sensitive = true
 }
 

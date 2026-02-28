@@ -7,7 +7,7 @@ terraform {
       version = "~> 2.0"
     }
     cloudflare = {
-      source  = "cloudflare/cloudflare"
+      source = "cloudflare/cloudflare"
       # XXX: 5.0 requires manual migration
       version = "~> 4.22"
     }

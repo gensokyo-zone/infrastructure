@@ -4,7 +4,7 @@ locals {
   meiling_int_offset  = 32
   meiling_int_addr4   = local.systems.meiling.network.networks.int.address4
   #meiling_int_bridge = proxmox_virtual_environment_network_linux_bridge.meiling_internal.name
-  meiling_int_bridge  = "vmbr9"
+  meiling_int_bridge = "vmbr9"
 
   proxmox_meiling_connection = {
     type     = "ssh"
@@ -38,7 +38,7 @@ variable "proxmox_meiling_username" {
 }
 
 variable "proxmox_meiling_password" {
-  type = string
+  type      = string
   sensitive = true
 }
 
@@ -55,7 +55,7 @@ variable "proxmox_meiling_ssh_port" {
 }
 
 provider "proxmox" {
-  alias = "meiling"
+  alias    = "meiling"
   endpoint = var.proxmox_meiling_endpoint
   username = var.proxmox_meiling_username
   password = var.proxmox_meiling_password
