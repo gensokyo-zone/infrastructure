@@ -1,5 +1,6 @@
 {
   config,
+  options,
   lib,
   gensokyo-zone,
   pkgs,
@@ -7,13 +8,14 @@
 }: let
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkMerge mkOrder mkBefore mkOptionDefault;
+  inherit (lib.modules) mkIf mkMerge mkOrder mkBefore mkDefault mkOptionDefault;
   inherit (lib.lists) optionals;
   inherit (gensokyo-zone.lib) unmerged;
   cfg = config.gensokyo-zone.dns;
   dnsModule = {
     gensokyo-zone,
     nixosConfig,
+    nixosOptions,
     config,
     pkgs,
     ...
@@ -106,11 +108,13 @@
             (mkIf (config.fixHostname && nixosConfig.services.resolved.enable) (mkOrder 450 ["files"]))
           ];
         };
-        resolvedSettings = {
-          # TODO: enable = mkIf (!resolved.enable) false;
-          extraConfig = mkIf config.prioritise ''
-            DNSStubListener=no
-          '';
+        # TODO: enable = mkIf (!resolved.enable) false;
+        resolvedSettings = if nixosOptions ? services.resolved.settings then {
+          settings = mkIf config.prioritise {
+            Resolve.DNSStubListener = mkDefault false;
+          };
+        } else {
+          extraConfig = mkIf config.prioritise "DNSStubListener=no";
         };
       };
     };
@@ -127,6 +131,7 @@ in {
         inherit gensokyo-zone pkgs;
         inherit (gensokyo-zone) inputs;
         nixosConfig = config;
+        nixosOptions = options;
       };
     };
     default = {};

@@ -1,5 +1,6 @@
 {
   config,
+  options,
   lib,
   access,
   gensokyo-zone,
@@ -127,11 +128,13 @@ in {
         address6 = mkDefault (access.getAddress6For system.name "local");
       };
     };
-    services.resolved = mkIf cfg.enable {
+    services.resolved = mkIf cfg.enable (if options.services.resolved ? "settings" then {
+      settings.Resolve.DNSStubListener = mkDefault false;
+    } else {
       extraConfig = ''
         DNSStubListener=no
       '';
-    };
+    });
     networking = mkIf cfg.enable {
       firewall = {
         interfaces.local.allowedTCPPorts = [53];
