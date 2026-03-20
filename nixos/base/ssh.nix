@@ -22,7 +22,12 @@ in {
       PasswordAuthentication = mkDefault false;
       KbdInteractiveAuthentication = mkDefault false;
       PermitRootLogin = mkDefault "prohibit-password";
-      KexAlgorithms = ["curve25519-sha256@libssh.org"];
+      KexAlgorithms = [
+        "curve25519-sha256@libssh.org"
+        # https://www.openssh.org/pq.html
+        "mlkem768x25519-sha256"
+        "sntrup761x25519-sha512" "sntrup761x25519-sha512@openssh.com"
+      ];
       PubkeyAcceptedAlgorithms = mkDefault "+ssh-rsa";
       StreamLocalBindUnlink = mkDefault "yes";
       LogLevel = mkDefault "VERBOSE";
