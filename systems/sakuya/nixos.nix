@@ -3,6 +3,7 @@
   config,
   modulesPath,
   meta,
+  lib,
   ...
 }: {
   imports = let
@@ -80,6 +81,9 @@
       size = 4096;
     }
   ];
+
+  boot.kernel.sysctl."vm.mmap_rnd_bits" = lib.warnIf (config.environment.etc."sysctl.d/55-nixos-aslr-entropy.conf".source or null != null) "sakuya: remove mmap_rnd_bits workaround" 18;
+  boot.kernel.sysctl."vm.mmap_rnd_compat_bits" = 16;
 
   networking.useNetworkd = true;
   systemd.network = {

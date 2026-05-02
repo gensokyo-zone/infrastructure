@@ -13,6 +13,7 @@
   inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault;
   inherit (lib.attrsets) mapAttrs attrValues;
   inherit (lib.lists) findSingle;
+  inherit (lib.strings) hasInfix;
   inherit (lib.trivial) mapNullable;
   cfg = config.access;
   systemAccess = access;
@@ -178,6 +179,8 @@
               then "${port.protocol}://"
               else if scheme == ""
               then ""
+              else if hasInfix ":" scheme
+              then scheme
               else "${scheme}://";
             port' =
               if !port.enable

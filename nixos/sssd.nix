@@ -19,7 +19,8 @@ in {
     services.sssd = {
       enable = mkDefault true;
       gensokyo-zone = let
-        serviceFragment = service: service;
+        serviceFragment = service: (access.systemForService service /*system.exports.services*/).exports.services.${service}.id;
+        #serviceFragment = service: service;
         toService = service: hostname: let
           segments = splitString "." hostname;
         in
