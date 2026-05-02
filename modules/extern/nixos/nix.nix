@@ -43,7 +43,7 @@
         };
         protocol = mkOption {
           type = enum ["ssh" "ssh-ng"];
-          default = "ssh";
+          default = "ssh-ng";
         };
         ssh = {
           commonKey =
