@@ -28,6 +28,9 @@
       ipa = config.ipa.enable && nixosConfig.security.ipa.enable;
       sssd = config.sssd.enable && nixosConfig.services.sssd.enable;
     };
+    ldapCa = if cfg.ca.trust || enabled.ipa
+      then "/etc/ssl/certs/ca-bundle.crt"
+      else "${cfg.ca.pem}";
   in {
     options = with lib.types; {
       enable = mkEnableOption "kerberos settings";
@@ -249,6 +252,10 @@
             };
             authToLocalNames = mkAlmostOptionDefault config.authToLocalNames;
           };
+          settings.libdefaults = {
+            dns_lookup_kdc = mkIf (access.local.enable || access.tail.enable) (mkAlmostOptionDefault false);
+            rdns = mkIf (access.local.enable && !access.tail.enable && config.gensokyo-zone.dns.enable or false && false) (mkAlmostOptionDefault true);
+          };
         };
         sssdSettings = let
           servers =
@@ -287,7 +294,9 @@
               pam.enable = mkIf (!config.sssd.pam.enable) (mkDefault false);
             };
           };
-        ipaSettings = mkIf config.ipa.enable (mapAlmostOptionDefaults {
+        ipaSettings = let
+          moduleOpt = key: if nixosOptions.security.ipa ? ${key} then key else null;
+        in mkIf config.ipa.enable (mapAlmostOptionDefaults {
             enable = true;
             certificate = config.ca.pem;
             basedn = config.ldap.baseDn;
@@ -297,7 +306,10 @@
             # TODO: dyndns?
           }
           // {
-            overrideConfigs = mapAlmostOptionDefaults {
+            ${moduleOpt "openldap"} = {
+              settings.tls_cacert = mkIf cfg.ca.trust (mkAlmostOptionDefault ldapCa);
+            };
+            ${moduleOpt "overrideConfigs"} = mapAlmostOptionDefaults {
               sssd = false;
               krb5 = false;
             };
@@ -371,7 +383,7 @@
             UMICH_SCHEMA = mkIf (elem "umich_ldap" config.nfs.idmapd.methods) (mapOptionDefaults {
               LDAP_server = config.ldap.host;
               LDAP_use_ssl = true;
-              LDAP_ca_cert = "/etc/ssl/certs/ca-bundle.crt";
+              LDAP_ca_cert = ldapCa;
               LDAP_base = config.ldap.baseDn;
               LDAP_people_base = "cn=users,cn=accounts,${config.ldap.baseDn}";
               LDAP_group_base = "cn=groups,cn=accounts,${config.ldap.baseDn}";

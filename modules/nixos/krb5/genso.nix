@@ -7,7 +7,7 @@
 }: let
   inherit (gensokyo-zone.lib) mkBaseDn mapDefaults mkAlmostOptionDefault mapOptionDefaults domain;
   inherit (lib.options) mkOption mkEnableOption;
-  inherit (lib.modules) mkIf mkDefault mkOptionDefault mkForce;
+  inherit (lib.modules) mkIf mkMerge mkDefault mkOptionDefault mkForce;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.strings) toUpper concatStringsSep concatStrings;
   inherit (config.security) krb5 ipa;
@@ -104,16 +104,20 @@ in {
           ${cfg.domain} = cfg.realm;
           ".${cfg.domain}" = cfg.realm;
         };
-        libdefaults = mapOptionDefaults {
-          default_realm = cfg.realm;
-          dns_lookup_realm = false;
-          dns_lookup_kdc = true;
-          rdns = false;
-          ticket_lifetime = "24h";
-          forwardable = true;
-          udp_preference_limit = 0;
-          ignore_acceptor_hostname = true;
-        };
+        libdefaults = mkMerge [
+          (mkIf (!ipa.enable) (mapOptionDefaults {
+            default_realm = cfg.realm;
+            dns_lookup_realm = false;
+            dns_lookup_kdc = true;
+            rdns = false;
+            ticket_lifetime = "24h";
+            forwardable = true;
+            udp_preference_limit = 0;
+          }))
+          {
+            ignore_acceptor_hostname = mkOptionDefault true;
+          }
+        ];
       };
       gensokyo-zone = {
         ca.cert = let

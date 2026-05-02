@@ -152,7 +152,7 @@ in {
         master_kdc = "${cfg.server}:88";
         admin_server = "${cfg.server}:749";
         default_domain = cfg.domain;
-        pkinit_anchors = "/etc/ipa/ca.crt";
+        pkinit_anchors = "FILE:/etc/ipa/ca.crt";
       };
       domain_realm = mkMerge [
         (mapOptionDefaults {

@@ -35,6 +35,10 @@
         // {
           default = true;
         };
+      domain = mkOption {
+        type = lib.types.str;
+        default = config.domain;
+      };
       krb5.enable =
         mkEnableOption "krb5"
         // {
@@ -134,8 +138,8 @@
         }:
           mkIf cfg.enable {
             device = mkMerge [
-              (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/${nfsSubpath}")
-              (mkIf config.smb.enable ''\\smb.${config.domain}\${smbSubpath}'')
+              (mkIf config.nfs.enable "nfs.${cfg.domain}:/srv/fs/${nfsSubpath}")
+              (mkIf config.smb.enable ''\\smb.${cfg.domain}\${smbSubpath}'')
             ];
             fsType = mkMerge [
               (mkIf config.nfs.enable "nfs4")
@@ -167,8 +171,8 @@
         };
         "/mnt/kyuuto-transfer" = mkIf config.transfer.enable {
           device = mkMerge [
-            (mkIf config.nfs.enable "nfs.${config.domain}:/srv/fs/kyuuto/transfer")
-            (mkIf (config.smb.enable && access.local.enable) ''\\smb.${config.domain}\kyuuto-transfer'')
+            (mkIf config.nfs.enable "nfs.${config.transfer.domain}:/srv/fs/kyuuto/transfer")
+            (mkIf (config.smb.enable && access.local.enable) ''\\smb.${config.transfer.domain}\kyuuto-transfer'')
           ];
           fsType = mkMerge [
             (mkIf config.nfs.enable "nfs4")
