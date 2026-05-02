@@ -8,6 +8,7 @@ in {
   boot = {
     initrd.systemd.emergencyAccess = mkDefault true;
     consoleLogLevel = mkDefault 5;
+    loader.grub.splashImage = null;
   };
   services.getty.autologinUser = mkDefault "root";
   documentation.enable = mkDefault false;
