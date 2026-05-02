@@ -8,7 +8,7 @@
   inherit (gensokyo-zone.lib) mkAlmostOptionDefault;
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkOptionDefault;
-  inherit (lib.attrsets) mapAttrsToList getAttrFromPath genAttrs;
+  inherit (lib.attrsets) mapAttrsToList getAttrFromPath mapAttrs;
   inherit (lib.trivial) mapNullable;
   inherit (lib.strings) concatStringsSep;
   cfg = config.exports;
@@ -195,11 +195,15 @@ in {
       nixosModule
     ];
     exports = let
-      defaultServices = genAttrs [
-        "sshd"
-        "prometheus-exporters-node"
-        "promtail"
-      ] (_: {enable = mkAlmostOptionDefault true;});
+      mkDefaultService = _: { cond ? true }: mkIf cond {
+        enable = mkAlmostOptionDefault true;
+      };
+      defaultServices = mapAttrs mkDefaultService {
+        sshd = {};
+        prometheus-exporters-node.cond = cfg.prometheus.exporter.enable;
+        # TODO: new log source
+        ${if false then "promtail" else null}.cond = cfg.prometheus.push.enable;
+      };
     in {
       services = mkIf cfg.defaultServices defaultServices;
     };

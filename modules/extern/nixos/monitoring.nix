@@ -35,6 +35,7 @@ let
         };
       };
       promtail = {
+        # TODO: pick new log push service
         enable = mkEnableOption "promtail";
         lokiUrl = mkOption {
           type = str;
@@ -42,6 +43,17 @@ let
         journald = {
           enable =
             mkEnableOption "systemd-journald"
+            // {
+              default = true;
+            };
+          settings = mkOption {
+            type = unmerged.types.attrs;
+            internal = true;
+          };
+        };
+        nginx.access = {
+          enable =
+            mkEnableOption "nginx access.log"
             // {
               default = true;
             };
@@ -122,9 +134,11 @@ let
           (mkIf access.tail.enabled (mkAlmostOptionDefault "logs.tail.${domain}"))
           (mkOptionDefault (lib.warn "gensokyo-zone.monitoring: promtail needs lan or tailscale access to function" "logs.${domain}"))
         ];
+        # TODO: nginx access logs scraper
         journald.settings = {
           job_name = "${config.systemName}-journald";
           journal = {
+            json = mkOptionDefault true;
             max_age = mkOptionDefault "${toString (24 * 7)}h";
             labels = mapOptionDefaults {
               job = "systemd-journald";
@@ -136,6 +150,19 @@ let
             {
               source_labels = ["__journal__systemd_unit"];
               target_label = "unit";
+            }
+            {
+              source_labels = ["__journal_syslog_identifier"];
+              target_label = "syslog_identifier";
+            }
+          ];
+        };
+        # TODO: also needs permissions to view logs too .-.
+        nginx.access.settings = {
+          job_name = "${config.systemName}-nginx-access";
+          static_configs = [
+            {
+              labels = cfg.nginx.access.labels;
             }
           ];
         };
@@ -182,7 +209,7 @@ in
     };
 
     config = {
-      services.promtail = mkIf (cfg.enable && cfg.promtail.enable) (
+      services.${if false then "promtail" else null} = mkIf (cfg.enable && cfg.promtail.enable) (
         unmerged.mergeAttrs cfg.promtail.settings
       );
       services.prometheus.exporters = mkIf cfg.enable {

@@ -241,6 +241,7 @@ in
   in {
     options.exports = with lib.types; {
       prometheus = {
+        push.enable = mkEnableOption "monitoring" // { default = true; };
         exporter = {
           enable =
             mkEnableOption "prometheus ingress"
@@ -368,7 +369,8 @@ in
             #grpclb.port = 9096;
           };
         };
-        promtail = {config, ...}: {
+        ${if false then "promtail" else null} = {config, ...}: {
+          # TODO: new log source provider
           nixos = {
             serviceAttr = "promtail";
             assertions = mkIf config.enable [

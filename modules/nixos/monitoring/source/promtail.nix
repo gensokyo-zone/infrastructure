@@ -9,8 +9,11 @@
   inherit (lib.strings) concatStringsSep;
   inherit (config.services) nginx;
   cfg = config.services.promtail;
+  # TODO: promtail is EOL/deprecated: https://discourse.nixos.org/t/breaking-changes-announcement-for-unstable/17574/124
+  # switch to fluent-bit?
+  serviceAttr = if false then "promtail" else null;
 in {
-  config.services.promtail = {
+  config.services.${serviceAttr} = {
     configuration = {
       server = {
         http_listen_port = mkOptionDefault 9094;
@@ -20,6 +23,7 @@ in {
         baseUrl = access.proxyUrlFor {serviceName = "loki";};
       in [
         {
+          # TODO: proxy via hakurei and add auth!
           url = "${baseUrl}/loki/api/v1/push";
         }
       ];
@@ -186,7 +190,7 @@ in {
       ];
     };
   };
-  config.systemd.services.promtail = mkIf cfg.enable {
+  config.systemd.services.${serviceAttr} = mkIf cfg.enable {
     # TODO: there must be a better way to provide promtail access to these logs!
     serviceConfig.Group = mkIf nginx.enable (lib.mkForce nginx.group);
   };
