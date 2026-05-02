@@ -9,15 +9,18 @@
   inherit (lib.modules) mkIf;
   inherit (lib.attrsets) genAttrs;
   cfg = config.services.sssd;
+  pamRuleModule = {name, ...}: {
+    config.enable = mkIf (name == "sss" && cfg.enable && !cfg.services.pam.enable) (
+      mkAlmostForce false
+    );
+  };
   pamRulesModule = {...}: let
     rules = ["account" "auth" "password" "session"];
-    mkRuleConfig = ruleName: {
-      sss = mkIf cfg.enable {
-        enable = mkIf (!cfg.services.pam.enable) (mkAlmostForce false);
-      };
+    mkRuleConfig = ruleName: mkOption {
+      type = with lib.types; attrsOf (submodule pamRuleModule);
     };
   in {
-    config = genAttrs rules mkRuleConfig;
+    options = genAttrs rules mkRuleConfig;
   };
   pamServiceModule = {...}: {
     options = with lib.types; {

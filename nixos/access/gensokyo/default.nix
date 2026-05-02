@@ -14,13 +14,13 @@ in {
     serverName = domain;
     locations = {
       "/" = {
-        root = gensokyo-zone.inputs.website.packages.${pkgs.system}.gensokyoZone;
+        root = gensokyo-zone.inputs.website.packages.${pkgs.stdenv.hostPlatform.system or pkgs.system}.gensokyoZone;
       };
       "/docs" = {
         root = pkgs.linkFarm "genso-docs-wwwroot" [
           {
             name = "docs";
-            path = gensokyo-zone.self.packages.${pkgs.system}.docs;
+            path = gensokyo-zone.self.packages.${pkgs.stdenv.hostPlatform.system or pkgs.system}.docs;
           }
         ];
       };
