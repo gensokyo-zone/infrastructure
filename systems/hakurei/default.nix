@@ -1,4 +1,4 @@
-{lib, ...}: {
+{config, lib, gensokyo-zone, ...}: {
   imports = [
     ./proxmox.nix
   ];
@@ -15,6 +15,17 @@
   };
   access = {
     global.enable = true;
+    fqdnAliases = map (name: lib.concatStringsSep "." (lib.toList name ++ [ gensokyo-zone.lib.domain ])) [
+      "plex"
+      "smb"
+      "mqtt"
+      "syncplay"
+      "pbx"
+      "radio"
+      "yt"
+      "ldap"
+      # "idp" "krb5"
+    ];
   };
   exports = {
     services = {
