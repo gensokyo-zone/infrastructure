@@ -25,5 +25,8 @@ in rec {
   builders = import ./builders.nix;
   deploy-rs = inputs.deploy-rs.overlays.default or inputs.deploy-rs.overlay;
   systemd2mqtt = inputs.systemd2mqtt.overlays.default;
-  arc = inputs.arcexprs.overlays.default;
+  arc = let
+    # assholes...
+    overlays = inputs.arcexprs.overlays.default;
+  in overlays // { __functor = _: a: overlays a; };
 }
