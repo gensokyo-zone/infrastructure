@@ -6,6 +6,7 @@ in rec {
     builders
     krb5
     llm
+    media
     minecraft
     nfs
     nginx
@@ -16,6 +17,7 @@ in rec {
   barcodebuddy = import ./barcodebuddy.nix;
   krb5 = import ./krb5.nix;
   llm = import ./llm.nix;
+  media = import ./media.nix;
   minecraft = import ./minecraft.nix;
   nfs = import ./nfs.nix;
   nginx = import ./nginx.nix;

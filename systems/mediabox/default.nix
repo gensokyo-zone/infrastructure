@@ -29,6 +29,10 @@ _: {
       plex.enable = true;
       invidious.enable = true;
       deluge.enable = true;
+      mediatomb = {
+        enable = true;
+        ports.default.port = 4152;
+      };
     };
   };
 }
