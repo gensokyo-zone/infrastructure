@@ -24,6 +24,12 @@ in {
       }
     ];
   };
+  systemd.network.config = {
+    networkConfig = {
+      # default prefers rotating private addresses :<
+      IPv6PrivacyExtensions = mkDefault "prefer-public";
+    };
+  };
 
   # work around https://github.com/NixOS/nixpkgs/issues/132646
   system.nssDatabases.hosts = mkIf config.services.resolved.enable (
