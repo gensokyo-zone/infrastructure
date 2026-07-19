@@ -27,7 +27,16 @@
   }: {
     vouch.auth.lua = {
       enable = true;
-      accessRequest = ''
+      accessRequest = let
+        omitted = ''
+        elseif ngx.re.match(ngx.var["${removePrefix "$" (xvars.get.host)}"], [[grocy\.(local|tail)\.${escapeRegex networking.domain}$]]) then
+          ngx.ctx.auth_res = {
+            status = ngx.HTTP_OK,
+            header = { },
+          }
+          ngx.var["grocy_user"] = "guest"
+        '';
+      in ''
         local grocy_apikey = ngx.var["http_grocy_api_key"]
         if grocy_apikey ~= nil and ngx.re.match(ngx.var["request_uri"], "^/api(/|$)") then
           -- bypass authentication and let grocy decide...
@@ -37,12 +46,6 @@
             status = ngx.HTTP_OK,
             header = { },
           }
-        -- elseif ngx.re.match(ngx.var["${removePrefix "$" (xvars.get.host)}"], [[grocy\.(local|tail)\.${escapeRegex networking.domain}$]]) then
-        --   ngx.ctx.auth_res = {
-        --     status = ngx.HTTP_OK,
-        --     header = { },
-        --   }
-        --   ngx.var["grocy_user"] = "guest"
         else
           ngx.ctx.auth_res = ngx.location.capture("${config.vouch.auth.requestLocation}")
         end
