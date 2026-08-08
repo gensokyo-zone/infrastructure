@@ -29,9 +29,12 @@
     };
     tree = {
       url = "github:kittywitch/tree";
-      inputs.std.follows = "std-fl";
-      inputs.nix-std.follows = "std-fl/nix-std";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        flake-compat.follows = "flake-compat";
+        std.follows = "std-fl";
+        nix-std.follows = "std-fl/nix-std";
+        nixpkgs.follows = "nixpkgs";
+      };
     };
     deploy-rs = {
       url = "github:serokell/deploy-rs/master";
