@@ -1,6 +1,10 @@
 variable "proxmox_container_template" {
   type    = string
-  default = "local:vztmpl/ct-20240831-nixos-system-x86_64-linux.tar.xz"
+  default = "local:vztmpl/ct-reisen-template-26.11.20260807.f13ff45-proxmox.tar.xz"
+}
+variable "proxmox_container_template_meiling" {
+  type    = string
+  default = "local:vztmpl/ct-meiling-template-26.11.20260807.f13ff45-proxmox.tar.xz"
 }
 
 locals {
