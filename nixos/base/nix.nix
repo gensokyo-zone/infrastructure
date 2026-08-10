@@ -76,11 +76,15 @@ in {
       extraOptions = mkIf hasSops ''
         !include ${config.sops.secrets.github-access-token-public.path}
       '';
-      gc = {
+      gc = mkMerge [ {
         automatic = mkDefault true;
         dates = mkDefault "Mon 02:45";
-        options = mkDefault "--delete-older-than 12d";
-      };
+        #options = mkDefault "--delete-older-than 12d";
+        options = mkDefault "--delete-older-than 180d";
+      } (lib.warn "auto-gc deferred until boxes have a home" {
+        dates = "semiannually";
+        options = "--delete-older-than 180d";
+      }) ];
       optimise = {
         automatic = mkAlmostDefault true;
         dates = mkDefault ["03:25"];
