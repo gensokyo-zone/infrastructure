@@ -7,12 +7,26 @@
   inherit (lib.options) mkOption mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkAfter mkOptionDefault;
   inherit (lib.strings) hasPrefix;
-  inherit (lib.attrsets) mapAttrsToList;
+  inherit (lib.attrsets) mapAttrsToList getLib;
+  inherit (lib.lists) concatMap;
   inherit (config.services.nginx) lua;
   cfg = lua;
   enabled = cfg.http.enable || cfg.upstream.enable;
-  luaPkgPath = pkg: "${pkg.lib or pkg}/lib/lua/${pkgs.luajit_openresty.luaversion}/?.lua";
-  luaCPkgPath = pkg: "${pkg.lib or pkg}/lib/lua/${pkgs.luajit_openresty.luaversion}/?.so";
+  luaModuleFor = mod:
+    if builtins.isString mod then cfg.luaPackage.pkgs.${mod}
+    else mod;
+  luaModulesFor = mod: [ mod ] ++ concatMap luaModulesFor mod.propagatedBuildInputs or [ ];
+  luaModules = concatMap luaModulesFor (map luaModuleFor cfg.modules);
+  luaPathFor = pkg: suffix: [
+    "${getLib pkg}/lib/lua/${cfg.luaPackage.luaversion}/${suffix}"
+    "${getLib pkg}/share/lua/${cfg.luaPackage.luaversion}/${suffix}"
+  ];
+  luaPkgPath = pkg:
+    luaPathFor pkg "?.lua"
+    ++ luaPathFor pkg "?/init.lua";
+  luaCPkgPath = pkg: [
+    "${getLib pkg}/lib/lua/${cfg.luaPackage.luaversion}/?.so"
+  ];
   luaModule = {config, ...}: let
     cfg = config.lua;
     mkSetBy = var: value:
@@ -82,10 +96,9 @@ in {
       luaPackage = mkOption {
         type = package;
         default = pkgs.luajit_openresty;
-        readOnly = true;
       };
       modules = mkOption {
-        type = listOf package;
+        type = listOf (either package str);
       };
       luaPath = mkOption {
         type = separatedString ";";
@@ -93,6 +106,7 @@ in {
       luaCPath = mkOption {
         type = separatedString ";";
       };
+      pathDirectives = mkEnableOption "prefer lua_package_path over LUA_PATH";
     };
     virtualHosts = mkOption {
       type = attrsOf (submoduleWith {
@@ -104,17 +118,13 @@ in {
   config = {
     services.nginx = {
       lua = {
-        modules =
-          [
-            cfg.luaPackage.pkgs.lua-resty-core
-          ]
-          ++ cfg.luaPackage.pkgs.lua-resty-core.propagatedBuildInputs;
+        modules = ["lua-resty-core"];
         luaPath = mkMerge (
-          map luaPkgPath cfg.modules
+          concatMap luaPkgPath luaModules
           ++ [(mkAfter ";")]
         );
         luaCPath = mkMerge (
-          map luaCPkgPath cfg.modules
+          concatMap luaCPkgPath luaModules
           ++ [(mkAfter ";")]
         );
       };
@@ -123,11 +133,18 @@ in {
         (mkIf cfg.http.enable [pkgs.nginxModules.lua])
         (mkIf cfg.upstream.enable [pkgs.nginxModules.lua-upstream])
       ];
+      appendHttpConfig = mkIf (enabled && cfg.pathDirectives) ''
+        lua_package_path '${cfg.luaPath}';
+        lua_package_cpath '${cfg.luaCPath}';
+      '';
     };
     systemd.services.nginx = mkIf config.services.nginx.enable {
-      environment = mkIf enabled {
+      environment = mkIf (enabled && !cfg.pathDirectives) {
         LUA_PATH = mkOptionDefault cfg.luaPath;
         LUA_CPATH = mkOptionDefault cfg.luaCPath;
+      };
+      serviceConfig = mkIf enabled {
+        SystemCallFilter = [ "@ipc" ];
       };
     };
   };
