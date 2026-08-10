@@ -10,9 +10,10 @@
   inherit (lib.options) mkEnableOption;
   inherit (lib.modules) mkIf mkMerge mkDefault;
   inherit (lib.lists) elem;
-  inherit (lib.strings) optionalString;
+  inherit (lib.strings) optionalString escapeShellArgs;
   inherit (lib.meta) getExe;
   cfg = config.services.tailscale;
+  useNixosAuth = false;
 in {
   options.services.tailscale = with lib.types; {
     advertiseExitNode = mkEnableOption "exit node";
@@ -34,7 +35,16 @@ in {
 
     services.tailscale = {
       enable = mkDefault true;
-      # TODO: extraSetFlags = [ "--accept-dns=false" advertiseExitNode ];
+      extraSetFlags = let
+        advertiseExitNode = "--advertise-exit-node" + optionalString (!cfg.advertiseExitNode) "=false";
+      in [
+        "--accept-dns=false"
+        advertiseExitNode
+      ];
+      extraUpFlags = mkIf (cfg.authKeyFile == null) [
+        "--auth-key=file:${config.sops.secrets.tailscale-key.path}"
+      ];
+      authKeyFile = mkIf useNixosAuth config.sops.secrets.tailscale-key.path;
     };
 
     sops.secrets.tailscale-key = let
@@ -75,7 +85,6 @@ in {
           netdev=$(${pkgs.iproute2}/bin/ip route show 0/0 | ${pkgs.coreutils}/bin/cut -f5 -d' ' || echo ${config.systemd.network.networks._00-local.name or "eth0"})
           ${getExe pkgs.ethtool} -K "$netdev" rx-udp-gro-forwarding on rx-gro-list off || true
         '';
-        advertiseExitNode = "--advertise-exit-node" + optionalString (!cfg.advertiseExitNode) "=false";
       in
         with pkgs; ''
           # wait for tailscaled to settle
@@ -92,7 +101,7 @@ in {
           fi
 
           # otherwise authenticate with tailscale
-          ${getExe tailscale} up --accept-dns=false ${advertiseExitNode} -authkey $(cat ${config.sops.secrets.tailscale-key.path})
+          ${getExe tailscale} up ${escapeShellArgs cfg.extraSetFlags} ${escapeShellArgs cfg.extraUpFlags}
         '';
     };
   };
